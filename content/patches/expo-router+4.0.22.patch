@@ -1,0 +1,425 @@
+diff --git a/node_modules/expo-router/_ctx.harmony.js b/node_modules/expo-router/_ctx.harmony.js
+new file mode 100644
+index 0000000..89d8b1d
+--- /dev/null
++++ b/node_modules/expo-router/_ctx.harmony.js
+@@ -0,0 +1,6 @@
++export const ctx = require.context(
++  process.env.EXPO_ROUTER_APP_ROOT,
++  true,
++  /^(?:\.\/)(?!(?:(?:(?:.*\+api)|(?:\+html)))\.[tj]sx?$).*(?:\.android|\.ios|\.web)?\.[tj]sx?$/,
++  process.env.EXPO_ROUTER_IMPORT_MODE
++);
+diff --git a/node_modules/expo-router/build/fork/useLinking.native.js b/node_modules/expo-router/build/fork/useLinking.native.js
+index 4b5033e..5448ca8 100644
+--- a/node_modules/expo-router/build/fork/useLinking.native.js
++++ b/node_modules/expo-router/build/fork/useLinking.native.js
+@@ -65,7 +65,7 @@ function useLinking(ref, { enabled = true, prefixes, filter, config, getInitialU
+                 'Looks like you have configured linking in multiple places. This is likely an error since deep links should only be handled in one place to avoid conflicts. Make sure that:',
+                 "- You don't have multiple NavigationContainers in the app each with 'linking' enabled",
+                 '- Only a single instance of the root component is rendered',
+-                react_native_1.Platform.OS === 'android'
++                react_native_1.Platform.OS === 'android' || react_native_1.Platform.OS === 'harmony'
+                     ? "- You have set 'android:launchMode=singleTask' in the '<activity />' section of the 'AndroidManifest.xml' file to avoid launching multiple instances"
+                     : '',
+             ]
+diff --git a/node_modules/expo-router/build/getRoutesCore.js b/node_modules/expo-router/build/getRoutesCore.js
+index b876fea..40027a0 100644
+--- a/node_modules/expo-router/build/getRoutesCore.js
++++ b/node_modules/expo-router/build/getRoutesCore.js
+@@ -2,7 +2,7 @@
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.generateDynamic = exports.extrapolateGroups = exports.getIgnoreList = exports.getRoutes = void 0;
+ const matchers_1 = require("./matchers");
+-const validPlatforms = new Set(['android', 'ios', 'native', 'web']);
++const validPlatforms = new Set(['android', 'harmony', 'ios', 'native', 'web']);
+ /**
+  * Given a Metro context module, return an array of nested routes.
+  *
+diff --git a/node_modules/expo-router/build/global-state/router-store.js b/node_modules/expo-router/build/global-state/router-store.js
+index 53fc405..d439157 100644
+--- a/node_modules/expo-router/build/global-state/router-store.js
++++ b/node_modules/expo-router/build/global-state/router-store.js
+@@ -172,6 +172,48 @@ class RouterStore {
+         }
+     }
+     getRouteInfo(state) {
++        if (react_native_1.Platform.OS === 'harmony') {
++            let current = state;
++            let fingerprint = '';
++            while (current) {
++                const route = current.routes[current.index !== undefined ? current.index : current.routes.length - 1];
++                fingerprint += '/' + route.name;
++                if (!route.state) {
++                    if (route.params) {
++                        try {
++                            fingerprint += '?' + JSON.stringify(route.params);
++                        } catch (e) {}
++                    }
++                    break;
++                }
++                current = route.state;
++            }
++            
++            if (!this._harmonyRouteInfoCache) {
++                this._harmonyRouteInfoCache = new Map();
++            }
++            if (this._harmonyRouteInfoCache.has(fingerprint)) {
++                return this._harmonyRouteInfoCache.get(fingerprint);
++            }
++            
++            const info = (0, LocationProvider_1.getRouteInfoFromState)((s, asPath) => {
++                return (0, getPathFromState_1.getPathDataFromState)(s, {
++                    screens: {},
++                    ...this.linking?.config,
++                    preserveDynamicRoutes: asPath,
++                    preserveGroups: asPath,
++                    shouldEncodeURISegment: false,
++                });
++            }, state);
++            
++            this._harmonyRouteInfoCache.set(fingerprint, info);
++            if (this._harmonyRouteInfoCache.size > 50) {
++                const firstKey = this._harmonyRouteInfoCache.keys().next().value;
++                this._harmonyRouteInfoCache.delete(firstKey);
++            }
++            return info;
++        }
++
+         return (0, LocationProvider_1.getRouteInfoFromState)((state, asPath) => {
+             return (0, getPathFromState_1.getPathDataFromState)(state, {
+                 screens: {},
+diff --git a/node_modules/expo-router/build/global-state/routing.js b/node_modules/expo-router/build/global-state/routing.js
+index 39672f8..b18278f 100644
+--- a/node_modules/expo-router/build/global-state/routing.js
++++ b/node_modules/expo-router/build/global-state/routing.js
+@@ -33,6 +33,7 @@ const href_1 = require("../link/href");
+ const useDomComponentNavigation_1 = require("../link/useDomComponentNavigation");
+ const matchers_1 = require("../matchers");
+ const url_1 = require("../utils/url");
++const harmonyStateCache = new WeakMap();
+ function assertIsReady(store) {
+     if (!store.navigationRef.isReady()) {
+         throw new Error('Attempted to navigate before mounting the Root Layout component. Ensure the Root Layout component is rendering a Slot, or other navigator on the first render.');
+@@ -146,7 +147,24 @@ function linkTo(href, options = {}) {
+     }
+     const rootState = navigationRef.getRootState();
+     href = (0, href_1.resolveHrefStringWithSegments)(href, this.routeInfo, options);
+-    const state = this.linking.getStateFromPath(href, this.linking.config);
++    let state;
++    if (react_native_1.Platform.OS === 'harmony') {
++        let storeCache = harmonyStateCache.get(this);
++        if (!storeCache) {
++            storeCache = new Map();
++            harmonyStateCache.set(this, storeCache);
++        }
++        state = storeCache.get(href);
++        if (!state) {
++            state = this.linking.getStateFromPath(href, this.linking.config);
++            if (state) {
++                storeCache.set(href, state);
++            }
++        }
++    }
++    else {
++        state = this.linking.getStateFromPath(href, this.linking.config);
++    }
+     if (!state || state.routes.length === 0) {
+         console.error('Could not generate a valid navigation state for the given path: ' + href);
+         return;
+diff --git a/node_modules/expo-router/build/hooks.js b/node_modules/expo-router/build/hooks.js
+index 55f5792..10f721a 100644
+--- a/node_modules/expo-router/build/hooks.js
++++ b/node_modules/expo-router/build/hooks.js
+@@ -6,8 +6,13 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.useSearchParams = exports.useLocalSearchParams = exports.useGlobalSearchParams = exports.usePathname = exports.useSegments = exports.useUnstableGlobalHref = exports.useRouter = exports.useNavigationContainerRef = exports.useRootNavigation = exports.useRouteInfo = exports.useRootNavigationState = void 0;
+ const react_1 = __importDefault(require("react"));
++const native_1 = require("@react-navigation/native");
++const react_native_1 = require("react-native");
+ const Route_1 = require("./Route");
+ const router_store_1 = require("./global-state/router-store");
++function useRouteInfoForGlobalHooks() {
++    return (0, router_store_1.useStoreRouteInfo)();
++}
+ /**
+  * Returns the [navigation state](https://reactnavigation.org/docs/navigation-state/)
+  * of the navigator which contains the current screen.
+@@ -28,7 +33,7 @@ function useRootNavigationState() {
+ }
+ exports.useRootNavigationState = useRootNavigationState;
+ function useRouteInfo() {
+-    return (0, router_store_1.useStoreRouteInfo)();
++    return useRouteInfoForGlobalHooks();
+ }
+ exports.useRouteInfo = useRouteInfo;
+ /**
+@@ -87,11 +92,11 @@ exports.useRouter = useRouter;
+  * from a predefined universal link. For example, `/foobar?hey=world` becomes `https://acme.dev/foobar?hey=world`.
+  */
+ function useUnstableGlobalHref() {
+-    return (0, router_store_1.useStoreRouteInfo)().unstable_globalHref;
++    return useRouteInfoForGlobalHooks().unstable_globalHref;
+ }
+ exports.useUnstableGlobalHref = useUnstableGlobalHref;
+ function useSegments() {
+-    return (0, router_store_1.useStoreRouteInfo)().segments;
++    return useRouteInfoForGlobalHooks().segments;
+ }
+ exports.useSegments = useSegments;
+ /**
+@@ -112,11 +117,11 @@ exports.useSegments = useSegments;
+  * ```
+  */
+ function usePathname() {
+-    return (0, router_store_1.useStoreRouteInfo)().pathname;
++    return useRouteInfoForGlobalHooks().pathname;
+ }
+ exports.usePathname = usePathname;
+ function useGlobalSearchParams() {
+-    return (0, router_store_1.useStoreRouteInfo)().params;
++    return useRouteInfoForGlobalHooks().params;
+ }
+ exports.useGlobalSearchParams = useGlobalSearchParams;
+ function useLocalSearchParams() {
+diff --git a/node_modules/expo-router/build/layouts/StackClient.js b/node_modules/expo-router/build/layouts/StackClient.js
+index 69eaf2c..e10547b 100644
+--- a/node_modules/expo-router/build/layouts/StackClient.js
++++ b/node_modules/expo-router/build/layouts/StackClient.js
+@@ -4,7 +4,35 @@ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.Stack = void 0;
+ const withLayoutContext_1 = require("./withLayoutContext");
+ const createNativeStackNavigator_1 = require("../fork/native-stack/createNativeStackNavigator");
++const react_native_1 = require("react-native");
++const react_1 = require("react");
++
++function withHarmonyStackScreenOptions(screenOptions) {
++    if (react_native_1.Platform.OS !== 'harmony') {
++        return screenOptions;
++    }
++    const harmonyDefaults = {
++        freezeOnBlur: true,
++        animation: 'none',
++    };
++    if (typeof screenOptions === 'function') {
++        return (args) => ({
++            ...harmonyDefaults,
++            ...screenOptions(args),
++        });
++    }
++    return {
++        ...harmonyDefaults,
++        ...screenOptions,
++    };
++}
++
+ const NativeStackNavigator = (0, createNativeStackNavigator_1.createNativeStackNavigator)().Navigator;
+-exports.Stack = (0, withLayoutContext_1.withLayoutContext)(NativeStackNavigator);
++
++const HarmonyNativeStackNavigator = react_1.forwardRef(({ screenOptions, ...props }, ref) => {
++    return <NativeStackNavigator {...props} ref={ref} screenOptions={withHarmonyStackScreenOptions(screenOptions)} />;
++});
++
++exports.Stack = (0, withLayoutContext_1.withLayoutContext)(HarmonyNativeStackNavigator);
+ exports.default = exports.Stack;
+ //# sourceMappingURL=StackClient.js.map
+\ No newline at end of file
+diff --git a/node_modules/expo-router/build/layouts/TabsClient.js b/node_modules/expo-router/build/layouts/TabsClient.js
+index 1a8c59c..4005070 100644
+--- a/node_modules/expo-router/build/layouts/TabsClient.js
++++ b/node_modules/expo-router/build/layouts/TabsClient.js
+@@ -12,14 +12,39 @@ const withLayoutContext_1 = require("./withLayoutContext");
+ const Link_1 = require("../link/Link");
+ // This is the only way to access the navigator.
+ const BottomTabNavigator = (0, bottom_tabs_1.createBottomTabNavigator)().Navigator;
+-exports.Tabs = (0, withLayoutContext_1.withLayoutContext)(BottomTabNavigator, (screens) => {
++function withHarmonyScreenOptions(screenOptions) {
++    if (react_native_1.Platform.OS !== 'harmony') {
++        return screenOptions;
++    }
++    const harmonyDefaults = {
++        animation: 'none',
++        freezeOnBlur: false,
++        lazy: true,
++    };
++    if (typeof screenOptions === 'function') {
++        return (args) => ({
++            ...harmonyDefaults,
++            ...screenOptions(args),
++        });
++    }
++    return {
++        ...harmonyDefaults,
++        ...screenOptions,
++    };
++}
++const HarmonyBottomTabNavigator = react_1.default.forwardRef(({ screenOptions, ...props }, ref) => {
++    return <BottomTabNavigator {...props} ref={ref} screenOptions={withHarmonyScreenOptions(screenOptions)}/>;
++});
++exports.Tabs = (0, withLayoutContext_1.withLayoutContext)(HarmonyBottomTabNavigator, (screens) => {
+     // Support the `href` shortcut prop.
+-    return screens.map((screen) => {
++    let didRewriteScreen = false;
++    const nextScreens = screens.map((screen) => {
+         if (typeof screen.options !== 'function' && screen.options?.href !== undefined) {
+             const { href, ...options } = screen.options;
+             if (options.tabBarButton) {
+                 throw new Error('Cannot use `href` and `tabBarButton` together.');
+             }
++            didRewriteScreen = true;
+             return {
+                 ...screen,
+                 options: {
+@@ -39,6 +64,7 @@ exports.Tabs = (0, withLayoutContext_1.withLayoutContext)(BottomTabNavigator, (s
+         }
+         return screen;
+     });
++    return didRewriteScreen ? nextScreens : screens;
+ });
+ exports.default = exports.Tabs;
+ //# sourceMappingURL=TabsClient.js.map
+diff --git a/node_modules/expo-router/build/layouts/withLayoutContext.js b/node_modules/expo-router/build/layouts/withLayoutContext.js
+index aa44aa1..baa6785 100644
+--- a/node_modules/expo-router/build/layouts/withLayoutContext.js
++++ b/node_modules/expo-router/build/layouts/withLayoutContext.js
+@@ -77,7 +77,7 @@ function withLayoutContext(Nav, processor) {
+         const { screens } = useFilterScreenChildren(userDefinedChildren, {
+             contextKey,
+         });
+-        const processed = processor ? processor(screens ?? []) : screens;
++        const processed = (0, react_1.useMemo)(() => processor ? processor(screens ?? []) : screens, [processor, screens]);
+         const sorted = (0, useScreens_1.useSortedScreens)(processed ?? []);
+         // Prevent throwing an error when there are no screens.
+         if (!sorted.length) {
+diff --git a/node_modules/expo-router/build/ui/TabSlot.js b/node_modules/expo-router/build/ui/TabSlot.js
+index 5024f12..bc861c8 100644
+--- a/node_modules/expo-router/build/ui/TabSlot.js
++++ b/node_modules/expo-router/build/ui/TabSlot.js
+@@ -22,9 +22,11 @@ const Navigator_1 = require("../views/Navigator");
+  * ```
+  */
+ function useTabSlot(options = {}) {
+-    const { detachInactiveScreens = react_native_1.Platform.OS === 'web' ||
+-        react_native_1.Platform.OS === 'android' ||
+-        react_native_1.Platform.OS === 'ios', style, renderFn = defaultTabsSlotRender, } = options;
++    const platformOS = react_native_1.Platform.OS;
++    const { detachInactiveScreens = platformOS === 'web' ||
++        platformOS === 'android' ||
++        platformOS === 'ios' ||
++        platformOS === 'harmony', style, renderFn = defaultTabsSlotRender, } = options;
+     const { state, descriptors } = (0, Navigator_1.useNavigatorContext)();
+     const focusedRouteKey = state.routes[state.index].key;
+     const [loaded, setLoaded] = (0, react_1.useState)({ [focusedRouteKey]: true });
+diff --git a/node_modules/expo-router/build/useScreens.js b/node_modules/expo-router/build/useScreens.js
+index e574029..d9a85bb 100644
+--- a/node_modules/expo-router/build/useScreens.js
++++ b/node_modules/expo-router/build/useScreens.js
+@@ -6,6 +6,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
+ Object.defineProperty(exports, "__esModule", { value: true });
+ exports.routeToScreen = exports.screenOptionsFactory = exports.createGetIdForRoute = exports.getQualifiedRouteComponent = exports.useSortedScreens = void 0;
+ const react_1 = __importDefault(require("react"));
++const react_native_1 = require("react-native");
+ const Route_1 = require("./Route");
+ const import_mode_1 = __importDefault(require("./import-mode"));
+ const primitives_1 = require("./primitives");
+@@ -57,9 +58,9 @@ function getSortedChildren(children, order, initialRouteName) {
+  */
+ function useSortedScreens(order) {
+     const node = (0, Route_1.useRouteNode)();
+-    const sorted = node?.children?.length
++    const sorted = react_1.default.useMemo(() => node?.children?.length
+         ? getSortedChildren(node.children, order, node.initialRouteName)
+-        : [];
++        : [], [node, order]);
+     return react_1.default.useMemo(() => sorted.map((value) => routeToScreen(value.route, value.props)), [sorted]);
+ }
+ exports.useSortedScreens = useSortedScreens;
+@@ -138,6 +139,31 @@ function getQualifiedRouteComponent(value) {
+     return QualifiedRoute;
+ }
+ exports.getQualifiedRouteComponent = getQualifiedRouteComponent;
++
++function getHarmonyQualifiedRouteComponent(value) {
++    if (qualifiedStore.has(value)) {
++        return qualifiedStore.get(value);
++    }
++    const res = value.loadRoute();
++    let Component;
++    if (res instanceof Promise) {
++        // Fallback for async load if somehow triggered, though standard is sync on Harmony
++        Component = react_1.default.lazy(() => res.then(fromImport).then(m => ({default: m.default})));
++    } else {
++        Component = fromImport(res).default;
++    }
++    
++    const QualifiedRoute = (props) => {
++        const content = <Component {...props} segment={value.route} />;
++        return (<Route_1.Route node={value} route={props.route}>
++            {res instanceof Promise ? (<react_1.default.Suspense fallback={null}>{content}</react_1.default.Suspense>) : content}
++        </Route_1.Route>);
++    };
++    QualifiedRoute.displayName = `Route(${value.route})`;
++    qualifiedStore.set(value, QualifiedRoute);
++    return QualifiedRoute;
++}
++
+ /** @returns a function which provides a screen id that matches the dynamic route name in params. */
+ function createGetIdForRoute(route) {
+     const include = new Map();
+@@ -195,7 +221,43 @@ function screenOptionsFactory(route, options) {
+     };
+ }
+ exports.screenOptionsFactory = screenOptionsFactory;
++const harmonyScreenConfigCache = new WeakMap();
++function getHarmonyScreenConfig(route, options) {
++    let routeCache = harmonyScreenConfigCache.get(route);
++    if (!routeCache) {
++        routeCache = {
++            getId: createGetIdForRoute(route),
++            getComponent: () => getHarmonyQualifiedRouteComponent(route),
++            optionsCache: new WeakMap(),
++            staticOptionsFactory: undefined,
++        };
++        harmonyScreenConfigCache.set(route, routeCache);
++    }
++    let optionsFactory;
++    if (options && (typeof options === 'object' || typeof options === 'function')) {
++        optionsFactory = routeCache.optionsCache.get(options);
++        if (!optionsFactory) {
++            optionsFactory = screenOptionsFactory(route, options);
++            routeCache.optionsCache.set(options, optionsFactory);
++        }
++    }
++    else {
++        if (!routeCache.staticOptionsFactory) {
++            routeCache.staticOptionsFactory = screenOptionsFactory(route, options);
++        }
++        optionsFactory = routeCache.staticOptionsFactory;
++    }
++    return {
++        getId: routeCache.getId,
++        getComponent: routeCache.getComponent,
++        options: optionsFactory,
++    };
++}
+ function routeToScreen(route, { options, ...props } = {}) {
++    if (react_native_1.Platform.OS === 'harmony') {
++        const harmonyConfig = getHarmonyScreenConfig(route, options);
++        return (<primitives_1.Screen getId={harmonyConfig.getId} {...props} name={route.route} key={route.route} options={harmonyConfig.options} getComponent={harmonyConfig.getComponent}/>);
++    }
+     return (<primitives_1.Screen 
+     // Users can override the screen getId function.
+     getId={createGetIdForRoute(route)} {...props} name={route.route} key={route.route} options={screenOptionsFactory(route, options)} getComponent={() => getQualifiedRouteComponent(route)}/>);
+diff --git a/node_modules/expo-router/build/views/Sitemap.js b/node_modules/expo-router/build/views/Sitemap.js
+index aa45237..e252875 100644
+--- a/node_modules/expo-router/build/views/Sitemap.js
++++ b/node_modules/expo-router/build/views/Sitemap.js
+@@ -34,7 +34,7 @@ function getNavOptions() {
+             borderBottomColor: '#323232',
+         },
+         header: () => {
+-            const WrapperElement = react_native_1.Platform.OS === 'android' ? react_native_safe_area_context_1.SafeAreaView : react_native_1.View;
++            const WrapperElement = (react_native_1.Platform.OS === 'android' || react_native_1.Platform.OS === 'harmony') ? react_native_safe_area_context_1.SafeAreaView : react_native_1.View;
+             return (<WrapperElement style={styles.header}>
+           <react_native_1.View style={styles.headerContent}>
+             <react_native_1.View style={styles.headerIcon}>

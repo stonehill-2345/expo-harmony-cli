@@ -1,0 +1,235 @@
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { spawnSync } from 'child_process';
+import * as fs from 'fs';
+import * as path from 'path';
+import * as os from 'os';
+import { injectHarmonyBaseline } from '../src/injector';
+
+describe('injectHarmonyBaseline', () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'inj-'));
+    fs.writeFileSync(path.join(tmp, 'app.json'), JSON.stringify({ expo: { name: 'MyApp', slug: 'myapp', scheme: 'myapp' } }));
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ name: 'myapp', scripts: { start: 'expo start' }, dependencies: { expo: '~52.0.49' } }));
+  });
+  afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
+
+  it('生成 Harmony 入口、Metro 与 postinstall 脚本，不再写仅用于 Splash 过滤的 app.config.ts', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    expect(fs.existsSync(path.join(tmp, 'app.config.ts'))).toBe(false);
+    expect(fs.existsSync(path.join(tmp, 'index.harmony.js'))).toBe(true);
+    expect(fs.existsSync(path.join(tmp, 'metro.config.js'))).toBe(true);
+    expect(fs.existsSync(path.join(tmp, 'scripts/postinstall-harmony.js'))).toBe(true);
+    expect(fs.existsSync(path.join(tmp, 'scripts/start-harmony.js'))).toBe(true);
+    expect(fs.existsSync(path.join(tmp, 'scripts/bundle-harmony-dev.js'))).toBe(true);
+  });
+
+  it('app.json 注入 harmony 块 + android.package 兜底', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const app = JSON.parse(fs.readFileSync(path.join(tmp, 'app.json'), 'utf8'));
+    expect(app.expo.harmony).toBeDefined();
+    expect(app.expo.harmony.package).toBe('com.example.myapp');
+    expect(app.expo.android.package).toBe('com.example.myapp');
+  });
+
+  it('package.json 合并 G 类 scripts + deps，保留原 scripts/deps', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
+    expect(pkg.scripts['start:harmony']).toBe('node scripts/start-harmony.js');
+    expect(pkg.scripts['dev:harmony']).toBe('node scripts/bundle-harmony-dev.js');
+    expect(pkg.scripts['bundle:harmony:release']).toBe('node scripts/bundle-harmony-release.js');
+    expect(pkg.scripts.postinstall).toContain('patch-package');
+    expect(pkg.dependencies['@react-native-oh/react-native-harmony']).toBe('0.77.71');
+    expect(pkg.dependencies['@babel/runtime']).toBe('7.29.7');
+    expect(pkg.dependencies['@react-navigation/elements']).toBe('2.9.30');
+    expect(pkg.dependencies['react-native-svg']).toBe('15.12.0');
+    expect(pkg.devDependencies['patch-package']).toBe('8.0.0');
+    expect(pkg.devDependencies['@react-native/metro-config']).toBe('0.77.1');
+    expect(pkg.devDependencies['@react-native-community/cli']).toBe('20.1.1');
+    expect(pkg.scripts.start).toBe('expo start');
+    expect(pkg.dependencies.expo).toBe('52.0.49');
+  });
+
+  it('注入后 package.json 依赖版本必须锁定，不能保留 ~ 或 ^', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
+    const versions = Object.values({ ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) }) as string[];
+    expect(versions.filter(version => /^[~^]/.test(version))).toEqual([]);
+  });
+
+  it('start-harmony.js 自动配置 hdc rport 并启动 8888 Metro', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const script = fs.readFileSync(path.join(tmp, 'scripts/start-harmony.js'), 'utf8');
+    expect(script).toContain('tcp:8888');
+    expect(script).toContain('tcp:8081');
+    expect(script).toContain('tcp:8888 tcp:8888');
+    expect(script).toContain('tcp:8081 tcp:8888');
+    expect(script).toContain("spawn('expo'");
+    expect(script).toContain("'start'");
+    expect(script).toContain("'--offline'");
+    expect(script).toContain("'--port'");
+    expect(script).toContain("'8888'");
+    expect(script).not.toContain("['start', '--offline', '--port', '8888', '--clear']");
+    expect(script).toContain('HARMONY_METRO_CLEAR');
+    expect(script).toContain("metroArgs.push('--clear')");
+    expect(script).toContain('RN_BUNDLE_PLATFORM');
+    expect(script).toContain('os.networkInterfaces');
+    expect(script).toContain('HARMONY_METRO_HOST');
+    expect(script).toContain("process.platform === 'win32'");
+    expect(script).toContain('process.env.ProgramFiles');
+    expect(script).toContain('hdc.exe');
+    expect(script).toContain('EXPO_PACKAGER_HOSTNAME');
+    expect(script).toContain('REACT_NATIVE_PACKAGER_HOSTNAME');
+    expect(script).toContain('Metro LAN URL');
+    expect(script).toContain('RNOH Dev Settings');
+  });
+
+  it('bundle-harmony-release.js 显式生成 rawfile JS bundle 与 assets，并拒绝陈旧产物', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const script = fs.readFileSync(path.join(tmp, 'scripts/bundle-harmony-release.js'), 'utf8');
+    expect(script).toContain("'bundle.harmony.js'");
+    expect(script).toContain("'--dev'");
+    expect(script).toContain("'false'");
+    expect(script).toContain("'--entry-file'");
+    expect(script).toContain("'index.harmony.js'");
+    expect(script).toContain("'--bundle-output'");
+    expect(script).toContain("'--assets-dest'");
+    expect(script).toContain("'react-native.cmd' : 'react-native'");
+    expect(script).not.toContain("'npx.cmd' : 'npx'");
+    expect(script).toContain("require.resolve('@react-native-community/cli/package.json')");
+    expect(script).toContain('pnpm add -D @react-native-community/cli@20.1.1');
+    expect(script).toContain("fs.rmSync(bundlePath, { force: true })");
+    expect(script).toContain("fs.rmSync(assetsDir, { recursive: true, force: true })");
+    expect(script).toContain("RN_BUNDLE_PLATFORM: 'harmony'");
+
+    const scriptPath = path.join(tmp, 'scripts/bundle-harmony-release.js');
+    const check = spawnSync(process.execPath, ['--check', scriptPath], { encoding: 'utf8' });
+    expect(check.stderr).toBe('');
+    expect(check.status).toBe(0);
+  });
+
+  it('dev:harmony 通过 Node 脚本跨平台设置 Harmony 环境变量', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const scriptPath = path.join(tmp, 'scripts/bundle-harmony-dev.js');
+    const script = fs.readFileSync(scriptPath, 'utf8');
+    expect(script).toContain("process.platform === 'win32' ? 'react-native.cmd' : 'react-native'");
+    expect(script).toContain("RN_BUNDLE_PLATFORM: 'harmony'");
+    expect(script).toContain("'bundle-harmony'");
+    expect(script).toContain("'--entry-file'");
+    expect(script).toContain("'index.harmony.js'");
+
+    const check = spawnSync(process.execPath, ['--check', scriptPath], { encoding: 'utf8' });
+    expect(check.stderr).toBe('');
+    expect(check.status).toBe(0);
+  });
+
+  it('start-harmony.js 生成后可被 Node 语法检查通过', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const scriptPath = path.join(tmp, 'scripts/start-harmony.js');
+    const script = fs.readFileSync(scriptPath, 'utf8');
+    expect(script).toContain("entry.replace(/\\+/g, ' ')");
+    expect(script).toContain('10\\.');
+    expect(script).toContain('192\\.168\\.');
+    expect(script).toContain('2\\d');
+
+    const check = spawnSync(process.execPath, ['--check', scriptPath], { encoding: 'utf8' });
+    expect(check.stderr).toBe('');
+    expect(check.status).toBe(0);
+  });
+
+  it('index.harmony.js {{scheme}} 替换 + 含 globalThis.expo polyfill', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const entry = fs.readFileSync(path.join(tmp, 'index.harmony.js'), 'utf8');
+    expect(entry).not.toContain('{{scheme}}');
+    expect(entry).toContain('myapp://');
+    expect(entry).toContain('globalThis.expo');
+    expect(entry).toContain('renderRootComponent');
+  });
+
+  it('默认模板移除 Expo Vector Icons 与 Splash 依赖及 plugin', () => {
+    const appPath = path.join(tmp, 'app.json');
+    const packagePath = path.join(tmp, 'package.json');
+    fs.writeFileSync(appPath, JSON.stringify({ expo: { name: 'MyApp', slug: 'myapp', plugins: ['expo-router', ['expo-splash-screen', { image: './splash.png' }]] } }));
+    fs.writeFileSync(packagePath, JSON.stringify({ name: 'myapp', dependencies: { expo: '~52.0.49', '@expo/vector-icons': '~14.0.4', 'expo-splash-screen': '~0.29.24' } }));
+
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+
+    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    const app = JSON.parse(fs.readFileSync(appPath, 'utf8'));
+    expect(pkg.dependencies['@expo/vector-icons']).toBeUndefined();
+    expect(pkg.dependencies['@react-native-ohos/react-native-vector-icons']).toBeUndefined();
+    expect(pkg.dependencies['expo-splash-screen']).toBeUndefined();
+    expect(pkg.dependencies['expo-splash-screen2']).toBeUndefined();
+    expect(app.expo.plugins).toEqual(['expo-router']);
+  });
+
+  it('Harmony shims copy 到 shims/ + .alias-map.json 初始条目', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    expect(fs.existsSync(path.join(tmp, 'shims/expo-metro-runtime.ts'))).toBe(true);
+    expect(fs.existsSync(path.join(tmp, 'shims/expo-modules-core/NativeModulesProxy.ts'))).toBe(false);
+    const aliasMap = JSON.parse(fs.readFileSync(path.join(tmp, 'shims/.alias-map.json'), 'utf8'));
+    expect(aliasMap['@expo/metro-runtime']).toBe('./shims/expo-metro-runtime.ts');
+    expect(Object.keys(aliasMap).some(key => key.startsWith('expo-modules-core'))).toBe(false);
+  });
+
+  it('postinstall-harmony.js 修复 RNOH LogBoxImages 缺失目录', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const script = fs.readFileSync(path.join(tmp, 'scripts/postinstall-harmony.js'), 'utf8');
+    expect(script).toContain('ensureRNOHLogBoxImages');
+    expect(script).toContain('LogBoxImages');
+    expect(script).toContain('ensurePnpmDecodedRNOHLogBoxImages');
+    expect(script).toContain("entry.replace(/\\+/g, ' ')");
+    expect(script).toContain('fs.symlinkSync');
+    expect(script).toContain('ensureExpoModulesCoreNativeModulesProxyNoWarn');
+    expect(script).toContain('NativeModulesProxy.native.ts');
+    expect(script).toContain('Object.keys(NativeModules)');
+    expect(script).toContain('alert-triangle.png');
+    expect(script).toContain('chevron-left.png');
+    expect(script).toContain('chevron-right.png');
+    expect(script).toContain('close.png');
+    expect(script).toContain('loader.png');
+  });
+
+  it('横杠 slug 的 bundleName 清洗为下划线（鸿蒙规范，禁止横杠）', () => {
+    injectHarmonyBaseline(tmp, { slug: 'my-app', scheme: 'my-app' });
+    const app = JSON.parse(fs.readFileSync(path.join(tmp, 'app.json'), 'utf8'));
+    expect(app.expo.harmony.package).toBe('com.example.my_app');
+    expect(app.expo.android.package).toBe('com.example.my_app');
+  });
+
+  it('metro.config.js 使用 resolveRequest 应用 shim alias', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const metro = fs.readFileSync(path.join(tmp, 'metro.config.js'), 'utf8');
+    expect(metro).toContain('resolveRequest(context, moduleName, platform)');
+    expect(metro).toContain('shimAliases[moduleName]');
+    expect(metro).toContain('resolveAliasTarget(aliasTarget)');
+    expect(metro).toContain('harmonyConfig.resolver?.resolveRequest');
+    expect(metro).toContain('return resolveWithHarmony(context, moduleName, platform)');
+    expect(metro).not.toContain('isExpoModulesCoreNativeModulesProxy');
+    expect(metro).not.toContain("moduleName === './NativeModulesProxy'");
+    expect(metro).not.toContain('originModulePath');
+    expect(metro).toContain("moduleName.startsWith('@/')");
+    expect(metro).toContain('path.resolve(__dirname, moduleName.slice(2))');
+    expect(metro).not.toContain('alias: shimAliases');
+  });
+
+  it('替换 IconSymbol 为 SVG 图标，避免 ExpoFontLoader 原生模块依赖', () => {
+    fs.mkdirSync(path.join(tmp, 'components/ui'), { recursive: true });
+    fs.writeFileSync(
+      path.join(tmp, 'components/ui/IconSymbol.tsx'),
+      "import MaterialIcons from '@expo/vector-icons/MaterialIcons';\nexport function IconSymbol() { return null; }\n",
+    );
+
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+
+    const icon = fs.readFileSync(path.join(tmp, 'components/ui/IconSymbol.tsx'), 'utf8');
+    expect(icon).not.toContain('@expo/vector-icons');
+    expect(icon).not.toContain("import { Text } from 'react-native'");
+    expect(icon).toContain("from 'react-native-svg'");
+    expect(icon).toContain('<Svg');
+    expect(icon).toContain('<Path');
+    expect(icon).toContain('fill={color}');
+    expect(icon).toContain('M3.5 10.25 12 3.5l8.5 6.75');
+    expect(icon).toContain('M2.75 3.25 21.25 12 2.75 20.75');
+  });
+});

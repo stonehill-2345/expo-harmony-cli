@@ -1,0 +1,10 @@
+__tests__/
+.github/
+.turbo/
+.pnpm-store/
+coverage/
+docs/
+examples/
+node_modules/
+*.tgz
+.DS_Store

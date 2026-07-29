@@ -1,0 +1,20 @@
+diff --git a/node_modules/@react-native-oh/react-native-harmony/Libraries/Linking/Linking.js b/node_modules/@react-native-oh/react-native-harmony/Libraries/Linking/Linking.js
+index 50e3651..79fae0c 100644
+--- a/node_modules/@react-native-oh/react-native-harmony/Libraries/Linking/Linking.js
++++ b/node_modules/@react-native-oh/react-native-harmony/Libraries/Linking/Linking.js
+@@ -29,7 +29,14 @@ type LinkingEventDefinitions = {
+  */
+ class Linking extends NativeEventEmitter<LinkingEventDefinitions> {
+   constructor() {
+-    super(Platform.OS === 'ios' ? nullthrows(NativeLinkingManager) : undefined);
++    if (Platform.OS === 'harmony') {
++      const linkingManager = nullthrows(NativeLinkingManager);
++      linkingManager.addListener ??= () => {};
++      linkingManager.removeListeners ??= () => {};
++      super(linkingManager);
++      return;
++    }
++    super(Platform.OS === 'ios' ? nullthrows(NativeLinkingManager) : undefined);
+   }
+ 
+   /**

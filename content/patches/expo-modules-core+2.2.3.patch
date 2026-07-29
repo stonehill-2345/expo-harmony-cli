@@ -1,0 +1,17 @@
+diff --git a/node_modules/expo-modules-core/src/NativeModulesProxy.native.ts b/node_modules/expo-modules-core/src/NativeModulesProxy.native.ts
+index d378217..ccd4f31 100644
+--- a/node_modules/expo-modules-core/src/NativeModulesProxy.native.ts
++++ b/node_modules/expo-modules-core/src/NativeModulesProxy.native.ts
+@@ -77,9 +77,9 @@ if (LegacyNativeProxy) {
+     }
+   });
+ } else {
+-  console.warn(
+-    `The "EXNativeModulesProxy" native module is not exported through NativeModules; verify that expo-modules-core's native code is linked properly`
+-  );
++  Object.keys(NativeModules).forEach((moduleName) => {
++    NativeModulesProxy[moduleName] = NativeModules[moduleName];
++  });
+ }
+ 
+ export default NativeModulesProxy;

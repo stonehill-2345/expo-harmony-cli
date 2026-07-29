@@ -1,0 +1,24 @@
+diff --git a/node_modules/expo-linking/build/ExpoLinking.js b/node_modules/expo-linking/build/ExpoLinking.js
+index 8400a9c..bff2d14 100644
+--- a/node_modules/expo-linking/build/ExpoLinking.js
++++ b/node_modules/expo-linking/build/ExpoLinking.js
+@@ -1,4 +1,17 @@
+-import { requireNativeModule, NativeModule } from 'expo-modules-core';
+-const ExpoLinking = requireNativeModule('ExpoLinking');
++import { Platform } from 'react-native';
++
++let ExpoLinking;
++
++if (Platform.OS === 'harmony') {
++  // HarmonyOS: Use mock ExpoLinking since we use RNLinking instead
++  ExpoLinking = {
++    getLinkingURL: () => null,
++    addListener: () => ({ remove: () => {} }),
++  };
++} else {
++  const { requireNativeModule } = require('expo-modules-core');
++  ExpoLinking = requireNativeModule('ExpoLinking');
++}
++
+ export default ExpoLinking;
+ //# sourceMappingURL=ExpoLinking.js.map

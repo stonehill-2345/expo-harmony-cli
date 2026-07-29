@@ -1,0 +1,37 @@
+diff --git a/node_modules/expo-linear-gradient/build/NativeLinearGradient.js b/node_modules/expo-linear-gradient/build/NativeLinearGradient.js
+index c6f0d11..29ffb65 100644
+--- a/node_modules/expo-linear-gradient/build/NativeLinearGradient.js
++++ b/node_modules/expo-linear-gradient/build/NativeLinearGradient.js
+@@ -1,10 +1,29 @@
+ import * as React from 'react';
+-import { View } from 'react-native';
++import { Platform, StyleSheet, View } from 'react-native';
+ // This is a shim view for platforms that aren't supported by Expo.
+ // The component and prop types should match all of the other platform variations.
++const isHarmony = Platform.OS === 'harmony';
++const HarmonyLinearGradient = isHarmony
++    ? require('@react-native-ohos/react-native-linear-gradient/src').default
++    : null;
++function normalizePoint(point, fallback) {
++    return point && point.length === 2 ? { x: point[0], y: point[1] } : fallback;
++}
++function resolveLocations(colors, locations) {
++    if (locations || !colors?.length) {
++        return locations;
++    }
++    return colors.map((_, index) => index / (colors.length - 1 || 1));
++}
+ export default function NativeLinearGradient(props) {
+-    const { colors, locations, startPoint, endPoint, ...viewProps } = props;
++    const { colors, locations, startPoint, endPoint, children, style, ...viewProps } = props;
++    if (isHarmony) {
++        return (<View {...viewProps} style={[style, { overflow: 'hidden' }]}>
++        <HarmonyLinearGradient style={StyleSheet.absoluteFill} colors={colors} startPoint={normalizePoint(startPoint, { x: 0.5, y: 0 })} endPoint={normalizePoint(endPoint, { x: 0.5, y: 1 })} locations={resolveLocations(colors, locations)}/>
++        {children}
++      </View>);
++    }
+     console.warn('LinearGradient is not available on this platform');
+-    return <View {...viewProps}/>;
++    return <View {...viewProps} style={style}>{children}</View>;
+ }
+ //# sourceMappingURL=NativeLinearGradient.js.map

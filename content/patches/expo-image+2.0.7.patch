@@ -1,0 +1,403 @@
+diff --git a/node_modules/expo-image/src/ExpoImage.tsx b/node_modules/expo-image/src/ExpoImage.tsx
+index dd3c718..faf4dd3 100644
+--- a/node_modules/expo-image/src/ExpoImage.tsx
++++ b/node_modules/expo-image/src/ExpoImage.tsx
+@@ -1,4 +1,3 @@
+-import { requireNativeViewManager } from 'expo-modules-core';
+ import React from 'react';
+ import { NativeSyntheticEvent, StyleSheet, Platform, processColor } from 'react-native';
+ 
+@@ -9,23 +8,161 @@ import {
+   ImageProgressEventData,
+ } from './Image.types';
+ 
+-const NativeExpoImage = requireNativeViewManager('ExpoImage');
+-
+-function withDeprecatedNativeEvent<NativeEvent>(
+-  event: NativeSyntheticEvent<NativeEvent>
+-): NativeEvent {
+-  Object.defineProperty(event.nativeEvent, 'nativeEvent', {
+-    get() {
+-      console.warn(
+-        '[expo-image]: Accessing event payload through "nativeEvent" is deprecated, it is now part of the event object itself'
+-      );
+-      return event.nativeEvent;
+-    },
+-  });
+-  return event.nativeEvent;
++const IS_HARMONY = Platform.OS === 'harmony';
++
++// HarmonyOS: lazy load FastImage
++let FastImage: any = null;
++if (IS_HARMONY) {
++  try {
++    const FastImagePkg = require('@react-native-oh-tpl/react-native-fast-image');
++    FastImage = FastImagePkg.default || FastImagePkg;
++  } catch (e) {
++    try {
++      const FastImagePkgRaw = require('react-native-fast-image');
++      FastImage = FastImagePkgRaw.default || FastImagePkgRaw;
++    } catch (e2) {}
++  }
++}
++
++const resizeModeMap: Record<string, string> = {
++  cover: 'cover',
++  contain: 'contain',
++  fill: 'stretch',
++  none: 'center',
++  'scale-down': 'center',
++};
++
++// ---- HarmonyOS implementation ----
++function ExpoImageHarmony(props: ImageNativeProps) {
++  // If FastImage is unavailable (unregistered), fallback to React Native's Image
++  if (!FastImage) {
++    const {
++      style,
++      source,
++      contentFit,
++      tintColor,
++      onLoadStart,
++      onLoad,
++      onError,
++      onLoadEnd,
++    } = props;
++
++    const sourceObj = Array.isArray(source) ? source[0] : source;
++    // Map contentFit to resizeMode
++    const resizeMode = (resizeModeMap[contentFit as string] || 'cover') as any;
++
++    return (
++      <Image
++        source={sourceObj as any}
++        style={[StyleSheet.flatten(style), { tintColor: tintColor as any }]}
++        resizeMode={resizeMode}
++        onLoadStart={onLoadStart}
++        onLoad={(e) => {
++          const { width, height } = e.nativeEvent.source;
++          onLoad?.({
++            cacheType: 'none',
++            source: { url: '', width, height, mediaType: null },
++          } as any);
++          onLoadEnd?.();
++        }}
++        onError={(e) => {
++          onError?.({ error: 'Image load failed (Fallback)' } as any);
++          onLoadEnd?.();
++        }}
++      />
++    );
++  }
++
++  const {
++    style,
++    source,
++    placeholder,
++    contentFit,
++    tintColor,
++    onLoadStart,
++    onLoad,
++    onProgress,
++    onError,
++    onLoadEnd,
++    ...restProps
++  } = props;
++
++  // Map source: expo-image uses ImageSource[], fast-image uses single Source
++  let fastSource: any = undefined;
++  if (Array.isArray(source) && source.length > 0) {
++    const s = source[0];
++    fastSource = { uri: s.uri, headers: s.headers };
++  } else if (source && typeof source === 'object' && 'uri' in source) {
++    fastSource = { uri: (source as any).uri, headers: (source as any).headers };
++  }
++
++  // Map placeholder to defaultSource
++  let defaultSource: string | undefined;
++  if (Array.isArray(placeholder) && placeholder.length > 0) {
++    defaultSource = placeholder[0]?.uri;
++  } else if (placeholder && typeof placeholder === 'object' && 'uri' in (placeholder as any)) {
++    defaultSource = (placeholder as any).uri;
++  }
++
++  // Map contentFit to resizeMode
++  const resizeMode = resizeModeMap[contentFit as string] || 'cover';
++
++  return (
++    <FastImage
++      {...restProps}
++      source={fastSource}
++      defaultSource={defaultSource}
++      resizeMode={resizeMode}
++      tintColor={tintColor}
++      style={StyleSheet.flatten(style)}
++      onLoadStart={onLoadStart}
++      onLoad={(e: NativeSyntheticEvent<{ width: number; height: number }>) => {
++        const { width, height } = e.nativeEvent;
++        const uri = Array.isArray(source) && source[0]?.uri ? source[0].uri : '';
++        onLoad?.({
++          cacheType: 'disk',
++          source: { url: uri, width, height, mediaType: null },
++        } as any as ImageLoadEventData);
++        onLoadEnd?.();
++      }}
++      onProgress={(e: NativeSyntheticEvent<{ loaded: number; total: number }>) => {
++        onProgress?.({
++          loaded: e.nativeEvent.loaded,
++          total: e.nativeEvent.total,
++        } as any as ImageProgressEventData);
++      }}
++      onError={() => {
++        onError?.({ error: 'Failed to load image' } as any as ImageErrorEventData);
++        onLoadEnd?.();
++      }}
++      onLoadEnd={onLoadEnd}
++    />
++  );
++}
++
++// ---- Original iOS/Android implementation ----
++let NativeExpoImage: any = null;
++let withDeprecatedNativeEvent: any = null;
++if (!IS_HARMONY) {
++  const { requireNativeViewManager } = require('expo-modules-core');
++  NativeExpoImage = requireNativeViewManager('ExpoImage');
++
++  withDeprecatedNativeEvent = function <NativeEvent>(
++    event: NativeSyntheticEvent<NativeEvent>
++  ): NativeEvent {
++    Object.defineProperty(event.nativeEvent, 'nativeEvent', {
++      get() {
++        console.warn(
++          '[expo-image]: Accessing event payload through "nativeEvent" is deprecated, it is now part of the event object itself'
++        );
++        return event.nativeEvent;
++      },
++    });
++    return event.nativeEvent;
++  };
+ }
+ 
+-class ExpoImage extends React.PureComponent<ImageNativeProps> {
++class ExpoImageNative extends React.PureComponent<ImageNativeProps> {
+   onLoadStart = () => {
+     this.props.onLoadStart?.();
+   };
+@@ -50,25 +187,18 @@ class ExpoImage extends React.PureComponent<ImageNativeProps> {
+ 
+   render() {
+     const { style, accessibilityLabel, alt, ...props } = this.props;
+-    const resolvedStyle = StyleSheet.flatten(style);
++    const resolvedStyle = StyleSheet.flatten(style) as any;
+ 
+-    // Shadows behave different on iOS, Android & Web.
+-    // Android uses the `elevation` prop, whereas iOS
+-    // and web use the regular `shadow...` props.
+     if (Platform.OS === 'android') {
+       delete resolvedStyle.shadowColor;
+       delete resolvedStyle.shadowOffset;
+       delete resolvedStyle.shadowOpacity;
+       delete resolvedStyle.shadowRadius;
+     } else {
+-      // @ts-expect-error
+       delete resolvedStyle.elevation;
+     }
+ 
+-    // @ts-ignore
+     const backgroundColor = processColor(resolvedStyle.backgroundColor);
+-    // On Android, we have to set the `backgroundColor` directly on the correct component.
+-    // So we have to remove it from styles. Otherwise, the background color won't take into consideration the border-radius.
+     if (Platform.OS === 'android') {
+       delete resolvedStyle.backgroundColor;
+     }
+@@ -76,17 +206,11 @@ class ExpoImage extends React.PureComponent<ImageNativeProps> {
+     const tintColor = processColor(props.tintColor || resolvedStyle.tintColor);
+ 
+     const borderColor = processColor(resolvedStyle.borderColor);
+-    // @ts-ignore
+     const borderStartColor = processColor(resolvedStyle.borderStartColor);
+-    // @ts-ignore
+     const borderEndColor = processColor(resolvedStyle.borderEndColor);
+-    // @ts-ignore
+     const borderLeftColor = processColor(resolvedStyle.borderLeftColor);
+-    // @ts-ignore
+     const borderRightColor = processColor(resolvedStyle.borderRightColor);
+-    // @ts-ignore
+     const borderTopColor = processColor(resolvedStyle.borderTopColor);
+-    // @ts-ignore
+     const borderBottomColor = processColor(resolvedStyle.borderBottomColor);
+ 
+     return (
+@@ -114,4 +238,4 @@ class ExpoImage extends React.PureComponent<ImageNativeProps> {
+   }
+ }
+ 
+-export default ExpoImage;
++export default IS_HARMONY ? ExpoImageHarmony : ExpoImageNative;
+diff --git a/node_modules/expo-image/src/Image.tsx b/node_modules/expo-image/src/Image.tsx
+index 7721bd9..07a5203 100644
+--- a/node_modules/expo-image/src/Image.tsx
++++ b/node_modules/expo-image/src/Image.tsx
+@@ -1,8 +1,15 @@
+ 'use client';
+ 
+-import { Platform, createSnapshotFriendlyRef } from 'expo-modules-core';
+ import React from 'react';
+-import { StyleSheet } from 'react-native';
++import { Platform, StyleSheet } from 'react-native';
++
++// HarmonyOS: createSnapshotFriendlyRef fallback
++let createSnapshotFriendlyRef: any;
++try {
++  createSnapshotFriendlyRef = require('expo-modules-core').createSnapshotFriendlyRef;
++} catch {
++  createSnapshotFriendlyRef = React.createRef;
++}
+ 
+ import ExpoImage from './ExpoImage';
+ import {
+diff --git a/node_modules/expo-image/src/ImageModule.ts b/node_modules/expo-image/src/ImageModule.ts
+index 2f541a0..4ad0a14 100644
+--- a/node_modules/expo-image/src/ImageModule.ts
++++ b/node_modules/expo-image/src/ImageModule.ts
+@@ -1,5 +1,95 @@
+-import { requireNativeModule } from 'expo';
++import { Platform } from 'react-native';
+ 
+ import type { ImageNativeModule } from './Image.types';
+ 
+-export default requireNativeModule<ImageNativeModule>('ExpoImage');
++// HarmonyOS: forward to react-native-fast-image
++let exportedModule: ImageNativeModule;
++
++if (Platform.OS === 'harmony') {
++  let FastImageModule: any = null;
++  try {
++    // Try explicit TPL package first
++    const FastImagePkg = require('@react-native-oh-tpl/react-native-fast-image');
++    FastImageModule = FastImagePkg.default || FastImagePkg;
++  } catch (e1) {
++    try {
++      // Try alias/standard name
++      const FastImagePkgRaw = require('react-native-fast-image');
++      FastImageModule = FastImagePkgRaw.default || FastImagePkgRaw;
++    } catch (e2) {
++      console.error('[expo-image] FastImageModule load failed. e1:', e1.message, 'e2:', e2.message);
++    }
++  }
++
++  exportedModule = {
++    prefetch: async (urls: string[], cachePolicy?: string, headers?: Record<string, string>) => {
++      if (!FastImageModule) {
++        console.warn('[expo-image] FastImageModule unreachable, falling back to RN.Image.prefetch');
++        try {
++          const { Image: RNImage } = require('react-native');
++          await Promise.all(urls.map((url) => RNImage.prefetch(url)));
++          return true;
++        } catch (e) {
++          console.error('[expo-image] Fallback prefetch failed:', e);
++          return false;
++        }
++      }
++      try {
++        const sources = urls.map((uri) => {
++          const source: any = { uri };
++          if (headers) {
++            source.headers = Object.entries(headers).map(([name, value]) => ({ name, value }));
++          }
++          return source;
++        });
++        // FastImage uses preload instead of prefetch
++        if (FastImageModule.preload) {
++          FastImageModule.preload(sources);
++          return true;
++        }
++        return false;
++      } catch (e) {
++        console.error('[expo-image] prefetch failed:', e);
++        return false;
++      }
++    },
++    clearMemoryCache: async () => {
++      if (!FastImageModule || !FastImageModule.clearMemoryCache) {
++        console.warn('[expo-image] clearMemoryCache not supported by fallback');
++        return true; // Graceful return
++      }
++      try {
++        await FastImageModule.clearMemoryCache();
++        return true;
++      } catch (e) {
++        console.error('[expo-image] clearMemoryCache failed:', e);
++        return false;
++      }
++    },
++    clearDiskCache: async () => {
++      if (!FastImageModule || !FastImageModule.clearDiskCache) {
++        console.warn('[expo-image] clearDiskCache not supported by fallback');
++        return true; // Graceful return
++      }
++      try {
++        await FastImageModule.clearDiskCache();
++        return true;
++      } catch (e) {
++        console.error('[expo-image] clearDiskCache failed:', e);
++        return false;
++      }
++    },
++    getCachePathAsync: async (_cacheKey: string) => null,
++    generateBlurhashAsync: async () => null,
++    loadAsync: async () => {
++      throw new Error('loadAsync is not supported on HarmonyOS');
++    },
++    Image: null as any,
++  } as unknown as ImageNativeModule;
++} else {
++  const { requireNativeModule } = require('expo');
++  exportedModule = requireNativeModule<ImageNativeModule>('ExpoImage');
++}
++
++export default exportedModule;
++
+diff --git a/node_modules/expo-image/src/utils.ts b/node_modules/expo-image/src/utils.ts
+index 6006d57..442817e 100644
+--- a/node_modules/expo-image/src/utils.ts
++++ b/node_modules/expo-image/src/utils.ts
+@@ -1,4 +1,8 @@
+-import { SharedRef } from 'expo';
++// HarmonyOS: safe import SharedRef
++let SharedRef: any = class {};
++try {
++  SharedRef = require('expo').SharedRef;
++} catch {}
+ import type { SharedRef as SharedRefType } from 'expo/types';
+ 
+ import {
+@@ -115,5 +119,10 @@ export function resolveTransition(
+  * Checks whether the given value is an instance of the `SharedRef<'image'>` class.
+  */
+ export function isImageRef(value: any): value is SharedRefType<'image'> {
+-  return value instanceof SharedRef && value.nativeRefType === 'image';
++  // HarmonyOS: safe instanceof check - ensure SharedRef is a valid constructor
++  try {
++    return typeof SharedRef === 'function' && value instanceof SharedRef && value.nativeRefType === 'image';
++  } catch {
++    return false;
++  }
+ }
+diff --git a/node_modules/expo-image/src/utils/resolveSources.tsx b/node_modules/expo-image/src/utils/resolveSources.tsx
+index 86bd02a..6f828ff 100644
+--- a/node_modules/expo-image/src/utils/resolveSources.tsx
++++ b/node_modules/expo-image/src/utils/resolveSources.tsx
+@@ -1,4 +1,10 @@
+-import { Platform } from 'expo-modules-core';
++// HarmonyOS: safe import Platform
++let Platform: any;
++try {
++  Platform = require('expo-modules-core').Platform;
++} catch {
++  Platform = require('react-native').Platform;
++}
+ 
+ import resolveAssetSource from './resolveAssetSource';
+ import { resolveBlurhashString, resolveThumbhashString } from './resolveHashString';

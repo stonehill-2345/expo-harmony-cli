@@ -1,0 +1,158 @@
+diff --git a/node_modules/expo-image-picker/build/ExponentImagePicker.js b/node_modules/expo-image-picker/build/ExponentImagePicker.js
+index b03e08a..99d7b7a 100644
+--- a/node_modules/expo-image-picker/build/ExponentImagePicker.js
++++ b/node_modules/expo-image-picker/build/ExponentImagePicker.js
+@@ -1,3 +1,151 @@
+-import { requireNativeModule } from 'expo-modules-core';
+-export default requireNativeModule('ExponentImagePicker');
++import { Platform } from 'react-native';
++
++const IS_HARMONY = Platform.OS === 'harmony';
++
++// HarmonyOS: forward to @react-native-ohos/react-native-image-picker
++let harmonyImagePicker = null;
++if (IS_HARMONY) {
++  try {
++    const pkg = require('@react-native-ohos/react-native-image-picker');
++    harmonyImagePicker = pkg;
++  } catch (e) {
++    console.warn('[expo-image-picker] Failed to load harmony plugin:', e.message);
++  }
++}
++
++// Map expo mediaTypes to harmony mediaType
++function mapMediaType(mediaTypes) {
++  if (!mediaTypes) return 'photo';
++  // Handle legacy MediaTypeOptions enum values
++  if (mediaTypes === 'All') return 'mixed';
++  if (mediaTypes === 'Images') return 'photo';
++  if (mediaTypes === 'Videos') return 'video';
++  // Handle string
++  if (typeof mediaTypes === 'string') {
++    if (mediaTypes === 'images') return 'photo';
++    if (mediaTypes === 'videos') return 'video';
++    if (mediaTypes === 'livePhotos') return 'photo'; // livePhotos not supported, fallback to photo
++    return 'photo';
++  }
++  // Handle array
++  if (Array.isArray(mediaTypes)) {
++    const hasImages = mediaTypes.includes('images') || mediaTypes.includes('livePhotos');
++    const hasVideos = mediaTypes.includes('videos');
++    if (hasImages && hasVideos) return 'mixed';
++    if (hasVideos) return 'video';
++    return 'photo';
++  }
++  return 'photo';
++}
++
++// Map expo options to harmony options
++function mapOptionsToHarmony(expoOptions, isCamera) {
++  const harmonyOpts = {
++    mediaType: mapMediaType(expoOptions.mediaTypes),
++    quality: expoOptions.quality ?? 1,
++    maxWidth: expoOptions.maxWidth ?? 0,
++    maxHeight: expoOptions.maxHeight ?? 0,
++    includeBase64: !!expoOptions.base64,
++    cameraType: expoOptions.cameraType || 'back',
++  };
++
++  if (isCamera) {
++    harmonyOpts.durationLimit = expoOptions.videoMaxDuration || 0;
++    harmonyOpts.saveToPhotos = false;
++  } else {
++    harmonyOpts.selectionLimit = expoOptions.allowsMultipleSelection
++      ? (expoOptions.selectionLimit || 999)
++      : 1;
++  }
++
++  return harmonyOpts;
++}
++
++// Map harmony response to expo response
++function mapResponseToExpo(harmonyResponse) {
++  if (harmonyResponse.didCancel) {
++    return { canceled: true, assets: null };
++  }
++
++  if (harmonyResponse.errorCode) {
++    return { canceled: true, assets: null };
++  }
++
++  const assets = (harmonyResponse.assets || []).map((asset) => {
++    // Infer type from file extension
++    let type = 'image';
++    if (asset.type) {
++      const ext = asset.type.toLowerCase();
++      const videoExts = ['mp4', 'mov', 'avi', '3gp', 'wmv', 'flv', 'mkv', 'webm'];
++      if (videoExts.includes(ext)) {
++        type = 'video';
++      }
++    }
++
++    return {
++      uri: asset.uri || '',
++      width: asset.width || 0,
++      height: asset.height || 0,
++      type,
++      fileName: asset.fileName || null,
++      fileSize: asset.fileSize,
++      base64: asset.base64 || null,
++      duration: asset.duration || null,
++      mimeType: undefined,
++      exif: null,
++      assetId: asset.id || null,
++    };
++  });
++
++  return { canceled: false, assets };
++}
++
++// Permission stub response
++function grantedPermissionResponse() {
++  return {
++    status: 'granted',
++    granted: true,
++    expires: 'never',
++    canAskAgain: true,
++  };
++}
++
++let exportedModule;
++
++if (IS_HARMONY && harmonyImagePicker) {
++  exportedModule = {
++    launchImageLibraryAsync: async (options) => {
++      try {
++        const harmonyOpts = mapOptionsToHarmony(options, false);
++        const response = await harmonyImagePicker.launchImageLibrary(harmonyOpts);
++        return mapResponseToExpo(response);
++      } catch (e) {
++        console.error('[expo-image-picker] launchImageLibraryAsync failed:', e);
++        return { canceled: true, assets: null };
++      }
++    },
++
++    launchCameraAsync: async (options) => {
++      try {
++        const harmonyOpts = mapOptionsToHarmony(options, true);
++        const response = await harmonyImagePicker.launchCamera(harmonyOpts);
++        return mapResponseToExpo(response);
++      } catch (e) {
++        console.error('[expo-image-picker] launchCameraAsync failed:', e);
++        return { canceled: true, assets: null };
++      }
++    },
++
++    getCameraPermissionsAsync: async () => grantedPermissionResponse(),
++    getMediaLibraryPermissionsAsync: async () => grantedPermissionResponse(),
++    requestCameraPermissionsAsync: async () => grantedPermissionResponse(),
++    requestMediaLibraryPermissionsAsync: async () => grantedPermissionResponse(),
++    getPendingResultAsync: async () => [],
++  };
++} else {
++  const { requireNativeModule } = require('expo-modules-core');
++  exportedModule = requireNativeModule('ExponentImagePicker');
++}
++
++export default exportedModule;
+ //# sourceMappingURL=ExponentImagePicker.js.map

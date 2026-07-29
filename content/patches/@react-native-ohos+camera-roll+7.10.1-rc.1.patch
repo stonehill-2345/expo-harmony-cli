@@ -1,0 +1,247 @@
+diff --git a/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/cpp/RNCCameraRoll.cpp b/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/cpp/RNCCameraRoll.cpp
+index bf3f6d0..63b48a2 100644
+--- a/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/cpp/RNCCameraRoll.cpp
++++ b/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/cpp/RNCCameraRoll.cpp
+@@ -15,6 +15,7 @@ using namespace facebook;
+ RNCCameraRoll::RNCCameraRoll(const ArkTSTurboModule::Context ctx, const std::string name) : ArkTSTurboModule(ctx, name) {
+     methodMap_ = {
+         ARK_ASYNC_METHOD_METADATA(saveToCameraRoll, 2),
++        ARK_ASYNC_METHOD_METADATA(openPhotoPicker, 1),
+         ARK_ASYNC_METHOD_METADATA(getPhotos, 1),
+         ARK_ASYNC_METHOD_METADATA(getAlbums, 1),
+         ARK_ASYNC_METHOD_METADATA(deletePhotos, 1),
+diff --git a/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/ets/CameraRollTurboModule.ts b/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/ets/CameraRollTurboModule.ts
+index 45b708d..62c44d1 100644
+--- a/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/ets/CameraRollTurboModule.ts
++++ b/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/ets/CameraRollTurboModule.ts
+@@ -59,6 +59,45 @@ export class CameraRollTurboModule extends TurboModule implements TM.RNCCameraRo
+     this.phAccessHelper = photoAccessHelper.getPhotoAccessHelper(this.ctx.uiAbilityContext);
+   }
+ 
++  /**
++   * 调起系统相册选择器（PhotoViewPicker），返回用户选中的 photoUris。
++   * options: { maxCount: number, assetType: 'Photos' | 'Videos' | 'All' }
++   * 使用 try-catch 与安全读参，避免 "Failed to retrieve property from object" 导致闪退。
++   */
++  async openPhotoPicker(options: Record<string, Object>): Promise<{ photoUris: string[] }> {
++    try {
++      let maxCount = 9;
++      let assetType = ASSET_TYPE_ALL;
++      if (options != null) {
++        const rawCount = options['maxCount'];
++        const rawType = options['assetType'];
++        if (typeof rawCount === 'number' && !Number.isNaN(rawCount)) {
++          maxCount = rawCount;
++        }
++        if (typeof rawType === 'string') {
++          assetType = rawType;
++        }
++      }
++      const photoSelectOptions = new photoAccessHelper.PhotoSelectOptions();
++      if (ASSET_TYPE_PHOTOS === assetType) {
++        photoSelectOptions.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE;
++      } else if (ASSET_TYPE_VIDEOS === assetType) {
++        photoSelectOptions.MIMEType = photoAccessHelper.PhotoViewMIMETypes.VIDEO_TYPE;
++      } else {
++        photoSelectOptions.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_VIDEO_TYPE;
++      }
++      photoSelectOptions.maxSelectNumber = Math.min(Math.max(1, maxCount), 500);
++      const photoViewPicker = new photoAccessHelper.PhotoViewPicker();
++      const result = await photoViewPicker.select(photoSelectOptions);
++      const photoUris = (result != null && Array.isArray(result['photoUris']))
++        ? result['photoUris'] as string[]
++        : [];
++      return { photoUris };
++    } catch (_e) {
++      return { photoUris: [] };
++    }
++  }
++
+   async saveToDevice(saveUri: string, options: SaveToCameraRollOptions,
+     resourceType: string): Promise<PhotoIdentifier> {
+     let photoCreationConfigs: Array<photoAccessHelper.PhotoCreationConfig> = [
+@@ -168,9 +207,16 @@ export class CameraRollTurboModule extends TurboModule implements TM.RNCCameraRo
+ 
+       let queryBegin = parseInt(this.isEmpty(after) ? '0' : after);
+       let predicates = new dataSharePredicates.DataSharePredicates();
+-      predicates.in('media_type', mimeTypes);
++      // mimeTypes 未传时跳过媒体类型过滤，避免 undefined 导致查询失败
++      if (mimeTypes && Array.isArray(mimeTypes) && mimeTypes.length > 0) {
++        predicates.in('media_type', mimeTypes);
++      }
+       predicates.limit(first + 1, queryBegin);
+       predicates.orderByDesc('date_added').orderByDesc('date_modified');
++      let emptyPage: PhotoIdentifiersPage = {
++        edges: [],
++        page_info: { has_next_page: false, end_cursor: '' },
++      };
+       let fetchOptions: photoAccessHelper.FetchOptions = {
+         fetchColumns: [
+           photoAccessHelper.PhotoKeys.URI,
+@@ -189,57 +235,65 @@ export class CameraRollTurboModule extends TurboModule implements TM.RNCCameraRo
+         predicates: predicates
+       };
+       this.phAccessHelper.getAssets(fetchOptions).then((fetchResult) => {
+-        if (fetchResult !== undefined) {
+-          fetchResult.getAllObjects().then((photoAssets) => {
+-            if (photoAssets !== undefined && photoAssets.length != 0) {
+-              let has_next_page: boolean = first < photoAssets.length;
+-              let pageInfo: {
+-                has_next_page: boolean;
+-                start_cursor?: string;
+-                end_cursor?: string;
+-              } = {
+-                has_next_page: has_next_page,
+-                end_cursor: has_next_page ? (queryBegin + first).toString() : ''
+-              }
+-              let photos: Array<PhotoIdentifier> = new Array<PhotoIdentifier>();
+-              photoAssets.forEach(photoAsset => {
+-                let type: string = photoAsset.photoType == 1 ? 'IMAGE' : 'VIDEO'
+-                let photo: PhotoIdentifier = {
+-                  node: {
+-                    id: '',
+-                    type: type,
+-                    subTypes: 'PhotoPanorama',
+-                    sourceType: 'UserLibrary',
+-                    group_name: [],
+-                    image: {
+-                      filename: photoAsset.displayName,
+-                      filepath: null,
+-                      extension: null,
+-                      uri: photoAsset.uri,
+-                      height: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.HEIGHT).toString()),
+-                      width: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.WIDTH).toString()),
+-                      fileSize: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.SIZE).toString()),
+-                      playableDuration: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.DURATION).toString()),
+-                      orientation: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.ORIENTATION).toString())
+-                    },
+-                    timestamp: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.DATE_ADDED).toString()),
+-                    modificationTimestamp: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.DATE_MODIFIED)
+-                      .toString()),
+-                    location: null
+-                  }
+-                }
+-                photos.push(photo);
+-              })
+-              let resulPage: PhotoIdentifiersPage = {
+-                edges: photos,
+-                page_info: pageInfo,
++        if (fetchResult === undefined) {
++          resolve(emptyPage);
++          return;
++        }
++        fetchResult.getAllObjects().then((photoAssets) => {
++          if (photoAssets === undefined || photoAssets.length === 0) {
++            resolve(emptyPage);
++            return;
++          }
++          let has_next_page: boolean = first < photoAssets.length;
++          let pageInfo: {
++            has_next_page: boolean;
++            start_cursor?: string;
++            end_cursor?: string;
++          } = {
++            has_next_page: has_next_page,
++            end_cursor: has_next_page ? (queryBegin + first).toString() : ''
++          }
++          let photos: Array<PhotoIdentifier> = new Array<PhotoIdentifier>();
++          photoAssets.forEach(photoAsset => {
++            let type: string = photoAsset.photoType == 1 ? 'IMAGE' : 'VIDEO'
++            let photo: PhotoIdentifier = {
++              node: {
++                id: '',
++                type: type,
++                subTypes: 'PhotoPanorama',
++                sourceType: 'UserLibrary',
++                group_name: [],
++                image: {
++                  filename: photoAsset.displayName,
++                  filepath: null,
++                  extension: null,
++                  uri: photoAsset.uri,
++                  height: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.HEIGHT).toString()),
++                  width: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.WIDTH).toString()),
++                  fileSize: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.SIZE).toString()),
++                  playableDuration: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.DURATION).toString()),
++                  orientation: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.ORIENTATION).toString())
++                },
++                timestamp: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.DATE_ADDED).toString()),
++                modificationTimestamp: parseInt(photoAsset.get(photoAccessHelper.PhotoKeys.DATE_MODIFIED)
++                  .toString()),
++                location: null
+               }
+-              resolve(resulPage);
+             }
++            photos.push(photo);
+           })
+-        }
++          let resulPage: PhotoIdentifiersPage = {
++            edges: photos,
++            page_info: pageInfo,
++          }
++          resolve(resulPage);
++        }).catch((err: Error) => {
++          Logger.error('getPhotos getAllObjects failed: ' + err);
++          reject(err);
++        });
+       }).catch(err => {
+         Logger.error('getPhotos failed with err: ' + err);
++        reject(err);
+       })
+     })
+   }
+diff --git a/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/ets/generated/turboModules/RNCCameraRoll.ts b/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/ets/generated/turboModules/RNCCameraRoll.ts
+index bc49bc7..c0fe9df 100644
+--- a/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/ets/generated/turboModules/RNCCameraRoll.ts
++++ b/node_modules/@react-native-ohos/camera-roll/harmony/camera_roll/src/main/ets/generated/turboModules/RNCCameraRoll.ts
+@@ -18,9 +18,13 @@ export namespace RNCCameraRoll {
+   
+   export type PhotoThumbnail = {thumbnailBase64: string}
+   
++  export type OpenPhotoPickerResult = { photoUris: string[] };
++
+   export interface Spec {
+     saveToCameraRoll(uri: string, options: Object): Promise<PhotoIdentifier>;
+   
++    openPhotoPicker(options: Object): Promise<OpenPhotoPickerResult>;
++  
+     getPhotos(params: Object): Promise<PhotoIdentifiersPage>;
+   
+     getAlbums(params: Object): Promise<Album[]>;
+diff --git a/node_modules/@react-native-ohos/camera-roll/src/CameraRoll.ts b/node_modules/@react-native-ohos/camera-roll/src/CameraRoll.ts
+index bc89f82..2a1abac 100644
+--- a/node_modules/@react-native-ohos/camera-roll/src/CameraRoll.ts
++++ b/node_modules/@react-native-ohos/camera-roll/src/CameraRoll.ts
+@@ -311,6 +311,16 @@ export class CameraRoll {
+     return RNCCameraRoll.getAlbums(params);
+   }
+ 
++  /**
++   * 鸿蒙：调起系统相册选择器，返回选中的 photoUris。仅鸿蒙平台实现。
++   */
++  static openPhotoPicker(options: {
++    maxCount: number;
++    assetType: 'Photos' | 'Videos' | 'All';
++  }): Promise<{ photoUris: string[] }> {
++    return RNCCameraRoll.openPhotoPicker(options);
++  }
++
+   static getParamsWithDefaults(params: GetPhotosParams): GetPhotosParams {
+     const newParams = {...params};
+     if (newParams.assetType === undefined) newParams.assetType = 'All';
+diff --git a/node_modules/@react-native-ohos/camera-roll/src/NativeCameraRollModule.ts b/node_modules/@react-native-ohos/camera-roll/src/NativeCameraRollModule.ts
+index 4ef4f25..254633b 100644
+--- a/node_modules/@react-native-ohos/camera-roll/src/NativeCameraRollModule.ts
++++ b/node_modules/@react-native-ohos/camera-roll/src/NativeCameraRollModule.ts
+@@ -102,8 +102,11 @@ type PhotoIdentifiersPage = {
+   limited?: boolean;
+ };
+ 
++export type OpenPhotoPickerResult = { photoUris: string[] };
++
+ export interface Spec extends TurboModule {
+   saveToCameraRoll(uri: string, options: Object): Promise<PhotoIdentifier>;
++  openPhotoPicker(options: Object): Promise<OpenPhotoPickerResult>;
+   getPhotos(params: Object): Promise<PhotoIdentifiersPage>;
+   getAlbums(params: Object): Promise<Album[]>;
+   deletePhotos(photoUris: Array<string>): Promise<void>;

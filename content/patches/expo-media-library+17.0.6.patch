@@ -1,0 +1,225 @@
+diff --git a/node_modules/expo-media-library/build/ExpoMediaLibrary.js b/node_modules/expo-media-library/build/ExpoMediaLibrary.js
+index 7fb713f..0e9e436 100644
+--- a/node_modules/expo-media-library/build/ExpoMediaLibrary.js
++++ b/node_modules/expo-media-library/build/ExpoMediaLibrary.js
+@@ -1,3 +1,21 @@
+ import { requireNativeModule } from 'expo-modules-core';
+-export default requireNativeModule('ExpoMediaLibrary');
++import { Platform } from 'react-native';
++const IS_HARMONY = Platform.OS === 'harmony';
++
++let ExpoMediaLibrary;
++if (IS_HARMONY) {
++  // HarmonyOS: 没有原生 ExpoMediaLibrary 模块，返回 mock 对象
++  // 实际 API 调用在 MediaLibrary.js 中被拦截转发到 camera-roll
++  ExpoMediaLibrary = {
++    MediaType: { audio: 'audio', photo: 'photo', video: 'video', unknown: 'unknown' },
++    SortBy: { default: 'default', mediaType: 'mediaType', width: 'width', height: 'height', creationTime: 'creationTime', modificationTime: 'modificationTime', duration: 'duration' },
++    CHANGE_LISTENER_NAME: 'onMediaLibraryChange',
++    addListener: () => ({ remove: () => {} }),
++    removeListeners: () => {},
++    removeAllListeners: () => {},
++  };
++} else {
++  ExpoMediaLibrary = requireNativeModule('ExpoMediaLibrary');
++}
++export default ExpoMediaLibrary;
+ //# sourceMappingURL=ExpoMediaLibrary.js.map
+\ No newline at end of file
+diff --git a/node_modules/expo-media-library/build/MediaLibrary.js b/node_modules/expo-media-library/build/MediaLibrary.js
+index 2c8f34e..de68ab7 100644
+--- a/node_modules/expo-media-library/build/MediaLibrary.js
++++ b/node_modules/expo-media-library/build/MediaLibrary.js
+@@ -1,6 +1,9 @@
+ import { PermissionStatus, createPermissionHook, UnavailabilityError, } from 'expo-modules-core';
+ import { Platform } from 'react-native';
+ import MediaLibrary from './ExpoMediaLibrary';
++const IS_HARMONY = Platform.OS === 'harmony';
++// HarmonyOS: 缓存 getAssetsAsync 返回的 Asset 列表，供 getAssetInfoAsync 按 ID 查找
++let _harmonyAssetCache = new Map();
+ const isExpoGo = typeof expo !== 'undefined' && globalThis.expo?.modules?.ExpoGo;
+ let loggedExpoGoWarning = false;
+ if (isExpoGo && !loggedExpoGoWarning) {
+@@ -8,6 +11,130 @@ if (isExpoGo && !loggedExpoGoWarning) {
+     loggedExpoGoWarning = true;
+ }
+ export { PermissionStatus, };
++
++// ===================== HarmonyOS 适配 =====================
++const _HarmonyMediaType = { audio: 'audio', photo: 'photo', video: 'video', unknown: 'unknown' };
++const _HarmonySortBy = { default: 'default', mediaType: 'mediaType', width: 'width', height: 'height', creationTime: 'creationTime', modificationTime: 'modificationTime', duration: 'duration' };
++
++function _harmonyAssetTypeToMediaType(type) {
++    if (!type) return 'unknown';
++    const t = type.toUpperCase();
++    if (t === 'VIDEO') return 'video';
++    if (t === 'IMAGE') return 'photo';
++    return 'unknown';
++}
++
++function _harmonyPhotoNodeToAsset(node) {
++    return {
++        id: node.image?.uri || node.id || '',
++        filename: node.image?.filename || '',
++        uri: node.image?.uri || '',
++        mediaType: _harmonyAssetTypeToMediaType(node.type),
++        width: node.image?.width || 0,
++        height: node.image?.height || 0,
++        creationTime: (node.timestamp || 0) * 1000,
++        modificationTime: (node.modificationTimestamp || 0) * 1000,
++        duration: (node.image?.playableDuration || 0) / 1000,
++        albumId: undefined,
++    };
++}
++
++function _harmonyPhotoNodeToAssetInfo(node) {
++    const asset = _harmonyPhotoNodeToAsset(node);
++    return {
++        ...asset,
++        localUri: node.image?.uri || '',
++        location: node.location || null,
++        exif: undefined,
++    };
++}
++
++async function _harmonyGetAssetsAsync(assetsOptions = {}) {
++    console.log('[MediaLibrary:harmony] _harmonyGetAssetsAsync options:', JSON.stringify(assetsOptions));
++    const CameraRoll = require('@react-native-camera-roll/camera-roll').CameraRoll;
++    const { first = 20, after, mediaType, album, sortBy, createdAfter, createdBefore } = assetsOptions;
++    let assetType = 'All';
++    if (Array.isArray(mediaType)) {
++        const hasVideo = mediaType.includes('video');
++        const hasPhoto = mediaType.includes('photo');
++        const hasAudio = mediaType.includes('audio');
++        if (hasVideo && !hasPhoto && !hasAudio) assetType = 'Videos';
++        else if (hasPhoto && !hasVideo && !hasAudio) assetType = 'Photos';
++    } else if (mediaType === 'video') {
++        assetType = 'Videos';
++    } else if (mediaType === 'photo') {
++        assetType = 'Photos';
++    }
++    const params = { first, assetType };
++    if (after) params.after = after;
++    console.log('[MediaLibrary:harmony] CameraRoll.getPhotos params:', JSON.stringify(params));
++    const result = await CameraRoll.getPhotos(params);
++    console.log('[MediaLibrary:harmony] CameraRoll.getPhotos edges:', result.edges?.length, 'page_info:', JSON.stringify(result.page_info));
++    let assets = (result.edges || []).map(edge => {
++        const asset = _harmonyPhotoNodeToAsset(edge.node);
++        _harmonyAssetCache.set(asset.id, edge.node);
++        return asset;
++    });
++    // HarmonyOS CameraRoll 的 assetType 过滤不准确，需要客户端二次过滤
++    const _imageExts = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.webp', '.heic', '.heif', '.tiff', '.svg'];
++    const _videoExts = ['.mp4', '.mov', '.avi', '.mkv', '.flv', '.wmv', '.3gp', '.ts', '.webm'];
++    if (assetType === 'Photos') {
++        assets = assets.filter(a => {
++            const ext = (a.filename || '').toLowerCase().match(/\.\w+$/);
++            return ext ? _imageExts.includes(ext[0]) : a.mediaType === 'photo';
++        });
++    } else if (assetType === 'Videos') {
++        assets = assets.filter(a => {
++            const ext = (a.filename || '').toLowerCase().match(/\.\w+$/);
++            return ext ? _videoExts.includes(ext[0]) : a.mediaType === 'video';
++        });
++    }
++    console.log('[MediaLibrary:harmony] mapped assets:', assets.length, 'first asset:', assets[0] ? JSON.stringify(assets[0]).substring(0, 150) : 'none');
++    return {
++        assets,
++        endCursor: result.page_info?.end_cursor || '',
++        hasNextPage: result.page_info?.has_next_page || false,
++        totalCount: assets.length + (result.page_info?.has_next_page ? 1 : 0),
++    };
++}
++
++async function _harmonyGetAssetInfoAsync(assetId, options) {
++    console.log('[MediaLibrary:harmony] _harmonyGetAssetInfoAsync id:', assetId, 'cache size:', _harmonyAssetCache.size);
++    const cachedNode = _harmonyAssetCache.get(assetId);
++    if (cachedNode) {
++        const info = _harmonyPhotoNodeToAssetInfo(cachedNode);
++        console.log('[MediaLibrary:harmony] _harmonyGetAssetInfoAsync cache hit, localUri:', info.localUri?.substring(0, 60));
++        return info;
++    }
++    console.log('[MediaLibrary:harmony] _harmonyGetAssetInfoAsync cache MISS, returning fallback');
++    return { id: assetId, filename: '', uri: assetId, localUri: assetId, mediaType: 'unknown', width: 0, height: 0, creationTime: 0, modificationTime: 0, duration: 0 };
++}
++
++async function _harmonySaveToLibraryAsync(localUri) {
++    const CameraRoll = require('@react-native-camera-roll/camera-roll').CameraRoll;
++    await CameraRoll.save(localUri);
++}
++
++function _harmonyUsePermissions(options) {
++    const [response, setResponse] = __harmonyUseState(null);
++    const getPermission = async () => {
++        const r = { status: 'granted', granted: true, expires: 'never', canAskAgain: true };
++        setResponse(r);
++        return r;
++    };
++    const requestPermission = async () => {
++        const r = { status: 'granted', granted: true, expires: 'never', canAskAgain: true };
++        setResponse(r);
++        return r;
++    };
++    return [response, requestPermission, getPermission];
++}
++// 使用 React 的 useState 模拟
++let __harmonyUseState;
++try { __harmonyUseState = require('react').useState; } catch(e) { __harmonyUseState = (v) => [v, () => {}]; }
++
++// ===================== End HarmonyOS =====================
++
+ function arrayize(item) {
+     if (Array.isArray(item)) {
+         return item;
+@@ -64,12 +191,12 @@ function dateToNumber(value) {
+ /**
+  * Possible media types.
+  */
+-export const MediaType = MediaLibrary.MediaType;
++export const MediaType = IS_HARMONY ? _HarmonyMediaType : MediaLibrary.MediaType;
+ // @needsAudit
+ /**
+  * Supported keys that can be used to sort `getAssetsAsync` results.
+  */
+-export const SortBy = MediaLibrary.SortBy;
++export const SortBy = IS_HARMONY ? _HarmonySortBy : MediaLibrary.SortBy;
+ // @needsAudit
+ /**
+  * Returns whether the Media Library API is enabled on the current device.
+@@ -123,7 +250,7 @@ export async function getPermissionsAsync(writeOnly = false, granularPermissions
+  * const [permissionResponse, requestPermission] = MediaLibrary.usePermissions();
+  * ```
+  */
+-export const usePermissions = createPermissionHook({
++export const usePermissions = IS_HARMONY ? _harmonyUsePermissions : createPermissionHook({
+     // TODO(cedric): permission requesters should have an options param or a different requester
+     getMethod: (options) => getPermissionsAsync(options?.writeOnly, options?.granularPermissions),
+     requestMethod: (options) => requestPermissionsAsync(options?.writeOnly, options?.granularPermissions),
+@@ -194,6 +321,7 @@ export async function createAssetAsync(localUri) {
+  * must be a local path, so it must start with `file:///`.
+  */
+ export async function saveToLibraryAsync(localUri) {
++    if (IS_HARMONY) return _harmonySaveToLibraryAsync(localUri);
+     if (!MediaLibrary.saveToLibraryAsync) {
+         throw new UnavailabilityError('MediaLibrary', 'saveToLibraryAsync');
+     }
+@@ -271,6 +399,11 @@ export async function deleteAssetsAsync(assets) {
+  * @return An [AssetInfo](#assetinfo) object, which is an `Asset` extended by an additional fields.
+  */
+ export async function getAssetInfoAsync(asset, options = { shouldDownloadFromNetwork: true }) {
++    if (IS_HARMONY) {
++        const assetId = getId(asset);
++        checkAssetIds([assetId]);
++        return await _harmonyGetAssetInfoAsync(assetId, options);
++    }
+     if (!MediaLibrary.getAssetInfoAsync) {
+         throw new UnavailabilityError('MediaLibrary', 'getAssetInfoAsync');
+     }
+@@ -373,6 +506,7 @@ export async function deleteAlbumsAsync(albums, assetRemove = false) {
+  * @return A promise that fulfils with to [`PagedInfo`](#pagedinfo) object with array of [`Asset`](#asset)s.
+  */
+ export async function getAssetsAsync(assetsOptions = {}) {
++    if (IS_HARMONY) return await _harmonyGetAssetsAsync(assetsOptions);
+     if (!MediaLibrary.getAssetsAsync) {
+         throw new UnavailabilityError('MediaLibrary', 'getAssetsAsync');
+     }

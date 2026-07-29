@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "expoSdk": "52",
+  "reactNative": "0.77.1",
+  "rnoh": "0.77.71",
+  "requiredFiles": [
+    "AppScope/app.json5",
+    "entry/build-profile.json5",
+    "entry/oh-package.json5",
+    "entry/src/main/ets/pages/Index.ets",
+    "entry/src/main/resources/rawfile/.gitkeep",
+    "entry/src/main/ets/entryability/EntryAbility.ets",
+    "entry/src/main/cpp/CMakeLists.txt",
+    "entry/src/main/cpp/generated/RNOHGeneratedPackage.h",
+    "oh-package.json5"
+  ]
+}

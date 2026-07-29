@@ -1,0 +1,90 @@
+diff --git a/node_modules/@react-native-oh-tpl/react-native-fast-image/harmony/fast_image/src/main/cpp/FastImageViewComponentInstance.cpp b/node_modules/@react-native-oh-tpl/react-native-fast-image/harmony/fast_image/src/main/cpp/FastImageViewComponentInstance.cpp
+index 68bddc1..d22cdb6 100644
+--- a/node_modules/@react-native-oh-tpl/react-native-fast-image/harmony/fast_image/src/main/cpp/FastImageViewComponentInstance.cpp
++++ b/node_modules/@react-native-oh-tpl/react-native-fast-image/harmony/fast_image/src/main/cpp/FastImageViewComponentInstance.cpp
+@@ -79,17 +79,7 @@ void FastImageViewComponentInstance::GetHeaderUri(
+ }
+ 
+ std::string FastImageViewComponentInstance::getBundlePath() {
+-    auto rnInstance = m_deps->rnInstance.lock();
+-    if (!rnInstance) {
+-        return BUNDLE_HARMONY_JS;
+-    }
+-
+-    auto internalInstance = std::dynamic_pointer_cast<RNInstanceInternal>(rnInstance);
+-    if (!internalInstance) {
+-        return BUNDLE_HARMONY_JS;
+-    }
+-
+-    return internalInstance->getBundlePath();
++    return BUNDLE_HARMONY_JS;
+ }
+ 
+ std::string FastImageViewComponentInstance::getAbsolutePathPrefix(std::string const &bundlePath) {
+@@ -159,7 +149,7 @@ void FastImageViewComponentInstance::onPropsChanged(SharedConcreteProps const &p
+         auto tintColor = getTintColorFromDynamic(props->rawProps);
+         if (tintColor.has_value()) {
+             auto tintColorValue = fastimage::Color::FromString(tintColor.value()).GetValue();
+-            this->getLocalRootArkUINode().setTintColor(SharedColor(tintColorValue));
++            this->getLocalRootArkUINode().setTintColor(facebook::react::SharedColor(tintColorValue));
+         }
+     }
+ }
+diff --git a/node_modules/@react-native-oh-tpl/react-native-fast-image/harmony/fast_image/src/main/cpp/Props.h b/node_modules/@react-native-oh-tpl/react-native-fast-image/harmony/fast_image/src/main/cpp/Props.h
+index b55b59d..7f79ba8 100644
+--- a/node_modules/@react-native-oh-tpl/react-native-fast-image/harmony/fast_image/src/main/cpp/Props.h
++++ b/node_modules/@react-native-oh-tpl/react-native-fast-image/harmony/fast_image/src/main/cpp/Props.h
+@@ -80,15 +80,13 @@ struct FastImageViewSourceHeadersStruct {
+ };
+ 
+ static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, FastImageViewSourceHeadersStruct &result) {
+-  auto map = (butter::map<std::string, RawValue>)value;
++  auto map = (folly::dynamic)value;
+ 
+-  auto tmp_name = map.find("name");
+-  if (tmp_name != map.end()) {
+-    fromRawValue(context, tmp_name->second, result.name);
++  if (map.count("name") > 0) {
++    fromRawValue(context, (RawValue)map["name"], result.name);
+   }
+-  auto tmp_value = map.find("value");
+-  if (tmp_value != map.end()) {
+-    fromRawValue(context, tmp_value->second, result.value);
++  if (map.count("value") > 0) {
++    fromRawValue(context, (RawValue)map["value"], result.value);
+   }
+ }
+ 
+@@ -114,23 +112,19 @@ struct FastImageViewSourceStruct {
+ };
+ 
+ static inline void fromRawValue(const PropsParserContext& context, const RawValue &value, FastImageViewSourceStruct &result) {
+-  auto map = (butter::map<std::string, RawValue>)value;
++  auto map = (folly::dynamic)value;
+ 
+-  auto tmp_uri = map.find("uri");
+-  if (tmp_uri != map.end()) {
+-    fromRawValue(context, tmp_uri->second, result.uri);
++  if (map.count("uri") > 0) {
++    fromRawValue(context, (RawValue)map["uri"], result.uri);
+   }
+-  auto tmp_headers = map.find("headers");
+-  if (tmp_headers != map.end()) {
+-    fromRawValue(context, tmp_headers->second, result.headers);
++  if (map.count("headers") > 0) {
++    fromRawValue(context, (RawValue)map["headers"], result.headers);
+   }
+-  auto tmp_priority = map.find("priority");
+-  if (tmp_priority != map.end()) {
+-    fromRawValue(context, tmp_priority->second, result.priority);
++  if (map.count("priority") > 0) {
++    fromRawValue(context, (RawValue)map["priority"], result.priority);
+   }
+-  auto tmp_cache = map.find("cache");
+-  if (tmp_cache != map.end()) {
+-    fromRawValue(context, tmp_cache->second, result.cache);
++  if (map.count("cache") > 0) {
++    fromRawValue(context, (RawValue)map["cache"], result.cache);
+   }
+ }
+ 

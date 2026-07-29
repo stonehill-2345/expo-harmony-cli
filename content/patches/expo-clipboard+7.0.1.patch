@@ -1,0 +1,60 @@
+diff --git a/node_modules/expo-clipboard/build/ExpoClipboard.js b/node_modules/expo-clipboard/build/ExpoClipboard.js
+index 33014a4..41aad8f 100644
+--- a/node_modules/expo-clipboard/build/ExpoClipboard.js
++++ b/node_modules/expo-clipboard/build/ExpoClipboard.js
+@@ -1,3 +1,54 @@
++import { Platform } from 'react-native';
+ import { requireNativeModule } from 'expo-modules-core';
+-export default requireNativeModule('ExpoClipboard');
++let ExpoClipboard;
++if (Platform.OS === 'harmony') {
++    const RNCClipboard = require('@react-native-ohos/clipboard').default;
++    const getContentTypesAsync = async () => {
++        const contentTypes = [];
++        if (await RNCClipboard.hasString()) {
++            contentTypes.push('plain-text');
++        }
++        if (await RNCClipboard.hasImage()) {
++            contentTypes.push('image');
++        }
++        return contentTypes;
++    };
++    ExpoClipboard = {
++        getStringAsync: () => RNCClipboard.getString(),
++        setStringAsync: async (text) => {
++            RNCClipboard.setString(text);
++            return true;
++        },
++        hasStringAsync: () => RNCClipboard.hasString(),
++        getImageAsync: async (options) => {
++            const format = options?.format === 'jpeg' ? 'jpeg' : 'png';
++            const image = format === 'jpeg'
++                ? await RNCClipboard.getImageJPG()
++                : await RNCClipboard.getImagePNG();
++            return image
++                ? {
++                    data: image,
++                    size: {
++                        width: 0,
++                        height: 0,
++                    },
++                }
++                : null;
++        },
++        setImageAsync: async (base64Image) => {
++            RNCClipboard.setImage(base64Image);
++        },
++        hasImageAsync: () => RNCClipboard.hasImage(),
++        addListener: (_eventName, listener) => RNCClipboard.addListener(async () => {
++            listener({
++                contentTypes: await getContentTypesAsync(),
++            });
++        }),
++        removeAllListeners: () => RNCClipboard.removeAllListeners(),
++    };
++}
++else {
++    ExpoClipboard = requireNativeModule('ExpoClipboard');
++}
++export default ExpoClipboard;
+ //# sourceMappingURL=ExpoClipboard.js.map
