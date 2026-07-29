@@ -25,7 +25,7 @@ HarmonyOS release 通过 `pnpm bundle:harmony:release` 生成嵌入 HAP rawfile 
 
 ## 环境要求
 
-- Node.js `>= 18.18.0`（建议使用当前 LTS；CLI 运行和 Expo SDK 52 不需要强制 Node 22.20.0）
+- Node.js `>= 18.18.0`
 - pnpm `>= 10.19.0`
 - DevEco Studio 5.0+，并安装可用的 OpenHarmony SDK
 - HarmonyOS 真机已开启开发者模式和 USB 调试，或已创建可用模拟器
