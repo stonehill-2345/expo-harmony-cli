@@ -8,3 +8,14 @@ examples/
 node_modules/
 *.tgz
 .DS_Store
+
+# 敏感信息兜底（防止被误打进包）
+.env*
+.npmrc
+*.key
+*.pem
+*.cert
+*.p12
+*.keystore
+*.jks
+*.log
