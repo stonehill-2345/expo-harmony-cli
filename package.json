@@ -2,6 +2,17 @@
   "name": "expo-harmony-cli",
   "version": "0.2.4",
   "description": "CLI for creating Expo projects with HarmonyOS support",
+  "keywords": [
+    "expo",
+    "react-native",
+    "harmonyos",
+    "openharmony",
+    "rnoh",
+    "expo-cli",
+    "react-native-cli",
+    "deveco-studio"
+  ],
+  "packageManager": "pnpm@10.19.0",
   "bin": { "expo-harmony-cli": "dist/index.js" },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
