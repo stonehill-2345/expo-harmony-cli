@@ -2,7 +2,7 @@
 
 使用 Expo SDK 52 创建 React Native 项目，并注入 HarmonyOS（OpenHarmony）开发基线的命令行工具。
 
-它保留 Expo 的 Android、iOS 与 Web 工作流，同时为 HarmonyOS 写入 Metro 配置、RNOH 依赖、原生工程模板、适配规则、patch 与开发文档。
+一条命令，一键初始化一个开箱即跑鸿蒙的 Expo（基于 RN）工程——同一套代码覆盖鸿蒙、iOS、安卓三端，全程沿用 Expo 的 CNG（配置驱动、随时重建）工作流。
 
 ## Key features
 
