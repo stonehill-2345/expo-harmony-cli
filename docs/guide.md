@@ -108,6 +108,7 @@ pnpm dlx expo-harmony-cli list
 ```
 
 未在兼容表中的包也建议先通过 CLI 安装：纯 JS 包通常会按 Expo 兼容版本完成安装；如果包含原生模块，请阅读生成项目中的 `docs/HARMONY.md`，并参考 `.agent/skills/expo-harmony-adapter/SKILL.md`
+
 ## 构建 HarmonyOS Release
 
 完成签名配置后，在最后一次 HarmonyOS prebuild 之后执行：
@@ -168,7 +169,6 @@ pnpm add -D @react-native-community/cli@20.1.1
 - 仅以 Expo SDK 52、React Native 0.77.1 和 RNOH 0.77.71 组合为当前支持基线。RNOH 已升级到 0.77.71，但 React Native 仍固定为 0.77.1，两者不要单独拆开升级。
 - 不是所有 Expo / React Native 原生模块都已适配 HarmonyOS；请以 `list` 输出、生成项目的 `docs/HARMONY.md` 和 `.agent/skills/expo-harmony-adapter/SKILL.md` 适配资料为准。
 - HarmonyOS release bundle 采用 JS rawfile；Hermes HBC 尚未作为默认发布格式提供。
-- Android 与 iOS 的 release 签名、商店发布仍遵循 Expo / 原生平台各自的标准流程。
 
 ## 源码仓库
 
