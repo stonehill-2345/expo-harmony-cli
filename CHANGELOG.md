@@ -1,5 +1,14 @@
 # expo-harmony-cli
 
+## 0.2.5
+
+### Patch Changes
+
+- 优化 README 文档内容与排版，同步刷新 npm 包页面展示。
+- 在 package.json 中补充 `keywords` 与 `packageManager` 元信息，改善 npm 页面可发现性。
+- 完善 `.npmignore`
+- 新增完整使用指南 `docs/guide.md`，并随 npm 包分发，npm 用户可离线查阅命令清单、环境配置与排障。
+
 ## 0.2.4
 
 ### Patch Changes
