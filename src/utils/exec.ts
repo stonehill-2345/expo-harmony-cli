@@ -1,6 +1,6 @@
 import { execFileSync, execSync, spawn } from 'child_process';
 
-const WINDOWS_NODE_COMMANDS = new Set(['npx', 'npm', 'pnpm', 'expo', 'react-native']);
+const WINDOWS_NODE_COMMANDS = new Set(['npx', 'npm', 'pnpm', 'yarn', 'bun', 'expo', 'react-native']);
 
 export interface CommandInvocation {
   command: string;
@@ -34,7 +34,7 @@ export function resolveCommandInvocation(file: string, platform: NodeJS.Platform
   };
 }
 
-/** execSync 包装，inherit stdio（让用户看到子进程输出）。*/
+/** @deprecated 使用 runFile，避免 shell 解析用户参数。 */
 export function run(cmd: string, opts: { cwd?: string } = {}): void {
   execSync(cmd, { stdio: 'inherit', ...opts });
 }

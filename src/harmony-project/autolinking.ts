@@ -97,6 +97,7 @@ endfunction()
 export interface AutolinkingResult {
   /** 命中并被链接的 npm 包名（字典序）*/
   linked: string[];
+  skipped: Array<{ package: string; reason: string }>;
   /** 生成的四个文件（绝对路径 + 内容）*/
   files: Array<{ path: string; content: string }>;
 }
@@ -135,8 +136,18 @@ export function runAutolinking(opts: {
   const { projectRoot, harmonyDir, mapping } = opts;
 
   // 1. 命中：mapping 里 npmPackageName 在 node_modules 存在 → 字典序排序（参考 D.7）
+  const skipped: Array<{ package: string; reason: string }> = [];
   const libraries = Object.values(mapping)
-    .filter(e => fs.existsSync(path.join(projectRoot, 'node_modules', e.npmPackageName)))
+    .filter(e => {
+      const packageDir = path.join(projectRoot, 'node_modules', e.npmPackageName);
+      if (!fs.existsSync(packageDir)) return false;
+      const harPath = path.join(packageDir, 'harmony', e.harName);
+      if (!fs.existsSync(harPath) || fs.statSync(harPath).size === 0) {
+        skipped.push({ package: e.npmPackageName, reason: `缺少有效 HAR: ${path.relative(projectRoot, harPath)}` });
+        return false;
+      }
+      return true;
+    })
     .sort((a, b) => a.npmPackageName.localeCompare(b.npmPackageName));
 
   const etsPackages = libraries.flatMap(getEtsPackages);
@@ -179,6 +190,7 @@ export function runAutolinking(opts: {
 
   return {
     linked: libraries.map(l => l.npmPackageName),
+    skipped,
     files,
   };
 }

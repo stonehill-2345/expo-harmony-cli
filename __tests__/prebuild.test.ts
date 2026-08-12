@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-vi.mock('../src/utils/exec', () => ({ run: vi.fn(), getOutput: vi.fn() }));
-const { run: mockRun } = await import('../src/utils/exec');
+vi.mock('../src/utils/exec', () => ({ runFile: vi.fn(), getOutput: vi.fn() }));
+const { runFile: mockRunFile } = await import('../src/utils/exec');
 
 vi.mock('../src/harmony-project', () => ({
   runHarmonyGeneration: vi.fn().mockResolvedValue(undefined),
@@ -22,7 +22,7 @@ describe('prebuild 命令', () => {
   let tmp: string;
   beforeEach(() => {
     vi.resetModules();
-    mockRun.mockClear();
+    mockRunFile.mockClear();
     mockGen.mockClear();
     mockWriteMetroConfig.mockClear();
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'prebuild-'));
@@ -44,8 +44,8 @@ describe('prebuild 命令', () => {
   it('无 --platform → 调 expo prebuild（native）+ runHarmonyGeneration（harmony）', async () => {
     const { prebuild } = await import('../src/commands/prebuild');
     await prebuild([]);
-    expect(mockRun).toHaveBeenCalledWith(
-      expect.stringContaining('expo prebuild'),
+    expect(mockRunFile).toHaveBeenCalledWith(
+      'npx', ['expo', 'prebuild'],
       expect.anything()
     );
     expect(mockGen).toHaveBeenCalledTimes(1);
@@ -54,7 +54,7 @@ describe('prebuild 命令', () => {
   it('--platform harmony → 仅调 runHarmonyGeneration，不调 expo prebuild', async () => {
     const { prebuild } = await import('../src/commands/prebuild');
     await prebuild(['--platform', 'harmony']);
-    expect(mockRun).not.toHaveBeenCalled();
+    expect(mockRunFile).not.toHaveBeenCalled();
     expect(mockGen).toHaveBeenCalledTimes(1);
     expect(mockGen).toHaveBeenCalledWith(expect.any(String), { name: 'X', slug: 'x' }, { force: false });
     expect(mockWriteMetroConfig).toHaveBeenCalledWith(expect.any(String));
@@ -63,15 +63,15 @@ describe('prebuild 命令', () => {
   it('--platform harmony --force → 覆盖已有 harmony 目录', async () => {
     const { prebuild } = await import('../src/commands/prebuild');
     await prebuild(['--platform', 'harmony', '--force']);
-    expect(mockRun).not.toHaveBeenCalled();
+    expect(mockRunFile).not.toHaveBeenCalled();
     expect(mockGen).toHaveBeenCalledWith(expect.any(String), { name: 'X', slug: 'x' }, { force: true });
   });
 
   it('--platform ios → 仅调 expo prebuild，不调 runHarmonyGeneration', async () => {
     const { prebuild } = await import('../src/commands/prebuild');
     await prebuild(['--platform', 'ios']);
-    expect(mockRun).toHaveBeenCalledWith(
-      expect.stringContaining('--platform ios'),
+    expect(mockRunFile).toHaveBeenCalledWith(
+      'npx', ['expo', 'prebuild', '--platform', 'ios'],
       expect.anything()
     );
     expect(mockGen).not.toHaveBeenCalled();

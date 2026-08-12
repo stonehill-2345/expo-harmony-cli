@@ -1,10 +1,10 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import chalk from 'chalk';
-import { run } from '../utils/exec';
+import { runFile } from '../utils/exec';
 import { log } from '../utils/log';
 import { adaptPackage } from './adapt-package';
-import { resolvePm, installCmd } from '../lib/pkg-manager';
+import { resolvePm, installCmd, runScriptCmd } from '../lib/pkg-manager';
 import { syncHarmonyAutolinking } from '../harmony-project';
 import { ensureAppJsonPlugin } from '../injector/app-json';
 
@@ -23,7 +23,7 @@ export async function runInstall(args: string[]): Promise<void> {
 
   // 步骤 2：iOS/Android 安装
   log.step(`expo install ${pkg}`);
-  run(`npx expo install --${pm} ${pkg}`, { cwd: projectRoot });
+  runFile('npx', ['expo', 'install', `--${pm}`, pkg], { cwd: projectRoot });
 
   if (skipHarmony) {
     log.info('--skip-harmony，跳过鸿蒙处理');
@@ -52,7 +52,8 @@ export async function runInstall(args: string[]): Promise<void> {
 
   // 步骤 4：装新依赖
   log.step('装新依赖');
-  run(installCmd(pm), { cwd: projectRoot });
+  const install = installCmd(pm);
+  runFile(install.file, install.args, { cwd: projectRoot });
 
   // 步骤 5：已有 Harmony 工程时只刷新 autolinking 托管文件，不覆盖整个 harmony/。
   if (result.needsAutolink && !skipNative) {
@@ -63,9 +64,10 @@ export async function runInstall(args: string[]): Promise<void> {
       if (result.requiresCodegen) {
         const harmonyEntryDir = path.join(projectRoot, 'harmony', 'entry');
         log.step('安装 HarmonyOS 原生依赖');
-        run(`${resolveOhpmCommand()} install`, { cwd: harmonyEntryDir });
+        runFile(resolveOhpmCommand(), ['install'], { cwd: harmonyEntryDir });
         log.step('生成 TurboModule C++ 桥接代码');
-        run('pnpm codegen', { cwd: projectRoot });
+        const codegen = runScriptCmd(pm, 'codegen');
+        runFile(codegen.file, codegen.args, { cwd: projectRoot });
         ensureCodegenOutput(projectRoot);
         log.success('TurboModule C++ 桥接代码已生成');
       } else {

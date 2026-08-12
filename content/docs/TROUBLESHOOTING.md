@@ -22,13 +22,13 @@ ohpm --version
 pnpm start:harmony
 ```
 
-该命令会启动 8888 端口，并自动尝试执行：
+该命令默认启动 8081 端口，并自动尝试执行：
 
 ```bash
-hdc rport tcp:8888 tcp:8888
+hdc rport tcp:8081 tcp:8081
 ```
 
-如果真机仍无法加载，在 RNOH Dev Settings 中填写终端输出的 `<局域网 IP>:8888`，然后 Reload。
+如果真机仍无法加载，在 RNOH Dev Settings 中填写终端输出的 `<局域网 IP>:8081`，然后 Reload。
 
 也可以显式指定地址：
 

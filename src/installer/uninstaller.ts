@@ -2,8 +2,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { syncHarmonyAutolinking } from '../harmony-project';
 import { cleanupManagedPackage, readManagedState } from '../lifecycle/managed-state';
-import { uninstallCmd, resolvePm } from '../lib/pkg-manager';
-import { run } from '../utils/exec';
+import { uninstallCmd, resolvePm, runScriptCmd } from '../lib/pkg-manager';
+import { runFile } from '../utils/exec';
 import { log } from '../utils/log';
 
 const DEVECO_OHPM_PATH = '/Applications/DevEco-Studio.app/Contents/tools/ohpm/bin/ohpm';
@@ -37,7 +37,8 @@ export async function runUninstall(args: string[]): Promise<void> {
   if (!skipHarmony && managed?.harmonyPackage) packages.push(managed.harmonyPackage);
 
   log.step(`卸载 ${packages.join('、')}`);
-  run(uninstallCmd(pm, packages), { cwd: projectRoot });
+  const uninstall = uninstallCmd(pm, packages);
+  runFile(uninstall.file, uninstall.args, { cwd: projectRoot });
 
   if (skipHarmony) {
     log.info('--skip-harmony，已跳过 HarmonyOS 管理资产清理');
@@ -64,11 +65,12 @@ export async function runUninstall(args: string[]): Promise<void> {
   const syncResult = syncHarmonyAutolinking(projectRoot);
   log.success(`HarmonyOS 原生注册已同步（${syncResult.linked.length} 个包）`);
   log.step('刷新 HarmonyOS 原生依赖');
-  run(`${resolveOhpmCommand()} install --all`, { cwd: harmonyDir });
+  runFile(resolveOhpmCommand(), ['install', '--all'], { cwd: harmonyDir });
 
   if (cleanup.requiresCodegen) {
     log.step('刷新 TurboModule C++ 桥接代码');
-    run('pnpm codegen', { cwd: projectRoot });
+    const codegen = runScriptCmd(pm, 'codegen');
+    runFile(codegen.file, codegen.args, { cwd: projectRoot });
   }
   log.success('uninstall 完成');
 }

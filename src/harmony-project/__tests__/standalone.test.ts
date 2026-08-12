@@ -16,6 +16,8 @@ describe('runHarmonyGeneration (integration)', () => {
     fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-oh', 'react-native-harmony'), {
       recursive: true,
     });
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony', 'safe_area.har'), 'har');
   });
   afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
@@ -23,6 +25,8 @@ describe('runHarmonyGeneration (integration)', () => {
     fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-svg'), {
       recursive: true,
     });
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-svg', 'harmony'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-svg', 'harmony', 'svg.har'), 'har');
     await runHarmonyGeneration(tmp, { name: 'MyApp', slug: 'myapp' } as any, {});
     const harmonyDir = path.join(tmp, 'harmony');
     expect(fs.existsSync(path.join(harmonyDir, 'AppScope/app.json5'))).toBe(true);
@@ -82,6 +86,8 @@ describe('runHarmonyGeneration (integration)', () => {
     fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-webview'), {
       recursive: true,
     });
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-webview', 'harmony'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-webview', 'harmony', 'rn_webview.har'), 'har');
 
     const result = syncHarmonyAutolinking(tmp);
 
@@ -112,6 +118,12 @@ describe('runHarmonyGeneration (integration)', () => {
       '@react-native-ohos/react-native-webview',
     ]) {
       fs.mkdirSync(path.join(tmp, 'node_modules', pkg), { recursive: true });
+    }
+    const hars: Record<string, string> = { 'react-native-gesture-handler': 'gesture_handler.har', 'react-native-reanimated': 'reanimated.har', 'react-native-screens': 'screens.har', 'react-native-webview': 'rn_webview.har' };
+    for (const [pkg, har] of Object.entries(hars)) {
+      const dir = path.join(tmp, 'node_modules', '@react-native-ohos', pkg, 'harmony');
+      fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(path.join(dir, har), 'har');
     }
 
     await runHarmonyGeneration(tmp, { name: 'Multi', slug: 'multi' } as any, {});
@@ -239,14 +251,13 @@ describe('runHarmonyGeneration (integration)', () => {
     expect(indexEts).toContain('appKey: "main"');
     expect(indexEts).toContain("import { preferences } from '@kit.ArkData';");
     expect(indexEts).toContain("dataPreferences.getSync('devHostAndPortAddress', '')");
-    expect(indexEts).toContain("'localhost:8888'");
+    expect(indexEts).toContain("'localhost:8081'");
     expect(indexEts).toContain('createMetroJSBundleProvider(this.rnohCoreContext)');
     expect(indexEts).toContain("'bundle.harmony.js'");
     expect(indexEts).toContain('new AnyJSBundleProvider([');
     expect(indexEts).toContain('new ResourceJSBundleProvider');
     expect(indexEts).not.toContain('hermes_bundle.hbc');
     expect(indexEts).not.toContain('new MetroJSBundleProvider()');
-    expect(indexEts).not.toContain('localhost:8081');
 
     const entryAbility = fs.readFileSync(
       path.join(harmonyDir, 'entry/src/main/ets/entryability/EntryAbility.ets'),

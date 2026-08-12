@@ -1,7 +1,9 @@
 import * as fs from 'fs';
 import * as path from 'path';
 
-const METRO_CONFIG_JS = `const path = require('path');
+const METRO_CONFIG_MARKER = '// expo-harmony-cli:managed';
+const METRO_CONFIG_JS = `${METRO_CONFIG_MARKER}
+const path = require('path');
 const { mergeConfig } = require('@react-native/metro-config');
 
 process.env.EXPO_ROUTER_APP_ROOT = path.resolve(__dirname, 'app');
@@ -57,5 +59,9 @@ if (isHarmonyBundle) {
 `;
 
 export function writeMetroConfig(targetDir: string): void {
-  fs.writeFileSync(path.join(targetDir, 'metro.config.js'), METRO_CONFIG_JS);
+  const configPath = path.join(targetDir, 'metro.config.js');
+  if (fs.existsSync(configPath) && !fs.readFileSync(configPath, 'utf8').includes(METRO_CONFIG_MARKER)) {
+    return;
+  }
+  fs.writeFileSync(configPath, METRO_CONFIG_JS);
 }

@@ -39,7 +39,7 @@ pnpm start:harmony
 
 随后在 DevEco Studio 中打开项目的 `harmony/` 目录，选择 `entry` 模块并运行到真机或模拟器。
 
-`pnpm start:harmony` 会启动 8888 端口的 Metro，自动尝试执行 `hdc rport tcp:8888 tcp:8888`，并输出局域网地址。真机仍无法加载 bundle 时，在 RNOH Dev Settings 中填写终端输出的 `<局域网 IP>:8888`；也可设置 `HARMONY_METRO_HOST=<局域网 IP>` 显式指定地址。
+`pnpm start:harmony` 会启动 8081 端口的 Metro，自动尝试执行 `hdc rport tcp:8081 tcp:8081`，并输出局域网地址。真机仍无法加载 bundle 时，在 RNOH Dev Settings 中填写终端输出的 `<局域网 IP>:8081`；也可设置 `HARMONY_METRO_HOST=<局域网 IP>` 和 `HARMONY_METRO_PORT=<端口>` 显式指定地址。
 
 ## Documentation
 

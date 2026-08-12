@@ -10,7 +10,7 @@
 | `pnpm dlx expo-harmony-cli scan`                                | 重新扫描现有 `package.json`，补齐可自动识别的 HarmonyOS 适配，并回收此前 CLI 管理但原包已不存在的残留。 |
 | `pnpm dlx expo-harmony-cli sync`                                | 仅同步 HarmonyOS 原生注册，不覆盖 `harmony/`。手工安装原生包后使用。                                    |
 | `pnpm dlx expo-harmony-cli prebuild --platform harmony --force` | 重新生成 HarmonyOS 原生工程。修改原生依赖或 `harmony/` 异常时使用。                                     |
-| `pnpm start:harmony`                                            | 启动 HarmonyOS Metro，端口为 `8888`。                                                                   |
+| `pnpm start:harmony`                                            | 启动 HarmonyOS Metro，默认端口为 `8081`（可用 `HARMONY_METRO_PORT` 覆盖）。                              |
 | `pnpm expo run:android` / `pnpm expo run:ios`                   | 按 Expo 标准方式构建 Android / iOS。                                                                    |
 
 默认不带 `--platform` 的 `prebuild` 会同时执行 Expo 原生预构建和 HarmonyOS 工程生成；只调试 HarmonyOS 时建议显式使用 `--platform harmony`。
@@ -137,10 +137,10 @@ harmony/entry/src/main/resources/rawfile/assets/
 确认 `pnpm start:harmony` 正在运行，设备与开发机处于可通信网络；终端会打印 Metro LAN URL。必要时使用：
 
 ```bash
-hdc rport tcp:8888 tcp:8888
+hdc rport tcp:8081 tcp:8081
 ```
 
-再在 RNOH Dev Settings 中填写 `<局域网 IP>:8888` 并 Reload。
+再在 RNOH Dev Settings 中填写 `<局域网 IP>:8081` 并 Reload。
 
 ### 新增原生依赖后 DevEco 构建失败
 

@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
 
-vi.mock('../src/utils/exec', () => ({ run: vi.fn() }));
-const { run: mockRun } = await import('../src/utils/exec');
+vi.mock('../src/utils/exec', () => ({ runFile: vi.fn() }));
+const { runFile: mockRunFile } = await import('../src/utils/exec');
 vi.mock('../src/harmony-project', () => ({ syncHarmonyAutolinking: vi.fn(() => ({ linked: [] })) }));
 const { syncHarmonyAutolinking: mockSync } = await import('../src/harmony-project');
 
@@ -12,7 +12,7 @@ describe('runUninstall', () => {
   let tmp: string;
 
   beforeEach(() => {
-    mockRun.mockClear();
+    mockRunFile.mockClear();
     mockSync.mockClear();
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'uninstall-'));
     fs.mkdirSync(path.join(tmp, 'harmony'), { recursive: true });
@@ -45,19 +45,19 @@ describe('runUninstall', () => {
 
     await runUninstall(['react-native-webview']);
 
-    expect(mockRun).toHaveBeenCalledWith(
-      'pnpm remove react-native-webview @react-native-ohos/react-native-webview',
+    expect(mockRunFile).toHaveBeenCalledWith(
+      'pnpm', ['remove', 'react-native-webview', '@react-native-ohos/react-native-webview'],
       expect.anything(),
     );
     expect(mockSync).toHaveBeenCalledWith(fs.realpathSync(tmp));
-    expect(mockRun).toHaveBeenCalledWith(expect.stringMatching(/ohpm.*install --all/), expect.anything());
+    expect(mockRunFile).toHaveBeenCalledWith(expect.any(String), ['install', '--all'], expect.anything());
   });
 
   it('未知包只执行包管理器卸载，不清理未知 HarmonyOS 资产', async () => {
     const { runUninstall } = await import('../src/installer/uninstaller');
     await runUninstall(['lodash']);
 
-    expect(mockRun).toHaveBeenCalledWith('pnpm remove lodash', expect.anything());
+    expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['remove', 'lodash'], expect.anything());
     expect(mockSync).not.toHaveBeenCalled();
   });
 });

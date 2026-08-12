@@ -16,18 +16,21 @@ describe('scan 命令', () => {
   });
   afterEach(() => { process.chdir(__dirname); fs.rmSync(tmp, { recursive: true, force: true }); });
 
-  it('scan 重跑 scanAndAdapt，删 expo-haptics', async () => {
+  it('scan 默认只读预览，--apply 才删除 expo-haptics', async () => {
     const { scan } = await import('../src/commands/scan');
     await scan([]);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['expo-haptics']).toBeUndefined();
+    expect(pkg.dependencies['expo-haptics']).toBe('~14.0.1');
+    await scan(['--apply']);
+    const applied = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
+    expect(applied.dependencies['expo-haptics']).toBeUndefined();
   });
 
   it('已有 harmony/ 时提示安装依赖后执行 sync', async () => {
     const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     fs.mkdirSync(path.join(tmp, 'harmony'));
     const { scan } = await import('../src/commands/scan');
-    await scan([]);
+    await scan(['--apply']);
     expect(output.mock.calls.flat().join('\n')).toContain('pnpm install，然后执行 pnpm dlx expo-harmony-cli sync');
     output.mockRestore();
   });

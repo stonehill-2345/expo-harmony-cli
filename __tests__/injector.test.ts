@@ -57,18 +57,16 @@ describe('injectHarmonyBaseline', () => {
     expect(versions.filter(version => /^[~^]/.test(version))).toEqual([]);
   });
 
-  it('start-harmony.js 自动配置 hdc rport 并启动 8888 Metro', () => {
+  it('start-harmony.js 自动配置 hdc rport 并启动 8081 Metro', () => {
     injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
     const script = fs.readFileSync(path.join(tmp, 'scripts/start-harmony.js'), 'utf8');
-    expect(script).toContain('tcp:8888');
-    expect(script).toContain('tcp:8081');
-    expect(script).toContain('tcp:8888 tcp:8888');
-    expect(script).toContain('tcp:8081 tcp:8888');
+    expect(script).toContain('HARMONY_METRO_PORT');
+    expect(script).toContain('tcp:\' + port');
     expect(script).toContain("spawn('expo'");
     expect(script).toContain("'start'");
     expect(script).toContain("'--offline'");
     expect(script).toContain("'--port'");
-    expect(script).toContain("'8888'");
+    expect(script).toContain("'8081'");
     expect(script).not.toContain("['start', '--offline', '--port', '8888', '--clear']");
     expect(script).toContain('HARMONY_METRO_CLEAR');
     expect(script).toContain("metroArgs.push('--clear')");

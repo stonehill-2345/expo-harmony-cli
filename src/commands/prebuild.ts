@@ -1,4 +1,4 @@
-import { run } from '../utils/exec';
+import { runFile } from '../utils/exec';
 import { log } from '../utils/log';
 import { resolveTasks } from '../prebuild/runner';
 import { preflight } from '../prebuild/preflight';
@@ -19,7 +19,7 @@ export async function prebuild(args: string[]): Promise<void> {
 
   if (runNative) {
     log.step('expo prebuild（ios/android）');
-    run(`npx expo prebuild ${nativeArgs.join(' ')}`.trim(), { cwd: projectRoot });
+    runFile('npx', ['expo', 'prebuild', ...nativeArgs], { cwd: projectRoot });
   }
 
   if (runHarmony) {

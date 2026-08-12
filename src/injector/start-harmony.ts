@@ -26,7 +26,10 @@ function findLanIPv4() {
 
 function getMetroHostAndPort() {
   const host = findLanIPv4();
-  return host.includes(':') ? host : host + ':8888';
+  const rawPort = process.env.HARMONY_METRO_PORT || '8081';
+  const portNumber = Number(rawPort);
+  const port = Number.isInteger(portNumber) && portNumber > 0 && portNumber < 65536 ? String(portNumber) : '8081';
+  return host.includes(':') ? '[' + host + ']:' + port : host + ':' + port;
 }
 
 function findHdc() {
@@ -159,13 +162,11 @@ function runHdcRport(hdc, remote, local) {
 function setupHarmonyPortForwarding() {
   const hdc = findHdc();
   if (!hdc) {
-    console.warn('[harmony] hdc not found, skip reverse port forwarding. If the app cannot load bundle, run: hdc rport tcp:8888 tcp:8888');
+    console.warn('[harmony] hdc not found, skip reverse port forwarding. If the app cannot load bundle, run: hdc rport tcp:' + getMetroHostAndPort().split(':').pop() + ' tcp:' + getMetroHostAndPort().split(':').pop());
     return;
   }
-  // hdc rport tcp:8888 tcp:8888
-  runHdcRport(hdc, 'tcp:8888', 'tcp:8888');
-  // Compatibility for older installed shells that still use RNOH default 8081: hdc rport tcp:8081 tcp:8888
-  runHdcRport(hdc, 'tcp:8081', 'tcp:8888');
+  const port = getMetroHostAndPort().split(':').pop();
+  runHdcRport(hdc, 'tcp:' + port, 'tcp:' + port);
 }
 
 ensureRNOHLogBoxImages();
@@ -174,7 +175,7 @@ ensureExpoModulesCoreNativeModulesProxyNoWarn();
 setupHarmonyPortForwarding();
 
 const metroHostAndPort = getMetroHostAndPort();
-const metroHost = metroHostAndPort.split(':')[0];
+const metroHost = metroHostAndPort.replace(/^\[/, '').replace(/\]:\d+$/, '').split(':')[0];
 console.log('[harmony] Metro LAN URL: http://' + metroHostAndPort);
 console.log('[harmony] If the app cannot load bundle on a real device, set RNOH Dev Settings to: ' + metroHostAndPort);
 
@@ -186,7 +187,7 @@ const env = {
   REACT_NATIVE_PACKAGER_HOSTNAME: metroHost,
 };
 
-const metroArgs = ['start', '--offline', '--port', '8888'];
+const metroArgs = ['start', '--offline', '--port', metroHostAndPort.split(':').pop()];
 if (process.env.HARMONY_METRO_CLEAR === '1' || process.env.HARMONY_METRO_CLEAR === 'true') {
   metroArgs.push('--clear');
 }
