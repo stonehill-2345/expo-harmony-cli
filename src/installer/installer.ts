@@ -38,8 +38,9 @@ export async function runInstall(args: string[]): Promise<void> {
     console.log();
     log.warn(
       [
-        chalk.bold(`未自动适配 HarmonyOS : ${pkg}`),
-        '请先确认：',
+        // Keep this text unstyled so the package name and newline remain
+        // contiguous for log consumers that inspect the raw output.
+        `未自动适配 HarmonyOS : ${pkg}\n请先确认：`,
         '- 纯 JS 包：可直接运行',
         `- 包含原生模块：请勿直接在 HarmonyOS 使用，可参考 ${chalk.cyan.bold('.agent/skills/expo-harmony-adapter/SKILL.md')} 完成适配`,
       ].join('\n')
