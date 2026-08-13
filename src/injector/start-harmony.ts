@@ -26,7 +26,17 @@ function findLanIPv4() {
 
 function getMetroHostAndPort() {
   const host = findLanIPv4();
-  return host.includes(':') ? '[' + host + ']:8888' : host + ':8888';
+  return host.includes(':') ? '[' + host + ']:8081' : host + ':8081';
+}
+
+function isMetroRunningOnPort(port) {
+  const result = spawnSync(process.execPath, ['-e',
+    "const net=require('net');const s=net.connect(" + port + ",'127.0.0.1');" +
+    "s.on('connect',function(){s.end();process.exit(0)});" +
+    "s.on('error',function(){process.exit(1)});" +
+    "setTimeout(function(){process.exit(1)},1000);"
+  ], { stdio: 'ignore' });
+  return result.status === 0;
 }
 
 function findHdc() {
@@ -146,25 +156,49 @@ function ensureRNOHLogBoxImages() {
   }
 }
 
+function clearConflictingRportRules(hdc, devicePort) {
+  const result = spawnSync(hdc, ['fport', 'ls'], { encoding: 'utf8' });
+  if (result.status !== 0) return;
+  const target = 'tcp:' + devicePort;
+  const lines = (result.stdout || '').split('\\n');
+  for (const line of lines) {
+    // 反向转发(rport)规则行: "<serial>  tcp:REMOTE tcp:LOCAL  [Reverse]"
+    // REMOTE 为设备侧端口，占用设备 8081 的旧规则会导致新 rport 失败，先清掉。
+    const match = line.match(/(tcp:\\d+)\\s+(tcp:\\d+)\\s+\\[Reverse\\]/);
+    if (!match) continue;
+    const remote = match[1];
+    const local = match[2];
+    if (remote === target) {
+      spawnSync(hdc, ['fport', 'rm', remote, local], { stdio: 'ignore' });
+      console.log('[harmony] 清理冲突的 hdc 旧转发规则 ' + remote + ' ' + local);
+    }
+  }
+}
+
 function runHdcRport(hdc, remote, local) {
   const result = spawnSync(hdc, ['rport', remote, local], { encoding: 'utf8' });
-  if (result.status === 0) {
+  const out = ((result.stdout || '') + (result.stderr || '')).trim();
+  // hdc rport 端口冲突失败时 exit code 仍为 0，必须依据输出判定：
+  // 成功 → 输出 "Forwardport result:OK"；失败 → 输出含 "[Fail]"
+  const ok = result.status === 0 && /Forwardport result:OK/i.test(out) && !/\\[Fail\\]/i.test(out);
+  if (ok) {
     console.log('[harmony] hdc rport ' + remote + ' ' + local + ' ready');
     return;
   }
-  const message = ((result.stderr || '') + (result.stdout || '')).trim();
-  if (message) console.warn('[harmony] hdc rport ' + remote + ' ' + local + ' skipped: ' + message);
+  console.error('[harmony] hdc rport ' + remote + ' ' + local + ' failed' + (out ? ': ' + out : ''));
+  console.error('[harmony] 请确认 Harmony 设备已通过 USB/无线连接并开启调试。若仍失败，可手动执行：hdc rport ' + remote + ' ' + local);
+  process.exit(1);
 }
 
 function setupHarmonyPortForwarding() {
   const hdc = findHdc();
   if (!hdc) {
-    console.warn('[harmony] hdc not found, skip reverse port forwarding. If the app cannot load bundle, run: hdc rport tcp:8888 tcp:8888');
-    return;
+    console.error('[harmony] 未找到 hdc。请安装 DevEco Studio，或设置 HDC_PATH 环境变量后重试：pnpm start:harmony');
+    process.exit(1);
   }
-  // Harmony RNOH 默认从设备侧 8081 请求，开发机上的 Harmony Metro 独立使用 8888。
-  runHdcRport(hdc, 'tcp:8888', 'tcp:8888');
-  runHdcRport(hdc, 'tcp:8081', 'tcp:8888');
+  // 三端共用 8081：先清掉占用设备 8081 的旧转发规则（如 8888→8081 迁移残留），再建单条 rport。
+  clearConflictingRportRules(hdc, 8081);
+  runHdcRport(hdc, 'tcp:8081', 'tcp:8081');
 }
 
 ensureRNOHLogBoxImages();
@@ -180,26 +214,28 @@ console.log('[harmony] If the app cannot load bundle on a real device, set RNOH 
 const env = {
   ...process.env,
   EXPO_OFFLINE: '1',
-  RN_BUNDLE_PLATFORM: 'harmony',
   EXPO_PACKAGER_HOSTNAME: metroHost,
   REACT_NATIVE_PACKAGER_HOSTNAME: metroHost,
 };
 
-const metroArgs = ['start', '--offline', '--port', '8888'];
+const metroArgs = ['start', '--offline', '--port', '8081'];
 if (process.env.HARMONY_METRO_CLEAR === '1' || process.env.HARMONY_METRO_CLEAR === 'true') {
   metroArgs.push('--clear');
 }
 
-const child = spawn('expo', metroArgs, {
-  stdio: 'inherit',
-  shell: true,
-  env,
-});
-
-child.on('exit', (code, signal) => {
-  if (signal) process.kill(process.pid, signal);
-  process.exit(code ?? 0);
-});
+if (isMetroRunningOnPort(8081)) {
+  console.log('[harmony] 检测到 8081 已有 Metro 运行，复用，仅完成 hdc 转发。');
+} else {
+  const child = spawn('expo', metroArgs, {
+    stdio: 'inherit',
+    shell: true,
+    env,
+  });
+  child.on('exit', (code, signal) => {
+    if (signal) process.kill(process.pid, signal);
+    process.exit(code ?? 0);
+  });
+}
 `;
 
 export function writeStartHarmony(targetDir: string): void {

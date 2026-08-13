@@ -47,7 +47,7 @@ function createCompleteTip(pm: Pm, projectName?: string): Tip {
         desc: '首次生成 HarmonyOS 原生工程',
       },
       { cmd: 'cd harmony && ohpm install', desc: '安装 ArkTS/HAR 原生依赖' },
-      { cmd: startCommand(pm), desc: '启动 HarmonyOS Metro（默认端口 8888，原生端口 8081）' },
+      { cmd: startCommand(pm), desc: '启动 HarmonyOS Metro（与 Android/iOS 统一端口 8081）' },
       { cmd: 'DevEco Studio', desc: '打开 harmony/，构建并运行 entry 模块' },
     ],
     mustRead: [{ name: '项目快速开始', path: 'README.md' }],

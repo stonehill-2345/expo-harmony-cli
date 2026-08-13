@@ -34,13 +34,13 @@ describe('dynamic templates', () => {
     expect(out).toContain('"value": "MyApp"');
   });
 
-  it('EntryIndexTemplate 注入 appName，并固定 Expo appKey 为 main + Metro 8888', () => {
+  it('EntryIndexTemplate 注入 appName，并固定 Expo appKey 为 main + Metro 8081', () => {
     const out = new EntryIndexTemplate('MyApp').build();
     expect(out.match(/MyApp/g)?.length).toBe(1);
     expect(out).toContain('name: "MyApp"');
     expect(out).toContain('appKey: "main"');
     expect(out).toContain("dataPreferences.getSync('devHostAndPortAddress', '')");
-    expect(out).toContain("'localhost:8888'");
+    expect(out).toContain("'localhost:8081'");
     expect(out).toContain("'/index.bundle?platform=harmony&dev=true&minify=false'");
     expect(out).toContain('createMetroJSBundleProvider(this.rnohCoreContext)');
     expect(out).toContain("'bundle.harmony.js'");

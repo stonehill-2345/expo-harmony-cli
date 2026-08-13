@@ -32,10 +32,10 @@ function dryRunPackFiles(cwd: string): string[] {
   }
 }
 
-function assertPackedDistContainsMetro8888Provider(cwd: string, files: string[]): void {
+function assertPackedDistContainsMetro8081Provider(cwd: string, files: string[]): void {
   expect(files).toContain('dist/harmony-project/templates/EntryIndexTemplate.js');
   const content = fs.readFileSync(path.join(cwd, 'dist/harmony-project/templates/EntryIndexTemplate.js'), 'utf8');
-  expect(content).toContain('localhost:8888');
+  expect(content).toContain('localhost:8081');
   expect(content).toContain('createMetroJSBundleProvider(this.rnohCoreContext)');
   expect(content).not.toContain('new MetroJSBundleProvider()');
 }
@@ -69,7 +69,7 @@ describe('内置 HarmonyOS 生成器 pack 文件', () => {
     expect(files).not.toContain('templates/harmony/.hvigor/dependencyMap/dependencyMap.json5');
     expect(files).not.toContain('templates/harmony/.idea/.deveco/module/entry.cache.json');
 
-    assertPackedDistContainsMetro8888Provider(cwd, files);
+    assertPackedDistContainsMetro8081Provider(cwd, files);
     assertPackedFilesDoNotContainLocalState(cwd, files);
   });
 });

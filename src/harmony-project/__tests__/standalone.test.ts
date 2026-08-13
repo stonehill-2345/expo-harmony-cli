@@ -251,7 +251,7 @@ describe('runHarmonyGeneration (integration)', () => {
     expect(indexEts).toContain('appKey: "main"');
     expect(indexEts).toContain("import { preferences } from '@kit.ArkData';");
     expect(indexEts).toContain("dataPreferences.getSync('devHostAndPortAddress', '')");
-    expect(indexEts).toContain("'localhost:8888'");
+    expect(indexEts).toContain("'localhost:8081'");
     expect(indexEts).toContain('createMetroJSBundleProvider(this.rnohCoreContext)');
     expect(indexEts).toContain("'bundle.harmony.js'");
     expect(indexEts).toContain('new AnyJSBundleProvider([');
