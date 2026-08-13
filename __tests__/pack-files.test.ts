@@ -62,8 +62,8 @@ function assertPackedDistContainsStartHarmonyScript(cwd: string, files: string[]
   const writer = fs.readFileSync(path.join(cwd, 'dist/injector/start-harmony.js'), 'utf8');
   const packageJson = fs.readFileSync(path.join(cwd, 'dist/injector/package-json.js'), 'utf8');
   expect(writer).toContain('start-harmony.js');
-  expect(writer).toContain("'tcp:' + port, 'tcp:' + port");
-  expect(writer).toContain("process.env.HARMONY_METRO_PORT || '8081'");
+  expect(writer).toContain("runHdcRport(hdc, 'tcp:8888', 'tcp:8888')");
+  expect(writer).toContain("runHdcRport(hdc, 'tcp:8081', 'tcp:8888')");
   expect(writer).toContain('os.networkInterfaces');
   expect(writer).toContain('HARMONY_METRO_HOST');
   expect(writer).toContain('EXPO_PACKAGER_HOSTNAME');

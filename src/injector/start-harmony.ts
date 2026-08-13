@@ -26,10 +26,7 @@ function findLanIPv4() {
 
 function getMetroHostAndPort() {
   const host = findLanIPv4();
-  const rawPort = process.env.HARMONY_METRO_PORT || '8081';
-  const portNumber = Number(rawPort);
-  const port = Number.isInteger(portNumber) && portNumber > 0 && portNumber < 65536 ? String(portNumber) : '8081';
-  return host.includes(':') ? '[' + host + ']:' + port : host + ':' + port;
+  return host.includes(':') ? '[' + host + ']:8888' : host + ':8888';
 }
 
 function findHdc() {
@@ -162,11 +159,12 @@ function runHdcRport(hdc, remote, local) {
 function setupHarmonyPortForwarding() {
   const hdc = findHdc();
   if (!hdc) {
-    console.warn('[harmony] hdc not found, skip reverse port forwarding. If the app cannot load bundle, run: hdc rport tcp:' + getMetroHostAndPort().split(':').pop() + ' tcp:' + getMetroHostAndPort().split(':').pop());
+    console.warn('[harmony] hdc not found, skip reverse port forwarding. If the app cannot load bundle, run: hdc rport tcp:8888 tcp:8888');
     return;
   }
-  const port = getMetroHostAndPort().split(':').pop();
-  runHdcRport(hdc, 'tcp:' + port, 'tcp:' + port);
+  // Harmony RNOH 默认从设备侧 8081 请求，开发机上的 Harmony Metro 独立使用 8888。
+  runHdcRport(hdc, 'tcp:8888', 'tcp:8888');
+  runHdcRport(hdc, 'tcp:8081', 'tcp:8888');
 }
 
 ensureRNOHLogBoxImages();
@@ -187,7 +185,7 @@ const env = {
   REACT_NATIVE_PACKAGER_HOSTNAME: metroHost,
 };
 
-const metroArgs = ['start', '--offline', '--port', metroHostAndPort.split(':').pop()];
+const metroArgs = ['start', '--offline', '--port', '8888'];
 if (process.env.HARMONY_METRO_CLEAR === '1' || process.env.HARMONY_METRO_CLEAR === 'true') {
   metroArgs.push('--clear');
 }

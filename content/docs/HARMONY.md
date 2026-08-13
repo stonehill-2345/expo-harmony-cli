@@ -32,7 +32,7 @@ pnpm start:harmony
 ## 日常开发命令
 
 ```bash
-# 启动 HarmonyOS Metro，默认端口 8081（可通过 HARMONY_METRO_PORT 覆盖）
+# 启动 HarmonyOS Metro，端口固定 8888（原生 iOS/Android Metro 使用 8081）
 pnpm start:harmony
 
 # Android
@@ -120,4 +120,4 @@ harmony/entry/src/main/resources/rawfile/assets/
 - 模拟器：DevEco Studio -> Tools -> Device Manager。
 - JS 日志：查看 Metro 控制台。
 - 原生日志：查看 DevEco Studio LogViewer / hilog。
-- 真机无法加载 bundle：查看 `pnpm start:harmony` 输出的 `<局域网 IP>:8081`，并在 RNOH Dev Settings 中填写。
+- 真机无法加载 bundle：查看 `pnpm start:harmony` 输出的 `<局域网 IP>:8888`，并在 RNOH Dev Settings 中填写。

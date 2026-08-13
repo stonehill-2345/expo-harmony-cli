@@ -16,7 +16,7 @@ function createMetroJSBundleProvider(ctx: RNOHCoreContext): MetroJSBundleProvide
   const dataPreferences: preferences.Preferences =
     preferences.getPreferencesSync(ctx.uiAbilityContext, { name: 'devSettings' });
   const address: preferences.ValueType = dataPreferences.getSync('devHostAndPortAddress', '');
-  const hostAndPort = address.toString() ? address.toString() : 'localhost:8081';
+  const hostAndPort = address.toString() ? address.toString() : 'localhost:8888';
   return new MetroJSBundleProvider(
     'http://' + hostAndPort + '/index.bundle?platform=harmony&dev=true&minify=false',
     ['main'],
