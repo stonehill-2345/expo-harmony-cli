@@ -38,7 +38,15 @@ export async function initProject(opts: InitOptions): Promise<void> {
 
   // 步骤 11：校验并拷贝包内模板目录（fs.cpSync，Node 16.7+）
   const resolvedTemplate = resolveHarmonyTemplateSource({ source: templateSource });
-  fs.cpSync(resolvedTemplate.templateDir, harmonyDir, { recursive: true });
+  // Windows 上目标目录可能由杀毒软件/同步工具短暂占用，不能假定 cpSync 会先创建目录。
+  // 预创建后再复制，且复制完成后立即校验，避免后续 readdirSync 只抛出无上下文的 ENOENT。
+  fs.mkdirSync(harmonyDir, { recursive: true });
+  fs.cpSync(resolvedTemplate.templateDir, harmonyDir, { recursive: true, force: true });
+  if (!fs.existsSync(path.join(harmonyDir, 'oh-package.json5'))) {
+    throw new Error(
+      `Harmony 模板复制失败：未找到 ${path.join(harmonyDir, 'oh-package.json5')}（模板源：${resolvedTemplate.templateDir}）`,
+    );
+  }
 
   // 步骤 12：递归重命名 gitignore → .gitignore
   renameGitignoreFiles(harmonyDir);
