@@ -6,6 +6,7 @@ import { scan } from './commands/scan';
 import { list } from './commands/list';
 import { sync } from './commands/sync';
 import { uninstall } from './commands/uninstall';
+import packageJson from '../package.json';
 
 /** 命令分发（纯函数）。argv = process.argv.slice(2) */
 export async function dispatch(argv: string[]): Promise<void> {
@@ -13,6 +14,10 @@ export async function dispatch(argv: string[]): Promise<void> {
 
   if (cmd === '--help' || cmd === '-h') {
     printHelp();
+    return;
+  }
+  if (cmd === '--version' || cmd === '-v') {
+    console.log(packageJson.version);
     return;
   }
 
@@ -61,6 +66,10 @@ Commands:
   scan                    手动重跑扫描适配
   sync                    增量同步 HarmonyOS 原生注册（不覆盖 harmony/）
   list                    列出 compat-table（调试用）
+
+Options:
+  -h, --help              显示帮助
+  -v, --version           显示 CLI 版本
 
 Examples:
   npx expo-harmony-cli my-app

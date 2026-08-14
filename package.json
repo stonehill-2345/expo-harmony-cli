@@ -1,6 +1,6 @@
 {
   "name": "expo-harmony-cli",
-  "version": "0.2.5",
+  "version": "1.0.0",
   "description": "CLI for creating Expo projects with HarmonyOS support",
   "keywords": [
     "expo",
@@ -18,7 +18,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepublishOnly": "pnpm run build",
+    "prepublishOnly": "pnpm run clean && pnpm run build",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
