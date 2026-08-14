@@ -16,11 +16,13 @@ export class Asset {
   height?: number;
   downloaded = false;
 
-  static async loadAsync(): Promise<Asset> {
-    return new Asset();
+  // 返回空数组对齐真实 API（真实 loadAsync 返回 Asset[]），避免业务
+  // `const [a] = await Asset.loadAsync(1)` 解构时 Asset 不可迭代而崩。
+  static async loadAsync(): Promise<Asset[]> {
+    return [];
   }
-  static async fromMetadata(): Promise<Asset> {
-    return new Asset();
+  static async fromMetadata(): Promise<Asset[]> {
+    return [];
   }
   async downloadAsync(): Promise<Asset> {
     this.downloaded = true;
@@ -28,7 +30,7 @@ export class Asset {
   }
 }
 
-// useAssets 返回空数组（而非 undefined），避免解构后 .map 二次崩溃
-export const useAssets = (): [Asset[], null] => [[], null];
+// useAssets 返回 [空数组, false]（loading 位 false 对齐真实 boolean），避免解构后 .map 二次崩溃
+export const useAssets = (): [Asset[], boolean] => [[], false];
 
 export default Asset;

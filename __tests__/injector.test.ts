@@ -209,6 +209,7 @@ describe('injectHarmonyBaseline', () => {
     injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
     expect(fs.existsSync(path.join(tmp, 'shims/expo-metro-runtime.ts'))).toBe(true);
     // expo-asset 基线 shim（Expo.fx 启动硬依赖，所有 expo 鸿蒙项目都崩）
+    // 注：本单测验证注入产物（文件存在 + alias-map 条目）；运行时 polyfill 行为由 Task 2 端到端 gate 覆盖
     expect(fs.existsSync(path.join(tmp, 'shims/expo-asset.ts'))).toBe(true);
     expect(fs.existsSync(path.join(tmp, 'shims/expo-modules-core/NativeModulesProxy.ts'))).toBe(false);
     const aliasMap = JSON.parse(fs.readFileSync(path.join(tmp, 'shims/.alias-map.json'), 'utf8'));
