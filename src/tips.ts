@@ -16,6 +16,10 @@ export interface TipOptions {
 
 export const TIPS: Record<string, Tip> = {};
 
+function commandText(pm: Pm, command: { file: string; args: string[] }): string {
+  return [command.file, ...command.args].join(' ');
+}
+
 function cliCommand(pm: Pm): string {
   return {
     pnpm: 'pnpm dlx expo-harmony-cli',
@@ -37,13 +41,13 @@ function startCommand(pm: Pm): string {
 function createCompleteTip(pm: Pm, projectName?: string): Tip {
   return {
     steps: [
-      { cmd: projectName ? `cd ${projectName} && ${installCmd(pm)}` : installCmd(pm), desc: '安装依赖并应用 patch' },
+      { cmd: projectName ? `cd ${projectName} && ${commandText(pm, installCmd(pm))}` : commandText(pm, installCmd(pm)), desc: '安装依赖并应用 patch' },
       {
         cmd: `${cliCommand(pm)} prebuild --platform harmony`,
         desc: '首次生成 HarmonyOS 原生工程',
       },
       { cmd: 'cd harmony && ohpm install', desc: '安装 ArkTS/HAR 原生依赖' },
-      { cmd: startCommand(pm), desc: '启动 HarmonyOS Metro（端口 8888）' },
+      { cmd: startCommand(pm), desc: '启动 HarmonyOS Metro（与 Android/iOS 统一端口 8081）' },
       { cmd: 'DevEco Studio', desc: '打开 harmony/，构建并运行 entry 模块' },
     ],
     mustRead: [{ name: '项目快速开始', path: 'README.md' }],

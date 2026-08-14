@@ -7,6 +7,7 @@ import { writeBundleHarmonyRelease } from './bundle-harmony-release';
 import { writeBundleHarmonyDev } from './bundle-harmony-dev';
 import { writeHarmonyEntry } from './harmony-entry';
 import { writeHarmonyIconSymbolFallback } from './icon-symbol';
+import { ensureNpmrcHoisted } from './npmrc';
 
 export interface InjectOptions {
   slug: string;
@@ -24,4 +25,5 @@ export function injectHarmonyBaseline(targetDir: string, opts: InjectOptions): v
   writeBundleHarmonyRelease(targetDir);
   writeHarmonyEntry(targetDir, opts.scheme);
   writeHarmonyIconSymbolFallback(targetDir);
+  ensureNpmrcHoisted(targetDir);
 }

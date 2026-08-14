@@ -22,6 +22,8 @@ describe('runAutolinking', () => {
       path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context'),
       { recursive: true },
     );
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony', 'safe_area.har'), 'har');
   });
   afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
@@ -30,6 +32,10 @@ describe('runAutolinking', () => {
     const cppOnlyPackage = '@react-native-ohos/react-native-linear-gradient';
     fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-mmkv'), { recursive: true });
     fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-linear-gradient'), { recursive: true });
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-mmkv', 'harmony'), { recursive: true });
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-linear-gradient', 'harmony'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-mmkv', 'harmony', 'reactNativeMMKV.har'), 'har');
+    fs.writeFileSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-linear-gradient', 'harmony', 'linear_gradient.har'), 'har');
 
     const result = runAutolinking({
       projectRoot: tmp,
@@ -216,6 +222,10 @@ describe('runAutolinking', () => {
         path.join(multiTmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context'),
         { recursive: true },
       );
+      fs.mkdirSync(path.join(multiTmp, 'node_modules', '@react-native-ohos', 'react-native-gesture-handler', 'harmony'), { recursive: true });
+      fs.writeFileSync(path.join(multiTmp, 'node_modules', '@react-native-ohos', 'react-native-gesture-handler', 'harmony', 'gesture_handler.har'), 'har');
+      fs.mkdirSync(path.join(multiTmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony'), { recursive: true });
+      fs.writeFileSync(path.join(multiTmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony', 'safe_area.har'), 'har');
 
       const result = runAutolinking({
         projectRoot: multiTmp,
@@ -267,6 +277,8 @@ describe('runAutolinking', () => {
         ),
         { recursive: true },
       );
+      fs.mkdirSync(path.join(noDepsTmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony'), { recursive: true });
+      fs.writeFileSync(path.join(noDepsTmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony', 'safe_area.har'), 'har');
 
       // 不报错
       const result = runAutolinking({

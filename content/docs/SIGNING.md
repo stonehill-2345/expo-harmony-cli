@@ -10,7 +10,7 @@
 {{bundleName}}
 ```
 
-签名证书的 bundleName 必须与 `harmony/app.json5` 的 `bundleName` 一致。
+签名证书的 bundleName 必须与 `harmony/AppScope/app.json5` 的 `bundleName` 一致。
 
 ## Debug 签名（开发）
 

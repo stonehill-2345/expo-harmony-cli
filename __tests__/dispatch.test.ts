@@ -33,6 +33,19 @@ describe('命令分发', () => {
     expect(mockCreate).toHaveBeenCalledWith([]);
   });
 
+  it('--version/-v → 输出 package.json 版本且不创建项目', async () => {
+    const { dispatch } = await import('../src/index');
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+
+    await dispatch(['--version']);
+    await dispatch(['-v']);
+
+    expect(output).toHaveBeenNthCalledWith(1, '1.0.0');
+    expect(output).toHaveBeenNthCalledWith(2, '1.0.0');
+    expect(mockCreate).not.toHaveBeenCalled();
+    output.mockRestore();
+  });
+
   it('create 命令 → 调 create', async () => {
     const { dispatch } = await import('../src/index');
     await dispatch(['create', 'my-app']);

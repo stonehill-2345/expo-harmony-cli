@@ -3,8 +3,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-vi.mock('../src/utils/exec', () => ({ run: vi.fn(), getOutput: vi.fn() }));
-const { run: mockRun } = await import('../src/utils/exec');
+vi.mock('../src/utils/exec', () => ({ runFile: vi.fn(), getOutput: vi.fn() }));
+const { runFile: mockRunFile } = await import('../src/utils/exec');
 
 vi.mock('../src/harmony-project', () => ({ syncHarmonyAutolinking: vi.fn(() => ({ linked: [] })) }));
 const { syncHarmonyAutolinking: mockSyncHarmonyAutolinking } = await import('../src/harmony-project');
@@ -13,7 +13,7 @@ describe('runInstall', () => {
   let tmp: string;
   beforeEach(() => {
     vi.resetModules();
-    mockRun.mockClear();
+    mockRunFile.mockClear();
     mockSyncHarmonyAutolinking.mockClear();
     tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'install-'));
     fs.writeFileSync(path.join(tmp, 'app.json'), JSON.stringify({ expo: { slug: 'x' } }));
@@ -27,8 +27,8 @@ describe('runInstall', () => {
   it('expo install 调用 + adaptPackage 命中 alias-only → 不自动 sync', async () => {
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['@shopify/flash-list']);
-    expect(mockRun).toHaveBeenCalledWith('npx expo install --pnpm @shopify/flash-list', expect.anything());
-    expect(mockRun).toHaveBeenCalledWith(expect.stringMatching(/pnpm install|npm install/), expect.anything());
+    expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', '@shopify/flash-list'], expect.anything());
+    expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['install'], expect.anything());
     expect(mockSyncHarmonyAutolinking).not.toHaveBeenCalled();
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1-rc.1');
@@ -39,7 +39,7 @@ describe('runInstall', () => {
 
     await runInstall(['lodash', '--npm']);
 
-    expect(mockRun).toHaveBeenCalledWith('npx expo install --npm lodash', expect.anything());
+    expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--npm', 'lodash'], expect.anything());
   });
 
   it('项目已安装 permissions 时，后续 expo install 前补齐插件配置', async () => {
@@ -51,7 +51,7 @@ describe('runInstall', () => {
 
     const app = JSON.parse(fs.readFileSync(path.join(tmp, 'app.json'), 'utf8'));
     expect(app.expo.plugins).toContainEqual(['react-native-permissions', { iosPermissions: [] }]);
-    expect(mockRun).toHaveBeenCalledWith('npx expo install --pnpm react-native-video', expect.anything());
+    expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-video'], expect.anything());
   });
 
   it('expo install 调用 + 已有 harmony/ + native → 自动增量 sync', async () => {
@@ -59,7 +59,7 @@ describe('runInstall', () => {
     fs.mkdirSync(path.join(tmp, 'harmony'));
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['react-native-webview']);
-    expect(mockRun).toHaveBeenCalledWith('npx expo install --pnpm react-native-webview', expect.anything());
+    expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-webview'], expect.anything());
     expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp));
     expect(output.mock.calls.flat().join('\n')).toContain('cd harmony && ohpm install');
     output.mockRestore();
@@ -80,7 +80,7 @@ describe('runInstall', () => {
     const info = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['lodash']);
-    expect(mockRun).toHaveBeenCalledWith('npx expo install --pnpm lodash', expect.anything());
+    expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'lodash'], expect.anything());
     expect(mockSyncHarmonyAutolinking).not.toHaveBeenCalled();
     const output = info.mock.calls.map(call => call.join(' ')).join('\n');
     expect(output).toContain('未自动适配 HarmonyOS : lodash');
@@ -115,16 +115,16 @@ describe('runInstall', () => {
     fs.writeFileSync(path.join(generatedDir, 'ReactNativeBlobUtil.cpp'), '// generated');
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['react-native-blob-util']);
-    expect(mockRun).toHaveBeenCalledWith('npx expo install --pnpm react-native-blob-util', expect.anything());
-    expect(mockRun).toHaveBeenCalledWith(expect.stringMatching(/pnpm install|npm install/), expect.anything());
+    expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-blob-util'], expect.anything());
+    expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['install'], expect.anything());
     expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp));
-    expect(mockRun).toHaveBeenCalledWith(expect.stringMatching(/ohpm install$/), { cwd: path.join(fs.realpathSync(tmp), 'harmony', 'entry') });
-    expect(mockRun).toHaveBeenCalledWith('pnpm codegen', { cwd: fs.realpathSync(tmp) });
-    expect(mockRun.mock.calls.map(([command]) => command)).toEqual([
-      'npx expo install --pnpm react-native-blob-util',
-      'pnpm install',
-      expect.stringMatching(/ohpm install$/),
-      'pnpm codegen',
+    expect(mockRunFile).toHaveBeenCalledWith(expect.any(String), ['install'], { cwd: path.join(fs.realpathSync(tmp), 'harmony', 'entry') });
+    expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['codegen'], { cwd: fs.realpathSync(tmp) });
+    expect(mockRunFile.mock.calls.map(([file, args]) => [file, args])).toEqual([
+      ['npx', ['expo', 'install', '--pnpm', 'react-native-blob-util']],
+      ['pnpm', ['install']],
+      [expect.any(String), ['install']],
+      ['pnpm', ['codegen']],
     ]);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['react-native-blob-util']).toBe('0.19.6');
@@ -136,8 +136,8 @@ describe('runInstall', () => {
     const { runInstall } = await import('../src/installer/installer');
 
     await expect(runInstall(['react-native-blob-util'])).rejects.toThrow('codegen 未生成 C++ 文件');
-    expect(mockRun).toHaveBeenCalledWith(expect.stringMatching(/ohpm install$/), { cwd: path.join(fs.realpathSync(tmp), 'harmony', 'entry') });
-    expect(mockRun).toHaveBeenCalledWith('pnpm codegen', { cwd: fs.realpathSync(tmp) });
+    expect(mockRunFile).toHaveBeenCalledWith(expect.any(String), ['install'], { cwd: path.join(fs.realpathSync(tmp), 'harmony', 'entry') });
+    expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['codegen'], { cwd: fs.realpathSync(tmp) });
   });
 
   it('install 命中 patch-only → 锁定原包版本并复制 patch', async () => {

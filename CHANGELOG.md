@@ -1,5 +1,15 @@
 # expo-harmony-cli
 
+## 1.0.0
+
+### Major Changes
+
+- 修复 create -> install -> prebuild -> sync 创建主链路中的依赖注入、原生工程生成和增量同步问题。
+- 优化三端 Metro 开发体验，统一 Android、iOS、HarmonyOS 默认端口为 8081，并增强真机 hdc rport 转发、旧规则清理和已有 Metro 复用。
+- 优化 HarmonyOS 原生 autolinking、Metro 配置、Expo 资源 shim 和 release JS bundle，增加关键文件与配置校验。
+- 增加 pnpm、npm、yarn、bun 的参数化命令执行支持，降低 Windows 和特殊路径下的命令解析风险。
+- 优化 scan 工作流：默认只读预览，只有显式使用 scan --apply 才写入依赖、patch 和适配资产。
+
 ## 0.2.5
 
 ### Patch Changes

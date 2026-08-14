@@ -2,6 +2,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 export type Pm = 'pnpm' | 'npm' | 'yarn' | 'bun';
+export interface CommandParts { file: string; args: string[]; }
 
 /** 包管理器选择：显式 flag > 项目 lockfile > 默认 pnpm。*/
 export function resolvePm(userFlags: string[], projectRoot?: string): Pm {
@@ -21,18 +22,18 @@ export function resolvePm(userFlags: string[], projectRoot?: string): Pm {
 }
 
 /** pm 对应的 install 命令字面量。*/
-export function installCmd(pm: Pm): string {
-  return { pnpm: 'pnpm install', npm: 'npm install', yarn: 'yarn', bun: 'bun install' }[pm];
+export function installCmd(pm: Pm): CommandParts {
+  return { pnpm: { file: 'pnpm', args: ['install'] }, npm: { file: 'npm', args: ['install'] }, yarn: { file: 'yarn', args: [] }, bun: { file: 'bun', args: ['install'] } }[pm];
 }
 
 /** pm 对应的卸载命令。packages 必须是已校验的 npm 包名。 */
-export function uninstallCmd(pm: Pm, packages: string[]): string {
+export function uninstallCmd(pm: Pm, packages: string[]): CommandParts {
   if (!packages.length) throw new Error('缺少待卸载依赖');
-  const joined = packages.join(' ');
-  return {
-    pnpm: `pnpm remove ${joined}`,
-    npm: `npm uninstall ${joined}`,
-    yarn: `yarn remove ${joined}`,
-    bun: `bun remove ${joined}`,
-  }[pm];
+  return { file: pm, args: [pm === 'npm' ? 'uninstall' : 'remove', ...packages] };
+}
+
+export function runScriptCmd(pm: Pm, script: string): CommandParts {
+  return pm === 'pnpm' || pm === 'yarn'
+    ? { file: pm, args: [script] }
+    : { file: pm, args: ['run', script] };
 }
