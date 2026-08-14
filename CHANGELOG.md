@@ -4,12 +4,12 @@
 
 ### Major Changes
 
-- 稳定 Expo SDK 52 + React Native 0.77.1 + RNOH 0.77.71 的 HarmonyOS 创建基线。
-- Android、iOS、HarmonyOS Metro 默认端口统一为 `8081`，支持 `HARMONY_METRO_PORT` 覆盖，并增强真机 `hdc rport` 转发处理。
-- 增强 HarmonyOS 原生 autolinking、Expo 资源 shim、Metro 配置和 release JS bundle 的稳定性校验。
-- 完成 `create -> install -> prebuild --platform harmony -> sync` 主链路，支持 pnpm、npm、yarn 和 bun 的参数化命令执行。
-- `scan` 默认只读预览，使用 `scan --apply` 才写入依赖、patch 和适配资产。
-- npm 发布包包含内置 HarmonyOS 模板、patch、shim、开发文档和适配 skill，可离线生成项目。
+- 修复 create -> install -> prebuild -> sync 创建主链路中的依赖注入、原生工程生成和增量同步问题。
+- 优化三端 Metro 开发体验，统一 Android、iOS、HarmonyOS 默认端口为 8081，并增强真机 hdc rport 转发、旧规则清理和已有 Metro 复用。
+- 优化 HarmonyOS 原生 autolinking、Metro 配置、Expo 资源 shim 和 release JS bundle，增加关键文件与配置校验。
+- 增加 pnpm、npm、yarn、bun 的参数化命令执行支持，降低 Windows 和特殊路径下的命令解析风险。
+- 优化 scan 工作流：默认只读预览，只有显式使用 scan --apply 才写入依赖、patch 和适配资产。
+- 增加离线创建能力，npm 发布包现在包含 HarmonyOS 模板、patch、shim、开发文档和适配 skill。
 
 ## 0.2.5
 
