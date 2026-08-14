@@ -175,17 +175,19 @@ describe('injectHarmonyBaseline', () => {
     expect(entry).toContain('renderRootComponent');
   });
 
-  it('index.harmony.js 在 require @expo/metro-runtime 之前触发 RNOH setUpXHR（注入 Web 全局）', () => {
+  it('index.harmony.js 在 require @expo/metro-runtime 之前预热 RNOH InitializeCore（核心初始化，含 setUpXHR）', () => {
     injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
     const entry = fs.readFileSync(path.join(tmp, 'index.harmony.js'), 'utf8');
-    // setUpXHR require 必须存在
-    expect(entry).toContain("require('@react-native-oh/react-native-harmony/Libraries/Core/setUpXHR')");
-    // 且必须在 require('@expo/metro-runtime') 之前：Winter 兼容层引用全局 FormData，setUpXHR 须先执行
-    const setUpXHRIdx = entry.indexOf('@react-native-oh/react-native-harmony/Libraries/Core/setUpXHR');
+    // InitializeCore 预热 RN 核心模块图（含 setUpXHR 注入 Web 全局），消除 Image/PixelRatio 渲染期 .default undefined
+    expect(entry).toContain("require('@react-native-oh/react-native-harmony/Libraries/Core/InitializeCore')");
+    // setUpXHR 不再单独 require（InitializeCore 第38行内含 setUpXHR，替换非补充）
+    expect(entry).not.toContain("require('@react-native-oh/react-native-harmony/Libraries/Core/setUpXHR')");
+    // 且必须在 require('@expo/metro-runtime') 之前：InitializeCore 含 setUpXHR，Winter 引用全局 FormData 须先注入
+    const initCoreIdx = entry.indexOf('@react-native-oh/react-native-harmony/Libraries/Core/InitializeCore');
     const metroRuntimeIdx = entry.indexOf("require('@expo/metro-runtime')");
-    expect(setUpXHRIdx).toBeGreaterThan(-1);
+    expect(initCoreIdx).toBeGreaterThan(-1);
     expect(metroRuntimeIdx).toBeGreaterThan(-1);
-    expect(setUpXHRIdx).toBeLessThan(metroRuntimeIdx);
+    expect(initCoreIdx).toBeLessThan(metroRuntimeIdx);
   });
 
   it('默认模板移除 Expo Vector Icons 与 Splash 依赖及 plugin', () => {
