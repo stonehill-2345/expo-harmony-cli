@@ -9,7 +9,6 @@
 - 优化 HarmonyOS 原生 autolinking、Metro 配置、Expo 资源 shim 和 release JS bundle，增加关键文件与配置校验。
 - 增加 pnpm、npm、yarn、bun 的参数化命令执行支持，降低 Windows 和特殊路径下的命令解析风险。
 - 优化 scan 工作流：默认只读预览，只有显式使用 scan --apply 才写入依赖、patch 和适配资产。
-- 增加离线创建能力，npm 发布包现在包含 HarmonyOS 模板、patch、shim、开发文档和适配 skill。
 
 ## 0.2.5
 

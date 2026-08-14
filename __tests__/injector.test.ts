@@ -130,6 +130,10 @@ describe('injectHarmonyBaseline', () => {
     expect(script).toContain("fs.rmSync(bundlePath, { force: true })");
     expect(script).toContain("fs.rmSync(assetsDir, { recursive: true, force: true })");
     expect(script).toContain("RN_BUNDLE_PLATFORM: 'harmony'");
+    // Windows 上 react-native.cmd 必须经 shell 启动（Node CVE-2024-27980 后 spawnSync('.cmd') 无 shell → EINVAL 静默失败）
+    expect(script).toContain('shell: process.platform');
+    // 失败必须打印 result.error 根因（EINVAL/ENOENT），不能只报产物缺失
+    expect(script).toContain('result.error.message');
 
     const scriptPath = path.join(tmp, 'scripts/bundle-harmony-release.js');
     const check = spawnSync(process.execPath, ['--check', scriptPath], { encoding: 'utf8' });
@@ -146,6 +150,9 @@ describe('injectHarmonyBaseline', () => {
     expect(script).toContain("'bundle-harmony'");
     expect(script).toContain("'--entry-file'");
     expect(script).toContain("'index.harmony.js'");
+    // Windows 上 react-native.cmd 必须经 shell 启动（否则 EINVAL 静默失败）；失败需打印根因
+    expect(script).toContain('shell: process.platform');
+    expect(script).toContain('result.error.message');
 
     const check = spawnSync(process.execPath, ['--check', scriptPath], { encoding: 'utf8' });
     expect(check.stderr).toBe('');
