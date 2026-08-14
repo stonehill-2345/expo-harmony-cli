@@ -295,4 +295,14 @@ describe('injectHarmonyBaseline', () => {
     expect(icon).toContain('M3.5 10.25 12 3.5l8.5 6.75');
     expect(icon).toContain('M2.75 3.25 21.25 12 2.75 20.75');
   });
+
+  it('pnpm 项目注入 .npmrc node-linker=hoisted（release bundle PNG asset 解析兜底）', () => {
+    fs.writeFileSync(path.join(tmp, 'pnpm-lock.yaml'), '');
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const npmrc = fs.readFileSync(path.join(tmp, '.npmrc'), 'utf8');
+    // @react-native/assets-registry 是 RN 传递依赖，pnpm 默认不提升，
+    // 导致 release bundle 解析 PNG asset 失败。node-linker=hoisted 是 Expo+pnpm 标准要求。
+    expect(npmrc).toContain('node-linker=hoisted');
+    expect(npmrc).toContain('expo-harmony-cli:managed');
+  });
 });
