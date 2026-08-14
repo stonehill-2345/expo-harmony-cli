@@ -208,9 +208,12 @@ describe('injectHarmonyBaseline', () => {
   it('Harmony shims copy 到 shims/ + .alias-map.json 初始条目', () => {
     injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
     expect(fs.existsSync(path.join(tmp, 'shims/expo-metro-runtime.ts'))).toBe(true);
+    // expo-asset 基线 shim（Expo.fx 启动硬依赖，所有 expo 鸿蒙项目都崩）
+    expect(fs.existsSync(path.join(tmp, 'shims/expo-asset.ts'))).toBe(true);
     expect(fs.existsSync(path.join(tmp, 'shims/expo-modules-core/NativeModulesProxy.ts'))).toBe(false);
     const aliasMap = JSON.parse(fs.readFileSync(path.join(tmp, 'shims/.alias-map.json'), 'utf8'));
     expect(aliasMap['@expo/metro-runtime']).toBe('./shims/expo-metro-runtime.ts');
+    expect(aliasMap['expo-asset']).toBe('./shims/expo-asset.ts');
     expect(Object.keys(aliasMap).some(key => key.startsWith('expo-modules-core'))).toBe(false);
   });
 

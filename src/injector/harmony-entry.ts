@@ -16,10 +16,15 @@ export function writeHarmonyEntry(targetDir: string, scheme: string): void {
     path.join(shimsSrc, 'expo-metro-runtime.ts'),
     path.join(shimsDir, 'expo-metro-runtime.ts'),
   );
+  fs.copyFileSync(
+    path.join(shimsSrc, 'expo-asset.ts'),
+    path.join(shimsDir, 'expo-asset.ts'),
+  );
 
   // 初始 .alias-map.json（scanAndAdapt Task 6 会合并更多）
   const aliasMap = {
     '@expo/metro-runtime': './shims/expo-metro-runtime.ts',
+    'expo-asset': './shims/expo-asset.ts',
   };
   fs.writeFileSync(path.join(shimsDir, '.alias-map.json'), JSON.stringify(aliasMap, null, 2));
 }
