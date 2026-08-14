@@ -52,6 +52,12 @@ if (typeof window !== 'undefined' && !window.location) {
   };
 }
 
+// ===== 2.5 RN Harmony 全局初始化：注入 FormData/Blob/File/Headers/fetch/XMLHttpRequest/URL 等 Web 全局 =====
+// RNOH 的 setUpXHR 一次性 polyfill 这些全局；鸿蒙入口需显式触发
+// （iOS/Android 由 RN Metro runBeforeMainModule 自动注入 InitializeCore→setUpXHR）。
+// 必须在 require expo/expo-router（其触发 Winter 兼容层、引用全局 FormData）之前执行。
+require('@react-native-oh/react-native-harmony/Libraries/Core/setUpXHR');
+
 // ===== 3. Metro runtime + expo-router bootstrap =====
 // @expo/metro-runtime 经 metro.config.js 的 alias 重定向到 no-op shim（鸿蒙无 dev server）
 require('@expo/metro-runtime');
