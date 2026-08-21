@@ -58,6 +58,39 @@ describe('命令分发', () => {
     expect(mockCreate).toHaveBeenCalledWith(['my-app']);
   });
 
+  it('未知 flag → 报错并打印 help，不落入 create', async () => {
+    const { dispatch } = await import('../src/index');
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    await expect(dispatch(['--platfrom', 'harmony'])).rejects.toThrow(/未知选项/);
+    expect(output).toHaveBeenCalledWith(expect.stringContaining('Commands:'));
+    expect(mockCreate).not.toHaveBeenCalled();
+    output.mockRestore();
+  });
+
+  it('近似拼写的子命令 → 提示疑似命令后仍按项目名创建', async () => {
+    const { dispatch } = await import('../src/index');
+    const err = vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    await dispatch(['prebuld']);
+    expect(err).toHaveBeenCalledWith(expect.stringContaining('prebuild'));
+    expect(mockCreate).toHaveBeenCalledWith(['prebuld']);
+    err.mockRestore();
+  });
+
+  it('裸项目名 + flag（如 --pnpm）→ 放行落入 create，不误判未知命令', async () => {
+    const { dispatch } = await import('../src/index');
+    await dispatch(['myapp', '--pnpm']);
+    expect(mockCreate).toHaveBeenCalledWith(['myapp', '--pnpm']);
+  });
+
+  it('未知首项 + 位置参数 → 报未知命令并打印 help，不落入 create', async () => {
+    const { dispatch } = await import('../src/index');
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    await expect(dispatch(['prebuld', 'foo'])).rejects.toThrow(/未知命令/);
+    expect(output).toHaveBeenCalledWith(expect.stringContaining('Commands:'));
+    expect(mockCreate).not.toHaveBeenCalled();
+    output.mockRestore();
+  });
+
   it('prebuild/install/scan/list/sync → 调对应命令', async () => {
     const { dispatch } = await import('../src/index');
 

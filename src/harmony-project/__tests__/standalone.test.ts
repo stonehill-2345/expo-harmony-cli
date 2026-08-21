@@ -4,6 +4,7 @@ import * as path from 'path';
 import * as os from 'os';
 import JSON5 from 'json5';
 import { runHarmonyGeneration, syncHarmonyAutolinking } from '../standalone';
+import { VERSION_MATRIX } from '../../version-matrix';
 
 describe('runHarmonyGeneration (integration)', () => {
   let tmp: string;
@@ -71,7 +72,7 @@ describe('runHarmonyGeneration (integration)', () => {
   it('harmony/ 已存在且未传 force → 抛错', async () => {
     fs.mkdirSync(path.join(tmp, 'harmony'));
     await expect(runHarmonyGeneration(tmp, { name: 'X', slug: 'x' } as any, {})).rejects.toThrow(
-      /already initialized/,
+      /prebuild --platform harmony --force/,
     );
   });
 
@@ -107,6 +108,18 @@ describe('runHarmonyGeneration (integration)', () => {
     await expect(
       runHarmonyGeneration(tmp, { name: 'X', slug: 'x' } as any, { force: true }),
     ).resolves.toBeUndefined();
+  });
+
+  it('Hvigor 插件 fallback 使用 VERSION_MATRIX.rnohCli', async () => {
+    const original = VERSION_MATRIX.rnohCli;
+    (VERSION_MATRIX as { rnohCli: string }).rnohCli = '9.9.9';
+    try {
+      await runHarmonyGeneration(tmp, { name: 'Matrix', slug: 'matrix' } as any, {});
+      const config = fs.readFileSync(path.join(tmp, 'harmony/hvigor/hvigor-config.json5'), 'utf8');
+      expect(config).toContain('rnoh-hvigor-plugin-9.9.9.tgz');
+    } finally {
+      (VERSION_MATRIX as { rnohCli: string }).rnohCli = original;
+    }
   });
 
   it('多包端到端：5 包同时命中按 npmPackageName 字典序链接（gesture-handler < reanimated < safe-area-context < screens < webview）', async () => {

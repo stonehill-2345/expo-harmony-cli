@@ -1,6 +1,6 @@
-import { execFileSync, execSync, spawn } from 'child_process';
+import { execFileSync, spawn } from 'child_process';
 
-const WINDOWS_NODE_COMMANDS = new Set(['npx', 'npm', 'pnpm', 'yarn', 'bun', 'expo', 'react-native']);
+const WINDOWS_NODE_COMMANDS = new Set(['npx', 'npm', 'pnpm', 'yarn', 'bun', 'expo', 'react-native', 'ohpm']);
 
 export interface CommandInvocation {
   command: string;
@@ -32,11 +32,6 @@ export function resolveCommandInvocation(file: string, platform: NodeJS.Platform
     command,
     shell: platform === 'win32' && isKnownWindowsCommand && !file.includes('/') && !file.includes('\\'),
   };
-}
-
-/** @deprecated 使用 runFile，避免 shell 解析用户参数。 */
-export function run(cmd: string, opts: { cwd?: string } = {}): void {
-  execSync(cmd, { stdio: 'inherit', ...opts });
 }
 
 /** 参数化执行命令，避免将用户输入拼接进 shell。*/
@@ -71,9 +66,4 @@ export function runFileQuiet(file: string, args: string[], opts: { cwd?: string 
       reject(error);
     });
   });
-}
-
-/** execSync 取输出（不 inherit）。*/
-export function getOutput(cmd: string, opts: { cwd?: string } = {}): string {
-  return execSync(cmd, { encoding: 'utf8', ...opts }).trim();
 }

@@ -41,7 +41,6 @@ vi.mock('../src/utils/exec', () => ({
       fs.writeFileSync(path.join(dir, 'components/ui/TabBarBackground.ios.tsx'), "import { BlurView } from 'expo-blur';\n");
     }
   }),
-  getOutput: vi.fn(),
 }));
 
 vi.mock('../src/utils/log', () => ({
@@ -175,6 +174,19 @@ describe('runCreate', () => {
     await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/创建 Expo SDK 52 模板失败.*network unavailable/s);
     const { log } = await import('../src/utils/log');
     expect(vi.mocked(log.task).mock.results[0].value.fail).toHaveBeenCalledOnce();
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('模板命令成功但 app.json 缺失 → 提示删除目录后重试', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-'));
+    const { runFileQuiet } = await import('../src/utils/exec');
+    vi.mocked(runFileQuiet).mockImplementationOnce((_file, args, opts) => {
+      const projectDir = path.join(opts?.cwd || tmp, args[1]);
+      fs.mkdirSync(projectDir, { recursive: true });
+      return Promise.resolve();
+    });
+    const { runCreate } = await import('../src/creator');
+    await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/模板.*不完整.*删除.*重试/s);
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 });

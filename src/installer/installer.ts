@@ -16,6 +16,9 @@ export async function runInstall(args: string[]): Promise<void> {
   if (!pkg) throw new Error('用法: install <pkg>[@version]');
 
   const projectRoot = process.cwd();
+  if (!fs.existsSync(path.join(projectRoot, 'package.json'))) {
+    throw new Error('当前目录非项目根（缺 package.json）');
+  }
   const skipHarmony = args.includes('--skip-harmony');
   const skipNative = args.includes('--skip-native');
   const pm = resolvePm(args, projectRoot);

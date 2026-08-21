@@ -8,6 +8,8 @@ import { sync } from './commands/sync';
 import { uninstall } from './commands/uninstall';
 import packageJson from '../package.json';
 
+const COMMANDS = ['create', 'prebuild', 'install', 'uninstall', 'remove', 'scan', 'list', 'sync'];
+
 /** 命令分发（纯函数）。argv = process.argv.slice(2) */
 export async function dispatch(argv: string[]): Promise<void> {
   const [cmd, ...rest] = argv;
@@ -19,6 +21,11 @@ export async function dispatch(argv: string[]): Promise<void> {
   if (cmd === '--version' || cmd === '-v') {
     console.log(packageJson.version);
     return;
+  }
+
+  if (cmd?.startsWith('-')) {
+    printHelp();
+    throw new Error(`未知选项：${cmd}`);
   }
 
   if (cmd === undefined || cmd === 'create') {
@@ -50,8 +57,33 @@ export async function dispatch(argv: string[]): Promise<void> {
     return;
   }
 
-  // 裸项目名 → 当 create <name>
+  // 裸项目名兼容：其余参数全为 flag（如 --pnpm）时放行；近似命令拼写提示后仍按项目名创建，
+  // 避免误拦 scanx 这类合法项目名。
+  const nearMiss = COMMANDS.find(command => editDistance(cmd!, command) <= 2);
+  if (rest.some(arg => !arg.startsWith('-'))) {
+    printHelp();
+    throw new Error(`未知命令：${cmd}${nearMiss ? `（是否想输入 ${nearMiss}？）` : ''}`);
+  }
+  if (nearMiss) {
+    console.error(`提示："${cmd}" 接近命令 "${nearMiss}"，将按项目名继续创建；若想执行该命令请重新输入。`);
+  }
   await create(argv);
+}
+
+function editDistance(a: string, b: string): number {
+  const row = Array.from({ length: b.length + 1 }, (_, index) => index);
+  for (let i = 1; i <= a.length; i++) {
+    let diagonal = row[0];
+    row[0] = i;
+    for (let j = 1; j <= b.length; j++) {
+      const above = row[j];
+      row[j] = a[i - 1] === b[j - 1]
+        ? diagonal
+        : Math.min(diagonal, above, row[j - 1]) + 1;
+      diagonal = above;
+    }
+  }
+  return row[b.length];
 }
 
 function printHelp(): void {

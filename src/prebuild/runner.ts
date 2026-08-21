@@ -45,7 +45,9 @@ export function resolveTasks(userArgs: string[]): ResolveTasksResult {
   const runHarmony = platforms.length === 0 || platforms.includes('harmony');
   const runNative =
     platforms.length === 0 || platforms.some((p) => p === 'ios' || p === 'android');
-  const nativeArgs = filterHarmonyPlatform(userArgs);
+  const nativeArgs = filterHarmonyPlatform(userArgs).map((arg) =>
+    arg === '--force' ? '--clean' : arg
+  );
 
   return { runNative, nativeArgs, runHarmony };
 }

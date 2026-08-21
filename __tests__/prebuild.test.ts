@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-vi.mock('../src/utils/exec', () => ({ runFile: vi.fn(), getOutput: vi.fn() }));
+vi.mock('../src/utils/exec', () => ({ runFile: vi.fn() }));
 const { runFile: mockRunFile } = await import('../src/utils/exec');
 
 vi.mock('../src/harmony-project', () => ({
@@ -51,6 +51,16 @@ describe('prebuild 命令', () => {
     expect(mockGen).toHaveBeenCalledTimes(1);
   });
 
+  it('无 --platform --force → 将 Expo native 参数映射为 --clean', async () => {
+    const { prebuild } = await import('../src/commands/prebuild');
+    await prebuild(['--force']);
+    expect(mockRunFile).toHaveBeenCalledWith(
+      'npx', ['expo', 'prebuild', '--clean'],
+      expect.anything()
+    );
+    expect(mockGen).toHaveBeenCalledWith(expect.any(String), { name: 'X', slug: 'x' }, { force: true });
+  });
+
   it('--platform harmony → 仅调 runHarmonyGeneration，不调 expo prebuild', async () => {
     const { prebuild } = await import('../src/commands/prebuild');
     await prebuild(['--platform', 'harmony']);
@@ -76,6 +86,16 @@ describe('prebuild 命令', () => {
     );
     expect(mockGen).not.toHaveBeenCalled();
     expect(mockWriteMetroConfig).not.toHaveBeenCalled();
+  });
+
+  it('--platform ios --force → 透传给 expo 的是 --clean 而非 --force', async () => {
+    const { prebuild } = await import('../src/commands/prebuild');
+    await prebuild(['--platform', 'ios', '--force']);
+    expect(mockRunFile).toHaveBeenCalledWith(
+      'npx', ['expo', 'prebuild', '--platform', 'ios', '--clean'],
+      expect.anything()
+    );
+    expect(mockGen).not.toHaveBeenCalled();
   });
 
   it('迁移旧项目：依赖已移除时，prebuild 清理遗留的 iOS 模板覆盖文件', async () => {
