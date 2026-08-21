@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import packageJson from '../package.json';
 
 vi.mock('../src/commands/create', () => ({ create: vi.fn().mockResolvedValue(undefined) }));
 vi.mock('../src/commands/prebuild', () => ({ prebuild: vi.fn().mockResolvedValue(undefined) }));
@@ -40,8 +41,9 @@ describe('命令分发', () => {
     await dispatch(['--version']);
     await dispatch(['-v']);
 
-    expect(output).toHaveBeenNthCalledWith(1, '1.0.0');
-    expect(output).toHaveBeenNthCalledWith(2, '1.0.0');
+    // 跟随 package.json 版本，避免每次发版都要改此断言
+    expect(output).toHaveBeenNthCalledWith(1, packageJson.version);
+    expect(output).toHaveBeenNthCalledWith(2, packageJson.version);
     expect(mockCreate).not.toHaveBeenCalled();
     output.mockRestore();
   });
