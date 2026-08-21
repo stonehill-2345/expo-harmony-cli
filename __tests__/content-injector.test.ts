@@ -85,6 +85,14 @@ describe('printTip', () => {
   it('create.complete 渲染不抛错', () => {
     expect(() => printTip('create.complete')).not.toThrow();
   });
+
+  it('排障文档说明 HARMONY_METRO_CLEAR 缓存清理', () => {
+    const docTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'cinj-doc-'));
+    injectContent(docTmp, { appName: 'X', slug: 'x', bundleName: 'com.x.app' });
+    const troubleshooting = fs.readFileSync(path.join(docTmp, 'docs/TROUBLESHOOTING.md'), 'utf8');
+    expect(troubleshooting).toContain('HARMONY_METRO_CLEAR=1 pnpm start:harmony');
+    fs.rmSync(docTmp, { recursive: true, force: true });
+  });
   it('create.complete 按完成真机验收的依赖顺序输出命令', () => {
     const spy = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     printTip('create.complete', { pm: 'pnpm', projectName: 'my-harmony-app' });

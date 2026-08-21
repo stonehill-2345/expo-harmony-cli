@@ -26,7 +26,7 @@ export async function runHarmonyGeneration(
 
   if (fs.existsSync(harmonyDir) && !opts.force) {
     throw new Error(
-      `The "harmony" directory is already initialized. Pass { force: true } to overwrite.`,
+      `harmony/ 已存在。如需覆盖生成，请执行：pnpm dlx expo-harmony-cli prebuild --platform harmony --force`,
     );
   }
   if (opts.force && fs.existsSync(harmonyDir)) {

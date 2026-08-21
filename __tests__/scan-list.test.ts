@@ -3,8 +3,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-vi.mock('../src/utils/exec', () => ({ run: vi.fn(), getOutput: vi.fn() }));
-
 describe('scan 命令', () => {
   let tmp: string;
   beforeEach(() => {

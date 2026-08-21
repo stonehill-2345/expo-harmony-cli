@@ -8,6 +8,7 @@ import { EntryIndexTemplate } from './templates/EntryIndexTemplate';
 import { EntryOhPackageJson5Template } from './templates/EntryOhPackageJson5Template';
 import { EntryStringVarTemplate } from './templates/EntryStringVarTemplate';
 import { resolveHarmonyTemplateSource } from './template-source';
+import { VERSION_MATRIX as V } from '../version-matrix';
 
 export interface InitOptions {
   /** ★ 必须有，用于 findHvigorPluginFilename 在用户项目 node_modules 找 cli */
@@ -120,5 +121,5 @@ function findHvigorPluginFilename(projectRoot: string, rnohCliNpmPackageName: st
       .find(f => f.startsWith('rnoh-hvigor-plugin') && f.endsWith('.tgz'));
     if (found) return found;
   }
-  return 'rnoh-hvigor-plugin-0.77.71.tgz'; // fallback
+  return `rnoh-hvigor-plugin-${V.rnohCli}.tgz`; // fallback
 }

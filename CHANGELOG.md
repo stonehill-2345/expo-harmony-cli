@@ -1,5 +1,15 @@
 # expo-harmony-cli
 
+## 1.1.0
+
+### Minor Changes
+
+- 修复 Windows 下 `ohpm` 命令未通过 shell 启动导致 HarmonyOS 原生依赖安装失败的问题。
+- 修复 `prebuild --force` 透传给 `expo prebuild` 报未知参数的问题，现自动映射为 `--clean`。
+- 修复 `HARMONY_METRO_HOST` 携带端口时被重复拼接 `:8081` 导致真机无法连接 Metro 的问题。
+- 增强错误提示：`install` 非项目根、`create` 模板生成不完整、`harmony/` 目录已存在等场景给出可操作的下一步建议。
+- 文档修正：`scan` 默认只读预览、写入需显式 `--apply`；补充 `HARMONY_METRO_CLEAR=1` 清理 Metro 缓存的排障用法。
+
 ## 1.0.0
 
 ### Major Changes

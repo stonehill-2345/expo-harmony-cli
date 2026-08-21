@@ -7,7 +7,7 @@
 | `npx expo-harmony-cli <目录名>`                                 | 创建 Expo SDK 52 项目并注入 HarmonyOS 基线；pnpm 用户也可用 `pnpm dlx expo-harmony-cli <目录名>`。      |
 | `pnpm dlx expo-harmony-cli install <包名>`                      | 使用 Expo 安装依赖；命中兼容表时自动追加 HarmonyOS 适配依赖、patch 或原生工程刷新。                     |
 | `pnpm dlx expo-harmony-cli uninstall <包名>`                    | 卸载原包，并清理 CLI 管理的 HarmonyOS 伴随包、alias、patch 与原生注册；`remove` 是同义别名。            |
-| `pnpm dlx expo-harmony-cli scan`                                | 重新扫描现有 `package.json`，补齐可自动识别的 HarmonyOS 适配，并回收此前 CLI 管理但原包已不存在的残留。 |
+| `pnpm dlx expo-harmony-cli scan --apply`                        | 重新扫描现有 `package.json`，补齐可自动识别的 HarmonyOS 适配，并回收此前 CLI 管理但原包已不存在的残留。 |
 | `pnpm dlx expo-harmony-cli sync`                                | 仅同步 HarmonyOS 原生注册，不覆盖 `harmony/`。手工安装原生包后使用。                                    |
 | `pnpm dlx expo-harmony-cli prebuild --platform harmony --force` | 重新生成 HarmonyOS 原生工程。修改原生依赖或 `harmony/` 异常时使用。                                     |
 | `pnpm start:harmony`                                            | 启动 HarmonyOS Metro，与 Android/iOS 统一端口 `8081`。                                                     |
@@ -66,7 +66,7 @@ HarmonyOS release 通过 `pnpm bundle:harmony:release` 生成嵌入 HAP rawfile 
 pnpm dlx expo-harmony-cli install <包名>
 pnpm dlx expo-harmony-cli uninstall <包名>
 pnpm dlx expo-harmony-cli remove <包名>
-pnpm dlx expo-harmony-cli scan
+pnpm dlx expo-harmony-cli scan --apply
 pnpm dlx expo-harmony-cli sync
 pnpm dlx expo-harmony-cli prebuild --platform harmony
 ```
@@ -99,7 +99,7 @@ pnpm dlx expo-harmony-cli uninstall react-native-svg
 pnpm dlx expo-harmony-cli remove react-native-svg
 ```
 
-CLI 只会清理 `.expo-harmony/managed-state.json` 中记录为自身管理的资产；用户手工安装或改写的 HarmonyOS 配置不会被自动删除。若此前直接用包管理器卸载了原包，可执行一次 `scan` 对账清理残留。
+CLI 只会清理 `.expo-harmony/managed-state.json` 中记录为自身管理的资产；用户手工安装或改写的 HarmonyOS 配置不会被自动删除。若此前直接用包管理器卸载了原包，可执行一次 `scan --apply` 对账清理残留。裸 `scan` 默认只读预览，不会修改项目。
 
 使用以下命令查看当前兼容表：
 
@@ -142,6 +142,12 @@ hdc rport tcp:8081 tcp:8081
 
 再在 RNOH Dev Settings 中填写 `<局域网 IP>:8081` 并 Reload。
 
+依赖或 shim 更新后出现白屏时，可执行以下命令清理 Metro 缓存后重试：
+
+```bash
+HARMONY_METRO_CLEAR=1 pnpm start:harmony
+```
+
 ### 新增原生依赖后 DevEco 构建失败
 
 先通过 CLI `install` 安装该包；CLI 会自动增量同步已有 HarmonyOS 工程。随后执行：
@@ -150,7 +156,7 @@ hdc rport tcp:8081 tcp:8081
 cd harmony && ohpm install
 ```
 
-如果此前误用 `expo install`、`pnpm add` 或 `pnpm remove` 处理过原生包，请先执行 `pnpm dlx expo-harmony-cli scan` 对账，再用 `pnpm dlx expo-harmony-cli sync` 刷新原生注册；只有工程需要整体重建时才使用 `prebuild --platform harmony --force`。
+如果此前误用 `expo install`、`pnpm add` 或 `pnpm remove` 处理过原生包，请先执行 `pnpm dlx expo-harmony-cli scan --apply` 对账，再用 `pnpm dlx expo-harmony-cli sync` 刷新原生注册；只有工程需要整体重建时才使用 `prebuild --platform harmony --force`。
 
 如果依赖包含 TurboModule 或 codegen，根据 CLI 输出运行项目提供的 `pnpm codegen`，然后重新构建。
 

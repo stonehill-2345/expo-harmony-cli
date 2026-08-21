@@ -173,6 +173,14 @@ describe('injectHarmonyBaseline', () => {
     expect(check.status).toBe(0);
   });
 
+  it('start-harmony.js 对已包含端口的 HARMONY_METRO_HOST 不重复追加 8081', () => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
+    const script = fs.readFileSync(path.join(tmp, 'scripts/start-harmony.js'), 'utf8');
+    expect(script).toContain("/^\\[.*\\]:\\d+$/.test(host)");
+    expect(script).toContain("/^[^:]+:\\d+$/.test(host)");
+    expect(script).toContain('return host;');
+  });
+
   it('index.harmony.js {{scheme}} 替换 + 含 globalThis.expo polyfill', () => {
     injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp' });
     const entry = fs.readFileSync(path.join(tmp, 'index.harmony.js'), 'utf8');

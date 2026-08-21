@@ -26,6 +26,9 @@ function findLanIPv4() {
 
 function getMetroHostAndPort() {
   const host = findLanIPv4();
+  if (/^\\[.*\\]:\\d+$/.test(host)) return host;
+  if (host.startsWith('[') && host.endsWith(']')) return host + ':8081';
+  if (/^[^:]+:\\d+$/.test(host)) return host;
   return host.includes(':') ? '[' + host + ']:8081' : host + ':8081';
 }
 

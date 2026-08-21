@@ -78,11 +78,22 @@ export async function runCreate(args: string[], opts: CreateOptions = {}): Promi
   const targetDir = path.resolve(cwd, projectName);
 
   // 读 app.json 拿 slug/scheme/name（bundleName = com.example.<清洗后 slug>，鸿蒙禁横杠）
-  const app = JSON.parse(fs.readFileSync(path.join(targetDir, 'app.json'), 'utf8'));
-  const slug = app.expo.slug || projectName;
-  const scheme = app.expo.scheme || slug;
-  const appName = app.expo.name || projectName;
-  const bundleName = buildBundleName(slug);
+  let slug: string;
+  let scheme: string;
+  let appName: string;
+  let bundleName: string;
+  try {
+    const app = JSON.parse(fs.readFileSync(path.join(targetDir, 'app.json'), 'utf8'));
+    if (!app?.expo || typeof app.expo !== 'object') throw new Error('app.json 缺少 expo 配置');
+    slug = app.expo.slug || projectName;
+    scheme = app.expo.scheme || slug;
+    appName = app.expo.name || projectName;
+    bundleName = buildBundleName(slug);
+  } catch (error) {
+    throw new Error(
+      `Expo 模板生成不完整：无法读取 ${path.join(targetDir, 'app.json')}。请删除目标目录后重试。\n${getCommandErrorDetail(error)}`,
+    );
+  }
 
   // 步骤 2：注入鸿蒙基线
   await runStep('2/4 注入 HarmonyOS 基线', () => {

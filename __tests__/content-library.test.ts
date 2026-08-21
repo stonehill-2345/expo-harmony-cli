@@ -1,6 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
+import { copyFromLibrary } from '../src/utils/content-library';
+import { log } from '../src/utils/log';
 
 const CONTENT = path.join(__dirname, '..', 'content');
 
@@ -20,6 +23,21 @@ describe('content-library', () => {
 
   it('expo-av shim 存在（install 按需）', () => {
     expect(fs.existsSync(path.join(CONTENT, 'shims', 'expo-av', 'index.ts'))).toBe(true);
+  });
+
+  it('用户修改内容库目标文件时跳过覆盖并发出警告', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'content-library-'));
+    const targetPath = 'shims/expo-metro-runtime.ts';
+    fs.mkdirSync(path.dirname(path.join(tmp, targetPath)), { recursive: true });
+    fs.writeFileSync(path.join(tmp, targetPath), 'user modification');
+    const warn = vi.spyOn(log, 'warn').mockImplementation(() => undefined);
+
+    expect(copyFromLibrary('content/shims/expo-metro-runtime.ts', tmp, targetPath)).toBe(false);
+    expect(fs.readFileSync(path.join(tmp, targetPath), 'utf8')).toBe('user modification');
+    expect(warn).toHaveBeenCalledWith(expect.stringContaining(targetPath));
+
+    warn.mockRestore();
+    fs.rmSync(tmp, { recursive: true, force: true });
   });
 
   it('6 文档模板存在 + 含占位符', () => {

@@ -36,6 +36,12 @@ hdc rport tcp:8081 tcp:8081
 HARMONY_METRO_HOST=<局域网 IP> pnpm start:harmony
 ```
 
+依赖或 shim 更新后出现白屏时，可清理 Metro 缓存后重启：
+
+```bash
+HARMONY_METRO_CLEAR=1 pnpm start:harmony
+```
+
 ## 安装依赖后 HarmonyOS 不生效
 
 请确认安装依赖使用的是 CLI：

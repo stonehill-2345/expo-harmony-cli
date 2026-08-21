@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 
-vi.mock('../src/utils/exec', () => ({ runFile: vi.fn(), getOutput: vi.fn() }));
+vi.mock('../src/utils/exec', () => ({ runFile: vi.fn() }));
 const { runFile: mockRunFile } = await import('../src/utils/exec');
 
 vi.mock('../src/harmony-project', () => ({ syncHarmonyAutolinking: vi.fn(() => ({ linked: [] })) }));
@@ -166,5 +166,11 @@ describe('runInstall', () => {
   it('缺包名 → 报错', async () => {
     const { runInstall } = await import('../src/installer/installer');
     await expect(runInstall([])).rejects.toThrow(/用法|pkg|包名/i);
+  });
+
+  it('非项目根 → 报项目根错误而不是裸 ENOENT', async () => {
+    fs.unlinkSync(path.join(tmp, 'package.json'));
+    const { runInstall } = await import('../src/installer/installer');
+    await expect(runInstall(['lodash'])).rejects.toThrow('当前目录非项目根（缺 package.json）');
   });
 });
