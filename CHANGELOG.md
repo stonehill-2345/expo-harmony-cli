@@ -7,12 +7,8 @@
 - 修复 Windows 下 `ohpm` 命令未通过 shell 启动导致 HarmonyOS 原生依赖安装失败的问题。
 - 修复 `prebuild --force` 透传给 `expo prebuild` 报未知参数的问题，现自动映射为 `--clean`。
 - 修复 `HARMONY_METRO_HOST` 携带端口时被重复拼接 `:8081` 导致真机无法连接 Metro 的问题。
-- 增强错误提示：`install` 在非项目根目录、`create` 模板生成不完整、`harmony/` 目录已存在三类场景给出可操作的下一步建议，替代裸异常。
-- patch/shim 因用户本地修改被跳过覆盖时打印警告，避免后续构建失败无从排查。
-- 未知选项与疑似拼错的子命令打印帮助与纠正提示；裸项目名搭配包管理器参数（如 `myapp --pnpm`）与近似命令拼写的项目名（如 `scanx`）均可正常创建。
-- hvigor 插件 fallback 文件名改为引用版本矩阵，避免基线升级时生成损坏的 hvigor 配置。
+- 增强错误提示：`install` 非项目根、`create` 模板生成不完整、`harmony/` 目录已存在等场景给出可操作的下一步建议。
 - 文档修正：`scan` 默认只读预览、写入需显式 `--apply`；补充 `HARMONY_METRO_CLEAR=1` 清理 Metro 缓存的排障用法。
-- 移除废弃的 `run`/`getOutput` 工具函数。
 
 ## 1.0.0
 
