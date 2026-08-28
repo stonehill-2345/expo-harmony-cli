@@ -1,10 +1,25 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'fs';
+import fsDefault from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import JSON5 from 'json5';
 import { runHarmonyGeneration, syncHarmonyAutolinking } from '../standalone';
+import { readManagedState as readManagedStateFor } from '../../lifecycle/managed-state';
 import { VERSION_MATRIX } from '../../version-matrix';
+
+// vitest 下 import * as fs 得到冻结 namespace、spyOn 拦不到被测模块内部调用；
+// 用文件级 vi.mock 让测试与被测模块共享同一 vi.fn（默认透传真实实现，不影响上方既有用例）。
+// 真实实现从 default 对象取（default = 工厂闭包里的 actual，未被 mock 污染）。
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
+  return {
+    ...actual,
+    writeFileSync: vi.fn(actual.writeFileSync),
+    renameSync: vi.fn(actual.renameSync),
+    default: actual,
+  };
+});
 
 describe('runHarmonyGeneration (integration)', () => {
   let tmp: string;
@@ -90,7 +105,7 @@ describe('runHarmonyGeneration (integration)', () => {
     fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-webview', 'harmony'), { recursive: true });
     fs.writeFileSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-webview', 'harmony', 'rn_webview.har'), 'har');
 
-    const result = syncHarmonyAutolinking(tmp);
+    const result = await syncHarmonyAutolinking(tmp);
 
     expect(result.linked).toContain('@react-native-ohos/react-native-webview');
     expect(fs.readFileSync(appScopePath, 'utf8')).toBe(appScopeBefore);
@@ -99,8 +114,8 @@ describe('runHarmonyGeneration (integration)', () => {
       .toContain('WebViewPackage');
   });
 
-  it('sync 在 harmony/ 不存在时提示先执行首次 prebuild', () => {
-    expect(() => syncHarmonyAutolinking(tmp)).toThrow(/harmony.*prebuild/i);
+  it('sync 在 harmony/ 不存在时提示先执行首次 prebuild', async () => {
+    await expect(syncHarmonyAutolinking(tmp)).rejects.toThrow(/harmony.*prebuild/i);
   });
 
   it('force=true 覆盖已存在 harmony/', async () => {
@@ -302,5 +317,321 @@ describe('runHarmonyGeneration (integration)', () => {
     expect(entryString).not.toContain('module_desc');
     expect(entryString).toContain('"EntryAbility_label"');
     expect(entryString).toContain('"value": "MyApp"');
+  });
+});
+
+describe('syncHarmonyAutolinking drift 保护', () => {
+  let tmp: string;
+  beforeEach(async () => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'drift-'));
+    // fixture 自包含：mergeOhPackageDependencies 直接读取两个 oh-package.json5，必须预置；
+    // @react-native-oh/react-native-harmony 目录与既有 fixture 同款（autolinking 探测需要）。
+    fs.mkdirSync(path.join(tmp, 'harmony', 'entry'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'harmony', 'oh-package.json5'), JSON.stringify({ dependencies: {} }));
+    fs.writeFileSync(path.join(tmp, 'harmony', 'entry', 'oh-package.json5'), JSON.stringify({ dependencies: {} }));
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony', 'safe_area.har'), 'har');
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-oh', 'react-native-harmony'), { recursive: true });
+    await syncHarmonyAutolinking(tmp); // 建立基线
+  });
+  afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
+
+  const etsPath = () => path.join(tmp, 'harmony', 'entry', 'src', 'main', 'ets', 'RNOHPackagesFactory.ets');
+
+  const collectLeftovers = (root: string, suffixes: string[]): string[] => {
+    const leftovers: string[] = [];
+    const walk = (dir: string) => {
+      for (const e of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, e.name);
+        if (e.isDirectory()) walk(full);
+        else if (suffixes.some(s => full.endsWith(s))) leftovers.push(full);
+      }
+    };
+    walk(root);
+    return leftovers;
+  };
+
+  it('首次 sync 写入 autolinking 文件并建立基线', () => {
+    const state = readManagedStateFor(tmp);
+    expect(state.generatedFiles?.[path.join('harmony', 'entry', 'src', 'main', 'ets', 'RNOHPackagesFactory.ets')]).toBeTruthy();
+    expect(state.generatedFiles?.[path.join('harmony', 'entry', 'src', 'main', 'cpp', 'autolinking.cmake')]).toBeTruthy();
+  });
+
+  it('手改 A 类文件 → 抛错且文件未被覆盖', async () => {
+    fs.writeFileSync(etsPath(), '// user manual edit\n');
+    await expect(syncHarmonyAutolinking(tmp)).rejects.toThrow(/受管文件/);
+    // 阻断提示需指路：自定义 Package 去 PackageProvider（用户区）
+    await expect(syncHarmonyAutolinking(tmp)).rejects.toThrow(/PackageProvider/);
+    expect(fs.readFileSync(etsPath(), 'utf8')).toBe('// user manual edit\n');
+  });
+
+  it('--force → 覆盖并更新基线', async () => {
+    fs.writeFileSync(etsPath(), '// user manual edit\n');
+    await expect(syncHarmonyAutolinking(tmp, { force: true })).resolves.toBeTruthy();
+    expect(fs.readFileSync(etsPath(), 'utf8')).not.toContain('user manual edit');
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy(); // 基线已更新
+  });
+
+  it('新增依赖库（内容变化但磁盘与旧基线一致）→ 不阻断', async () => {
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-svg', 'harmony'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-svg', 'harmony', 'svg.har'), 'har');
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy();
+    expect(fs.readFileSync(etsPath(), 'utf8')).toContain('SvgPackage');
+  });
+
+  it('已有基线时手改根 oh-package 托管条目（B 类）→ 抛错', async () => {
+    const ohPkg = path.join(tmp, 'harmony', 'oh-package.json5');
+    const json = JSON5.parse(fs.readFileSync(ohPkg, 'utf8'));
+    json.dependencies['@react-native-ohos/react-native-safe-area-context'] = '1.0.0';
+    fs.writeFileSync(ohPkg, JSON.stringify(json, null, 2));
+    await expect(syncHarmonyAutolinking(tmp)).rejects.toThrow(/react-native-safe-area-context/);
+  });
+
+  it('unmanaged 条目被改 → 放行（非托管修改不属保护范围，保留逻辑照常回写）', async () => {
+    const ohPkg = path.join(tmp, 'harmony', 'oh-package.json5');
+    const json = JSON5.parse(fs.readFileSync(ohPkg, 'utf8'));
+    json.dependencies['my-own-lib'] = '^1.0.0';
+    fs.writeFileSync(ohPkg, JSON.stringify(json, null, 2));
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy();
+    const after = JSON5.parse(fs.readFileSync(ohPkg, 'utf8'));
+    expect(after.dependencies['my-own-lib']).toBe('^1.0.0'); // 未被删除
+  });
+
+  it('无 B 类基线（形状退化）：改为 1.0.0 → 阻断；改为其他 file: 值 → 放行', async () => {
+    const ohPkg = path.join(tmp, 'harmony', 'oh-package.json5');
+    const dep = '@react-native-ohos/react-native-safe-area-context';
+    const statePath = path.join(tmp, '.expo-harmony', 'managed-state.json');
+    const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    delete state.managedEntries; // 模拟迁移/早期状态（A 类基线保留）
+    fs.writeFileSync(statePath, JSON.stringify(state));
+
+    const json = JSON5.parse(fs.readFileSync(ohPkg, 'utf8'));
+    json.dependencies[dep] = '1.0.0';
+    fs.writeFileSync(ohPkg, JSON.stringify(json, null, 2));
+    await expect(syncHarmonyAutolinking(tmp)).rejects.toThrow(/safe-area-context/); // 脱离 file: 家族
+
+    json.dependencies[dep] = 'file:../custom_location/x.har';
+    fs.writeFileSync(ohPkg, JSON.stringify(json, null, 2));
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy(); // file: 家族放行
+  });
+
+  it('B 类合法升级：现值 = 基线记录值 ≠ 当前期望 → 放行覆盖（与 A 类升级哲学对齐）', async () => {
+    const ohPkg = path.join(tmp, 'harmony', 'oh-package.json5');
+    const rel = path.join('harmony', 'oh-package.json5');
+    const dep = '@react-native-ohos/react-native-safe-area-context';
+    const oldSpec = 'file:../node_modules/@react-native-ohos/react-native-safe-area-context/harmony/old_name.har';
+    const newSpec = 'file:../node_modules/@react-native-ohos/react-native-safe-area-context/harmony/safe_area.har';
+    // 磁盘现值 = 旧 spec（模拟旧版 CLI 写入）
+    const json = JSON5.parse(fs.readFileSync(ohPkg, 'utf8'));
+    json.dependencies[dep] = oldSpec;
+    fs.writeFileSync(ohPkg, JSON.stringify(json, null, 2));
+    // B 类基线记录值 = 旧 spec（A 类基线未动，无 A 类 drift）
+    const statePath = path.join(tmp, '.expo-harmony', 'managed-state.json');
+    const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    state.managedEntries = { [`${rel}:${dep}`]: { path: rel, dependency: dep, spec: oldSpec, cliVersion: '1.1.0' } };
+    fs.writeFileSync(statePath, JSON.stringify(state));
+
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy();
+    const after = JSON5.parse(fs.readFileSync(ohPkg, 'utf8'));
+    expect(after.dependencies[dep]).toBe(newSpec); // 覆盖为新期望并更新基线
+    const stateAfter = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    expect(stateAfter.managedEntries?.[`${rel}:${dep}`]?.spec).toBe(newSpec);
+  });
+
+  it('删除基线后手改文件（新 clone 场景）→ 放行并重建基线', async () => {
+    fs.rmSync(path.join(tmp, '.expo-harmony'), { recursive: true, force: true });
+    fs.writeFileSync(etsPath(), '// user manual edit\n');
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy();
+    expect(fs.readFileSync(etsPath(), 'utf8')).not.toContain('user manual edit');
+  });
+
+  it('sync --force 只覆盖受管文件，harmony/ 其余内容保留（与 prebuild --force 整目录删除对照）', async () => {
+    fs.writeFileSync(etsPath(), '// user manual edit\n');
+    const customFile = path.join(tmp, 'harmony', 'my-signing-notes.txt');
+    fs.writeFileSync(customFile, '签名信息');
+    await expect(syncHarmonyAutolinking(tmp, { force: true })).resolves.toBeTruthy();
+    expect(fs.readFileSync(customFile, 'utf8')).toBe('签名信息');
+  });
+
+  it('已有基线 + prebuild --force（runHarmonyGeneration）→ 不因残余基线误阻断（force 透传链）', async () => {
+    // prebuild --force 删除整个 harmony/ 重建，但 .expo-harmony/ 状态（含 v2 基线）保留；
+    // 若 force 未透传到 syncHarmonyAutolinking，此处会误抛"受管文件被手动修改"。
+    fs.writeFileSync(etsPath(), '// user manual edit\n');
+    await expect(
+      runHarmonyGeneration(tmp, { name: 'X', slug: 'x' } as any, { force: true }),
+    ).resolves.toBeUndefined();
+    expect(fs.readFileSync(etsPath(), 'utf8')).not.toContain('user manual edit');
+  });
+
+  it('暂存阶段：第二个 tmp 写失败 → 干净失败，目标文件与基线不变、无 .cli-tmp 残留', async () => {
+    const etsBefore = fs.readFileSync(etsPath(), 'utf8');
+    const stateBefore = JSON.stringify(readManagedStateFor(tmp));
+    const realWrite = fsDefault.writeFileSync;
+    // files 顺序 ets → h → cmake → oh-package：让 ets 之外的第一个 tmp 写失败
+    vi.mocked(fs.writeFileSync).mockImplementation(((p: any, data: any, ...rest: any[]) => {
+      if (typeof p === 'string' && p.endsWith('.cli-tmp') && !p.endsWith('.ets.cli-tmp')) {
+        throw new Error('mock 磁盘故障');
+      }
+      return (realWrite as any)(p, data, ...rest);
+    }) as any);
+    try {
+      await expect(syncHarmonyAutolinking(tmp, { force: true })).rejects.toThrow(/写入失败/);
+    } finally {
+      vi.mocked(fs.writeFileSync).mockImplementation(realWrite);
+    }
+    expect(fs.readFileSync(etsPath(), 'utf8')).toBe(etsBefore);        // rename 未发生
+    expect(JSON.stringify(readManagedStateFor(tmp))).toBe(stateBefore); // 基线未写
+    expect(collectLeftovers(tmp, ['.cli-tmp'])).toEqual([]);            // tmp 全部清理
+  });
+
+  it('五阶段事务：替换阶段第 2 个 rename 失败 → 回滚成功，全部文件恢复原内容、无 tmp/bak 残留、基线未动', async () => {
+    const before = new Map<string, string>();
+    const targets = [
+      path.join(tmp, 'harmony', 'entry', 'src', 'main', 'ets', 'RNOHPackagesFactory.ets'),
+      path.join(tmp, 'harmony', 'entry', 'src', 'main', 'cpp', 'RNOHPackagesFactory.h'),
+      path.join(tmp, 'harmony', 'entry', 'src', 'main', 'cpp', 'autolinking.cmake'),
+      path.join(tmp, 'harmony', 'oh-package.json5'),
+      path.join(tmp, 'harmony', 'entry', 'oh-package.json5'),
+    ];
+    for (const t of targets) before.set(t, fs.readFileSync(t, 'utf8'));
+    const stateBefore = fs.readFileSync(path.join(tmp, '.expo-harmony', 'managed-state.json'), 'utf8');
+
+    const realRename = fsDefault.renameSync;
+    let tmpRenames = 0;
+    vi.mocked(fs.renameSync).mockImplementation(((from: any, to: any) => {
+      if (typeof from === 'string' && from.endsWith('.cli-tmp')) {
+        tmpRenames += 1;
+        if (tmpRenames === 2) throw new Error('mock rename 故障'); // 备份 rename 不受影响
+      }
+      return (realRename as any)(from, to);
+    }) as any);
+    try {
+      await expect(syncHarmonyAutolinking(tmp, { force: true })).rejects.toThrow(/已回滚/);
+    } finally {
+      vi.mocked(fs.renameSync).mockImplementation(realRename);
+    }
+    for (const [t, content] of before) {
+      expect(fs.readFileSync(t, 'utf8')).toBe(content); // 含第 1 个已替换文件也被回滚
+    }
+    expect(fs.readFileSync(path.join(tmp, '.expo-harmony', 'managed-state.json'), 'utf8')).toBe(stateBefore);
+    expect(collectLeftovers(tmp, ['.cli-tmp', '.cli-bak'])).toEqual([]);
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy(); // 回滚后普通 sync 可直接通过
+  });
+
+  it('五阶段事务：状态落账失败（managed-state rename 抛错）→ 同一回滚，文件恢复原内容、旧基线未动、无 tmp/bak/state-tmp 残留、普通 sync 直接通过', async () => {
+    const before = new Map<string, string>();
+    const targets = [
+      path.join(tmp, 'harmony', 'entry', 'src', 'main', 'ets', 'RNOHPackagesFactory.ets'),
+      path.join(tmp, 'harmony', 'entry', 'src', 'main', 'cpp', 'RNOHPackagesFactory.h'),
+      path.join(tmp, 'harmony', 'entry', 'src', 'main', 'cpp', 'autolinking.cmake'),
+      path.join(tmp, 'harmony', 'oh-package.json5'),
+      path.join(tmp, 'harmony', 'entry', 'oh-package.json5'),
+    ];
+    for (const t of targets) before.set(t, fs.readFileSync(t, 'utf8'));
+    const statePath = path.join(tmp, '.expo-harmony', 'managed-state.json');
+    const stateBefore = fs.readFileSync(statePath, 'utf8');
+
+    const realRename = fsDefault.renameSync;
+    vi.mocked(fs.renameSync).mockImplementation(((from: any, to: any) => {
+      // 仅拦截 managed-state 的 tmp → rename（第 ④ 阶段），受管文件替换不受影响
+      if (typeof from === 'string' && from.endsWith('managed-state.json.cli-tmp')) {
+        throw new Error('mock state rename 故障');
+      }
+      return (realRename as any)(from, to);
+    }) as any);
+    try {
+      await expect(syncHarmonyAutolinking(tmp)).rejects.toThrow(/基线状态写入失败/);
+    } finally {
+      vi.mocked(fs.renameSync).mockImplementation(realRename);
+    }
+    for (const [t, content] of before) {
+      expect(fs.readFileSync(t, 'utf8')).toBe(content); // 全部恢复原内容（含已替换的）
+    }
+    expect(fs.readFileSync(statePath, 'utf8')).toBe(stateBefore); // 旧基线未动，无"新文件+旧基线"错配
+    expect(collectLeftovers(tmp, ['.cli-tmp', '.cli-bak'])).toEqual([]); // 无 tmp/bak/state-tmp 残留
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy(); // 普通 sync 直接通过
+  });
+
+  it('五阶段事务：替换失败且回滚中恢复也失败 → 保留原始错误并列出未能恢复的文件（回滚不静默中断）', async () => {
+    const realRename = fsDefault.renameSync;
+    let tmpRenames = 0;
+    vi.mocked(fs.renameSync).mockImplementation(((from: any, to: any) => {
+      if (typeof from === 'string' && from.endsWith('.cli-tmp')) {
+        tmpRenames += 1;
+        if (tmpRenames === 1) throw new Error('mock rename 故障'); // 替换阶段第 1 个失败
+      }
+      if (typeof from === 'string' && from.endsWith('.cli-bak')) {
+        throw new Error('mock 回滚故障'); // 回滚阶段的 bak 恢复也全部失败
+      }
+      return (realRename as any)(from, to);
+    }) as any);
+    let message = '';
+    try {
+      await syncHarmonyAutolinking(tmp, { force: true });
+    } catch (err) {
+      message = err instanceof Error ? err.message : String(err);
+    } finally {
+      vi.mocked(fs.renameSync).mockImplementation(realRename);
+    }
+    expect(message).toMatch(/mock rename 故障/);   // 原始错误未被回滚失败掩盖
+    expect(message).toMatch(/未能自动恢复/);        // 明确告知存在未恢复文件
+    expect(message).toContain('RNOHPackagesFactory.ets.cli-bak'); // 列出具体文件
+    // bak 残留（回滚恢复失败 → 目标缺失 + bak 并存 = 唯一副本形态），
+    // 下次 sync 步骤 0 自动恢复后正常通过，闭环自愈
+    expect(collectLeftovers(tmp, ['.cli-bak']).length).toBeGreaterThan(0);
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy();
+    expect(collectLeftovers(tmp, ['.cli-bak'])).toEqual([]);
+  });
+
+  it('启动时残留检查：.cli-tmp 残留 → 自动清理后正常写入（步骤 0）', async () => {
+    fs.writeFileSync(`${etsPath()}.cli-tmp`, 'garbage');
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy();
+    expect(fs.existsSync(`${etsPath()}.cli-tmp`)).toBe(false);
+    expect(fs.readFileSync(etsPath(), 'utf8')).not.toBe('garbage'); // tmp 未被误用
+  });
+
+  it('启动时残留检查：.cli-bak 且目标文件缺失 → 自动恢复原文件后正常写入（bak 是唯一副本）', async () => {
+    const original = fs.readFileSync(etsPath(), 'utf8');
+    fs.renameSync(etsPath(), `${etsPath()}.cli-bak`); // 模拟备份后被杀、替换未发生
+    // 未恢复时 ets 缺失 → A 类基线 hash 对不上 → 阻断；resolves 成功本身即证明恢复发生
+    await expect(syncHarmonyAutolinking(tmp)).resolves.toBeTruthy();
+    expect(fs.existsSync(`${etsPath()}.cli-bak`)).toBe(false); // 已恢复或被正常流程消费
+    expect(fs.readFileSync(etsPath(), 'utf8')).toBe(original); // 恢复后幂等重写，内容不变
+  });
+
+  it('启动时残留检查：.cli-bak 且目标文件并存 → 阻断并给双出口（sync --force 或手动恢复）；--force 清理残留并重建', async () => {
+    fs.copyFileSync(etsPath(), `${etsPath()}.cli-bak`); // 模拟 ③④ 间被杀（新内容+旧基线+bak）
+    await expect(syncHarmonyAutolinking(tmp)).rejects.toThrow(/上次中断遗留的备份/);
+    await expect(syncHarmonyAutolinking(tmp)).rejects.toThrow(/手动/); // 双出口：不止 sync --force 一个出口
+    expect(fs.existsSync(`${etsPath()}.cli-bak`)).toBe(true); // 绝不静默覆盖有价值的 bak
+    await expect(syncHarmonyAutolinking(tmp, { force: true })).resolves.toBeTruthy();
+    expect(fs.existsSync(`${etsPath()}.cli-bak`)).toBe(false); // force 清理残留
+  });
+
+  it('prebuild --force 输出破坏性警告（runHarmonyGeneration，规范 3.5 命令输出）', async () => {
+    const warnings: string[] = [];
+    // log.warn 走 console.log（chalk 黄色 ⚠ 前缀），spy console.log 而非 console.warn
+    const spy = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+      warnings.push(args.join(' '));
+    });
+    try {
+      await runHarmonyGeneration(tmp, { name: 'X', slug: 'x' } as any, { force: true });
+    } finally {
+      spy.mockRestore();
+    }
+    expect(warnings.join('\n')).toContain('删除整个 harmony/ 目录');
+    // 警告需点名 PackageProvider 自定义代码会被重置，并给出备份指引
+    expect(warnings.join('\n')).toContain('PackageProvider');
+    expect(warnings.join('\n')).toContain('git');
+  });
+
+  it('A 类基线在 sync 成功后记录 contentHash 与 cliVersion', () => {
+    const state = readManagedStateFor(tmp);
+    const keys = Object.keys(state.generatedFiles ?? {});
+    expect(keys.length).toBeGreaterThan(0);
+    for (const k of keys) {
+      expect(state.generatedFiles?.[k]?.contentHash).toMatch(/^[a-f0-9]{64}$/);
+      expect(typeof state.generatedFiles?.[k]?.cliVersion).toBe('string');
+    }
   });
 });

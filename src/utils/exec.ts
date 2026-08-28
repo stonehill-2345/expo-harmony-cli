@@ -1,6 +1,6 @@
-import { execFileSync, spawn } from 'child_process';
+import { execFileSync, spawn, spawnSync } from 'child_process';
 
-const WINDOWS_NODE_COMMANDS = new Set(['npx', 'npm', 'pnpm', 'yarn', 'bun', 'expo', 'react-native', 'ohpm']);
+const WINDOWS_NODE_COMMANDS = new Set(['npx', 'npm', 'pnpm', 'yarn', 'bun', 'expo', 'react-native', 'ohpm', 'hvigor']);
 
 export interface CommandInvocation {
   command: string;
@@ -66,4 +66,32 @@ export function runFileQuiet(file: string, args: string[], opts: { cwd?: string 
       reject(error);
     });
   });
+}
+
+export interface ProbeResult {
+  ok: boolean;
+  stdout: string;
+  stderr: string;
+}
+
+/** 非抛出探测：命令缺失、非零退出、超时一律返回 ok:false。 */
+export function probeCommand(
+  file: string,
+  args: string[],
+  opts: { timeoutMs?: number } = {},
+): ProbeResult {
+  const invocation = resolveCommandInvocation(file);
+  try {
+    const result = spawnSync(invocation.command, args, {
+      shell: invocation.shell,
+      encoding: 'utf8',
+      timeout: opts.timeoutMs ?? 5000,
+    });
+    if (result.error) {
+      return { ok: false, stdout: result.stdout ?? '', stderr: result.error.message };
+    }
+    return { ok: result.status === 0, stdout: result.stdout ?? '', stderr: result.stderr ?? '' };
+  } catch (err) {
+    return { ok: false, stdout: '', stderr: err instanceof Error ? err.message : String(err) };
+  }
 }

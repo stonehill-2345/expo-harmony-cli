@@ -2,6 +2,7 @@ import { createHash } from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
 import { removeAppJsonPlugin } from '../injector/app-json';
+import { renameAtomic } from '../utils/atomic-rename';
 
 const STATE_PATH = '.expo-harmony/managed-state.json';
 const GITIGNORE_ENTRY = '.expo-harmony/';
@@ -23,8 +24,10 @@ export type ManagedPackage = {
 };
 
 export type ManagedState = {
-  version: 1;
+  version: 2;
   packages: Record<string, ManagedPackage>;
+  generatedFiles?: Record<string, { contentHash: string; cliVersion: string }>;
+  managedEntries?: Record<string, { path: string; dependency: string; spec: string; cliVersion: string }>;
 };
 
 export type CleanupResult = {
@@ -52,6 +55,23 @@ function contentHash(filePath: string): string | undefined {
   return createHash('sha256').update(fs.readFileSync(filePath)).digest('hex');
 }
 
+function isRelPathSafe(projectRoot: string, rel: string): boolean {
+  if (!rel || path.isAbsolute(rel) || rel.split(/[\\/]/).includes('..')) return false;
+  return path.resolve(projectRoot, rel).startsWith(projectRoot + path.sep);
+}
+
+function validGenerated(projectRoot: string, value: unknown): value is ManagedState['generatedFiles'] {
+  if (value === undefined) return true;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  return Object.entries(value).every(([key, entry]) => isRelPathSafe(projectRoot, key) && !!entry && typeof entry === 'object' && typeof (entry as any).contentHash === 'string' && typeof (entry as any).cliVersion === 'string');
+}
+
+function validEntries(projectRoot: string, value: unknown): value is ManagedState['managedEntries'] {
+  if (value === undefined) return true;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  return Object.values(value).every(entry => !!entry && typeof entry === 'object' && isRelPathSafe(projectRoot, (entry as any).path) && typeof (entry as any).dependency === 'string' && typeof (entry as any).spec === 'string' && typeof (entry as any).cliVersion === 'string');
+}
+
 function materializeFiles(projectRoot: string, files: ManagedFile[] | undefined): ManagedFile[] | undefined {
   if (!files?.length) return undefined;
   return files.map(file => ({
@@ -62,21 +82,33 @@ function materializeFiles(projectRoot: string, files: ManagedFile[] | undefined)
 
 export function readManagedState(projectRoot: string): ManagedState {
   const filePath = statePath(projectRoot);
-  if (!fs.existsSync(filePath)) return { version: 1, packages: {} };
+  if (!fs.existsSync(filePath)) return { version: 2, packages: {} };
   try {
     const state = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    if (state?.version === 1 && state.packages && typeof state.packages === 'object') return state;
+    if ((state?.version === 1 || state?.version === 2) && state.packages && typeof state.packages === 'object') {
+      const normalized: ManagedState = { ...state, version: 2 };
+      if (!validGenerated(projectRoot, normalized.generatedFiles)) delete normalized.generatedFiles;
+      if (!validEntries(projectRoot, normalized.managedEntries)) delete normalized.managedEntries;
+      return normalized;
+    }
   } catch {
     // 状态损坏时视为无状态，绝不据此删除用户资产。
   }
-  return { version: 1, packages: {} };
+  return { version: 2, packages: {} };
 }
 
 export function writeManagedState(projectRoot: string, state: ManagedState): void {
   ensureManagedStateIgnored(projectRoot);
   const filePath = statePath(projectRoot);
   fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  fs.writeFileSync(filePath, JSON.stringify(state, null, 2) + '\n');
+  const tmpPath = `${filePath}.cli-tmp`;
+  try {
+    fs.writeFileSync(tmpPath, JSON.stringify({ ...state, version: 2 }, null, 2) + '\n');
+    renameAtomic(tmpPath, filePath);
+  } catch (err) {
+    fs.rmSync(tmpPath, { force: true });
+    throw err;
+  }
 }
 
 /** 状态文件是 CLI 运行产物，不要求业务项目提交。 */
@@ -171,4 +203,41 @@ export function reconcileManagedState(projectRoot: string): string[] {
   const stalePackages = Object.keys(state.packages).filter(name => !dependencyExists(pkg, name));
   for (const name of stalePackages) cleanupManagedPackage(projectRoot, name);
   return stalePackages;
+}
+
+export function findGeneratedFileDrift(projectRoot: string, relPaths: string[]): string[] {
+  const state = readManagedState(projectRoot);
+  return relPaths.filter(rel => {
+    const baseline = state.generatedFiles?.[rel];
+    if (!baseline) return false;
+    const current = contentHash(path.join(projectRoot, rel));
+    return current !== baseline.contentHash;
+  });
+}
+
+export function withGeneratedFileBaselines(projectRoot: string, state: ManagedState, relPaths: string[], cliVersion: string): ManagedState {
+  state.generatedFiles = state.generatedFiles ?? {};
+  for (const rel of relPaths) {
+    const hash = contentHash(path.join(projectRoot, rel));
+    if (hash) state.generatedFiles[rel] = { contentHash: hash, cliVersion };
+  }
+  return state;
+}
+
+export function withManagedEntries(state: ManagedState, entries: Array<{ path: string; dependency: string; spec: string }>, cliVersion: string): ManagedState {
+  state.managedEntries = state.managedEntries ?? {};
+  for (const entry of entries) state.managedEntries[`${entry.path}:${entry.dependency}`] = { ...entry, cliVersion };
+  return state;
+}
+
+export function readManagedEntries(projectRoot: string) {
+  return readManagedState(projectRoot).managedEntries ?? {};
+}
+
+export function recordGeneratedFileBaselines(projectRoot: string, relPaths: string[], cliVersion: string): void {
+  writeManagedState(projectRoot, withGeneratedFileBaselines(projectRoot, readManagedState(projectRoot), relPaths, cliVersion));
+}
+
+export function recordManagedEntries(projectRoot: string, entries: Array<{ path: string; dependency: string; spec: string }>, cliVersion: string): void {
+  writeManagedState(projectRoot, withManagedEntries(readManagedState(projectRoot), entries, cliVersion));
 }

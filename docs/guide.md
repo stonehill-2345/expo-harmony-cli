@@ -42,6 +42,19 @@ ohpm --version
 hdc version
 ```
 
+## 环境检查与诊断
+
+```bash
+pnpm dlx expo-harmony-cli env
+pnpm dlx expo-harmony-cli doctor
+```
+
+退出码：`0` 全部通过，`2` 仅有警告，`1` 存在失败项。node、包管理器和 ohpm 缺失会失败；DevEco Studio、hvigor、hdc 缺失会警告。DevEco 自定义路径可设置 `DEVECO_HOME`，hdc 可设置 `HDC_PATH`。
+
+`sync`、`prebuild`、`install`、`uninstall` 会保护 CLI 托管的 autolinking 文件和 `oh-package.json5` 条目。发现手动修改时默认阻断，可使用 `sync --force` 或对应命令的 `--force` 跳过；其中 `prebuild --force` 会删除整个 `harmony/` 目录，请先备份签名、资源和手工配置。
+
+基线保存在 `.expo-harmony/managed-state.json`，新 clone 首次同步会自动建立。
+
 ## 支持范围
 
 | 项目                            | 当前基线                                  |

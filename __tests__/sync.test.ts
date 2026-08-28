@@ -37,7 +37,7 @@ describe('sync 命令', () => {
 
     await sync([]);
 
-    expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp));
+    expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp), { force: false });
     expect(log.success).toHaveBeenCalledWith('HarmonyOS 原生注册已同步（1 个包）');
     expect(log.info).toHaveBeenCalledWith('下一步：cd harmony && ohpm install，再在 DevEco Studio 重新构建');
   });

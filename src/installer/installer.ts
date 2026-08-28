@@ -5,7 +5,8 @@ import { runFile } from '../utils/exec';
 import { log } from '../utils/log';
 import { adaptPackage } from './adapt-package';
 import { resolvePm, installCmd, runScriptCmd } from '../lib/pkg-manager';
-import { syncHarmonyAutolinking } from '../harmony-project';
+import * as harmonyProject from '../harmony-project';
+import { assertNoDrift } from '../harmony-project/standalone';
 import { ensureAppJsonPlugin } from '../injector/app-json';
 
 const DEVECO_OHPM_PATH = '/Applications/DevEco-Studio.app/Contents/tools/ohpm/bin/ohpm';
@@ -21,7 +22,9 @@ export async function runInstall(args: string[]): Promise<void> {
   }
   const skipHarmony = args.includes('--skip-harmony');
   const skipNative = args.includes('--skip-native');
+  const force = args.includes('--force');
   const pm = resolvePm(args, projectRoot);
+  if (!skipHarmony && !skipNative && !force && fs.existsSync(path.join(projectRoot, '.expo-harmony', 'managed-state.json'))) assertNoDrift(projectRoot);
   const addedPermissionsPlugin = ensureReactNativePermissionsPlugin(projectRoot, pkg);
 
   // 步骤 2：iOS/Android 安装
@@ -63,7 +66,7 @@ export async function runInstall(args: string[]): Promise<void> {
   if (result.needsAutolink && !skipNative) {
     if (fs.existsSync(path.join(projectRoot, 'harmony'))) {
       log.step('自动同步 HarmonyOS 原生注册');
-      const syncResult = syncHarmonyAutolinking(projectRoot);
+      const syncResult = await harmonyProject.syncHarmonyAutolinking(projectRoot, { force });
       log.success(`HarmonyOS 原生注册已同步（${syncResult.linked.length} 个包）`);
       if (result.requiresCodegen) {
         const harmonyEntryDir = path.join(projectRoot, 'harmony', 'entry');

@@ -1,6 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { syncHarmonyAutolinking } from '../harmony-project';
+import * as harmonyProject from '../harmony-project';
+import { assertNoDrift } from '../harmony-project/standalone';
 import { cleanupManagedPackage, readManagedState } from '../lifecycle/managed-state';
 import { uninstallCmd, resolvePm, runScriptCmd } from '../lib/pkg-manager';
 import { runFile } from '../utils/exec';
@@ -31,7 +32,9 @@ export async function runUninstall(args: string[]): Promise<void> {
   const originalPackage = packageName(requested);
   const skipHarmony = args.includes('--skip-harmony');
   const skipNative = args.includes('--skip-native');
+  const force = args.includes('--force');
   const pm = resolvePm(args, projectRoot);
+  if (!skipHarmony && !skipNative && !force && fs.existsSync(path.join(projectRoot, '.expo-harmony', 'managed-state.json'))) assertNoDrift(projectRoot);
   const managed = readManagedState(projectRoot).packages[originalPackage];
   const packages = [originalPackage];
   if (!skipHarmony && managed?.harmonyPackage) packages.push(managed.harmonyPackage);
@@ -62,7 +65,7 @@ export async function runUninstall(args: string[]): Promise<void> {
   const harmonyDir = path.join(projectRoot, 'harmony');
   if (!fs.existsSync(harmonyDir)) return;
   log.step('自动同步 HarmonyOS 原生注册');
-  const syncResult = syncHarmonyAutolinking(projectRoot);
+  const syncResult = await harmonyProject.syncHarmonyAutolinking(projectRoot, { force });
   log.success(`HarmonyOS 原生注册已同步（${syncResult.linked.length} 个包）`);
   log.step('刷新 HarmonyOS 原生依赖');
   runFile(resolveOhpmCommand(), ['install', '--all'], { cwd: harmonyDir });

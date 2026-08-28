@@ -100,6 +100,7 @@ export interface AutolinkingResult {
   skipped: Array<{ package: string; reason: string }>;
   /** 生成的四个文件（绝对路径 + 内容）*/
   files: Array<{ path: string; content: string }>;
+  managedOhPackageEntries: Array<{ ohPackagePath: string; expected: Record<string, string> }>;
 }
 
 function getEtsPackages(lib: HarmonyPackageMappingEntry): HarmonyEtsPackage[] {
@@ -188,10 +189,17 @@ export function runAutolinking(opts: {
     });
   }
 
+  const expectedFor = (prefix: '../node_modules' | '../../node_modules') => Object.fromEntries(
+    libraries.map(lib => [lib.npmPackageName, `file:${prefix}/${lib.npmPackageName}/harmony/${lib.harName}`]),
+  );
+  const managedOhPackageEntries = [{ ohPackagePath: ohPkgPath, expected: expectedFor('../node_modules') }];
+  if (fs.existsSync(entryOhPkgPath)) managedOhPackageEntries.push({ ohPackagePath: entryOhPkgPath, expected: expectedFor('../../node_modules') });
+
   return {
     linked: libraries.map(l => l.npmPackageName),
     skipped,
     files,
+    managedOhPackageEntries,
   };
 }
 

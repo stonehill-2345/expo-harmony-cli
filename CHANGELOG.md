@@ -1,5 +1,20 @@
 # expo-harmony-cli
 
+## 1.2.0
+
+### Minor Changes
+
+- 新增 `env` 命令：检查 node、hvigor、ohpm、hdc 等工具链的版本与可用性，逐项输出结果与修复建议。
+- 新增 `doctor` 命令：汇总环境检查计数，明细输出项目级诊断（受管文件漂移、依赖基线等），末尾按优先级给出"下一步"建议。
+- `env` / `doctor` 退出码分级：0 全部通过、1 存在失败、2 仅有警告，便于 CI 与脚本集成。
+- 新增受管文件漂移保护：`sync` 生成的 3 个 autolinking 文件（`RNOHPackagesFactory.ets/.h`、`autolinking.cmake`）与 `oh-package.json5` 中 CLI 托管的依赖条目被手动修改后，重新 `sync` 将保护性阻断；还原修改或 `sync --force` 可继续。
+- `install` / `uninstall` 增加前置预检：检测到漂移时在写入任何文件前阻断，避免产生半完成状态；同样支持 `--force` 跳过。
+- 受管文件写入升级为五阶段事务（暂存 → 备份 → 替换 → 状态原子落账 → 清理），任一阶段失败自动回滚，磁盘不残留半成品。
+- `sync` 启动时自动处理上次中断的遗留产物：`.cli-tmp` 暂存自动清理、`.cli-bak` 备份自动还原；备份与目标并存时阻断并给出手动恢复指引。
+- 明确自定义 Package 扩展点：`PackageProvider.ets` / `PackageProvider.cpp` 归用户管理，CLI 不会覆盖；模板内附注册示例，漂移阻断提示中附带该指引。
+- `prebuild --force` 警告强化：明确将删除整个 `harmony/` 目录并重置其中的自定义代码（含 `PackageProvider`），请依赖 git 恢复或先手动备份。
+- Windows 兼容：`hvigor` 命令改经 shell 启动，与 `ohpm` 一致，修复直接调用失败的问题。
+
 ## 1.1.0
 
 ### Minor Changes
