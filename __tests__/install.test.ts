@@ -60,7 +60,7 @@ describe('runInstall', () => {
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['react-native-webview']);
     expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-webview'], expect.anything());
-    expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp));
+    expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp), { force: false });
     expect(output.mock.calls.flat().join('\n')).toContain('cd harmony && ohpm install');
     output.mockRestore();
   });
@@ -117,7 +117,7 @@ describe('runInstall', () => {
     await runInstall(['react-native-blob-util']);
     expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-blob-util'], expect.anything());
     expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['install'], expect.anything());
-    expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp));
+    expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp), { force: false });
     expect(mockRunFile).toHaveBeenCalledWith(expect.any(String), ['install'], { cwd: path.join(fs.realpathSync(tmp), 'harmony', 'entry') });
     expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['codegen'], { cwd: fs.realpathSync(tmp) });
     expect(mockRunFile.mock.calls.map(([file, args]) => [file, args])).toEqual([
@@ -172,5 +172,39 @@ describe('runInstall', () => {
     fs.unlinkSync(path.join(tmp, 'package.json'));
     const { runInstall } = await import('../src/installer/installer');
     await expect(runInstall(['lodash'])).rejects.toThrow('当前目录非项目根（缺 package.json）');
+  });
+
+  // drift preflight：真实链路（assertNoDrift 走 harmony-project/standalone 子模块，不受 index mock 影响）
+  const buildDriftProject = async () => {
+    const { syncHarmonyAutolinking: syncReal } = await import('../src/harmony-project/standalone');
+    fs.mkdirSync(path.join(tmp, 'harmony', 'entry'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'harmony', 'oh-package.json5'), JSON.stringify({ dependencies: {} }));
+    fs.writeFileSync(path.join(tmp, 'harmony', 'entry', 'oh-package.json5'), JSON.stringify({ dependencies: {} }));
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context', 'harmony', 'safe_area.har'), 'har');
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-oh', 'react-native-harmony'), { recursive: true });
+    const quiet = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    try {
+      await syncReal(tmp); // 建立真实基线
+    } finally {
+      quiet.mockRestore();
+    }
+    fs.writeFileSync(path.join(tmp, 'harmony', 'entry', 'src', 'main', 'ets', 'RNOHPackagesFactory.ets'), '// manual edit\n');
+  };
+
+  it('drift（受管文件被手动修改）→ 在任何安装动作前阻断，磁盘快照不变', async () => {
+    await buildDriftProject();
+    const pkgBefore = fs.readFileSync(path.join(tmp, 'package.json'), 'utf8');
+    const { runInstall } = await import('../src/installer/installer');
+    await expect(runInstall(['react-native-webview'])).rejects.toThrow(/已阻止本次 install/);
+    expect(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8')).toBe(pkgBefore); // 尚未做任何变更
+    expect(mockRunFile).not.toHaveBeenCalled(); // 安装动作未发生
+  });
+
+  it('drift + --force → 跳过 drift 保护继续安装', async () => {
+    await buildDriftProject();
+    const { runInstall } = await import('../src/installer/installer');
+    await runInstall(['react-native-webview', '--force']);
+    expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-webview'], expect.anything());
   });
 });

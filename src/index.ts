@@ -5,10 +5,12 @@ import { install } from './commands/install';
 import { scan } from './commands/scan';
 import { list } from './commands/list';
 import { sync } from './commands/sync';
+import { env } from './commands/env';
+import { doctor } from './commands/doctor';
 import { uninstall } from './commands/uninstall';
 import packageJson from '../package.json';
 
-const COMMANDS = ['create', 'prebuild', 'install', 'uninstall', 'remove', 'scan', 'list', 'sync'];
+const COMMANDS = ['create', 'prebuild', 'install', 'uninstall', 'remove', 'scan', 'list', 'sync', 'env', 'doctor'];
 
 /** 命令分发（纯函数）。argv = process.argv.slice(2) */
 export async function dispatch(argv: string[]): Promise<void> {
@@ -56,6 +58,14 @@ export async function dispatch(argv: string[]): Promise<void> {
     await sync(rest);
     return;
   }
+  if (cmd === 'env') {
+    await env(rest);
+    return;
+  }
+  if (cmd === 'doctor') {
+    await doctor(rest);
+    return;
+  }
 
   // 裸项目名兼容：其余参数全为 flag（如 --pnpm）时放行；近似命令拼写提示后仍按项目名创建，
   // 避免误拦 scanx 这类合法项目名。
@@ -92,11 +102,13 @@ expo-harmony-cli <command> [args]
 
 Commands:
   create [name]           创建含鸿蒙基线的 Expo 项目（默认命令）
-  install <pkg>           装 iOS/Android + 鸿蒙 JS 包 + 原生集成
-  uninstall <pkg>         卸载包并清理 CLI 管理的 HarmonyOS 适配资产（remove 同义）
+  install <pkg>           装 iOS/Android + 鸿蒙 JS 包 + 原生集成（--force 跳过 drift 保护）
+  uninstall <pkg>         卸载包并清理 CLI 管理的 HarmonyOS 适配资产（remove 同义，--force 跳过 drift 保护）
   prebuild [args]         生成三端原生目录（透传 expo prebuild + harmony 走生成器）
   scan                    手动重跑扫描适配
-  sync                    增量同步 HarmonyOS 原生注册（不覆盖 harmony/）
+  sync                    增量同步 HarmonyOS 原生注册（--force 跳过受管文件 drift 保护）
+  env                     检查环境工具（node/包管理器/ohpm/hvigor/hdc/DevEco）
+  doctor                  只读汇总环境与项目诊断（兼容基线/受管文件漂移）
   list                    列出 compat-table（调试用）
 
 Options:
