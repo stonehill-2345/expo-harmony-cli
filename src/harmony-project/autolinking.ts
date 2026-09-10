@@ -97,6 +97,8 @@ endfunction()
 export interface AutolinkingResult {
   /** 命中并被链接的 npm 包名（字典序）*/
   linked: string[];
+  /** linked 各包的注册来源：'official'（官方 autolink）| 'mapping'（自研补充）。 */
+  linkedSources?: Record<string, 'official' | 'mapping'>;
   skipped: Array<{ package: string; reason: string }>;
   /** 生成的四个文件（绝对路径 + 内容）*/
   files: Array<{ path: string; content: string }>;
@@ -117,6 +119,45 @@ function getCppPackages(lib: HarmonyPackageMappingEntry): HarmonyCppPackage[] {
     return [{ className: lib.cppPackageClassName, namespace: lib.cppPackageNamespace }];
   }
   return [];
+}
+
+/**
+ * 单包注册片段（任务三）：把「一个 mapping 包 → 三工厂各一行」的生成从整文件 mustache
+ * 模板中抽出，供两条路径共用——批量渲染（官方整体失败兜底）与官方产物锚点补充。
+ * 缩进与三模板对应区保持一致。
+ */
+export interface PackageSnippets {
+  /** mapping 中该包需要的 HAR 引用（oh-package dependencies 值，prefix 由调用方决定）。 */
+  harNames: string[];
+  etsImports: string[];
+  etsInstances: string[];
+  cppIncludes: string[];
+  cppInstances: string[];
+  cmakeSubdirectories: string[];
+  cmakeTargets: string[];
+}
+
+export function buildPackageSnippets(lib: HarmonyPackageMappingEntry): PackageSnippets {
+  const ets = getEtsPackages(lib);
+  const cpp = getCppPackages(lib);
+  return {
+    harNames: [lib.harName],
+    etsImports: ets.map(entry => entry.importStatement),
+    etsInstances: ets.flatMap(entry => entry.classNames.map(c => `    new ${c}(ctx),`)),
+    cppIncludes: cpp.map(entry => `#include "${entry.className}.h"`),
+    cppInstances: cpp.map(entry => {
+      const typeName = entry.namespace === null ? entry.className : `${entry.namespace}::${entry.className}`;
+      return `    std::make_shared<${typeName}>(ctx),`;
+    }),
+    cmakeSubdirectories: lib.cmakeLibraryTargetName && lib.cppSourcePath
+      ? [`    set(AUTOLINKED_CPP_DIR "\${NODE_MODULES}/${lib.npmPackageName}/${lib.cppSourcePath}")`,
+         `    add_subdirectory("\${AUTOLINKED_CPP_DIR}" ./${lib.cmakeLibraryTargetName})`]
+      : lib.cmakeLibraryTargetName
+        ? [`    resolve_oh_package_cpp(AUTOLINKED_CPP_DIR "${lib.npmPackageName}")`,
+           `    add_subdirectory("\${AUTOLINKED_CPP_DIR}" ./${lib.cmakeLibraryTargetName})`]
+        : [],
+    cmakeTargets: lib.cmakeLibraryTargetName ? [`        ${lib.cmakeLibraryTargetName}`] : [],
+  };
 }
 
 /**
@@ -197,6 +238,7 @@ export function runAutolinking(opts: {
 
   return {
     linked: libraries.map(l => l.npmPackageName),
+    linkedSources: Object.fromEntries(libraries.map(l => [l.npmPackageName, 'mapping' as const])),
     skipped,
     files,
     managedOhPackageEntries,
@@ -209,18 +251,46 @@ function mergeOhPackageDependencies(
   mapping: Record<string, HarmonyPackageMappingEntry>,
   nodeModulesRelativePath: '../node_modules' | '../../node_modules',
 ): string {
-  const ohPackage = JSON5.parse(fs.readFileSync(ohPackagePath, 'utf8'));
-
-  const managed: Record<string, string> = {};
+  void mapping;
+  const managedSpecs: Record<string, string> = {};
   for (const lib of libraries) {
-    managed[lib.npmPackageName] = `file:${nodeModulesRelativePath}/${lib.npmPackageName}/harmony/${lib.harName}`;
+    managedSpecs[lib.npmPackageName] = `file:${nodeModulesRelativePath}/${lib.npmPackageName}/harmony/${lib.harName}`;
   }
+  return mergeOhPackageDependenciesWithSpecs(ohPackagePath, managedSpecs);
+}
 
+/**
+ * 通用 oh-package 合并（任务四）：managedSpecs = 本轮受管键 → 完整 spec 值。
+ * 归属以「本轮受管集」为准（不再以 mapping 键集判定）——不在本轮受管集的键按非受管保留，
+ * 卸载清理由 uninstaller 显式执行（规范 §5：确认卸载才清除，扫描异常不等于卸载）。
+ * staleManagedKeys：上轮受管、本轮不再出现的键（名域迁移等），随本轮结果清除——
+ * 它们是 CLI 自己写入的历史键，非用户手写，不清除会残留双键导致 ohpm 00604006。
+ */
+export function mergeOhPackageDependenciesWithSpecs(
+  ohPackagePath: string,
+  managedSpecs: Record<string, string>,
+  staleManagedKeys: string[] = [],
+): string {
+  const ohPackage = JSON5.parse(fs.readFileSync(ohPackagePath, 'utf8'));
+  const baseDir = path.dirname(ohPackagePath);
+
+  const stale = new Set(staleManagedKeys);
   const unmanaged: Record<string, string> = {};
   for (const [name, spec] of Object.entries<string>(ohPackage.dependencies || {})) {
-    const isAutolinkedHarmonyPackage = Object.prototype.hasOwnProperty.call(mapping, name);
-    if (!isAutolinkedHarmonyPackage) unmanaged[name] = spec;
+    if (stale.has(name)) continue;
+    if (Object.prototype.hasOwnProperty.call(managedSpecs, name)) continue; // 本轮受管键由 managedSpecs 最终覆盖
+    // 卸载残留的 autolink 族悬空引用（目标 HAR 已不存在）随本轮清除：
+    // 与 staleManagedKeys 互补——那条依据受管条目记录，这条依据引用目标实际存在，
+    // 覆盖条目已被 cleanup 清除后 sync 仍能识别旧键（uninstall 联动，ohpm fetch 不再失败）。
+    if (isDanglingAutolinkRef(spec, baseDir)) continue;
+    unmanaged[name] = spec;
   }
-  ohPackage.dependencies = { ...unmanaged, ...managed };
+  ohPackage.dependencies = { ...unmanaged, ...managedSpecs };
   return JSON5.stringify(ohPackage, { space: 2, quote: '"' }) + '\n';
+}
+
+/** autolink 族 file: 引用且目标 HAR 不存在（卸载残留的悬空引用）。 */
+export function isDanglingAutolinkRef(spec: string, baseDir: string): boolean {
+  if (!/^file:(?:\.\.\/)+node_modules\/.+\/harmony\/.+\.(?:har|har\.bk)$/.test(spec)) return false;
+  return !fs.existsSync(path.resolve(baseDir, spec.slice('file:'.length)));
 }

@@ -1,5 +1,20 @@
 # expo-harmony-cli
 
+## 1.3.0
+
+### Minor Changes
+
+- 原生插件链接改为「官方优先」：`sync` / `prebuild` / `install` / `uninstall` 共用统一链路，优先调用项目内安装的 RNOH 官方 `link-harmony`（识别 `package.json` 带 `harmony.autolinking` 声明的包），官方注册结果原样保留；候选不再受内置映射表限制。
+- 官方未覆盖的插件自动查询内置映射表补充注册：以锚点方式插入官方产物，不改写已成功的官方注册；两者均未覆盖的插件逐包报告原因并给出适配指引，不再静默丢失。
+- 官方 CLI 不可用或产物合并冲突时自动回退内置批量生成；跨插件同名 Package / CMake target 冲突时报错并保留原工程，不以去重掩盖。
+- 官方产物中的临时目录相对路径自动改写为项目相对路径，root 与 entry 两级 `oh-package.json5` 受管合并，npm 包名与 OHPM 包名差异自动归一比对。
+- `install` 未列入适配表但携带有效 HarmonyOS 原生痕迹（autolinking 声明或 harmony 目录）的包不再直接跳过，仍尝试原生注册并按「官方 / 自研补充 / 未覆盖」归类报告。
+- `prebuild` 前置校验项目依赖：未安装 expo 时前置拦截，避免 npx 拉取与项目 SDK 版本不符的最新 expo 接管构建；内部调用统一加 `--no-install`。
+- 修复 `uninstall` 后受管状态残留：包档案与两级 `oh-package.json5` 受管条目随卸载清除；指向已卸载包的悬空 `file:` HAR 引用在下次同步时自动清理，修复由此导致的 `ohpm install` 拉取失败。
+- oh-package 依赖归属改按「本轮受管集」判定（原先按映射表键集）：历史受管项仅在确认卸载时清除，扫描异常不再影响用户依赖。
+- 生成的 `RNOHPackagesFactory.ets` 返回类型对齐旧式适配包（`RNPackage[]`），避免 ArkTS 严格类型检查下旧式包缺少新接口方法导致编译失败。
+- 文档：生成项目的 `docs/HARMONY.md` 新增「原生注册机制」章节（官方优先流程、手动安装原生依赖后需执行 `sync`、Hvigor 插件注册注意事项），adapter skill 同步更新链接规则。
+
 ## 1.2.0
 
 ### Minor Changes

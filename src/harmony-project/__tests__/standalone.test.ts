@@ -5,8 +5,9 @@ import * as path from 'path';
 import * as os from 'os';
 import JSON5 from 'json5';
 import { runHarmonyGeneration, syncHarmonyAutolinking } from '../standalone';
-import { readManagedState as readManagedStateFor } from '../../lifecycle/managed-state';
+import { readManagedState as readManagedStateFor, writeManagedState, withManagedEntries } from '../../lifecycle/managed-state';
 import { VERSION_MATRIX } from '../../version-matrix';
+import { installFakeRnohCli, installAdapterPkg } from './helpers/fake-rnoh-cli';
 
 // vitest 下 import * as fs 得到冻结 namespace、spyOn 拦不到被测模块内部调用；
 // 用文件级 vi.mock 让测试与被测模块共享同一 vi.fn（默认透传真实实现，不影响上方既有用例）。
@@ -633,5 +634,232 @@ describe('syncHarmonyAutolinking drift 保护', () => {
       expect(state.generatedFiles?.[k]?.contentHash).toMatch(/^[a-f0-9]{64}$/);
       expect(typeof state.generatedFiles?.[k]?.cliVersion).toBe('string');
     }
+  });
+});
+
+describe('官方优先三态合并（任务四）', () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'official-first-'));
+    fs.mkdirSync(path.join(tmp, 'harmony', 'entry'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'harmony', 'oh-package.json5'), JSON.stringify({ name: 'root', dependencies: { 'user-manual-dep': '1.0.0' } }));
+    fs.writeFileSync(path.join(tmp, 'harmony', 'entry', 'oh-package.json5'), JSON.stringify({ name: 'entry', dependencies: {} }));
+    installFakeRnohCli(tmp, 'ok');
+    installAdapterPkg(tmp, '@react-native-ohos/react-native-safe-area-context', 'safe_area.har');
+    // fake 产物引用的两个官方包补实体（镜像真实：官方 CLI 只会链接已安装的包，
+    // 其产物引用的目标必存在，悬空引用只可能来自拷入的卸载残留）
+    installAdapterPkg(tmp, '@react-native-ohos/react-native-video', 'rn_video.har');
+    installAdapterPkg(tmp, 'official-only-pkg', 'x.har');
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-oh', 'react-native-harmony'), { recursive: true });
+  });
+  afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
+
+  const read = (rel: string) => fs.readFileSync(path.join(tmp, rel), 'utf8');
+
+  it('官方包保留官方注册、mapping 包锚点补充、两级 oh-package 路径改写正确', async () => {
+    const result = await syncHarmonyAutolinking(tmp);
+    expect(result.linked).toEqual([
+      '@react-native-ohos/react-native-safe-area-context',
+      '@react-native-ohos/react-native-video',
+      'official-only-pkg',
+    ].sort());
+    // ETS：官方实例 + 自研补充实例共存
+    const ets = read('harmony/entry/src/main/ets/RNOHPackagesFactory.ets');
+    expect(ets).toContain('new RNCVideoPackage(ctx),');
+    expect(ets).toContain('new SafeAreaViewPackage(ctx),');
+    // root oh-package：官方深路径已改写 + mapping 包补充 + 用户依赖保留
+    const rootOh = JSON5.parse(read('harmony/oh-package.json5'));
+    expect(rootOh.dependencies['@react-native-ohos/react-native-video'])
+      .toBe('file:../node_modules/@react-native-ohos/react-native-video/harmony/rn_video.har');
+    expect(rootOh.dependencies['official-only-pkg']).toBe('file:../node_modules/official-only-pkg/harmony/x.har');
+    expect(rootOh.dependencies['@react-native-ohos/react-native-safe-area-context'])
+      .toBe('file:../node_modules/@react-native-ohos/react-native-safe-area-context/harmony/safe_area.har');
+    expect(rootOh.dependencies['user-manual-dep']).toBe('1.0.0');
+    // entry oh-package：同一批受管键以 ../../ 前缀写入
+    const entryOh = JSON5.parse(read('harmony/entry/oh-package.json5'));
+    expect(entryOh.dependencies['@react-native-ohos/react-native-safe-area-context'])
+      .toBe('file:../../node_modules/@react-native-ohos/react-native-safe-area-context/harmony/safe_area.har');
+    expect(entryOh.dependencies['official-only-pkg']).toBe('file:../../node_modules/official-only-pkg/harmony/x.har');
+    // managed-state：两级受管条目均落账
+    const state = readManagedStateFor(tmp);
+    const keys = Object.keys(state.managedEntries ?? {});
+    expect(keys.some(k => k.startsWith(`harmony/oh-package.json5:`))).toBe(true);
+    expect(keys.some(k => k.startsWith(`harmony/entry/oh-package.json5:`))).toBe(true);
+    // 归类来源：官方注册与 mapping 补充分别标注
+    expect(result.linkedSources?.['@react-native-ohos/react-native-video']).toBe('official');
+    expect(result.linkedSources?.['@react-native-ohos/react-native-safe-area-context']).toBe('mapping');
+  });
+
+  it('entry oh-package 清除上轮受管但本轮不再出现的键，非受管用户键保留', async () => {
+    // 名域迁移残留场景：上轮受管键为 tpl 域（ohPackageName 产物），本轮统一为 npm 名——
+    // 旧受管键随本轮结果清除；用户手写键不受影响
+    fs.writeFileSync(path.join(tmp, 'harmony', 'entry', 'oh-package.json5'), JSON.stringify({
+      name: 'entry',
+      dependencies: {
+        '@react-native-oh-tpl/react-native-safe-area-context': 'file:../../node_modules/@react-native-ohos/react-native-safe-area-context/harmony/safe_area.har',
+        'user-manual-dep': '1.0.0',
+      },
+    }));
+    fs.mkdirSync(path.join(tmp, '.expo-harmony'), { recursive: true });
+    writeManagedState(tmp, withManagedEntries(
+      { version: 2, packages: {} },
+      [{
+        path: 'harmony/entry/oh-package.json5',
+        dependency: '@react-native-oh-tpl/react-native-safe-area-context',
+        spec: 'file:../../node_modules/@react-native-ohos/react-native-safe-area-context/harmony/safe_area.har',
+      }],
+      'test',
+    ));
+    await syncHarmonyAutolinking(tmp);
+    const entryOh = JSON5.parse(read('harmony/entry/oh-package.json5'));
+    expect(entryOh.dependencies['@react-native-oh-tpl/react-native-safe-area-context']).toBeUndefined();
+    expect(entryOh.dependencies['user-manual-dep']).toBe('1.0.0');
+  });
+
+  it('quiet 模式静默全量汇总（install 单包场景由调用方报告目标包）', async () => {
+    const logs: string[] = [];
+    const spyLog = vi.spyOn(console, 'log').mockImplementation((...args: unknown[]) => {
+      logs.push(args.join(' '));
+    });
+    const spyDebug = vi.spyOn(console, 'debug').mockImplementation((...args: unknown[]) => {
+      logs.push(args.join(' '));
+    });
+    try {
+      await syncHarmonyAutolinking(tmp, { quiet: true });
+      const text = logs.join('\n');
+      expect(text).not.toContain('官方 RNOH autolink 已生效');
+      expect(text).not.toContain('[link]');
+      expect(text).not.toContain('[skip]');
+    } finally {
+      spyLog.mockRestore();
+      spyDebug.mockRestore();
+    }
+  });
+
+  it('未覆盖且不在 mapping 的包进入 skipped 并保留原因', async () => {
+    installAdapterPkg(tmp, 'unknown-native-pkg', 'whatever.har');
+    const result = await syncHarmonyAutolinking(tmp);
+    expect(result.skipped.map(s => s.package)).toContain('unknown-native-pkg');
+  });
+
+  it('官方 CLI 整体不可用 → 回退自研批量模板（产物为自研形状）', async () => {
+    fs.rmSync(path.join(tmp, 'node_modules', '@react-native-oh', 'react-native-harmony-cli'), { recursive: true, force: true });
+    const result = await syncHarmonyAutolinking(tmp);
+    // video 也在 mapping 中且有 HAR，自研批量照常链接（官方独有 official-only-pkg 才被丢弃）
+    expect(result.linked).toEqual(['@react-native-ohos/react-native-safe-area-context', '@react-native-ohos/react-native-video']);
+    const ets = read('harmony/entry/src/main/ets/RNOHPackagesFactory.ets');
+    expect(ets).toContain('RNPackage, RNPackageContext'); // 自研模板 import 形状
+    expect(ets).not.toContain('official-only-pkg');
+  });
+
+  it('官方调用抛意外错误 → 回退自研批量且不向上抛', async () => {
+    installFakeRnohCli(tmp, 'throw');
+    const result = await syncHarmonyAutolinking(tmp);
+    expect(result.linked).toEqual(['@react-native-ohos/react-native-safe-area-context', '@react-native-ohos/react-native-video']);
+  });
+
+  it('官方产物静默失败（DescriptiveError）→ 靠产物检查回退自研', async () => {
+    installFakeRnohCli(tmp, 'silent-fail');
+    const result = await syncHarmonyAutolinking(tmp);
+    expect(result.linked).toEqual(['@react-native-ohos/react-native-safe-area-context', '@react-native-ohos/react-native-video']);
+  });
+
+  it('官方优先成功后再次 sync 幂等（无 drift 阻断、内容一致）', async () => {
+    await syncHarmonyAutolinking(tmp);
+    const ets1 = read('harmony/entry/src/main/ets/RNOHPackagesFactory.ets');
+    const oh1 = read('harmony/oh-package.json5');
+    await syncHarmonyAutolinking(tmp);
+    expect(read('harmony/entry/src/main/ets/RNOHPackagesFactory.ets')).toBe(ets1);
+    expect(read('harmony/oh-package.json5')).toBe(oh1);
+  });
+
+  it('历史自研注册的包被官方识别时迁移为官方注册，不因旧键冲突回退', async () => {
+    // 迁移场景：既有 oh-package 带 safe-area 的非受管 file: 旧键（v1.2.0 自研链路或手写），
+    // 新版本包补齐 autolinking metadata 后被官方 link——不得误判未覆盖而二次注册
+    fs.writeFileSync(path.join(tmp, 'harmony', 'oh-package.json5'), JSON.stringify({
+      name: 'root',
+      dependencies: {
+        'user-manual-dep': '1.0.0',
+        '@react-native-ohos/react-native-safe-area-context': 'file:../node_modules/@react-native-ohos/react-native-safe-area-context/harmony/safe_area.har',
+      },
+    }));
+    installFakeRnohCli(tmp, 'ok-safe-area');
+    const result = await syncHarmonyAutolinking(tmp);
+    // 走官方链路（官方骨架），safe-area 计入 linked 且注册恰好一次（无 mapping 重复补充）
+    expect(result.linked).toContain('@react-native-ohos/react-native-safe-area-context');
+    const ets = read('harmony/entry/src/main/ets/RNOHPackagesFactory.ets');
+    expect(ets).toContain('RNPackage[]'); // 工厂返回类型已改写（旧式包兼容）
+    expect(ets.match(/new SafeAreaViewPackage\(ctx\)/g)?.length).toBe(1);
+    const cmake = read('harmony/entry/src/main/cpp/autolinking.cmake');
+    expect(cmake.match(/^\s+rnoh_safe_area$/gm)?.length).toBe(1);
+  });
+
+  it('官方以 tpl 域 ohPackageName 注册的包不与 mapping 冲突（名字域归一）', async () => {
+    // 真实形态：safe-area 新版配置 ohPackageName=@react-native-oh-tpl/...（与 npm 名不同域），
+    // 官方产物以 tpl 名注册、CMake target 与 mapping 同名——归一失败即触发跨插件冲突回退
+    fs.writeFileSync(path.join(tmp, 'harmony', 'oh-package.json5'), JSON.stringify({
+      name: 'root',
+      dependencies: {
+        'user-manual-dep': '1.0.0',
+        '@react-native-ohos/react-native-safe-area-context': 'file:../node_modules/@react-native-ohos/react-native-safe-area-context/harmony/safe_area.har',
+      },
+    }));
+    installAdapterPkg(tmp, '@react-native-ohos/react-native-safe-area-context', 'safe_area.har', {
+      ohPackageName: '@react-native-oh-tpl/react-native-safe-area-context',
+    });
+    installFakeRnohCli(tmp, 'ok-tpl');
+    const result = await syncHarmonyAutolinking(tmp);
+    expect(result.linked).toContain('@react-native-ohos/react-native-safe-area-context');
+    const ets = read('harmony/entry/src/main/ets/RNOHPackagesFactory.ets');
+    expect(ets).toContain('RNPackage[]'); // 工厂返回类型已改写（旧式包兼容） // 官方骨架（未回退自研）
+    expect(ets.match(/new SafeAreaViewPackage\(ctx\)/g)?.length).toBe(1);
+    const cmake = read('harmony/entry/src/main/cpp/autolinking.cmake');
+    expect(cmake.match(/^\s+rnoh_safe_area$/gm)?.length).toBe(1);
+    // 名域改写回 npm 名：ohpm 依赖键必须与 HAR 内实际 name（npm 名）一致（00604006），
+    // ETS import source 与 CMake ${OH_MODULES_DIR} 路径也须指向 npm 名目录
+    const rootOh = JSON5.parse(read('harmony/oh-package.json5'));
+    expect(rootOh.dependencies['@react-native-ohos/react-native-safe-area-context'])
+      .toMatch(/^file:\.\.\/node_modules\//);
+    expect(rootOh.dependencies['@react-native-oh-tpl/react-native-safe-area-context']).toBeUndefined();
+    expect(ets).toContain(`'@react-native-ohos/react-native-safe-area-context'`);
+    expect(ets).not.toContain('@react-native-oh-tpl/');
+    expect(cmake).toContain('${OH_MODULES_DIR}/@react-native-ohos/react-native-safe-area-context/');
+    expect(cmake).not.toContain('@react-native-oh-tpl/');
+  });
+});
+
+describe('卸载后的悬空引用清理（uninstall 联动）', () => {
+  let tmp: string;
+  beforeEach(() => {
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'dangling-'));
+    fs.mkdirSync(path.join(tmp, 'harmony', 'entry'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'harmony', 'oh-package.json5'), JSON.stringify({ name: 'root', dependencies: { 'user-keep-dep': '1.0.0' } }));
+    fs.writeFileSync(path.join(tmp, 'harmony', 'entry', 'oh-package.json5'), JSON.stringify({ name: 'entry', dependencies: {} }));
+    installFakeRnohCli(tmp, 'ok');
+    installAdapterPkg(tmp, '@react-native-ohos/react-native-safe-area-context', 'safe_area.har');
+    fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-oh', 'react-native-harmony'), { recursive: true });
+  });
+  afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
+
+  it('包移除后再 sync：两级 oh-package 的悬空 file: 引用被清除，用户键与有效引用保留', async () => {
+    await syncHarmonyAutolinking(tmp); // 建立含 safe-area 补充的基线
+    // 模拟卸载：包从 node_modules 消失（managedEntries 已由 cleanup 清理——不依赖条目识别旧键）
+    fs.rmSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-safe-area-context'), { recursive: true, force: true });
+    const statePath = path.join(tmp, '.expo-harmony', 'managed-state.json');
+    const state = JSON.parse(fs.readFileSync(statePath, 'utf8'));
+    for (const key of Object.keys(state.managedEntries ?? {})) {
+      if (key.endsWith(':@react-native-ohos/react-native-safe-area-context')) delete state.managedEntries[key];
+    }
+    fs.writeFileSync(statePath, JSON.stringify(state));
+
+    await syncHarmonyAutolinking(tmp);
+
+    const rootOh = JSON5.parse(fs.readFileSync(path.join(tmp, 'harmony', 'oh-package.json5'), 'utf8'));
+    const entryOh = JSON5.parse(fs.readFileSync(path.join(tmp, 'harmony', 'entry', 'oh-package.json5'), 'utf8'));
+    expect(rootOh.dependencies['@react-native-ohos/react-native-safe-area-context']).toBeUndefined();
+    expect(entryOh.dependencies['@react-native-ohos/react-native-safe-area-context']).toBeUndefined();
+    // 官方包（node_modules 内不存在其实体也无妨——其引用目标存在与否由路径判定）与用户键保留
+    expect(rootOh.dependencies['user-keep-dep']).toBe('1.0.0');
+    expect(entryOh.dependencies['user-keep-dep'] ?? rootOh.dependencies['user-keep-dep']).toBeTruthy();
   });
 });

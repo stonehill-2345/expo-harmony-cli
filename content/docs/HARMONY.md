@@ -17,6 +17,8 @@
 
 执行 `prebuild --platform harmony` 后，CLI 会生成 `harmony/` 原生工程，并根据当前依赖同步 RNOH autolinking。
 
+原生插件链接固定遵循：优先使用 RNOH 官方 `link-harmony`；官方未覆盖的插件使用 CLI 自研 mapping 补充；仍未覆盖时提示参考 `.agent/skills/expo-harmony-adapter/SKILL.md`。手动安装原生依赖后请执行 `pnpm dlx expo-harmony-cli sync`，构建工具不会代替 CLI 更新注册。
+
 ## 首次运行 HarmonyOS
 
 ```bash
@@ -90,6 +92,20 @@ pnpm install
 pnpm dlx expo-harmony-cli scan
 pnpm dlx expo-harmony-cli sync
 ```
+
+## 原生注册机制（官方优先）
+
+`sync` / `prebuild` / `install` / `uninstall` 共用同一套原生链接流程，规则固定：
+
+1. **官方优先**：CLI 调用项目内安装的 RNOH 官方 `link-harmony`（识别 `package.json` 带 `harmony.autolinking` 声明的包），官方注册结果原样保留。
+2. **mapping 补充**：官方未覆盖（如仅带 `harmony.alias` 的适配包）时，CLI 查询自研映射表补充注册片段。
+3. **未覆盖提示**：两者都未覆盖的包不会自动注册，CLI 会逐包报告并提示参考 `list` 输出、本文件与 `.agent/skills/expo-harmony-adapter/SKILL.md`。
+
+注意：
+
+- **手动安装原生依赖后必须运行 `sync`**——Hvigor 构建不会替你更新原生注册文件。
+- CLI 生成的项目默认未在 `hvigorfile.ts` 注册 `@rnoh/hvigor-plugin`，因此构建期不会重复执行 autolinking；若你自行注册该插件，请以 `autolinking: null` 初始化，否则构建会重写 `RNOHPackagesFactory.ets` 等受管文件并丢失 CLI 的补充注册。
+- 链接成功不等同于运行时兼容，仍需真机验证。
 
 ## codegen
 

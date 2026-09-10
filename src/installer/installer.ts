@@ -6,7 +6,8 @@ import { log } from '../utils/log';
 import { adaptPackage } from './adapt-package';
 import { resolvePm, installCmd, runScriptCmd } from '../lib/pkg-manager';
 import * as harmonyProject from '../harmony-project';
-import { assertNoDrift } from '../harmony-project/standalone';
+import { assertNoDrift, UNCOVERED_HINT } from '../harmony-project/standalone';
+import { hasNativeFootprint } from '../harmony-project/official-autolinking';
 import { ensureAppJsonPlugin } from '../injector/app-json';
 
 const DEVECO_OHPM_PATH = '/Applications/DevEco-Studio.app/Contents/tools/ohpm/bin/ohpm';
@@ -36,11 +37,33 @@ export async function runInstall(args: string[]): Promise<void> {
     return;
   }
 
-  // 步骤 3：查 compat-table（单包）
+  // 步骤 3：查 compat-table（单包）——依赖适配与原生链接分开判断（规范 §6）：
+  // 未命中适配表不等于跳过链接，带有效原生痕迹（官方 metadata 或 harmony 目录）的包
+  // 仍交给官方优先流程识别。
   const result = adaptPackage(pkg, projectRoot, {
     appPlugins: addedPermissionsPlugin ? ['react-native-permissions'] : undefined,
   });
   if (result.status === 'skipped' || result.status === 'unsupported') {
+    const scopeAt = pkg.indexOf('@', 1);
+    const baseName = scopeAt === -1 ? pkg : pkg.slice(0, scopeAt);
+    const nativeFootprint = hasNativeFootprint(path.join(projectRoot, 'node_modules', baseName));
+    const harmonyReady = fs.existsSync(path.join(projectRoot, 'harmony'));
+    if (nativeFootprint && harmonyReady && !skipNative) {
+      log.info(`${baseName} 未列入适配表，但检测到 HarmonyOS 原生痕迹，尝试官方 autolink`);
+      // quiet：全量汇总（含官方扫描明细）静默，只报 install 目标包的注册归类
+      const syncResult = await harmonyProject.syncHarmonyAutolinking(projectRoot, { force, quiet: true });
+      const linkedNow = syncResult.linked.includes(baseName);
+      if (linkedNow) {
+        const source = syncResult.linkedSources?.[baseName] === 'official' ? '官方 autolink' : '自研补充';
+        log.success(`${baseName} 已完成 HarmonyOS 原生注册（${source}）`);
+      } else {
+        const reason = syncResult.skipped.find(s => s.package === baseName)?.reason ?? '官方与 mapping 均未覆盖';
+        log.warn(`${baseName} 未能完成 HarmonyOS 原生注册：${reason}`);
+        log.warn(UNCOVERED_HINT);
+      }
+      log.success('install 完成');
+      return;
+    }
     console.log();
     log.warn(
       [
@@ -66,8 +89,18 @@ export async function runInstall(args: string[]): Promise<void> {
   if (result.needsAutolink && !skipNative) {
     if (fs.existsSync(path.join(projectRoot, 'harmony'))) {
       log.step('自动同步 HarmonyOS 原生注册');
-      const syncResult = await harmonyProject.syncHarmonyAutolinking(projectRoot, { force });
-      log.success(`HarmonyOS 原生注册已同步（${syncResult.linked.length} 个包）`);
+      // quiet：全量汇总静默，只报 install 目标包的注册归类。
+      // 注册域是鸿蒙版包名（适配表命中时装入 result.harmonyPackage），不能用原版名比对
+      const target = result.harmonyPackage ?? pkg;
+      const syncResult = await harmonyProject.syncHarmonyAutolinking(projectRoot, { force, quiet: true });
+      if (syncResult.linked.includes(target)) {
+        const source = syncResult.linkedSources?.[target] === 'official' ? '官方 autolink' : '自研补充';
+        log.success(`${target} 已完成 HarmonyOS 原生注册（${source}）`);
+      } else {
+        const reason = syncResult.skipped.find(s => s.package === target)?.reason ?? '官方与 mapping 均未覆盖';
+        log.warn(`${target} 未能完成 HarmonyOS 原生注册：${reason}`);
+        log.warn(UNCOVERED_HINT);
+      }
       if (result.requiresCodegen) {
         const harmonyEntryDir = path.join(projectRoot, 'harmony', 'entry');
         log.step('安装 HarmonyOS 原生依赖');

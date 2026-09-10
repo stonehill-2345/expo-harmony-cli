@@ -15,6 +15,12 @@ description: Expo 插件鸿蒙(HarmonyOS)适配工作流。当适配 expo-image�
 
 核心思路：在 expo 插件中添加鸿蒙平台检测（`Platform.OS === 'harmony'`），转发到社区鸿蒙化插件实现。
 
+## CLI 原生链接规则
+
+CLI 会优先调用 RNOH 官方 `link-harmony`（识别 `package.json` 带 `harmony.autolinking` 声明的包）。官方未覆盖的插件再查询 CLI 自研 mapping；两者都未覆盖时不会自动修改原生注册。请以 `list` 输出、生成项目的 `docs/HARMONY.md` 和本 skill 为准，并按下文手动确认 HAR、ETS/C++ Package、CMake target 与 OHPM 依赖。
+
+手动 `pnpm add` 原生依赖后必须运行 `pnpm dlx expo-harmony-cli sync` 更新注册；构建不会代替这一步。
+
 ---
 
 ## 执行原则

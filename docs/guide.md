@@ -1,5 +1,18 @@
 # expo-harmony-cli 使用指南
 
+> 本文是 [README](../README.md) 的配套详细文档——README 讲重点，这里讲细节。
+
+## 目录
+
+- [常用命令](#常用命令)
+- [环境要求](#环境要求)
+- [环境检查与诊断](#环境检查与诊断)
+- [支持范围](#支持范围)
+- [三方依赖](#三方依赖)
+- [构建 HarmonyOS Release](#构建-harmonyos-release)
+- [常见问题](#常见问题)
+- [已知限制](#已知限制)
+
 ## 常用命令
 
 | 命令                                                            | 用途                                                                                                    |
@@ -10,6 +23,9 @@
 | `pnpm dlx expo-harmony-cli scan --apply`                        | 重新扫描现有 `package.json`，补齐可自动识别的 HarmonyOS 适配，并回收此前 CLI 管理但原包已不存在的残留。 |
 | `pnpm dlx expo-harmony-cli sync`                                | 仅同步 HarmonyOS 原生注册，不覆盖 `harmony/`。手工安装原生包后使用。                                    |
 | `pnpm dlx expo-harmony-cli prebuild --platform harmony --force` | 重新生成 HarmonyOS 原生工程。修改原生依赖或 `harmony/` 异常时使用。                                     |
+| `pnpm dlx expo-harmony-cli env`                                 | 环境工具链检查（node、hvigor、ohpm、hdc）。                                                             |
+| `pnpm dlx expo-harmony-cli doctor`                              | 环境汇总 + 项目诊断（受管文件漂移、依赖基线），按优先级给出下一步建议。                                 |
+| `pnpm dlx expo-harmony-cli list`                                | 查看当前兼容表。                                                                                        |
 | `pnpm start:harmony`                                            | 启动 HarmonyOS Metro，与 Android/iOS 统一端口 `8081`。                                                     |
 | `pnpm expo run:android` / `pnpm expo run:ios`                   | 按 Expo 标准方式构建 Android / iOS。                                                                    |
 
@@ -53,6 +69,8 @@ pnpm dlx expo-harmony-cli doctor
 
 `sync`、`prebuild`、`install`、`uninstall` 会保护 CLI 托管的 autolinking 文件和 `oh-package.json5` 条目。发现手动修改时默认阻断，可使用 `sync --force` 或对应命令的 `--force` 跳过；其中 `prebuild --force` 会删除整个 `harmony/` 目录，请先备份签名、资源和手工配置。
 
+原生插件注册采用官方优先策略：CLI 优先调用项目内安装的 RNOH 官方 `link-harmony`（识别 `package.json` 带 `harmony.autolinking` 声明的包），官方未覆盖的插件由内置映射表自动补充，两者均未覆盖时逐包报告并提示适配指引。手动安装原生依赖后需执行 `sync` 更新注册，构建不会代替这一步。
+
 基线保存在 `.expo-harmony/managed-state.json`，新 clone 首次同步会自动建立。
 
 ## 支持范围
@@ -65,26 +83,7 @@ pnpm dlx expo-harmony-cli doctor
 | HarmonyOS 开发工具              | DevEco Studio 5.0+ 与对应 OpenHarmony SDK |
 | iOS 构建工具                    | Xcode 16.4 及以下                         |
 
-已验证的主路径是创建 Expo 默认模板、生成 HarmonyOS 工程、启动 HarmonyOS Metro，并在 DevEco Studio 中构建运行。
-
-HarmonyOS release 通过 `pnpm bundle:harmony:release` 生成嵌入 HAP rawfile 的生产 JS bundle；签名和 HAP/APP 构建仍由 DevEco Studio 完成。首次接入项目时必须按下文[构建 HarmonyOS Release](#构建-harmonyos-release)关闭 Metro 验收。
-
-## 依赖和 HarmonyOS 工程管理
-
-`expo-harmony-cli` 不只是创建项目的入口。它还负责维护 HarmonyOS 兼容表、依赖版本锁定、patch、Metro alias、RNOH 原生注册、`oh-package.json5`、CMake、PackageProvider 与 `RNOHPackagesFactory`。
-
-因此在本 CLI 创建的项目中，安装、卸载、扫描、同步和 HarmonyOS prebuild 都应通过本 CLI 执行：
-
-```bash
-pnpm dlx expo-harmony-cli install <包名>
-pnpm dlx expo-harmony-cli uninstall <包名>
-pnpm dlx expo-harmony-cli remove <包名>
-pnpm dlx expo-harmony-cli scan --apply
-pnpm dlx expo-harmony-cli sync
-pnpm dlx expo-harmony-cli prebuild --platform harmony
-```
-
-不要优先使用 `expo install`、`pnpm add`、`pnpm remove`、`expo prebuild` 或 `npx expo prebuild` 来处理 HarmonyOS 相关依赖和工程生成，否则容易出现 JS 依赖、patch 和 HarmonyOS 原生工程状态不一致。
+已验证的主路径是创建 Expo 默认模板、生成 HarmonyOS 工程、通过 CLI 安装关键原生依赖并运行开发构建。其他模板和原生模块按需适配。
 
 ## 三方依赖
 
@@ -188,8 +187,3 @@ pnpm add -D @react-native-community/cli@20.1.1
 - 仅以 Expo SDK 52、React Native 0.77.1 和 RNOH 0.77.71 组合为当前支持基线。RNOH 已升级到 0.77.71，但 React Native 仍固定为 0.77.1，两者不要单独拆开升级。
 - 不是所有 Expo / React Native 原生模块都已适配 HarmonyOS；请以 `list` 输出、生成项目的 `docs/HARMONY.md` 和 `.agent/skills/expo-harmony-adapter/SKILL.md` 适配资料为准。
 - HarmonyOS release bundle 采用 JS rawfile；Hermes HBC 尚未作为默认发布格式提供。
-
-## 源码仓库
-
-- GitHub：https://github.com/stonehill-2345/expo-harmony-cli
-- Gitee：https://gitee.com/stonehill-2345/expo-harmony-cli

@@ -82,6 +82,26 @@ describe('HarmonyOS managed state', () => {
     expect(readManagedState(tmp).packages['react-native-webview']).toBeUndefined();
   });
 
+  it('卸载时同步清除两级 oh-package 受管条目，保留无关包条目（规范 §5）', () => {
+    recordManagedPackage(tmp, 'react-native-webview', {
+      harmonyPackage: '@react-native-ohos/react-native-webview',
+      alias: 'react-native-webview',
+      needsAutolink: true,
+    });
+    // 模拟 sync 产出的 managedEntries：本包两级 + 无关包一条
+    recordManagedEntries(tmp, [
+      { path: 'harmony/oh-package.json5', dependency: '@react-native-ohos/react-native-webview', spec: 'file:../node_modules/@react-native-ohos/react-native-webview/harmony/rn_webview.har' },
+      { path: 'harmony/entry/oh-package.json5', dependency: '@react-native-ohos/react-native-webview', spec: 'file:../../node_modules/@react-native-ohos/react-native-webview/harmony/rn_webview.har' },
+      { path: 'harmony/oh-package.json5', dependency: '@react-native-ohos/react-native-svg', spec: 'file:../node_modules/@react-native-ohos/react-native-svg/harmony/svg.har' },
+    ], '1.2.0');
+
+    cleanupManagedPackage(tmp, 'react-native-webview');
+
+    const keys = Object.keys(readManagedEntries(tmp));
+    expect(keys.some(k => k.endsWith(':@react-native-ohos/react-native-webview'))).toBe(false);
+    expect(keys.some(k => k.endsWith(':@react-native-ohos/react-native-svg'))).toBe(true);
+  });
+
   it('共享同一 HarmonyOS 包时，先移除引用的一方不会删除伴随包', () => {
     recordManagedPackage(tmp, 'first', { harmonyPackage: '@react-native-ohos/react-native-webview' });
     recordManagedPackage(tmp, 'second', { harmonyPackage: '@react-native-ohos/react-native-webview' });
