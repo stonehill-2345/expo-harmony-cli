@@ -6,7 +6,7 @@ import * as os from 'os';
 vi.mock('../src/utils/exec', () => ({ runFile: vi.fn() }));
 const { runFile: mockRunFile } = await import('../src/utils/exec');
 
-vi.mock('../src/harmony-project', () => ({ syncHarmonyAutolinking: vi.fn(() => ({ linked: [] })) }));
+vi.mock('../src/harmony-project', () => ({ syncHarmonyAutolinking: vi.fn(() => ({ linked: [], skipped: [] })) }));
 const { syncHarmonyAutolinking: mockSyncHarmonyAutolinking } = await import('../src/harmony-project');
 
 describe('runInstall', () => {
@@ -54,13 +54,32 @@ describe('runInstall', () => {
     expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-video'], expect.anything());
   });
 
+  it('命中适配表的原版包注册比对用鸿蒙版包名，不以原版名误报未注册', async () => {
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    fs.mkdirSync(path.join(tmp, 'harmony'));
+    // 装原版 react-native-video：适配表命中并装入鸿蒙版，sync 的 linked 存鸿蒙版包名
+    mockSyncHarmonyAutolinking.mockResolvedValueOnce({
+      linked: ['@react-native-ohos/react-native-video'],
+      linkedSources: { '@react-native-ohos/react-native-video': 'official' },
+      skipped: [],
+    } as any);
+    const { runInstall } = await import('../src/installer/installer');
+
+    await runInstall(['react-native-video']);
+
+    const text = output.mock.calls.flat().join('\n');
+    expect(text).toContain('@react-native-ohos/react-native-video 已完成 HarmonyOS 原生注册（官方 autolink）');
+    expect(text).not.toContain('未能完成 HarmonyOS 原生注册');
+    output.mockRestore();
+  });
+
   it('expo install 调用 + 已有 harmony/ + native → 自动增量 sync', async () => {
     const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     fs.mkdirSync(path.join(tmp, 'harmony'));
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['react-native-webview']);
     expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-webview'], expect.anything());
-    expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp), { force: false });
+    expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp), { force: false, quiet: true });
     expect(output.mock.calls.flat().join('\n')).toContain('cd harmony && ohpm install');
     output.mockRestore();
   });
@@ -117,7 +136,7 @@ describe('runInstall', () => {
     await runInstall(['react-native-blob-util']);
     expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-blob-util'], expect.anything());
     expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['install'], expect.anything());
-    expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp), { force: false });
+    expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp), { force: false, quiet: true });
     expect(mockRunFile).toHaveBeenCalledWith(expect.any(String), ['install'], { cwd: path.join(fs.realpathSync(tmp), 'harmony', 'entry') });
     expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['codegen'], { cwd: fs.realpathSync(tmp) });
     expect(mockRunFile.mock.calls.map(([file, args]) => [file, args])).toEqual([
@@ -206,5 +225,95 @@ describe('runInstall', () => {
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['react-native-webview', '--force']);
     expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-webview'], expect.anything());
+  });
+});
+
+describe('runInstall 官方优先（任务五）', () => {
+  let tmp: string;
+  beforeEach(() => {
+    vi.resetModules();
+    mockRunFile.mockClear();
+    mockSyncHarmonyAutolinking.mockClear();
+    tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'install-official-'));
+    fs.writeFileSync(path.join(tmp, 'app.json'), JSON.stringify({ expo: { slug: 'x' } }));
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ dependencies: {} }));
+    fs.mkdirSync(path.join(tmp, 'shims'), { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'shims/.alias-map.json'), '{}');
+    process.chdir(tmp);
+  });
+  afterEach(() => { process.chdir(__dirname); fs.rmSync(tmp, { recursive: true, force: true }); });
+
+  it('未命中适配表但有原生痕迹且已有 harmony/ → 尝试官方 autolink 并在成功时报告', async () => {
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    fs.mkdirSync(path.join(tmp, 'harmony'));
+    const pkgDir = path.join(tmp, 'node_modules', 'brand-new-native-pkg', 'harmony');
+    fs.mkdirSync(pkgDir, { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', 'brand-new-native-pkg', 'package.json'),
+      JSON.stringify({ name: 'brand-new-native-pkg', harmony: { autolinking: {} } }));
+    fs.writeFileSync(path.join(pkgDir, 'x.har'), 'har');
+    mockSyncHarmonyAutolinking.mockResolvedValueOnce({ linked: ['brand-new-native-pkg'], skipped: [] } as any);
+    const { runInstall } = await import('../src/installer/installer');
+
+    await runInstall(['brand-new-native-pkg']);
+
+    expect(mockSyncHarmonyAutolinking).toHaveBeenCalled();
+    const text = output.mock.calls.flat().join('\n');
+    expect(text).toContain('尝试官方 autolink');
+    expect(text).toContain('brand-new-native-pkg 已完成 HarmonyOS 原生注册（自研补充）');
+    output.mockRestore();
+  });
+
+  it('install 目标包由官方 autolink 注册时归类输出为官方', async () => {
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    fs.mkdirSync(path.join(tmp, 'harmony'));
+    const pkgDir = path.join(tmp, 'node_modules', 'brand-new-native-pkg', 'harmony');
+    fs.mkdirSync(pkgDir, { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', 'brand-new-native-pkg', 'package.json'),
+      JSON.stringify({ name: 'brand-new-native-pkg', harmony: { autolinking: {} } }));
+    fs.writeFileSync(path.join(pkgDir, 'x.har'), 'har');
+    mockSyncHarmonyAutolinking.mockResolvedValueOnce({
+      linked: ['brand-new-native-pkg'],
+      linkedSources: { 'brand-new-native-pkg': 'official' },
+      skipped: [],
+    } as any);
+    const { runInstall } = await import('../src/installer/installer');
+
+    await runInstall(['brand-new-native-pkg']);
+
+    const text = output.mock.calls.flat().join('\n');
+    expect(text).toContain('brand-new-native-pkg 已完成 HarmonyOS 原生注册（官方 autolink）');
+    output.mockRestore();
+  });
+
+  it('官方尝试后仍未覆盖 → 输出原因与统一提示', async () => {
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    fs.mkdirSync(path.join(tmp, 'harmony'));
+    const pkgDir = path.join(tmp, 'node_modules', 'brand-new-native-pkg', 'harmony');
+    fs.mkdirSync(pkgDir, { recursive: true });
+    fs.writeFileSync(path.join(tmp, 'node_modules', 'brand-new-native-pkg', 'package.json'),
+      JSON.stringify({ name: 'brand-new-native-pkg', harmony: {} }));
+    fs.writeFileSync(path.join(pkgDir, 'x.har'), 'har');
+    mockSyncHarmonyAutolinking.mockResolvedValueOnce({
+      linked: [],
+      skipped: [{ package: 'brand-new-native-pkg', reason: '未适配 HarmonyOS（官方与 mapping 均未覆盖）' }],
+    } as any);
+    const { runInstall } = await import('../src/installer/installer');
+
+    await runInstall(['brand-new-native-pkg']);
+
+    const text = output.mock.calls.flat().join('\n');
+    expect(text).toContain('未能完成 HarmonyOS 原生注册');
+    expect(text).toContain('不是所有 Expo / React Native 原生模块都已适配 HarmonyOS');
+    output.mockRestore();
+  });
+
+  it('未命中适配表且无原生痕迹 → 维持原有警告路径，不调用 sync', async () => {
+    const info = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    fs.mkdirSync(path.join(tmp, 'harmony'));
+    const { runInstall } = await import('../src/installer/installer');
+    await runInstall(['lodash']);
+    expect(mockSyncHarmonyAutolinking).not.toHaveBeenCalled();
+    expect(info.mock.calls.flat().join('\n')).toContain('未自动适配 HarmonyOS : lodash');
+    info.mockRestore();
   });
 });

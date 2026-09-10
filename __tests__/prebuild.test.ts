@@ -31,6 +31,7 @@ describe('prebuild 命令', () => {
       JSON.stringify({ expo: { name: 'X', slug: 'x' } })
     );
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ dependencies: {} }));
+    fs.mkdirSync(path.join(tmp, 'node_modules', 'expo'), { recursive: true });
     fs.mkdirSync(path.join(tmp, 'components', 'ui'), { recursive: true });
     fs.writeFileSync(path.join(tmp, 'components', 'ui', 'TabBarBackground.ios.tsx'), "import { BlurView } from 'expo-blur';\n");
     fs.writeFileSync(path.join(tmp, 'components', 'ui', 'IconSymbol.ios.tsx'), "import { SymbolView } from 'expo-symbols';\n");
@@ -45,7 +46,7 @@ describe('prebuild 命令', () => {
     const { prebuild } = await import('../src/commands/prebuild');
     await prebuild([]);
     expect(mockRunFile).toHaveBeenCalledWith(
-      'npx', ['expo', 'prebuild'],
+      'npx', ['--no-install', 'expo', 'prebuild'],
       expect.anything()
     );
     expect(mockGen).toHaveBeenCalledTimes(1);
@@ -55,7 +56,7 @@ describe('prebuild 命令', () => {
     const { prebuild } = await import('../src/commands/prebuild');
     await prebuild(['--force']);
     expect(mockRunFile).toHaveBeenCalledWith(
-      'npx', ['expo', 'prebuild', '--clean'],
+      'npx', ['--no-install', 'expo', 'prebuild', '--clean'],
       expect.anything()
     );
     expect(mockGen).toHaveBeenCalledWith(expect.any(String), { name: 'X', slug: 'x' }, { force: true });
@@ -81,7 +82,7 @@ describe('prebuild 命令', () => {
     const { prebuild } = await import('../src/commands/prebuild');
     await prebuild(['--platform', 'ios']);
     expect(mockRunFile).toHaveBeenCalledWith(
-      'npx', ['expo', 'prebuild', '--platform', 'ios'],
+      'npx', ['--no-install', 'expo', 'prebuild', '--platform', 'ios'],
       expect.anything()
     );
     expect(mockGen).not.toHaveBeenCalled();
@@ -92,7 +93,7 @@ describe('prebuild 命令', () => {
     const { prebuild } = await import('../src/commands/prebuild');
     await prebuild(['--platform', 'ios', '--force']);
     expect(mockRunFile).toHaveBeenCalledWith(
-      'npx', ['expo', 'prebuild', '--platform', 'ios', '--clean'],
+      'npx', ['--no-install', 'expo', 'prebuild', '--platform', 'ios', '--clean'],
       expect.anything()
     );
     expect(mockGen).not.toHaveBeenCalled();
@@ -103,6 +104,13 @@ describe('prebuild 命令', () => {
     await prebuild(['--platform', 'ios']);
     expect(fs.existsSync(path.join(tmp, 'components/ui/TabBarBackground.ios.tsx'))).toBe(false);
     expect(fs.existsSync(path.join(tmp, 'components/ui/IconSymbol.ios.tsx'))).toBe(false);
+  });
+
+  it('工程未装依赖（node_modules 无 expo）→ 拦截并提示先安装，不调 npx', async () => {
+    fs.rmSync(path.join(tmp, 'node_modules', 'expo'), { recursive: true });
+    const { prebuild } = await import('../src/commands/prebuild');
+    await expect(prebuild(['--platform', 'ios'])).rejects.toThrow(/pnpm install|安装依赖/);
+    expect(mockRunFile).not.toHaveBeenCalled();
   });
 
   it('非项目根（无 app.json）→ 抛错', async () => {

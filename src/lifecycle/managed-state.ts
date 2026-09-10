@@ -165,6 +165,14 @@ export function cleanupManagedPackage(projectRoot: string, originalPackage: stri
   removeDependency(pkg, originalPackage);
   delete state.packages[originalPackage];
 
+  // 规范 §5：确认卸载的包清除旧项——含两级 oh-package 受管条目。
+  // withManagedEntries 为合并语义（sync 不删旧键），残留条目会随卸载累积为脏数据。
+  const removedDeps = new Set([originalPackage, managed.harmonyPackage].filter(Boolean) as string[]);
+  for (const key of Object.keys(state.managedEntries ?? {})) {
+    const dep = key.slice(key.lastIndexOf(':') + 1);
+    if (removedDeps.has(dep)) delete state.managedEntries![key];
+  }
+
   let removedHarmonyPackage: string | undefined;
   if (managed.harmonyPackage && !isHarmonyPackageReferenced(state, managed.harmonyPackage)) {
     removeDependency(pkg, managed.harmonyPackage);
