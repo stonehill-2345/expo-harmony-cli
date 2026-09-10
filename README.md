@@ -29,8 +29,7 @@
 - [环境要求](#环境要求)
 - [支持范围](#支持范围)
 - [与 Expo 标准工作流的关系](#与-expo-标准工作流的关系)
-- [常见问题 (FAQ)](#常见问题-faq)
-- [已知限制](#已知限制)
+- [常见问题](#常见问题)
 - [文档](#文档)
 - [源码仓库](#源码仓库)
 
@@ -100,7 +99,7 @@ pnpm start:harmony
 | ohpm | 随 DevEco Studio | 鸿蒙包管理器 |
 | hdc | 随 DevEco Studio | 鸿蒙调试桥 |
 
-> 详细环境配置（macOS/Windows ohpm PATH 设置、环境变量）见 [使用指南 → 环境要求](./docs/guide.md#环境要求)。
+> 详细环境配置见 [使用指南 → 环境要求](./docs/guide.md#环境要求)。
 
 ## 支持范围
 
@@ -123,51 +122,25 @@ pnpm start:harmony
 
 本质上，你在 Expo 项目里多了一个 `--platform harmony` 选项，其他一切不变。
 
-## 常见问题 (FAQ)
+## 常见问题
 
 ### 为什么需要这个工具？直接用 Expo 不行吗？
 
-Expo 官方目前不支持 HarmonyOS 平台。`expo-harmony-cli` 在 Expo SDK 52 基础上，通过 RNOH（React Native OpenHarmony）桥接层，让同一套 React Native 代码能运行在鸿蒙设备上。CLI 自动化了原生工程生成、依赖映射、autolinking 注册等手工配置繁琐的步骤。
+Expo 官方目前不支持 HarmonyOS 平台。`expo-harmony-cli` 在 Expo SDK 52 基础上，通过 RNOH（React Native OpenHarmony）桥接层，让同一套 React Native 代码能运行在鸿蒙设备上。
 
 ### 支持哪些 React Native 库？
 
-以 `pnpm dlx expo-harmony-cli list` 输出为准。CLI 对依赖分五类处理：纯 JS 包、alias-only、native/bump-native、patch-only、unsupported。详见 [使用指南 → 三方依赖](./docs/guide.md#三方依赖)。
-
-### 如何安装第三方原生依赖？
-
-```bash
-pnpm dlx expo-harmony-cli install react-native-svg
-```
-
-不要直接用 `expo install` 或 `pnpm add`。详见 [使用指南 → 三方依赖](./docs/guide.md#三方依赖)。
-
-### 真机提示无法加载 bundle？
-
-确认 Metro 运行中，`hdc rport tcp:8081 tcp:8081`，RNOH Dev Settings 填写局域网 IP。详见 [使用指南 → 常见问题](./docs/guide.md#真机提示无法加载-bundle)。
-
-### 新增原生依赖后 DevEco 构建失败？
-
-先 CLI `install` → `cd harmony && ohpm install`，误操作后 `scan --apply` + `sync` 对账。详见 [使用指南 → 常见问题](./docs/guide.md#新增原生依赖后-deveco-构建失败)。
-
-### autolinking 托管文件被手动修改了怎么办？
-
-`sync` / `install` / `uninstall` 会保护性阻断。还原修改或 `--force` 覆盖。自定义 Package 请注册在 `PackageProvider.ets` / `PackageProvider.cpp`（用户管理，CLI 不覆盖）。
+CLI 对依赖分五类自动处理：纯 JS 包、alias-only、native/bump-native、patch-only、unsupported。以 `pnpm dlx expo-harmony-cli list` 输出为准。详见 [使用指南 → 三方依赖](./docs/guide.md#三方依赖)。
 
 ### 和 [react-native-harmony](https://github.com/react-native-oh-library/react-native-harmony) 是什么关系？
 
-`expo-harmony-cli` 底层依赖 RNOH（`@react-native-oh/react-native-harmony`）作为鸿蒙桥接层，但在此基础上封装了 Expo CNG 工作流、自动化依赖管理、原生注册等功能。如果直接用 RNOH 裸 SDK，需要手动完成所有原生工程配置；`expo-harmony-cli` 把这些自动化了。
+`expo-harmony-cli` 底层依赖 RNOH 作为鸿蒙桥接层，在此基础上封装了 Expo CNG 工作流、自动化依赖管理、原生注册。直接用 RNOH 裸 SDK 需手动完成所有原生工程配置；本工具把这些自动化了。
 
-## 已知限制
-
-- 当前仅支持 Expo SDK 52 + React Native 0.77.1 + RNOH 0.77.71 组合，不支持单独升级
-- 并非所有 Expo/React Native 原生模块已适配 HarmonyOS，以 `list` 输出和生成项目的 `docs/HARMONY.md` 为准
-- HarmonyOS release bundle 采用 JS rawfile，Hermes HBC 尚未作为默认发布格式
-
-> 详见 [使用指南 → 已知限制](./docs/guide.md#已知限制)。
+> 更多排障问题（依赖安装、构建失败、bundle 加载等）见 [使用指南 → 常见问题](./docs/guide.md#常见问题)。
 
 ## 文档
 
-完整使用指南、排障、签名配置见 [docs/guide.md](./docs/guide.md)。
+完整使用指南见 [docs/guide.md](./docs/guide.md)。
 
 ## 源码仓库
 

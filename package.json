@@ -32,7 +32,8 @@
     "templates",
     "CHANGELOG.md",
     "NOTICE.md",
-    "docs/guide.md"
+    "docs/guide.md",
+    "assets"
   ],
   "engines": {
     "node": ">=18.18.0"

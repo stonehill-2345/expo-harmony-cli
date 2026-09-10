@@ -11,7 +11,7 @@
 - [三方依赖](#三方依赖)
 - [构建 HarmonyOS Release](#构建-harmonyos-release)
 - [常见问题](#常见问题)
-- [已知限制](#已知限制)
+- [使用须知](#使用须知)
 
 ## 常用命令
 
@@ -172,6 +172,23 @@ cd harmony && ohpm install
 
 如果依赖包含 TurboModule 或 codegen，根据 CLI 输出运行项目提供的 `pnpm codegen`，然后重新构建。
 
+
+### 如何安装第三方原生依赖？
+
+```bash
+pnpm dlx expo-harmony-cli install react-native-svg
+```
+
+禁止直接用 `expo install` 或 `pnpm add` 处理原生包——CLI 需要管理 HarmonyOS 伴随依赖和原生注册。误操作后执行 `pnpm dlx expo-harmony-cli scan --apply` 对账。
+
+### autolinking 托管文件被手动修改了怎么办？
+
+`sync` / `install` / `uninstall` 会保护性阻断。两种方案：
+- 还原修改后重试
+- 使用 `--force` 强制覆盖
+
+自定义 Package 请注册在 `PackageProvider.ets` / `PackageProvider.cpp`（用户管理，CLI 不覆盖）。
+
 ### `bundle:harmony:release` 提示缺少 React Native CLI
 
 新版 CLI 创建的项目会自动包含该依赖。旧项目执行一次：
@@ -182,7 +199,7 @@ pnpm add -D @react-native-community/cli@20.1.1
 
 更多排障信息请见生成项目中的 `docs/TROUBLESHOOTING.md`；签名配置见 `harmony/SIGNING.md`。
 
-## 已知限制
+## 使用须知
 
 - 仅以 Expo SDK 52、React Native 0.77.1 和 RNOH 0.77.71 组合为当前支持基线。RNOH 已升级到 0.77.71，但 React Native 仍固定为 0.77.1，两者不要单独拆开升级。
 - 不是所有 Expo / React Native 原生模块都已适配 HarmonyOS；请以 `list` 输出、生成项目的 `docs/HARMONY.md` 和 `.agent/skills/expo-harmony-adapter/SKILL.md` 适配资料为准。
