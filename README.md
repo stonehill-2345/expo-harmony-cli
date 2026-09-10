@@ -26,8 +26,7 @@
 - [核心能力](#核心能力)
 - [效果预览](#效果预览)
 - [常用命令](#常用命令)
-- [环境要求](#环境要求)
-- [支持范围](#支持范围)
+- [环境与支持范围](#环境与支持范围)
 - [与 Expo 标准工作流的关系](#与-expo-标准工作流的关系)
 - [常见问题](#常见问题)
 - [文档](#文档)
@@ -89,27 +88,19 @@ pnpm start:harmony
 
 > 完整命令参考（`sync`、`scan`、`env`、`list`、`uninstall` 等）见 [使用指南 → 常用命令](./docs/guide.md#常用命令)。
 
-## 环境要求
+## 环境与支持范围
 
-| 工具 | 最低版本 | 说明 |
-|------|----------|------|
-| Node.js | ≥ 18.18.0 | |
-| pnpm | ≥ 10.19.0 | 推荐包管理器 |
-| DevEco Studio | 5.0+ | 含 OpenHarmony SDK |
-| ohpm | 随 DevEco Studio | 鸿蒙包管理器 |
-| hdc | 随 DevEco Studio | 鸿蒙调试桥 |
-
-> 详细环境配置见 [使用指南 → 环境要求](./docs/guide.md#环境要求)。
-
-## 支持范围
-
-| 项目 | 当前基线 |
-|------|----------|
+| 项 | 要求 / 基线 |
+|------|-------------|
+| Node.js | ≥ 18.18.0 |
+| pnpm | ≥ 10.19.0 |
+| DevEco Studio | 5.0+（含 OpenHarmony SDK、ohpm、hdc） |
 | Expo | SDK 52 |
 | React Native | 0.77.1 |
-| React Native OpenHarmony (RNOH) | 0.77.71 |
-| 开发工具 | DevEco Studio 5.0+ |
+| RNOH（React Native OpenHarmony） | 0.77.71 |
 | iOS 构建 | Xcode 16.4 及以下 |
+
+> 详细环境配置见 [使用指南 → 环境要求](./docs/guide.md#环境要求)。
 
 ## 与 Expo 标准工作流的关系
 
