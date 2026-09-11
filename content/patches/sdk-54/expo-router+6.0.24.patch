@@ -1,0 +1,24 @@
+diff --git a/node_modules/expo-router/_ctx.harmony.js b/node_modules/expo-router/_ctx.harmony.js
+new file mode 100644
+index 0000000..4d0c41e
+--- /dev/null
++++ b/node_modules/expo-router/_ctx.harmony.js
+@@ -0,0 +1,6 @@
++export const ctx = require.context(
++  process.env.EXPO_ROUTER_APP_ROOT,
++  true,
++  /^(?:\.\/)(?!(?:(?:(?:.*\+api)|(?:\+html)|(?:\+middleware)))\.[tj]sx?$).*(?:\.android|\.ios|\.web)?\.[tj]sx?$/,
++  process.env.EXPO_ROUTER_IMPORT_MODE
++);
+diff --git a/node_modules/expo-router/build/getRoutesCore.js b/node_modules/expo-router/build/getRoutesCore.js
+index b110c14..b23fe89 100644
+--- a/node_modules/expo-router/build/getRoutesCore.js
++++ b/node_modules/expo-router/build/getRoutesCore.js
+@@ -5,6 +5,6 @@ exports.generateDynamic = generateDynamic;
+ const matchers_1 = require("./matchers");
+ const url_1 = require("./utils/url");
+-const validPlatforms = new Set(['android', 'ios', 'native', 'web']);
++const validPlatforms = new Set(['android', 'harmony', 'ios', 'native', 'web']);
+ /**
+  * Given a Metro context module, return an array of nested routes.
+  *

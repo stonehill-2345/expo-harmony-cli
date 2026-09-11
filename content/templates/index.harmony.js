@@ -55,9 +55,13 @@ if (typeof window !== 'undefined' && !window.location) {
 // ===== 2.5 RN Harmony 核心初始化：预热 RN 核心模块图（含 Web 全局）=====
 // InitializeCore = RN 核心初始化（setUpGlobals/setUpDOM/setUpTimers/setUpXHR/setUpPlatform/AppRegistry 等），
 // 按序预热核心模块，建立稳定求值顺序（iOS/Android 由 Metro runBeforeMainModule 自动执行）。
-// 鸿蒙 CLI 的 metro-config 仅叠加 RNOH resolver、未带 RNOH serializer(InitializeCore)，故入口显式预热。
+// 鸿蒙 CLI 的 metro-config 负责 RNOH serializer；入口仍显式预热核心模块，确保直接执行时顺序稳定。
 // 必须在 require expo/expo-router 之前：InitializeCore 内含 setUpXHR，注入 Winter 引用的全局 FormData。
 require('@react-native-oh/react-native-harmony/Libraries/Core/InitializeCore');
+// Hermes may not resolve Expo Winter's lazy global FormData getter reliably.
+// Bind the Harmony implementation before Expo runtime modules are evaluated.
+const fd = require('@react-native-oh/react-native-harmony/Libraries/Network/FormData');
+globalThis.FormData = fd.default || fd;
 
 // ===== 3. Metro runtime + expo-router bootstrap =====
 // @expo/metro-runtime 经 metro.config.js 的 alias 重定向到 no-op shim（鸿蒙无 dev server）

@@ -1,11 +1,11 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { COMPAT_TABLE } from './compat-table';
+import { getCompatTable } from './compat-table';
 import { copyFromLibrary } from '../utils/content-library';
 import { applyCompatPatch, applyCompatibleVersionPair, lockAllDependencyVersions } from './compat-patch';
 import { syncAppJsonPlugins } from '../injector/app-json';
 import { reconcileManagedState, recordManagedPackage, type ManagedPackage } from '../lifecycle/managed-state';
-import { VERSION_MATRIX as V } from '../version-matrix';
+import { getVersionMatrix, type SdkVersion } from '../version-matrix';
 
 export interface ScanReport {
   bumped: Array<{ from: string; to: string; harmonyPackage: string }>;
@@ -20,7 +20,10 @@ export interface ScanReport {
   reconciled: string[];
 }
 
-export function scanAndAdapt(targetDir: string): ScanReport {
+export function scanAndAdapt(targetDir: string, sdk: SdkVersion): ScanReport {
+  const V = getVersionMatrix(sdk);
+  const COMPAT_TABLE = getCompatTable(sdk);
+
   // 先根据 managed-state 回收用户绕过 CLI 卸载后的残留资产；无状态资产一律不碰。
   const reconciled = reconcileManagedState(targetDir);
   const pkgPath = path.join(targetDir, 'package.json');
@@ -117,8 +120,14 @@ export function scanAndAdapt(targetDir: string): ScanReport {
 
   // ★ 强制注入 RNOH 核心 patch（传递依赖，扫不到）
   const rnohPatchPath = `patches/@react-native-oh+react-native-harmony+${V.rnoh}.patch`;
-  copyFromLibrary(`content/${rnohPatchPath}`, targetDir, rnohPatchPath);
+  copyFromLibrary(`content/patches/${sdk}/${path.basename(rnohPatchPath)}`, targetDir, rnohPatchPath);
   report.patched.push({ original: '@react-native-oh/react-native-harmony', patchPath: rnohPatchPath });
+
+  // ★ 强制注入 @react-navigation/bottom-tabs patch（传递依赖，修复 CommonActions.navigate 旧 API 警告）
+  const bottomTabsVer = sdk === 'sdk-52' ? '7.2.0' : '7.4.0';
+  const bottomTabsPatchPath = `patches/@react-navigation+bottom-tabs+${bottomTabsVer}.patch`;
+  copyFromLibrary(`content/patches/${sdk}/@react-navigation+bottom-tabs+${bottomTabsVer}.patch`, targetDir, bottomTabsPatchPath);
+  report.patched.push({ original: '@react-navigation/bottom-tabs', patchPath: bottomTabsPatchPath });
 
   // expo-modules-core 是 Expo 传递依赖，pnpm 下通常不是顶层 node_modules 包。
   // 不再复制 patch-package patch，运行时由 Metro shim 与 postinstall/start-harmony fallback 处理。

@@ -1,12 +1,12 @@
 # expo-harmony-cli
 
-使用 Expo SDK 52 创建 React Native 项目，并注入 HarmonyOS（OpenHarmony）开发基线的命令行工具。
+使用 Expo SDK 52（RN 0.77）或 SDK 54（RN 0.82）创建 React Native 项目，并注入 HarmonyOS（OpenHarmony）开发基线的命令行工具。
 
 一条命令，一键初始化一个开箱即跑鸿蒙的 Expo（基于 RN）工程——同一套代码覆盖鸿蒙、iOS、安卓三端，全程沿用 Expo 的 CNG（配置驱动、随时重建）工作流。
 
 ## Key features
 
-- 创建 Expo SDK 52 项目，并自动注入 HarmonyOS 开发基线
+- 创建 Expo SDK 52 或 SDK 54 项目，并固定对应版本的 RN / RNOH 开发基线
 - 生成 HarmonyOS 原生工程、Metro 配置、RNOH 依赖和开发文档
 - 通过 CLI 管理三方依赖、patch、Metro alias 与 HarmonyOS 原生注册
 - 内置 `env` / `doctor` 诊断命令：工具链环境检查、项目健康诊断，退出码分级可接入 CI
@@ -19,9 +19,11 @@
 
 ```bash
 # 1. 创建项目
-npx expo-harmony-cli my-harmony-app
+npx expo-harmony-cli my-harmony-app [--sdk=52|54]
 # pnpm 用户也可以使用：
-pnpm dlx expo-harmony-cli my-harmony-app
+pnpm dlx expo-harmony-cli my-harmony-app [--sdk=52|54]
+
+# 不指定 --sdk 时会弹出交互式选择：Expo SDK 54 模板 / Expo SDK 52 模板
 
 # 2. 安装 JS 依赖并应用 HarmonyOS patch
 cd my-harmony-app

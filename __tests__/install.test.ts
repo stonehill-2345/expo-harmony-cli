@@ -31,7 +31,7 @@ describe('runInstall', () => {
     expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['install'], expect.anything());
     expect(mockSyncHarmonyAutolinking).not.toHaveBeenCalled();
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1-rc.1');
+    expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1');
   });
 
   it('显式包管理器覆盖默认 pnpm 并透传给 expo install', async () => {
@@ -108,7 +108,7 @@ describe('runInstall', () => {
     warn.mockRestore();
   });
 
-  it('blob-util → 原生同步后自动安装 ohpm 依赖并执行 codegen', async () => {
+  it('blob-util → 使用包内生成代码，不额外执行 codegen', async () => {
     fs.mkdirSync(path.join(tmp, 'harmony'));
     const generatedDir = path.join(tmp, 'harmony/entry/src/main/cpp/generated');
     fs.mkdirSync(generatedDir, { recursive: true });
@@ -118,34 +118,22 @@ describe('runInstall', () => {
     expect(mockRunFile).toHaveBeenCalledWith('npx', ['expo', 'install', '--pnpm', 'react-native-blob-util'], expect.anything());
     expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['install'], expect.anything());
     expect(mockSyncHarmonyAutolinking).toHaveBeenCalledWith(fs.realpathSync(tmp), { force: false });
-    expect(mockRunFile).toHaveBeenCalledWith(expect.any(String), ['install'], { cwd: path.join(fs.realpathSync(tmp), 'harmony', 'entry') });
-    expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['codegen'], { cwd: fs.realpathSync(tmp) });
+    expect(mockRunFile).not.toHaveBeenCalledWith('pnpm', ['codegen'], { cwd: fs.realpathSync(tmp) });
     expect(mockRunFile.mock.calls.map(([file, args]) => [file, args])).toEqual([
       ['npx', ['expo', 'install', '--pnpm', 'react-native-blob-util']],
       ['pnpm', ['install']],
-      [expect.any(String), ['install']],
-      ['pnpm', ['codegen']],
     ]);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['react-native-blob-util']).toBe('0.19.6');
-    expect(pkg.dependencies['@react-native-oh-tpl/react-native-blob-util']).toBe('0.19.7-rc.1');
-  });
-
-  it('TurboModule codegen 未生成 C++ 文件时中止安装流程', async () => {
-    fs.mkdirSync(path.join(tmp, 'harmony'));
-    const { runInstall } = await import('../src/installer/installer');
-
-    await expect(runInstall(['react-native-blob-util'])).rejects.toThrow('codegen 未生成 C++ 文件');
-    expect(mockRunFile).toHaveBeenCalledWith(expect.any(String), ['install'], { cwd: path.join(fs.realpathSync(tmp), 'harmony', 'entry') });
-    expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['codegen'], { cwd: fs.realpathSync(tmp) });
+    expect(pkg.dependencies['react-native-blob-util']).toBe('0.24.10');
+    expect(pkg.dependencies['@react-native-ohos/react-native-blob-util']).toBe('0.23.0');
   });
 
   it('install 命中 patch-only → 锁定原包版本并复制 patch', async () => {
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['expo-constants']);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['expo-constants']).toBe('17.0.8');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+17.0.8.patch'))).toBe(true);
+    expect(pkg.dependencies['expo-constants']).toBe('18.0.14');
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+18.0.14.patch'))).toBe(true);
     expect(mockSyncHarmonyAutolinking).not.toHaveBeenCalled();
   });
 
@@ -159,7 +147,7 @@ describe('runInstall', () => {
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['@shopify/flash-list', '--skip-native']);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1-rc.1');
+    expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1');
     expect(mockSyncHarmonyAutolinking).not.toHaveBeenCalled();
   });
 

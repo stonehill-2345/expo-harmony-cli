@@ -16,12 +16,84 @@ describe('HarmonyOS bundled template validation', () => {
   it('loads the bundled manifest and validates the template', () => {
     const manifest = loadTemplateManifest(getBundledTemplateManifestPath());
 
-    expect(manifest.expoSdk).toBe('52');
-    expect(manifest.reactNative).toBe('0.77.1');
-    expect(manifest.rnoh).toBe('0.77.71');
+    expect(manifest.expoSdk).toBe('54');
+    expect(manifest.reactNative).toBe('0.82.1');
+    expect(manifest.rnoh).toBe('0.82.30');
     expect(manifest.requiredFiles).toContain('entry/src/main/cpp/generated/RNOHGeneratedPackage.h');
+    expect(manifest.requiredFiles).toContain('entry/src/main/ets/workers/RNOHWorker.ets');
 
     expect(() => validateHarmonyTemplate(getBundledTemplateDir(), manifest)).not.toThrow();
+  });
+
+  it('rejects templates without the RNOH project and module Hvigor plugins', () => {
+    const tmp = copyTemplateToTemp();
+    const manifest = loadTemplateManifest(getBundledTemplateManifestPath());
+    const hvigorPath = path.join(tmp, 'hvigorfile.ts');
+    fs.writeFileSync(hvigorPath, fs.readFileSync(hvigorPath, 'utf8').replace('createRNOHProjectPlugin({', 'createMissingProjectPlugin({'));
+
+    expect(() => validateHarmonyTemplate(tmp, manifest)).toThrow(/createRNOHProjectPlugin/);
+
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('requires the project plugin to leave release bundling to the CLI', () => {
+    const tmp = copyTemplateToTemp();
+    const manifest = loadTemplateManifest(getBundledTemplateManifestPath());
+    const hvigorPath = path.join(tmp, 'hvigorfile.ts');
+    const hvigor = fs.readFileSync(hvigorPath, 'utf8');
+    fs.writeFileSync(hvigorPath, hvigor.replace('bundler: { enabled: false }', 'bundler: {}'));
+
+    expect(() => validateHarmonyTemplate(tmp, manifest)).toThrow(/bundling.*CLI/i);
+
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('requires the module plugin to leave Metro and autolinking to the CLI', () => {
+    const tmp = copyTemplateToTemp();
+    const manifest = loadTemplateManifest(getBundledTemplateManifestPath());
+    const hvigorPath = path.join(tmp, 'entry/hvigorfile.ts');
+    const hvigor = fs.readFileSync(hvigorPath, 'utf8');
+
+    fs.writeFileSync(hvigorPath, hvigor.replace('      metro: null,\n', ''));
+    expect(() => validateHarmonyTemplate(tmp, manifest)).toThrow(/metro.*CLI/i);
+
+    fs.writeFileSync(hvigorPath, hvigor.replace('      autolinking: null,\n', ''));
+    expect(() => validateHarmonyTemplate(tmp, manifest)).toThrow(/autolinking.*CLI/i);
+
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('requires the RNPackage return type used by mixed legacy and RNOHPackage libraries', () => {
+    const tmp = copyTemplateToTemp();
+    const manifest = loadTemplateManifest(getBundledTemplateManifestPath());
+    const packageProviderPath = path.join(tmp, 'entry/src/main/ets/PackageProvider.ets');
+    fs.writeFileSync(packageProviderPath, fs.readFileSync(packageProviderPath, 'utf8').replace('RNPackage[]', 'RNOHPackage[]'));
+
+    expect(() => validateHarmonyTemplate(tmp, manifest)).toThrow(/RNPackage\[\]/);
+
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('requires the 0.82 worker URL and Linking/Metro module capabilities', () => {
+    const tmp = copyTemplateToTemp();
+    const manifest = loadTemplateManifest(getBundledTemplateManifestPath());
+    const abilityPath = path.join(tmp, 'entry/src/main/ets/entryability/EntryAbility.ets');
+    fs.writeFileSync(abilityPath, fs.readFileSync(abilityPath, 'utf8').replace('getRNOHWorkerScriptUrl', 'getMissingWorkerScriptUrl'));
+
+    expect(() => validateHarmonyTemplate(tmp, manifest)).toThrow(/getRNOHWorkerScriptUrl/);
+
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('requires the 0.82 native compiler and network permission', () => {
+    const tmp = copyTemplateToTemp();
+    const manifest = loadTemplateManifest(getBundledTemplateManifestPath());
+    const buildProfilePath = path.join(tmp, 'build-profile.json5');
+    fs.writeFileSync(buildProfilePath, fs.readFileSync(buildProfilePath, 'utf8').replace('"nativeCompiler": "BiSheng"', '"nativeCompiler": "missing"'));
+
+    expect(() => validateHarmonyTemplate(tmp, manifest)).toThrow(/nativeCompiler/);
+
+    fs.rmSync(tmp, { recursive: true, force: true });
   });
 
   it('reports missing required files with the missing relative path', () => {

@@ -1,5 +1,18 @@
 # expo-harmony-cli
 
+## 1.4.0
+
+### Minor Changes
+
+- 支持 Expo SDK 52（RN 0.77 / RNOH 0.77.x）和 SDK 54（RN 0.82 / RNOH 0.82.x）双版本创建，`create` 新增 `--sdk=52|54` 参数，不指定时交互选择。
+- Patches 按 SDK 版本分目录管理（`content/patches/sdk-52/` 与 `content/patches/sdk-54/`），创建时按所选基线注入。
+- HarmonyOS 原生模板按 SDK 版本分目录（`templates/harmony-sdk-52/` 与 `templates/harmony-sdk-54/`），prebuild 时按项目基线选择对应模板。
+- 新增 `harmony-form-data.js` ESM shim，修复 HarmonyOS 运行时 `FormData` 兼容问题。
+- 新增 `@expo/metro-runtime/error-overlay` Metro alias，修复运行时错误遮罩加载。
+- 更新 `version-matrix.ts` 为双 SDK 版本矩阵，compat-table 按 SDK 版本分表维护。
+- 更新 README 与使用指南，覆盖双 SDK 选择说明与版本矩阵。
+
+
 ## 1.2.0
 
 ### Minor Changes

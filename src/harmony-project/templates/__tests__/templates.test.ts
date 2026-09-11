@@ -61,9 +61,9 @@ describe('dynamic templates', () => {
   it('HvigorConfigJson5Template 注入 cli 包名 + hvigor 插件文件名', () => {
     const out = new HvigorConfigJson5Template(
       '@react-native-oh/react-native-harmony-cli',
-      'rnoh-hvigor-plugin-0.77.71.tgz',
+      'rnoh-hvigor-plugin-0.82.30.tgz',
     ).build();
-    expect(out).toContain('"@rnoh/hvigor-plugin": "../../node_modules/@react-native-oh/react-native-harmony-cli/harmony/rnoh-hvigor-plugin-0.77.71.tgz"');
+    expect(out).toContain('"@rnoh/hvigor-plugin": "../../node_modules/@react-native-oh/react-native-harmony-cli/harmony/rnoh-hvigor-plugin-0.82.30.tgz"');
   });
 
   it('MetroConfigTemplate 注入 harmony 包名', () => {

@@ -172,7 +172,7 @@ export function runAutolinking(opts: {
 
   // 3. oh-package.json5 合并（参考 D.5 模板 4）
   const ohPkgPath = path.join(harmonyDir, 'oh-package.json5');
-  const ohPkgContent = mergeOhPackageDependencies(ohPkgPath, libraries, mapping, '../node_modules');
+  const ohPkgContent = mergeOhPackageDependencies(ohPkgPath, libraries, mapping, '../node_modules', true);
 
   const files = [
     { path: path.join(harmonyDir, 'entry/src/main/ets/RNOHPackagesFactory.ets'), content: ets },
@@ -208,6 +208,7 @@ function mergeOhPackageDependencies(
   libraries: HarmonyPackageMappingEntry[],
   mapping: Record<string, HarmonyPackageMappingEntry>,
   nodeModulesRelativePath: '../node_modules' | '../../node_modules',
+  manageOverrides = false,
 ): string {
   const ohPackage = JSON5.parse(fs.readFileSync(ohPackagePath, 'utf8'));
 
@@ -222,5 +223,20 @@ function mergeOhPackageDependencies(
     if (!isAutolinkedHarmonyPackage) unmanaged[name] = spec;
   }
   ohPackage.dependencies = { ...unmanaged, ...managed };
+
+  if (manageOverrides) {
+    const unmanagedOverrides = Object.fromEntries(
+      Object.entries<string>(ohPackage.overrides || {}).filter(([name]) => !mapping[name]?.ohpmOverride),
+    );
+    const managedOverrides = Object.fromEntries(
+      libraries
+        .filter(lib => lib.ohpmOverride)
+        .map(lib => [lib.npmPackageName, `file:${nodeModulesRelativePath}/${lib.npmPackageName}/harmony/${lib.harName}`]),
+    );
+    const overrides = { ...unmanagedOverrides, ...managedOverrides };
+    if (Object.keys(overrides).length > 0) ohPackage.overrides = overrides;
+    else delete ohPackage.overrides;
+  }
+
   return JSON5.stringify(ohPackage, { space: 2, quote: '"' }) + '\n';
 }

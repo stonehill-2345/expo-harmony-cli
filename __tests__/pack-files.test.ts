@@ -151,13 +151,13 @@ describe('expo-harmony-cli npm pack files', () => {
     expect(files).toContain('content/templates/index.harmony.js');
     expect(files).toContain('content/templates/postinstall-harmony.js');
     expect(files).toContain('content/shims/expo-metro-runtime.ts');
-    expect(files).toContain('content/patches/@react-native-oh+react-native-harmony+0.77.71.patch');
+    expect(files).toContain('content/patches/sdk-54/@react-native-oh+react-native-harmony+0.82.30.patch');
     expect(files).toContain('content/docs/README.md');
     expect(files).toContain('content/docs/AGENTS.md');
     expect(files).toContain('content/docs/HARMONY.md');
     expect(files).toContain('content/skills/expo-harmony-adapter/SKILL.md');
     expect(files).toContain('content/skills/harmony-plugin-integration/SKILL.md');
-    expect(files).toContain('templates/harmony-template.manifest.json');
+    expect(files).toContain('templates/harmony-sdk-54.manifest.json');
     expect(files).toContain('templates/harmony/entry/src/main/cpp/CMakeLists.txt');
     expect(files).toContain('templates/harmony/entry/src/main/resources/rawfile/.gitkeep');
     expect(files.some(file => file.startsWith('examples/'))).toBe(false);

@@ -4,7 +4,7 @@
 
 | 命令                                                            | 用途                                                                                                    |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `npx expo-harmony-cli <目录名>`                                 | 创建 Expo SDK 52 项目并注入 HarmonyOS 基线；pnpm 用户也可用 `pnpm dlx expo-harmony-cli <目录名>`。      |
+| `npx expo-harmony-cli <目录名>`                                 | 创建 Expo SDK 52（RN 0.77）或 SDK 54（RN 0.82）项目并注入 HarmonyOS 基线；不指定 `--sdk=52|54` 时交互选择。      |
 | `pnpm dlx expo-harmony-cli install <包名>`                      | 使用 Expo 安装依赖；命中兼容表时自动追加 HarmonyOS 适配依赖、patch 或原生工程刷新。                     |
 | `pnpm dlx expo-harmony-cli uninstall <包名>`                    | 卸载原包，并清理 CLI 管理的 HarmonyOS 伴随包、alias、patch 与原生注册；`remove` 是同义别名。            |
 | `pnpm dlx expo-harmony-cli scan --apply`                        | 重新扫描现有 `package.json`，补齐可自动识别的 HarmonyOS 适配，并回收此前 CLI 管理但原包已不存在的残留。 |
@@ -19,11 +19,11 @@
 
 ## 环境要求
 
-- Node.js `>= 18.18.0`
+- Node.js `>= 20.19.4`
 - pnpm `>= 10.19.0`
 - DevEco Studio 5.0+，并安装可用的 OpenHarmony SDK
 - HarmonyOS 真机已开启开发者模式和 USB 调试，或已创建可用模拟器
-- iOS 本地构建建议使用 Xcode 16.4 及以下；原因是当前基线固定在 Expo SDK 52 / React Native 0.77.1
+- 
 
 建议在 macOS 上将 `ohpm` 加入 `PATH`：
 
@@ -59,11 +59,11 @@ pnpm dlx expo-harmony-cli doctor
 
 | 项目                            | 当前基线                                  |
 | ------------------------------- | ----------------------------------------- |
-| Expo                            | SDK 52                                    |
-| React Native                    | 0.77.1                                    |
-| React Native OpenHarmony (RNOH) | 0.77.71                                   |
+| Expo                            | SDK 52（Expo 52.x）或 SDK 54（Expo 54.x）  |
+| React Native                    | 0.77.x（SDK 52）或 0.82.x（SDK 54）       |
+| React Native OpenHarmony (RNOH) | 0.77.x（SDK 52）或 0.82.x（SDK 54）       |
 | HarmonyOS 开发工具              | DevEco Studio 5.0+ 与对应 OpenHarmony SDK |
-| iOS 构建工具                    | Xcode 16.4 及以下                         |
+| iOS 构建工具                    | 遵循对应 Expo SDK 版本官方要求             |
 
 已验证的主路径是创建 Expo 默认模板、生成 HarmonyOS 工程、启动 HarmonyOS Metro，并在 DevEco Studio 中构建运行。
 
@@ -185,8 +185,10 @@ pnpm add -D @react-native-community/cli@20.1.1
 
 ## 已知限制
 
-- 仅以 Expo SDK 52、React Native 0.77.1 和 RNOH 0.77.71 组合为当前支持基线。RNOH 已升级到 0.77.71，但 React Native 仍固定为 0.77.1，两者不要单独拆开升级。
+- 当前支持 Expo SDK 52（RN 0.77 / RNOH 0.77.x）和 SDK 54（RN 0.82 / RNOH 0.82.x）两种基线；不要跨基线混搭版本。
 - 不是所有 Expo / React Native 原生模块都已适配 HarmonyOS；请以 `list` 输出、生成项目的 `docs/HARMONY.md` 和 `.agent/skills/expo-harmony-adapter/SKILL.md` 适配资料为准。
+- `react-native-mmkv` 尚未完成 Nitro 伴随依赖闭环；`react-native-fast-image@9.2.1` 与 React 19 peer 不兼容；clipboard、permissions、device-info、fs、image-picker 和 media-library 的部分版本原生闭环尚未发布或验证，CLI 会报告 unsupported 而不会降级安装。
+- Expo Image 的 HarmonyOS 实现覆盖基础渲染和 prefetch；清缓存为无操作成功，`loadAsync` 暂不支持。
 - HarmonyOS release bundle 采用 JS rawfile；Hermes HBC 尚未作为默认发布格式提供。
 
 ## 源码仓库

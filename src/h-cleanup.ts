@@ -17,6 +17,16 @@ export function useBottomTabOverflow() {
 }
 `;
 
+const EXTERNAL_LINK_FALLBACK_TSX = `import { type Href, Link } from 'expo-router';
+import { type ComponentProps } from 'react';
+
+type Props = Omit<ComponentProps<typeof Link>, 'href'> & { href: Href & string };
+
+export function ExternalLink({ href, ...rest }: Props) {
+  return <Link target="_blank" {...rest} href={href} />;
+}
+`;
+
 /**
  * 按 remove/replace 结果清理模版 TSX（P1 参考 F 节 H 类 7 包表）。
  *
@@ -36,10 +46,22 @@ export function useBottomTabOverflow() {
  */
 export function cleanupHTemplateCode(targetDir: string, input: HCleanupInput): void {
   const layoutPath = path.join(targetDir, 'app', '_layout.tsx');
-  const hapticTabPath = path.join(targetDir, 'components', 'HapticTab.tsx');
-  const externalLinkPath = path.join(targetDir, 'components', 'ExternalLink.tsx');
-  const iconSymbolPath = path.join(targetDir, 'components', 'ui', 'IconSymbol.tsx');
-  const iconSymbolIosPath = path.join(targetDir, 'components', 'ui', 'IconSymbol.ios.tsx');
+  const hapticTabPath = [
+    path.join(targetDir, 'components', 'haptic-tab.tsx'),
+    path.join(targetDir, 'components', 'HapticTab.tsx'),
+  ].find(file => fs.existsSync(file));
+  const externalLinkPath = [
+    path.join(targetDir, 'components', 'external-link.tsx'),
+    path.join(targetDir, 'components', 'ExternalLink.tsx'),
+  ].find(file => fs.existsSync(file));
+  const iconSymbolPath = [
+    path.join(targetDir, 'components', 'ui', 'icon-symbol.tsx'),
+    path.join(targetDir, 'components', 'ui', 'IconSymbol.tsx'),
+  ].find(file => fs.existsSync(file));
+  const iconSymbolIosPaths = [
+    path.join(targetDir, 'components', 'ui', 'icon-symbol.ios.tsx'),
+    path.join(targetDir, 'components', 'ui', 'IconSymbol.ios.tsx'),
+  ];
   const tabBarBackgroundPath = path.join(targetDir, 'components', 'ui', 'TabBarBackground.tsx');
   const tabBarBackgroundIosPath = path.join(targetDir, 'components', 'ui', 'TabBarBackground.ios.tsx');
 
@@ -71,25 +93,17 @@ export function cleanupHTemplateCode(targetDir: string, input: HCleanupInput): v
   }
 
   // expo-haptics 删除 → 删 HapticTab 的 Haptics（import + 调用）
-  if (input.removed.includes('expo-haptics') && fs.existsSync(hapticTabPath)) {
+  if (input.removed.includes('expo-haptics') && hapticTabPath) {
     let c = fs.readFileSync(hapticTabPath, 'utf8');
     c = c.replace(/import\s*\*?\s*as\s*Haptics\s*from\s*['"]expo-haptics['"];?\s*\n?/g, '');
     c = c.replace(/Haptics\.[^\n;]*;?\s*\n?/g, '');
     fs.writeFileSync(hapticTabPath, c);
   }
 
-  // expo-web-browser 删除 → 删 ExternalLink 的 WebBrowser（import + openBrowserAsync）
-  // I-1: 真实 default 模版用具名导入 import { openBrowserAsync } from 'expo-web-browser'
-  //       （不是 namespace import * as WebBrowser）。需同时覆盖两种形态 + 调用。
-  if (input.removed.includes('expo-web-browser') && fs.existsSync(externalLinkPath)) {
-    let c = fs.readFileSync(externalLinkPath, 'utf8');
-    // 删 namespace import：import * as WebBrowser from 'expo-web-browser'
-    c = c.replace(/import\s*\*?\s*as\s*WebBrowser\s*from\s*['"]expo-web-browser['"];?\s*\n?/g, '');
-    // 删具名 import：import { openBrowserAsync } from 'expo-web-browser'（可能含其它具名）
-    c = c.replace(/import\s*\{[^}]*openBrowserAsync[^}]*\}\s*from\s*['"]expo-web-browser['"];?\s*\n?/g, '');
-    // 删调用：含可选 await 前缀（避免残留 "await }" 语法错误）+ 可选 WebBrowser. 前缀
-    c = c.replace(/(?:await\s+)?(?:WebBrowser\.)?openBrowserAsync\([^()]*\);?\s*\n?/g, '');
-    fs.writeFileSync(externalLinkPath, c);
+  // SDK 54 的 external-link.tsx 回调包含嵌套对象，直接回退为 Router Link，避免脆弱的正则删改。
+  if (input.removed.includes('expo-web-browser') && externalLinkPath) {
+    const content = fs.readFileSync(externalLinkPath, 'utf8');
+    if (content.includes('expo-web-browser')) fs.writeFileSync(externalLinkPath, EXTERNAL_LINK_FALLBACK_TSX);
   }
 
   // expo-symbols 删除 → 删 IconSymbol.tsx 的 SymbolWeight type import 与 iOS 专用实现。
@@ -97,7 +111,7 @@ export function cleanupHTemplateCode(targetDir: string, input: HCleanupInput): v
   // I-1: 真实 default 模版用动态 type import：import('expo-symbols').SymbolViewProps['name']
   //       旧正则只删 import { SymbolWeight }，不匹配动态 type → 残留 import('expo-symbols')。
   //       删整行会破坏 Record<K,V> 多行结构 → 改为替换为 string（安全 fallback）。
-  if (input.removed.includes('expo-symbols') && fs.existsSync(iconSymbolPath)) {
+  if (input.removed.includes('expo-symbols') && iconSymbolPath) {
     let c = fs.readFileSync(iconSymbolPath, 'utf8');
     // 删静态 type import：import { SymbolWeight } from 'expo-symbols'
     c = c.replace(/import\s*\{[^}]*SymbolWeight[^}]*\}\s*from\s*['"]expo-symbols['"];?\s*\n?/g, '');
@@ -109,7 +123,7 @@ export function cleanupHTemplateCode(targetDir: string, input: HCleanupInput): v
   }
 
   if (input.removed.includes('expo-symbols')) {
-    fs.rmSync(iconSymbolIosPath, { force: true });
+    for (const iconSymbolIosPath of iconSymbolIosPaths) fs.rmSync(iconSymbolIosPath, { force: true });
   }
 
   // 删除 expo-blur 后移除 iOS 覆盖文件，Metro 将回退至 TabBarBackground.tsx。

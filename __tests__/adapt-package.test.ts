@@ -26,40 +26,39 @@ describe('adaptPackage', () => {
     expect(r.status).toBe('alias-only');
     expect(r.needsAutolink).toBe(false);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1-rc.1');
+    expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1');
     const aliasMap = JSON.parse(fs.readFileSync(path.join(tmp, 'shims/.alias-map.json'), 'utf8'));
     expect(aliasMap['@shopify/flash-list']).toBe('@react-native-ohos/flash-list');
   });
 
-  it('native（MMKV）→ 加鸿蒙包 + Metro alias，并要求原生 autolinking', () => {
+  it('MMKV 缺少 Nitro 伴随依赖闭环时不自动改写', () => {
     const initial = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     initial.dependencies['react-native-mmkv'] = '4.3.2';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(initial));
 
     const r = adaptPackage('react-native-mmkv', tmp);
-    expect(r.status).toBe('native');
-    expect(r.needsAutolink).toBe(true);
+    expect(r.status).toBe('unsupported');
+    expect(r.needsAutolink).toBeUndefined();
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['react-native-mmkv']).toBe('3.3.1');
-    expect(pkg.dependencies['@react-native-ohos/react-native-mmkv']).toBe('3.3.1-rc.1');
+    expect(pkg.dependencies['react-native-mmkv']).toBe('4.3.2');
+    expect(pkg.dependencies['@react-native-ohos/react-native-mmkv']).toBeUndefined();
     const aliasMap = JSON.parse(fs.readFileSync(path.join(tmp, 'shims/.alias-map.json'), 'utf8'));
-    expect(aliasMap['react-native-mmkv']).toBe('@react-native-ohos/react-native-mmkv');
+    expect(aliasMap['react-native-mmkv']).toBeUndefined();
   });
 
-  it('native + patch（fast-image）→ 加鸿蒙包、alias 并复制 RNOH 兼容补丁', () => {
+  it('fast-image 的 React 19 peer 未兼容时不自动改写', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     pkg.dependencies['react-native-fast-image'] = '^8.6.3';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg));
 
     const r = adaptPackage('react-native-fast-image', tmp);
 
-    expect(r.status).toBe('native');
-    expect(r.needsAutolink).toBe(true);
-    expect(r.patchPath).toBe('patches/@react-native-oh-tpl+react-native-fast-image+8.6.3-0.4.17.patch');
-    expect(fs.existsSync(path.join(tmp, r.patchPath!))).toBe(true);
+    expect(r.status).toBe('unsupported');
+    expect(r.needsAutolink).toBeUndefined();
+    expect(r.patchPath).toBeUndefined();
     const pkg2 = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg2.dependencies['react-native-fast-image']).toBe('8.6.3');
-    expect(pkg2.dependencies['@react-native-oh-tpl/react-native-fast-image']).toBe('8.6.3-0.4.17');
+    expect(pkg2.dependencies['@react-native-ohos/react-native-fast-image']).toBeUndefined();
   });
 
   it('先适配 permissions 再安装其他包时，为 Expo 插件补齐空的 iosPermissions 配置', () => {
@@ -72,7 +71,7 @@ describe('adaptPackage', () => {
     expect(app.expo.plugins).toContainEqual(['react-native-permissions', { iosPermissions: [] }]);
   });
 
-  it('TurboModule（blob-util）→ 锁定 ohrn 版本对并标记 codegen 后置要求', () => {
+  it('blob-util → 锁定 0.82 版本对并使用包内生成代码', () => {
     const initial = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     initial.dependencies['react-native-blob-util'] = '0.24.10';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(initial));
@@ -80,38 +79,68 @@ describe('adaptPackage', () => {
     const r = adaptPackage('react-native-blob-util', tmp);
     expect(r.status).toBe('native');
     expect(r.needsAutolink).toBe(true);
-    expect(r.requiresCodegen).toBe(true);
+    expect(r.requiresCodegen).toBeUndefined();
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['react-native-blob-util']).toBe('0.19.6');
-    expect(pkg.dependencies['@react-native-oh-tpl/react-native-blob-util']).toBe('0.19.7-rc.1');
+    expect(pkg.dependencies['react-native-blob-util']).toBe('0.24.10');
+    expect(pkg.dependencies['@react-native-ohos/react-native-blob-util']).toBe('0.23.0');
   });
 
   it('patch-only（expo-constants）→ 锁定原包版本为 patch 版本并复制 patch', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    pkg.dependencies['expo-constants'] = '~17.0.8';
+    pkg.dependencies['expo-constants'] = '~18.0.9';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg));
 
     const r = adaptPackage('expo-constants', tmp);
     expect(r.status).toBe('patch-only');
-    expect(r.patchPath).toBe('patches/expo-constants+17.0.8.patch');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+17.0.8.patch'))).toBe(true);
+    expect(r.patchPath).toBe('patches/expo-constants+18.0.14.patch');
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+18.0.14.patch'))).toBe(true);
     const pkg2 = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg2.dependencies['expo-constants']).toBe('17.0.8');
+    expect(pkg2.dependencies['expo-constants']).toBe('18.0.14');
+  });
+
+  it('expo-linear-gradient → 同时锁定 SDK 54 patch 和 0.82 Harmony 包', () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
+    pkg.dependencies['expo-linear-gradient'] = '~15.0.8';
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg));
+
+    const r = adaptPackage('expo-linear-gradient', tmp);
+
+    expect(r.status).toBe('native');
+    expect(r.needsAutolink).toBe(true);
+    expect(r.patchPath).toBe('patches/expo-linear-gradient+15.0.8.patch');
+    const nextPkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
+    expect(nextPkg.dependencies['expo-linear-gradient']).toBe('15.0.8');
+    expect(nextPkg.dependencies['@react-native-ohos/react-native-linear-gradient']).toBe('3.2.0');
+  });
+
+  it('expo-document-picker → 同时锁定 SDK 54 patch 和 0.82 Harmony 包', () => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
+    pkg.dependencies['expo-document-picker'] = '~14.0.8';
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg));
+
+    const r = adaptPackage('expo-document-picker', tmp);
+
+    expect(r.status).toBe('native');
+    expect(r.needsAutolink).toBe(true);
+    expect(r.patchPath).toBe('patches/expo-document-picker+14.0.8.patch');
+    const nextPkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
+    expect(nextPkg.dependencies['expo-document-picker']).toBe('14.0.8');
+    expect(nextPkg.dependencies['@react-native-ohos/react-native-document-picker']).toBe('9.4.0');
   });
 
   it('alias-only + patch（expo-router）→ 锁定原包版本、加鸿蒙包并复制 patch，不需要 autolinking', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    pkg.dependencies['expo-router'] = '~4.0.22';
+    pkg.dependencies['expo-router'] = '~6.0.10';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg));
 
     const r = adaptPackage('expo-router', tmp);
     expect(r.status).toBe('alias-only');
     expect(r.needsAutolink).toBe(false);
-    expect(r.patchPath).toBe('patches/expo-router+4.0.22.patch');
+    expect(r.patchPath).toBe('patches/expo-router+6.0.24.patch');
     const pkg2 = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg2.dependencies['expo-router']).toBe('4.0.22');
-    expect(pkg2.dependencies['@react-native-ohos/native-stack']).toBe('7.3.11-rc.1');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-router+4.0.22.patch'))).toBe(true);
+    expect(pkg2.dependencies['expo-router']).toBe('6.0.24');
+    expect(pkg2.dependencies['@react-native-ohos/native-stack']).toBe('7.4.0-beta.13');
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-router+6.0.24.patch'))).toBe(true);
   });
 
   it('remove（expo-haptics）→ 从 package.json 删除', () => {
@@ -162,6 +191,6 @@ describe('adaptPackage', () => {
     expect(r.status).toBe('alias-only');
     expect(r.needsAutolink).toBe(false);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1-rc.1');
+    expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1');
   });
 });

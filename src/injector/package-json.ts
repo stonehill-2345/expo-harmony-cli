@@ -1,13 +1,19 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { VERSION_MATRIX as V } from '../version-matrix';
+import { getVersionMatrix, type SdkVersion } from '../version-matrix';
 import { lockAllDependencyVersions } from '../scanner/compat-patch';
 
 
 /** 读现有 package.json，合并 G 类 scripts + dependencies + devDependencies。*/
-export function mergePackageJson(targetDir: string): void {
+export function mergePackageJson(targetDir: string, sdk: SdkVersion): void {
+  const V = getVersionMatrix(sdk);
   const pkgPath = path.join(targetDir, 'package.json');
   const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+
+  // Metro resolves index.harmony.js only when the package entry is the
+  // platform-neutral index. Keep the standard Expo Router bootstrap in
+  // index.js for non-Harmony platforms.
+  pkg.main = 'index';
 
   pkg.scripts = {
     ...(pkg.scripts || {}),
@@ -20,9 +26,14 @@ export function mergePackageJson(targetDir: string): void {
 
   pkg.dependencies = {
     ...(pkg.dependencies || {}),
+    expo: V.expo,
+    react: V.react,
+    'react-dom': V.reactDom,
+    'react-native': V.reactNative,
     '@react-native-oh/react-native-harmony': V.rnoh,
     '@react-native-oh/react-native-harmony-cli': V.rnohCli,
     '@babel/runtime': V.babelRuntime,
+    '@react-navigation/native': V.reactNavigationNative,
     '@react-navigation/elements': V.reactNavigationElements,
     'react-native-svg': '15.12.0',
   };
@@ -35,8 +46,10 @@ export function mergePackageJson(targetDir: string): void {
 
   pkg.devDependencies = {
     ...(pkg.devDependencies || {}),
+    '@types/react': V.reactTypes,
     '@react-native/metro-config': V.reactNative,
     '@react-native-community/cli': V.reactNativeCommunityCli,
+    metro: V.metro,
     'patch-package': '8.0.0',
     'react-native-svg-transformer': '1.5.3',
   };

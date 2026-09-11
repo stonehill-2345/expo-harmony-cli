@@ -3,6 +3,7 @@ import * as path from 'path';
 import * as os from 'os';
 import { scanAndAdapt } from '../scanner/scan';
 import { log } from '../utils/log';
+import { detectSdkVersion } from '../version-matrix';
 
 /** scan 命令：手动重跑扫描适配（用户后期加包后用）。*/
 export async function scan(_args: string[]): Promise<void> {
@@ -27,7 +28,8 @@ export async function scan(_args: string[]): Promise<void> {
     scanRoot = tempRoot;
   }
   try {
-    const report = scanAndAdapt(scanRoot);
+    const sdk = detectSdkVersion(scanRoot);
+    const report = scanAndAdapt(scanRoot, sdk);
     log.info(`bump ${report.bumped.length} / 原生包 ${report.addedNative.length} / alias-only ${report.addedAliasOnly.length} / 删 ${report.removed.length} / 替换 ${report.replaced.length} / patch ${report.patched.length} / 回收 ${report.reconciled.length}`);
     if (apply && fs.existsSync(path.join(projectRoot, 'harmony'))) {
       log.success('扫描完成。下一步：pnpm install，然后执行 pnpm dlx expo-harmony-cli sync');

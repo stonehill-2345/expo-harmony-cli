@@ -1,0 +1,26 @@
+diff --git a/node_modules/expo-linear-gradient/build/NativeLinearGradient.js b/node_modules/expo-linear-gradient/build/NativeLinearGradient.js
+index c6f0d11..8831f6c 100644
+--- a/node_modules/expo-linear-gradient/build/NativeLinearGradient.js
++++ b/node_modules/expo-linear-gradient/build/NativeLinearGradient.js
+@@ -1,10 +1,19 @@
+ import * as React from 'react';
+-import { View } from 'react-native';
++import { Platform, View } from 'react-native';
+ // This is a shim view for platforms that aren't supported by Expo.
+ // The component and prop types should match all of the other platform variations.
++const HarmonyLinearGradient = Platform.OS === 'harmony'
++    ? require('@react-native-ohos/react-native-linear-gradient').default
++    : null;
++function toPoint(point) {
++    return point?.length === 2 ? { x: point[0], y: point[1] } : undefined;
++}
+ export default function NativeLinearGradient(props) {
+-    const { colors, locations, startPoint, endPoint, ...viewProps } = props;
++    const { colors, locations, startPoint, endPoint, dither, ...viewProps } = props;
++    if (HarmonyLinearGradient) {
++        return (<HarmonyLinearGradient {...viewProps} colors={colors} locations={locations ?? undefined} start={toPoint(startPoint)} end={toPoint(endPoint)}/>);
++    }
+     console.warn('LinearGradient is not available on this platform');
+     return <View {...viewProps}/>;
+ }
+ //# sourceMappingURL=NativeLinearGradient.js.map

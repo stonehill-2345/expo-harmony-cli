@@ -1,5 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
+import type { SdkVersion } from '../version-matrix';
 
 export interface HarmonyTemplateManifest {
   version: string;
@@ -9,8 +10,9 @@ export interface HarmonyTemplateManifest {
   requiredFiles: string[];
 }
 
-export function getBundledTemplateManifestPath(): string {
-  return path.join(__dirname, '..', '..', 'templates', 'harmony-template.manifest.json');
+export function getBundledTemplateManifestPath(sdk?: SdkVersion): string {
+  const name = sdk ? `harmony-${sdk}.manifest.json` : 'harmony-template.manifest.json';
+  return path.join(__dirname, '..', '..', 'templates', name);
 }
 
 export function loadTemplateManifest(manifestPath: string): HarmonyTemplateManifest {

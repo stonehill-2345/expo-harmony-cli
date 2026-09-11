@@ -1,6 +1,6 @@
 ---
 name: harmony-plugin-integration
-description: 鸿蒙 React Native 插件集成工作流。当用户要在 harmony 鸿蒙工程中集成 @react-native-ohos/* 类原生插件时，按本 skill 执行；以 react-native-pager-view 为例。必须先拿到并阅读该插件的集成文档后再改代码；若文档与 skill 步骤不一致，须先向用户询问再继续。
+description: 鸿蒙 React Native 插件集成工作流。当用户要在 harmony 鸿蒙工程中集成 @react-native-ohos/* 类原生插件时，按本 skill 执行；以 react-native-pager-view 为例。适用于需要核对 npm 发布物、HAR、CMake target、ETS/C++ Package 和 autolinking 的场景。
 ---
 
 # 鸿蒙 React Native 插件集成工作流
@@ -13,10 +13,9 @@ description: 鸿蒙 React Native 插件集成工作流。当用户要在 harmony
 
 ## 前置步骤（必须先做）
 
-1. **拿到并打开该插件的「鸿蒙集成文档」**（用户提供链接或正文）：
-   - **优先用浏览器 MCP 打开文档链接**；若打不开或超时，**必须向用户索要文档的具体内容**（粘贴全文或关键章节），**一定要看到文档内容后再改代码**。
-2. **确认 RN 0.77 适配版本**：在文档或 npm 上**明确确认**该插件标注支持 React Native 0.77 的版本号（如 `x.y.z-rc.n`），安装与配置均按该版本执行。
-3. **通读文档**，重点确认：
+1. **下载并检查目标 npm 发布物**：以实际安装的 tarball 为准读取 `package.json`、`harmony/`、HAR、CMakeLists、ETS/C++ Package 和 JS 入口。
+2. **确认 RN 0.82 适配版本**：发布物依赖、peerDependencies、源码分支和官方版本表必须能共同证明目标版本支持 React Native 0.82。
+3. **再通读官方集成文档**，重点核对：
    - **推荐安装的版本**（如 `x.y.z` 或 `x.y.z-rc.n`）；
    - **手动 link 部分**：
      - 鸿蒙侧依赖的 **.har 路径**（如 `harmony/xxx.har`）；
@@ -25,17 +24,17 @@ description: 鸿蒙 React Native 插件集成工作流。当用户要在 harmony
      - **CMake target 名称**（如 `rnoh_pager_view`，用于 `target_link_libraries`）；
      - **ArkTS 侧包名与路径**（如 `@react-native-ohos/react-native-pager-view/ts` 的 `ViewPagerPackage`）。
 
-**未读完文档、未确认 0.77 版本前不要改代码。**
+**未检查发布物源码、未确认 0.82 版本前不要改代码。**
 
-4. **文档与本 Skill 不一致时必须询问用户**：若用户提供的集成文档中的步骤、路径、类名、target 名等与下述「集成步骤」中的描述或示例**有任何不一致**，**必须先向用户说明差异并询问**：「文档中写的是 ……，本 Skill 中写的是 ……，应以哪一方为准？」在用户明确答复后再继续执行，不得自行择一执行。
+4. **源码优先**：文档与 npm 发布物不一致时，以用户实际会安装的发布物为准，并在适配记录中写明差异。发布物本身存在互相冲突的入口、类型或原生注册信息时再停止并询问用户。
 
 ---
 
-## 集成步骤（在已读文档且已处理不一致项后执行）
+## 集成步骤（在已核对发布物源码和文档后执行）
 
 ### 1. 安装 npm 依赖
 
-在项目根目录执行（版本以文档为准）：
+在项目根目录执行（使用已经过发布物和 peerDependencies 核验的精确版本）：
 
 ```bash
 yarn add @react-native-ohos/<插件名>@<文档推荐版本>
@@ -47,7 +46,7 @@ yarn add @react-native-ohos/<插件名>@<文档推荐版本>
 
 ### 2. 修改 `harmony/entry/oh-package.json5`
 
-在 `dependencies` 中增加一条，**har 路径以文档为准**（常见为 `harmony/包名.har`）：
+在 `dependencies` 中增加一条，**HAR 路径以 npm 发布物中的实际文件为准**（常见为 `harmony/包名.har`）：
 
 ```json5
 "@react-native-ohos/<插件名>": "file:../../node_modules/@react-native-ohos/<插件名>/harmony/<har 文件名>.har"
@@ -55,13 +54,13 @@ yarn add @react-native-ohos/<插件名>@<文档推荐版本>
 
 例：`"@react-native-ohos/react-native-pager-view": "file:../../node_modules/@react-native-ohos/react-native-pager-view/harmony/pager_view.har"`
 
-若文档写的是其他 har 名或子路径（如 `reactNativeMMKV.har`、`gesture_handler.har`），按文档改。
+如果文档写的是其他 HAR 名或子路径（如 `reactNativeMMKV.har`、`gesture_handler.har`），先与发布物核对，使用实际存在的路径。
 
 ---
 
 ### 3. 修改 `harmony/entry/src/main/cpp/CMakeLists.txt`
 
-- 在 **「添加第三方原生包的子目录」** 区域增加一行（路径与子目录名以文档为准）：
+- 在 **「添加第三方原生包的子目录」** 区域增加一行（路径与子目录名以包内 `CMakeLists.txt` 为准）：
 
 ```cmake
 add_subdirectory("${OH_MODULE_DIR}/@react-native-ohos/<插件名>/src/main/cpp" ./<子目录名>)
@@ -69,19 +68,19 @@ add_subdirectory("${OH_MODULE_DIR}/@react-native-ohos/<插件名>/src/main/cpp" 
 
 例：`add_subdirectory("${OH_MODULE_DIR}/@react-native-ohos/react-native-pager-view/src/main/cpp" ./pager_view)`
 
-- 在 **`target_link_libraries(rnoh_app PUBLIC ...)`** 中增加该插件对应的 target（**target 名以文档或该插件自身 CMakeLists.txt 为准**）：
+- 在 **`target_link_libraries(rnoh_app PUBLIC ...)`** 中增加该插件对应的 target（**target 名以该插件自身 `CMakeLists.txt` 为准**）：
 
 ```cmake
 target_link_libraries(rnoh_app PUBLIC <target 名>)
 ```
 
-例：`target_link_libraries(rnoh_app PUBLIC rnoh_pager_view)`。不同插件的 target 可能不同（如 `rnoh_gesture_handler`、`rnoh_safe_area`、`rnoh_native_mmkv`），需从文档或插件源码确认。
+例：`target_link_libraries(rnoh_app PUBLIC rnoh_pager_view)`。不同插件的 target 可能不同（如 `rnoh_gesture_handler`、`rnoh_safe_area`、`rnoh_native_mmkv`），需从插件源码确认并用文档交叉检查。
 
 ---
 
 ### 4. 修改 `harmony/entry/src/main/cpp/PackageProvider.cpp`
 
-- 在文件顶部增加头文件（**头文件名以文档为准**）：
+- 在文件顶部增加头文件（**头文件名以发布物中的实际导出为准**）：
 
 ```cpp
 #include "<Package 类名>.h"
@@ -89,7 +88,7 @@ target_link_libraries(rnoh_app PUBLIC <target 名>)
 
 例：`#include "ViewPagerPackage.h"`
 
-- 在 `getPackages` 的 `return` 向量中增加（**类名以文档为准**）：
+- 在 `getPackages` 的 `return` 向量中增加（**类名以头文件中的实际定义为准**）：
 
 ```cpp
 std::make_shared<Package类名>(ctx)
@@ -101,7 +100,7 @@ std::make_shared<Package类名>(ctx)
 
 ### 5. 修改 `harmony/entry/src/main/ets/RNPackagesFactory.ets`
 
-- 增加 import（**路径与导出名以文档为准**，常见为 `.../ts`）：
+- 增加 import（**路径与导出名以发布物中的 ArkTS 导出为准**，常见为 `.../ts`）：
 
 ```ts
 import { <Package 类名> } from '@react-native-ohos/<插件名>/ts';
@@ -136,11 +135,10 @@ new <Package 类名>(ctx)
 
 ## 注意事项
 
-- **文档优先，不一致必问**：先用浏览器 MCP 打开用户提供的文档链接；打不开则向用户要文档正文，**必须看到文档内容**再执行集成。执行过程中若发现**文档与本 Skill 的步骤、路径、命名等不一致**，**必须先向用户询问并以用户确认为准**，再继续改代码。
-- **文档必须可见**：未拿到、未阅读到文档正文前不要改代码。
-- **0.77 版本**：安装与配置前**务必确认**该插件标明支持 React Native 0.77 的版本号，避免版本不匹配。
+- **源码优先、文档为辅**：发布物决定实际路径、命名和 API；官方文档用于发现候选版本和补充使用说明。
+- **0.82 版本**：安装与配置前必须确认该插件的发布物与 React Native 0.82 版本闭环，避免把 0.77 包带入新项目。
 - **业务代码 import**：若插件有 `harmony.alias`（如 `@shopify/flash-list`），Demo 与业务代码中 **import 一律用 alias 包名**，不用 `@react-native-ohos/xxx`。
-- **har 路径**：不同插件可能为 `harmony/xxx.har` 或 `packages/xxx/harmony/xxx.har`，以文档为准。
+- **HAR 路径**：不同插件可能为 `harmony/xxx.har` 或 `packages/xxx/harmony/xxx.har`，以 npm 发布物中的实际文件为准。
 - **CMake target 名**：必须与插件内 `add_library` 的目标名一致，否则链接失败；不确定时查插件仓库中的 `CMakeLists.txt`。
 - **ArkTS 导入路径**：有的包是 `@react-native-ohos/xxx/ts` 导出 Package，有的是默认导出，以文档或 `package.json` 的 `exports` 为准。
 - 若文档要求修改 **harmony/oh-package.json5**（工程级）或 **RNPackagesFactory 的注册顺序**，也一并按文档执行。

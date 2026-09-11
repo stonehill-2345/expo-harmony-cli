@@ -1,0 +1,220 @@
+diff --git a/node_modules/@react-native-ohos/react-native-screens/lib/commonjs/components/ScreenStackItem.js b/node_modules/@react-native-ohos/react-native-screens/lib/commonjs/components/ScreenStackItem.js
+index e0a1e1a..28d60c2 100644
+--- a/node_modules/@react-native-ohos/react-native-screens/lib/commonjs/components/ScreenStackItem.js
++++ b/node_modules/@react-native-ohos/react-native-screens/lib/commonjs/components/ScreenStackItem.js
+@@ -7,7 +7,6 @@ exports.default = void 0;
+ var React = _interopRequireWildcard(require("react"));
+ var _reactNative = require("react-native");
+ var _warnOnce = _interopRequireDefault(require("warn-once"));
+-var _DebugContainer = _interopRequireDefault(require("react-native-screens/src/components/DebugContainer"));
+ var _ScreenStackHeaderConfig = require("./ScreenStackHeaderConfig");
+ var _Screen = _interopRequireDefault(require("./Screen"));
+ var _ScreenStack = _interopRequireDefault(require("./ScreenStack"));
+@@ -40,9 +39,9 @@ function ScreenStackItem({
+     (0, _warnOnce.default)(_reactNative.Platform.OS !== 'android' && stackPresentation !== 'push' && headerHiddenPreviousRef.current !== headerConfig?.hidden, `Dynamically changing header's visibility in modals will result in remounting the screen and losing all local state.`);
+     headerHiddenPreviousRef.current = headerConfig?.hidden;
+   }, [headerConfig?.hidden, stackPresentation]);
+-  const content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(_DebugContainer.default, {
+-    style: [stackPresentation === 'formSheet' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container],
+-    stackPresentation: stackPresentation ?? 'push'
++  const content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(_reactNative.View, {
++    collapsable: false,
++    style: [stackPresentation === 'formSheet' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container]
+   }, /*#__PURE__*/React.createElement(_reactNative.View, {
+     style: [stackPresentation === 'formSheet' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container, contentStyle]
+   }, children)), /*#__PURE__*/React.createElement(_ScreenStackHeaderConfig.ScreenStackHeaderConfig, headerConfig), stackPresentation === 'formSheet' && unstable_sheetFooter && /*#__PURE__*/React.createElement(_ScreenFooter.FooterComponent, null, unstable_sheetFooter()));
+@@ -51,11 +50,13 @@ function ScreenStackItem({
+   // This allows to workaround one issue with truncated
+   // content with formSheet presentation.
+   let internalScreenStyle;
+-  if (stackPresentation === 'formSheet' && contentStyle) {
++  if (contentStyle) {
+     const flattenContentStyles = _reactNative.StyleSheet.flatten(contentStyle);
+-    internalScreenStyle = {
+-      backgroundColor: flattenContentStyles?.backgroundColor
+-    };
++    if (flattenContentStyles?.backgroundColor !== undefined) {
++      internalScreenStyle = {
++        backgroundColor: flattenContentStyles.backgroundColor
++      };
++    }
+   }
+   return /*#__PURE__*/React.createElement(_Screen.default, _extends({
+     ref: node => {
+@@ -93,7 +94,9 @@ function ScreenStackItem({
+     style: _reactNative.StyleSheet.absoluteFill
+   }, content)) : content);
+ }
+-var _default = exports.default = /*#__PURE__*/React.forwardRef(ScreenStackItem);
++const ScreenStackItemWithRef = /*#__PURE__*/React.forwardRef(ScreenStackItem);
++ScreenStackItemWithRef.displayName = 'ScreenStackItem';
++var _default = exports.default = ScreenStackItemWithRef;
+ const styles = _reactNative.StyleSheet.create({
+   container: {
+     flex: 1
+diff --git a/node_modules/@react-native-ohos/react-native-screens/lib/commonjs/utils.js b/node_modules/@react-native-ohos/react-native-screens/lib/commonjs/utils.js
+index 0870676..408f404 100644
+--- a/node_modules/@react-native-ohos/react-native-screens/lib/commonjs/utils.js
++++ b/node_modules/@react-native-ohos/react-native-screens/lib/commonjs/utils.js
+@@ -15,6 +15,9 @@ function executeNativeBackPress() {
+ }
+ const isHeaderBarButtonsAvailableForCurrentPlatform = exports.isHeaderBarButtonsAvailableForCurrentPlatform = _reactNative.Platform.OS === 'ios';
+ function parseBooleanToOptionalBooleanNativeProp(prop) {
++  if (_reactNative.Platform.OS === 'harmony') {
++    return prop;
++  }
+   switch (prop) {
+     case undefined:
+       return 'undefined';
+diff --git a/node_modules/@react-native-ohos/react-native-screens/lib/module/components/ScreenStackItem.js b/node_modules/@react-native-ohos/react-native-screens/lib/module/components/ScreenStackItem.js
+index 881f35d..fc3fdab 100644
+--- a/node_modules/@react-native-ohos/react-native-screens/lib/module/components/ScreenStackItem.js
++++ b/node_modules/@react-native-ohos/react-native-screens/lib/module/components/ScreenStackItem.js
+@@ -2,7 +2,6 @@ function _extends() { return _extends = Object.assign ? Object.assign.bind() : f
+ import * as React from 'react';
+ import { Platform, StyleSheet, View } from 'react-native';
+ import warnOnce from 'warn-once';
+-import DebugContainer from 'react-native-screens/src/components/DebugContainer';
+ import { ScreenStackHeaderConfig } from './ScreenStackHeaderConfig';
+ import Screen from './Screen';
+ import ScreenStack from './ScreenStack';
+@@ -32,9 +31,9 @@ function ScreenStackItem({
+     warnOnce(Platform.OS !== 'android' && stackPresentation !== 'push' && headerHiddenPreviousRef.current !== headerConfig?.hidden, `Dynamically changing header's visibility in modals will result in remounting the screen and losing all local state.`);
+     headerHiddenPreviousRef.current = headerConfig?.hidden;
+   }, [headerConfig?.hidden, stackPresentation]);
+-  const content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(DebugContainer, {
+-    style: [stackPresentation === 'formSheet' ? Platform.OS === 'ios' ? styles.absolute : null : styles.container],
+-    stackPresentation: stackPresentation ?? 'push'
++  const content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(View, {
++    collapsable: false,
++    style: [stackPresentation === 'formSheet' ? Platform.OS === 'ios' ? styles.absolute : null : styles.container]
+   }, /*#__PURE__*/React.createElement(View, {
+     style: [stackPresentation === 'formSheet' ? Platform.OS === 'ios' ? styles.absolute : null : styles.container, contentStyle]
+   }, children)), /*#__PURE__*/React.createElement(ScreenStackHeaderConfig, headerConfig), stackPresentation === 'formSheet' && unstable_sheetFooter && /*#__PURE__*/React.createElement(FooterComponent, null, unstable_sheetFooter()));
+@@ -43,11 +42,13 @@ function ScreenStackItem({
+   // This allows to workaround one issue with truncated
+   // content with formSheet presentation.
+   let internalScreenStyle;
+-  if (stackPresentation === 'formSheet' && contentStyle) {
++  if (contentStyle) {
+     const flattenContentStyles = StyleSheet.flatten(contentStyle);
+-    internalScreenStyle = {
+-      backgroundColor: flattenContentStyles?.backgroundColor
+-    };
++    if (flattenContentStyles?.backgroundColor !== undefined) {
++      internalScreenStyle = {
++        backgroundColor: flattenContentStyles.backgroundColor
++      };
++    }
+   }
+   return /*#__PURE__*/React.createElement(Screen, _extends({
+     ref: node => {
+@@ -85,7 +86,9 @@ function ScreenStackItem({
+     style: StyleSheet.absoluteFill
+   }, content)) : content);
+ }
+-export default /*#__PURE__*/React.forwardRef(ScreenStackItem);
++const ScreenStackItemWithRef = /*#__PURE__*/React.forwardRef(ScreenStackItem);
++ScreenStackItemWithRef.displayName = 'ScreenStackItem';
++export default ScreenStackItemWithRef;
+ const styles = StyleSheet.create({
+   container: {
+     flex: 1
+diff --git a/node_modules/@react-native-ohos/react-native-screens/lib/module/utils.js b/node_modules/@react-native-ohos/react-native-screens/lib/module/utils.js
+index 0708533..66eaadd 100644
+--- a/node_modules/@react-native-ohos/react-native-screens/lib/module/utils.js
++++ b/node_modules/@react-native-ohos/react-native-screens/lib/module/utils.js
+@@ -7,6 +7,9 @@ export function executeNativeBackPress() {
+ }
+ export const isHeaderBarButtonsAvailableForCurrentPlatform = Platform.OS === 'ios';
+ export function parseBooleanToOptionalBooleanNativeProp(prop) {
++  if (Platform.OS === 'harmony') {
++    return prop;
++  }
+   switch (prop) {
+     case undefined:
+       return 'undefined';
+diff --git a/node_modules/@react-native-ohos/react-native-screens/src/components/ScreenStackItem.tsx b/node_modules/@react-native-ohos/react-native-screens/src/components/ScreenStackItem.tsx
+index 98c4452..cc8c5d8 100644
+--- a/node_modules/@react-native-ohos/react-native-screens/src/components/ScreenStackItem.tsx
++++ b/node_modules/@react-native-ohos/react-native-screens/src/components/ScreenStackItem.tsx
+@@ -8,7 +8,6 @@ import {
+ } from 'react-native';
+ import warnOnce from 'warn-once';
+ 
+-import DebugContainer from 'react-native-screens/src/components/DebugContainer';
+ import { ScreenProps, ScreenStackHeaderConfigProps } from 'react-native-screens/src/types';
+ import { ScreenStackHeaderConfig } from './ScreenStackHeaderConfig';
+ import Screen from './Screen';
+@@ -67,15 +66,15 @@ function ScreenStackItem(
+ 
+   const content = (
+     <>
+-      <DebugContainer
++      <View
++        collapsable={false}
+         style={[
+           stackPresentation === 'formSheet'
+             ? Platform.OS === 'ios'
+               ? styles.absolute
+               : null
+             : styles.container, 
+-        ]}
+-        stackPresentation={stackPresentation ?? 'push'}>
++        ]}>
+         <View style={[
+           stackPresentation === 'formSheet'
+             ? Platform.OS === 'ios'
+@@ -86,7 +85,7 @@ function ScreenStackItem(
+           ]}>
+         {children}
+         </View>        
+-      </DebugContainer>
++      </View>
+ 
+       {/**
+        * `HeaderConfig` needs to be the direct child of `Screen` without any intermediate `View`
+@@ -112,11 +111,13 @@ function ScreenStackItem(
+   // content with formSheet presentation.
+   let internalScreenStyle;
+ 
+-  if (stackPresentation === 'formSheet' && contentStyle) {
++  if (contentStyle) {
+     const flattenContentStyles = StyleSheet.flatten(contentStyle);
+-    internalScreenStyle = {
+-      backgroundColor: flattenContentStyles?.backgroundColor,
+-    };
++    if (flattenContentStyles?.backgroundColor !== undefined) {
++      internalScreenStyle = {
++        backgroundColor: flattenContentStyles.backgroundColor,
++      };
++    }
+   }
+ 
+   return (
+@@ -169,7 +170,10 @@ function ScreenStackItem(
+   );
+ }
+ 
+-export default React.forwardRef(ScreenStackItem);
++const ScreenStackItemWithRef = React.forwardRef(ScreenStackItem);
++ScreenStackItemWithRef.displayName = 'ScreenStackItem';
++
++export default ScreenStackItemWithRef;
+ 
+ const styles = StyleSheet.create({
+   container: {
+diff --git a/node_modules/@react-native-ohos/react-native-screens/src/utils.ts b/node_modules/@react-native-ohos/react-native-screens/src/utils.ts
+index 189722f..bbbd816 100644
+--- a/node_modules/@react-native-ohos/react-native-screens/src/utils.ts
++++ b/node_modules/@react-native-ohos/react-native-screens/src/utils.ts
+@@ -19,6 +19,9 @@ type OptionalBoolean = 'undefined' | 'false' | 'true';
+ export function parseBooleanToOptionalBooleanNativeProp(
+   prop: boolean | undefined,
+ ): OptionalBoolean {
++  if (Platform.OS === 'harmony') {
++    return prop as unknown as OptionalBoolean;
++  }
+   switch (prop) {
+     case undefined:
+       return 'undefined';

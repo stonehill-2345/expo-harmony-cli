@@ -14,11 +14,13 @@ describe('scanAndAdapt', () => {
       dependencies: {
         'react-native': '0.76.9',
         'react-native-screens': '4.4.0',
-        'expo-router': '~4.0.22',
-        'expo-haptics': '~14.0.1',
-        'expo-splash-screen': '~0.29.24',
-        'expo-constants': '~17.0.8',
-        'expo-status-bar': '2.0.1',
+        'expo-router': '~6.0.10',
+        'expo-haptics': '~15.0.7',
+        'expo-splash-screen': '~31.0.10',
+        'expo-constants': '~18.0.9',
+        'expo-linking': '~8.0.8',
+        'expo-image': '~3.0.8',
+        'expo-status-bar': '~3.0.8',
       },
     }));
     // 假 default 模版 app.json（含 plugins，I-2 同步验证用）
@@ -38,30 +40,30 @@ describe('scanAndAdapt', () => {
   });
   afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
-  it('bump-native: react-native → 0.77.1 + 加鸿蒙包', () => {
+  it('bump-native: react-native → 0.82.1 + 加 RNOH 0.82.30', () => {
     const report = scanAndAdapt(tmp);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['react-native']).toBe('0.77.1');
-    expect(pkg.dependencies['@react-native-oh/react-native-harmony']).toBe('0.77.71');
+    expect(pkg.dependencies['react-native']).toBe('0.82.1');
+    expect(pkg.dependencies['@react-native-oh/react-native-harmony']).toBe('0.82.30');
     expect(report.bumped.find(b => b.from === 'react-native')).toBeTruthy();
   });
 
-  it('bump-native: react-native-screens 升级到 Xcode 16.4 兼容版本并添加鸿蒙配套包', () => {
+  it('bump-native: react-native-screens 升级到 0.82 兼容版本并添加鸿蒙配套包', () => {
     const report = scanAndAdapt(tmp);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['react-native-screens']).toBe('4.8.0');
-    expect(pkg.dependencies['@react-native-ohos/react-native-screens']).toBe('4.8.1-rc.7');
+    expect(pkg.dependencies['react-native-screens']).toBe('4.17.1');
+    expect(pkg.dependencies['@react-native-ohos/react-native-screens']).toBe('4.9.0');
     expect(report.bumped).toContainEqual(expect.objectContaining({
       from: 'react-native-screens',
-      to: '4.8.0',
+      to: '4.17.1',
     }));
   });
 
   it('alias-only: expo-router 加 @react-native-ohos/native-stack + copy patch，不计入 native', () => {
     scanAndAdapt(tmp);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['@react-native-ohos/native-stack']).toBe('7.3.11-rc.1');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-router+4.0.22.patch'))).toBe(true);
+    expect(pkg.dependencies['@react-native-ohos/native-stack']).toBe('7.4.0-beta.13');
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-router+6.0.24.patch'))).toBe(true);
   });
 
   it('alias-only: @shopify/flash-list 加 @react-native-ohos/flash-list + alias，不计入 native', () => {
@@ -73,7 +75,7 @@ describe('scanAndAdapt', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     const aliasMap = JSON.parse(fs.readFileSync(path.join(tmp, 'shims/.alias-map.json'), 'utf8'));
 
-    expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1-rc.1');
+    expect(pkg.dependencies['@react-native-ohos/flash-list']).toBe('2.1.1');
     expect(aliasMap['@shopify/flash-list']).toBe('@react-native-ohos/flash-list');
     expect(report.addedAliasOnly).toContainEqual({
       original: '@shopify/flash-list',
@@ -83,19 +85,20 @@ describe('scanAndAdapt', () => {
     expect(report.addedNative.find(item => item.original === '@shopify/flash-list')).toBeUndefined();
   });
 
-  it('native: MMKV 同时锁定原包与鸿蒙包版本，避免 alias API 错配', () => {
+  it('unsupported: MMKV 不自动注入未闭环的 Nitro 原生依赖', () => {
     const pkg0 = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     pkg0.dependencies['react-native-mmkv'] = '4.3.2';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg0));
 
-    scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp);
 
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['react-native-mmkv']).toBe('3.3.1');
-    expect(pkg.dependencies['@react-native-ohos/react-native-mmkv']).toBe('3.3.1-rc.1');
+    expect(pkg.dependencies['react-native-mmkv']).toBe('4.3.2');
+    expect(pkg.dependencies['@react-native-ohos/react-native-mmkv']).toBeUndefined();
+    expect(report.unsupported).toContain('react-native-mmkv');
   });
 
-  it('native + patch: fast-image 复制 RNOH 兼容补丁', () => {
+  it('unsupported: fast-image 有 React 19 peer 冲突时不自动改写', () => {
     const pkg0 = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     pkg0.dependencies['react-native-fast-image'] = '^8.6.3';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg0));
@@ -104,12 +107,10 @@ describe('scanAndAdapt', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
 
     expect(pkg.dependencies['react-native-fast-image']).toBe('8.6.3');
-    expect(pkg.dependencies['@react-native-oh-tpl/react-native-fast-image']).toBe('8.6.3-0.4.17');
-    expect(fs.existsSync(path.join(tmp, 'patches/@react-native-oh-tpl+react-native-fast-image+8.6.3-0.4.17.patch'))).toBe(true);
-    expect(report.patched).toContainEqual({
-      original: 'react-native-fast-image',
-      patchPath: 'patches/@react-native-oh-tpl+react-native-fast-image+8.6.3-0.4.17.patch',
-    });
+    expect(pkg.dependencies['@react-native-ohos/react-native-fast-image']).toBeUndefined();
+    expect(fs.existsSync(path.join(tmp, 'patches/@react-native-oh-tpl+react-native-fast-image+8.6.3-0.4.17.patch'))).toBe(false);
+    expect(report.patched.find(item => item.original === 'react-native-fast-image')).toBeUndefined();
+    expect(report.unsupported).toContain('react-native-fast-image');
   });
 
   it('remove: expo-haptics 从 package.json 删除', () => {
@@ -122,7 +123,7 @@ describe('scanAndAdapt', () => {
   it('unsupported: expo-splash-screen 不自动替换或删除用户依赖', () => {
     const report = scanAndAdapt(tmp);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['expo-splash-screen']).toBe('0.29.24');
+    expect(pkg.dependencies['expo-splash-screen']).toBe('31.0.10');
     expect(pkg.dependencies['expo-splash-screen2']).toBeUndefined();
     expect(report.unsupported).toContain('expo-splash-screen');
   });
@@ -142,8 +143,8 @@ describe('scanAndAdapt', () => {
   it('patch-only: expo-constants copy patch（不改依赖）', () => {
     const report = scanAndAdapt(tmp);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['expo-constants']).toBe('17.0.8');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+17.0.8.patch'))).toBe(true);
+    expect(pkg.dependencies['expo-constants']).toBe('18.0.14');
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+18.0.14.patch'))).toBe(true);
     expect(report.patched.find(p => p.original === 'expo-constants')).toBeTruthy();
   });
 
@@ -153,7 +154,7 @@ describe('scanAndAdapt', () => {
 
     scanAndAdapt(tmp);
 
-    expect(fs.existsSync(path.join(tmp, 'patches/@react-native-oh+react-native-harmony+0.77.71.patch'))).toBe(true);
+    expect(fs.existsSync(path.join(tmp, 'patches/@react-native-oh+react-native-harmony+0.82.30.patch'))).toBe(true);
     expect(fs.existsSync(path.join(tmp, 'patches/expo-modules-core+2.2.3.patch'))).toBe(false);
   });
 

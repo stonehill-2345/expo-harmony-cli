@@ -1,10 +1,12 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { COMPAT_TABLE, CompatStatus } from '../scanner/compat-table';
+import { getCompatTable } from '../scanner/compat-table';
+import { CompatStatus } from '../scanner/compat-table';
 import { copyFromLibrary } from '../utils/content-library';
 import { applyCompatPatch, applyCompatibleVersionPair, lockAllDependencyVersions } from '../scanner/compat-patch';
 import { ensureAppJsonPlugin, syncAppJsonPlugins } from '../injector/app-json';
 import { recordManagedPackage } from '../lifecycle/managed-state';
+import { detectSdkVersion, type SdkVersion } from '../version-matrix';
 
 export interface AdaptResult {
   status: CompatStatus | 'skipped';
@@ -27,6 +29,10 @@ export function adaptPackage(pkgName: string, targetDir: string, options: AdaptO
   // 跳过开头的 @（scoped 包名），从 index 1 开始查 @version 分隔符。
   const scopeAt = pkgName.indexOf('@', 1);
   const baseName = scopeAt === -1 ? pkgName : pkgName.slice(0, scopeAt);
+
+  const sdk = detectSdkVersion(targetDir);
+  const COMPAT_TABLE = getCompatTable(sdk);
+
   const entry = COMPAT_TABLE[baseName];
   if (!entry) {
     return { status: 'skipped' };

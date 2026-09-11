@@ -50,6 +50,9 @@ describe('runHarmonyGeneration (integration)', () => {
     expect(fs.existsSync(path.join(harmonyDir, 'entry/src/main/cpp/CMakeLists.txt'))).toBe(true);
     expect(fs.existsSync(path.join(harmonyDir, 'entry/src/main/ets/PackageProvider.ets'))).toBe(true);
     expect(
+      fs.readFileSync(path.join(harmonyDir, 'entry/src/main/ets/PackageProvider.ets'), 'utf8'),
+    ).toContain('getRNOHPackages(ctx: RNPackageContext): RNPackage[]');
+    expect(
       fs.existsSync(path.join(harmonyDir, 'entry/src/main/resources/rawfile/.gitkeep')),
     ).toBe(true);
     expect(fs.existsSync(path.join(harmonyDir, '.gitignore'))).toBe(true);
@@ -293,7 +296,11 @@ describe('runHarmonyGeneration (integration)', () => {
     );
     expect(entryAbility).toContain("import { RNAbility }");
     expect(entryAbility).toContain("extends RNAbility");
-    expect(entryAbility).toContain("super.onWindowStageCreate(windowStage)");
+    expect(entryAbility).toContain('getRNOHWorkerScriptUrl()');
+    expect(entryAbility).toContain('entry/ets/workers/RNOHWorker.ets');
+    const worker = fs.readFileSync(path.join(harmonyDir, 'entry/src/main/ets/workers/RNOHWorker.ets'), 'utf8');
+    expect(worker).toContain('setupRNOHWorker({');
+    expect(worker).toContain('thirdPartyPackagesFactory: getRNOHPackages');
 
     const entryBuildProfile = fs.readFileSync(path.join(harmonyDir, 'entry/build-profile.json5'), 'utf8');
     expect(entryBuildProfile).toContain('"externalNativeOptions"');

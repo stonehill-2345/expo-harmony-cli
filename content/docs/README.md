@@ -9,11 +9,11 @@
 | 项目 | 版本 |
 | --- | --- |
 | Expo | {{expoSdk}} |
-| React Native | 0.77.1 |
+| React Native | 0.82.1 |
 | React Native OpenHarmony | {{rnohVersion}} |
 | bundleName | `{{bundleName}}` |
 
-RNOH 已固定为 `{{rnohVersion}}`，React Native 仍固定为 `0.77.1`。不要单独升级其中一个版本，避免 JS 依赖、HAR、C++/ArkTS 模板和 patch 失配。
+RNOH 已固定为 `{{rnohVersion}}`，React Native 固定为 `0.82.1`。不要单独升级其中一个版本，避免 JS 依赖、HAR、C++/ArkTS 模板和 patch 失配。
 
 ## 快速开始
 
