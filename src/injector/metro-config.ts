@@ -20,6 +20,9 @@ const harmonyConfig = createHarmonyMetroConfig({
   reactNativeHarmonyPackageName: '@react-native-oh/react-native-harmony',
 });
 
+// 保存 Expo 原始 getModulesRunBeforeMainModule，RN_BUNDLE_PLATFORM=harmony 时 Android 入口回退使用
+const expoGetModulesRunBeforeMainModule = baseConfig.serializer?.getModulesRunBeforeMainModule;
+
 const shimAliases = require('./shims/.alias-map.json');
 const harmonyResolveRequest = harmonyConfig.resolver?.resolveRequest;
 
@@ -84,6 +87,12 @@ if (originalRunBeforeMainModule) {
     const preModules = originalRunBeforeMainModule(entryFile);
     const isHarmonyEntry = String(entryFile).endsWith('index.harmony.js') || process.env.RN_BUNDLE_PLATFORM === 'harmony';
     if (!isHarmonyEntry) return preModules;
+    // Android/iOS entry under RN_BUNDLE_PLATFORM=harmony:
+    // RNOH serializer 的 preModules 缺少 Expo winter runtime（URLSearchParams 等 polyfill），
+    // 回退到 Expo 原始 preModules。
+    if (!String(entryFile).endsWith('index.harmony.js') && expoGetModulesRunBeforeMainModule) {
+      return expoGetModulesRunBeforeMainModule(entryFile);
+    }
     const formDataBootstrap = path.resolve(__dirname, 'shims/harmony-form-data.js');
     const initializeCoreIndex = preModules.findIndex((modulePath) => modulePath.includes('Libraries/Core/InitializeCore'));
     if (initializeCoreIndex === -1) return [formDataBootstrap, ...preModules];

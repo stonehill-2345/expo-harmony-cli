@@ -3,7 +3,9 @@ import * as path from 'path';
 import type { HarmonyGenerationOptions } from './types';
 import { resolveBundleName, resolveAppName } from './config-merger';
 import { initProject } from './init-project';
-import { runAutolinking, type AutolinkingResult } from './autolinking';
+import { runAutolinking, mergeOhPackageDependenciesWithSpecs, isDanglingAutolinkRef, type AutolinkingResult } from './autolinking';
+import { runOfficialAutolinking, type OfficialAutolinkingResult } from './official-autolinking';
+import { patchOfficialArtifacts, type PatchReport } from './autolinking-patch';
 import { HARMONY_PACKAGE_MAPPING } from './harmony-package-mapping';
 import JSON5 from 'json5';
 import packageJson from '../../package.json';
@@ -55,7 +57,7 @@ export async function runHarmonyGeneration(
     templateSource: opts.templateSource,
   });
 
-  // ② autolinking：写三文件（ets/cpp/cmake）+ 合并 oh-package.json5
+  // ② autolinking：官方优先三态合并（写三文件 + 合并两级 oh-package）
   await syncHarmonyAutolinking(projectRoot, { force: opts.force });
 }
 
@@ -63,7 +65,11 @@ export async function runHarmonyGeneration(
  * 仅刷新 HarmonyOS 原生依赖的 autolinking 托管文件。
  * 不复制模板、不删除 harmony/，因此不会影响签名、资源和其他非托管配置。
  */
-export type SyncAutolinkingOptions = { force?: boolean };
+export type SyncAutolinkingOptions = {
+  force?: boolean;
+  /** install 单包场景：静默全量汇总（含官方 [link]/[skip] 扫描明细），由调用方只报目标包归类。 */
+  quiet?: boolean;
+};
 export type DriftedEntry = { path: string; dependency: string; currentSpec: string; expectedSpec: string; baselineSpec?: string };
 export type DriftReport = { files: string[]; entries: DriftedEntry[] };
 
@@ -138,6 +144,71 @@ function rollbackTransaction(
 /** 步骤 0 扫描时跳过的构建产物/依赖目录：受管文件不会位于其中，跳过可避免遍历海量文件。 */
 const ARTIFACT_SCAN_SKIP_DIRS = new Set(['oh_modules', 'node_modules', '.hvigor', '.cxx', 'build']);
 
+/** 规范 §6 统一提示：未覆盖插件逐包报告后的总指引。 */
+export const UNCOVERED_HINT =
+  '不是所有 Expo / React Native 原生模块都已适配 HarmonyOS；' +
+  '请以 list 输出、生成项目的 docs/HARMONY.md 和 .agent/skills/expo-harmony-adapter/SKILL.md 为准。';
+
+/**
+ * 组装官方优先三态结果（任务四）：官方产物 + mapping 补充 + entry oh-package 受管合并。
+ * managedOhPackageEntries 的 expected 直接取自最终写入内容，保证与磁盘一致、drift 不误报。
+ */
+function buildOfficialFirstResult(
+  harmonyDir: string,
+  official: OfficialAutolinkingResult,
+  patched: PatchReport,
+  previousManagedEntries: Record<string, unknown> = {},
+): AutolinkingResult {
+  const rootOh = patched.files.find(f => f.path.endsWith('oh-package.json5'))!;
+  const rootOhObj = JSON5.parse(rootOh.content) as { dependencies?: Record<string, string> };
+  // 官方产物可能保留拷入 oh-package 的旧键：卸载残留的悬空 autolink 引用在此清除，
+  // 否则 ohpm fetch 失败（uninstall 联动，与 entry 侧 isDanglingAutolinkRef 同一规则）。
+  let rootDeps = rootOhObj.dependencies ?? {};
+  if (Object.values(rootDeps).some(spec => isDanglingAutolinkRef(spec, harmonyDir))) {
+    rootDeps = Object.fromEntries(
+      Object.entries(rootDeps).filter(([, spec]) => !isDanglingAutolinkRef(spec, harmonyDir)),
+    );
+    rootOhObj.dependencies = rootDeps;
+    rootOh.content = JSON.stringify(rootOhObj, null, 2) + '\n';
+  }
+  const rootSpecs = Object.fromEntries(
+    Object.entries(rootDeps).filter(([, spec]) => /^file:\.\.\/node_modules\/.+\/harmony\/.+\.har$/.test(spec)),
+  );
+  const files = [...patched.files];
+  const managedOhPackageEntries = [{ ohPackagePath: rootOh.path, expected: rootSpecs }];
+  const entryOhPkgPath = path.join(harmonyDir, 'entry/oh-package.json5');
+  if (fs.existsSync(entryOhPkgPath)) {
+    const entrySpecs = Object.fromEntries(
+      Object.entries(rootSpecs).map(([name, spec]) => [name, spec.replace(/^file:\.\.\//, 'file:../../')]),
+    );
+    // entry 旧受管键中本轮不再出现的（名域迁移 tpl→npm 等历史写入）随本轮清除，
+    // 否则同包双键残留会让 ohpm 报 Inconsistent Dep Names；用户手写键不受影响
+    const entryRel = path.relative(path.dirname(harmonyDir), entryOhPkgPath);
+    const prevEntryKeys = Object.keys(previousManagedEntries)
+      .filter(key => key.startsWith(`${entryRel}:`))
+      .map(key => key.slice(entryRel.length + 1));
+    const staleEntryKeys = prevEntryKeys.filter(key => !(key in entrySpecs));
+    files.push({
+      path: entryOhPkgPath,
+      content: mergeOhPackageDependenciesWithSpecs(entryOhPkgPath, entrySpecs, staleEntryKeys),
+    });
+    managedOhPackageEntries.push({ ohPackagePath: entryOhPkgPath, expected: entrySpecs });
+  }
+  return {
+    linked: [...official.officialPackages, ...patched.patched].sort(),
+    linkedSources: {
+      ...Object.fromEntries(official.officialPackages.map(p => [p, 'official' as const])),
+      ...Object.fromEntries(patched.patched.map(p => [p, 'mapping' as const])),
+    },
+    skipped: [
+      ...patched.skippedNoHar,
+      ...patched.remainingGaps.map(p => ({ package: p, reason: '未适配 HarmonyOS（官方与 mapping 均未覆盖）' })),
+    ],
+    files,
+    managedOhPackageEntries,
+  };
+}
+
 /**
  * 步骤 0：上次中断残留三态（tmp 清理 / bak+目标缺失恢复 / bak+目标并存阻断）。
  * 扫盘而非依赖 autolinking 结果——runAutolinking 需读磁盘 oh-package，恢复必须先于它执行；
@@ -176,7 +247,7 @@ function recoverInterruptedArtifacts(projectRoot: string, harmonyDir: string, op
   return conflicts;
 }
 
-function syncHarmonyAutolinkingImpl(projectRoot: string, opts: SyncAutolinkingOptions = {}): AutolinkingResult {
+async function syncHarmonyAutolinkingImpl(projectRoot: string, opts: SyncAutolinkingOptions = {}): Promise<AutolinkingResult> {
   const harmonyDir = path.join(projectRoot, 'harmony');
   if (!fs.existsSync(harmonyDir)) {
     throw new Error(
@@ -191,11 +262,39 @@ function syncHarmonyAutolinkingImpl(projectRoot: string, opts: SyncAutolinkingOp
         '若需保留备份内容，请先将 .cli-bak 手动重命名回原路径（去掉 .cli-bak 后缀）后重试',
     );
   }
-  const result = runAutolinking({
+  // 官方优先、mapping 补充、仍未覆盖提示 skill（规范 §1 固定流程）。
+  // 官方整体不可用或合并冲突 → 丢弃官方结果，回退批量自研模板（规范 §4）。
+  const customFallback = () => runAutolinking({
     projectRoot,
     harmonyDir,
     mapping: HARMONY_PACKAGE_MAPPING,
   });
+  let result: AutolinkingResult;
+  const official = await runOfficialAutolinking({ projectRoot, harmonyDir, quiet: opts.quiet, mapping: HARMONY_PACKAGE_MAPPING });
+  if (official.ok) {
+    try {
+      const patched = patchOfficialArtifacts({ projectRoot, harmonyDir, official, mapping: HARMONY_PACKAGE_MAPPING });
+      result = buildOfficialFirstResult(harmonyDir, official, patched, readManagedState(projectRoot).managedEntries ?? {});
+      if (!opts.quiet) {
+        log.info(
+          `官方 RNOH autolink 已生效（官方 ${official.officialPackages.length} 包 / 自研补充 ${patched.patched.length} 包` +
+            `${patched.remainingGaps.length ? ` / 未覆盖 ${patched.remainingGaps.length} 包` : ''}）`,
+        );
+        if (official.officialPackages.length) log.info(`  官方注册：${official.officialPackages.join('、')}`);
+        if (patched.patched.length) log.info(`  自研补充：${patched.patched.join('、')}`);
+        if (patched.remainingGaps.length) {
+          log.warn(`未适配 HarmonyOS 的原生包：${patched.remainingGaps.join('、')}`);
+          log.warn(UNCOVERED_HINT);
+        }
+      }
+    } catch (err) {
+      log.warn(`官方产物合并失败，已回退自研批量生成：${err instanceof Error ? err.message : String(err)}`);
+      result = customFallback();
+    }
+  } else {
+    log.warn(`官方 link-harmony 不可用，已回退自研批量生成：${official.failureReason}`);
+    result = customFallback();
+  }
   const previousState = readManagedState(projectRoot);
   const firstBaseline =
     !Object.keys(previousState.generatedFiles ?? {}).length &&
@@ -250,7 +349,7 @@ function syncHarmonyAutolinkingImpl(projectRoot: string, opts: SyncAutolinkingOp
 }
 
 /**
- * 仅刷新 HarmonyOS 原生依赖的 autolinking 托管文件（async：为后续官方链路接入保持签名稳定）。
+ * 仅刷新 HarmonyOS 原生依赖的 autolinking 托管文件（async：为官方链路接入保持签名稳定）。
  */
 export async function syncHarmonyAutolinking(
   projectRoot: string,

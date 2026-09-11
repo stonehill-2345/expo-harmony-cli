@@ -7,4 +7,5 @@ export async function list(_args: string[] = []): Promise<void> {
     const harmony = entry.harmony ? ` → ${entry.harmony.package}` : '';
     console.log(`  ${pkg.padEnd(40)} ${entry.status.padEnd(14)}${harmony}`);
   }
+  console.log('\n不是所有 Expo / React Native 原生模块都已适配 HarmonyOS；请以 list 输出、生成项目的 docs/HARMONY.md 和 .agent/skills/expo-harmony-adapter/SKILL.md 为准。');
 }

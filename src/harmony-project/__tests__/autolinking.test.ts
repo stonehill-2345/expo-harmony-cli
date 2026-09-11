@@ -141,7 +141,7 @@ describe('runAutolinking', () => {
     );
   });
 
-  it('Worklets HAR 写入根 overrides，覆盖 Reanimated 发布物中的失效相对依赖', () => {
+  it('Worklets HAR 写入根 dependencies（v1.3.0 已移除 ohpmOverride 机制）', () => {
     const workletsDir = path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-worklets', 'harmony');
     fs.mkdirSync(workletsDir, { recursive: true });
     fs.writeFileSync(path.join(workletsDir, 'worklets.har'), 'har');
@@ -159,7 +159,7 @@ describe('runAutolinking', () => {
     const parsed = JSON5.parse(ohPkg);
 
     expect(parsed.overrides.custom).toBe('1.0.0');
-    expect(parsed.overrides['@react-native-ohos/react-native-worklets']).toBe(
+    expect(parsed.dependencies['@react-native-ohos/react-native-worklets']).toBe(
       'file:../node_modules/@react-native-ohos/react-native-worklets/harmony/worklets.har',
     );
   });

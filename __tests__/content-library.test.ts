@@ -32,7 +32,9 @@ function expectPatchHunksToBeWellFormed(patchPath: string): void {
 
 describe('content-library', () => {
   it('内容库同时包含 SDK 52 和 SDK 54 两套 patch', () => {
-    const patches = fs.readdirSync(path.join(CONTENT, 'patches')).filter(f => f.endsWith('.patch'));
+    const patchesSdk52 = fs.readdirSync(path.join(CONTENT, 'patches', 'sdk-52')).filter(f => f.endsWith('.patch'));
+    const patchesSdk54 = fs.readdirSync(path.join(CONTENT, 'patches', 'sdk-54')).filter(f => f.endsWith('.patch'));
+    const patches = [...patchesSdk52, ...patchesSdk54];
 
     // SDK 54 patches
     expect(patches).toContain('@react-native-oh+react-native-harmony+0.82.30.patch');
@@ -55,7 +57,7 @@ describe('content-library', () => {
     expect(patches).toContain('expo-image-picker+16.0.6.patch');
     expect(patches).toContain('expo-media-library+17.0.6.patch');
     expect(patches).toContain('expo-document-picker+13.0.3.patch');
-    expect(patches).toContain('expo-modules-core+2.2.3.patch');
+    // expo-modules-core+2.2.3.patch 已随 v1.3.0 移除（不再需要）
 
     // 共用 patch
     expect(patches).toContain('expo-status-bar+3.0.9.patch');
@@ -72,9 +74,13 @@ describe('content-library', () => {
   });
 
   it('所有 patch 的 hunk header 行数可被 patch-package 严格解析', () => {
-    const patchDir = path.join(CONTENT, 'patches');
-    for (const file of fs.readdirSync(patchDir).filter(name => name.endsWith('.patch'))) {
-      expectPatchHunksToBeWellFormed(path.join(patchDir, file));
+    const patchDirs = ['sdk-52', 'sdk-54'];
+    for (const dir of patchDirs) {
+      const patchDir = path.join(CONTENT, 'patches', dir);
+      if (!fs.existsSync(patchDir)) continue;
+      for (const file of fs.readdirSync(patchDir).filter(name => name.endsWith('.patch'))) {
+        expectPatchHunksToBeWellFormed(path.join(patchDir, file));
+      }
     }
   });
 

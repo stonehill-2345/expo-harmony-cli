@@ -41,7 +41,7 @@ describe('scanAndAdapt', () => {
   afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
   it('bump-native: react-native → 0.82.1 + 加 RNOH 0.82.30', () => {
-    const report = scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['react-native']).toBe('0.82.1');
     expect(pkg.dependencies['@react-native-oh/react-native-harmony']).toBe('0.82.30');
@@ -49,7 +49,7 @@ describe('scanAndAdapt', () => {
   });
 
   it('bump-native: react-native-screens 升级到 0.82 兼容版本并添加鸿蒙配套包', () => {
-    const report = scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['react-native-screens']).toBe('4.17.1');
     expect(pkg.dependencies['@react-native-ohos/react-native-screens']).toBe('4.9.0');
@@ -60,7 +60,7 @@ describe('scanAndAdapt', () => {
   });
 
   it('alias-only: expo-router 加 @react-native-ohos/native-stack + copy patch，不计入 native', () => {
-    scanAndAdapt(tmp);
+    scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['@react-native-ohos/native-stack']).toBe('7.4.0-beta.13');
     expect(fs.existsSync(path.join(tmp, 'patches/expo-router+6.0.24.patch'))).toBe(true);
@@ -71,7 +71,7 @@ describe('scanAndAdapt', () => {
     pkg0.dependencies['@shopify/flash-list'] = '1.8.3';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg0));
 
-    const report = scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     const aliasMap = JSON.parse(fs.readFileSync(path.join(tmp, 'shims/.alias-map.json'), 'utf8'));
 
@@ -90,7 +90,7 @@ describe('scanAndAdapt', () => {
     pkg0.dependencies['react-native-mmkv'] = '4.3.2';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg0));
 
-    const report = scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp, 'sdk-54');
 
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['react-native-mmkv']).toBe('4.3.2');
@@ -103,7 +103,7 @@ describe('scanAndAdapt', () => {
     pkg0.dependencies['react-native-fast-image'] = '^8.6.3';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg0));
 
-    const report = scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
 
     expect(pkg.dependencies['react-native-fast-image']).toBe('8.6.3');
@@ -114,14 +114,14 @@ describe('scanAndAdapt', () => {
   });
 
   it('remove: expo-haptics 从 package.json 删除', () => {
-    const report = scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['expo-haptics']).toBeUndefined();
     expect(report.removed).toContain('expo-haptics');
   });
 
   it('unsupported: expo-splash-screen 不自动替换或删除用户依赖', () => {
-    const report = scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['expo-splash-screen']).toBe('31.0.10');
     expect(pkg.dependencies['expo-splash-screen2']).toBeUndefined();
@@ -129,7 +129,7 @@ describe('scanAndAdapt', () => {
   });
 
   it('unsupported: scan 不修改用户 app.json 中的 Splash plugin', () => {
-    scanAndAdapt(tmp);
+    scanAndAdapt(tmp, 'sdk-54');
     const app = JSON.parse(fs.readFileSync(path.join(tmp, 'app.json'), 'utf8'));
     const plugins = app.expo.plugins;
     // 字符串插件不受影响
@@ -141,7 +141,7 @@ describe('scanAndAdapt', () => {
   });
 
   it('patch-only: expo-constants copy patch（不改依赖）', () => {
-    const report = scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['expo-constants']).toBe('18.0.14');
     expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+18.0.14.patch'))).toBe(true);
@@ -152,14 +152,14 @@ describe('scanAndAdapt', () => {
     fs.mkdirSync(path.join(tmp, 'patches'), { recursive: true });
     fs.writeFileSync(path.join(tmp, 'patches/expo-modules-core+2.2.3.patch'), 'legacy patch');
 
-    scanAndAdapt(tmp);
+    scanAndAdapt(tmp, 'sdk-54');
 
     expect(fs.existsSync(path.join(tmp, 'patches/@react-native-oh+react-native-harmony+0.82.30.patch'))).toBe(true);
     expect(fs.existsSync(path.join(tmp, 'patches/expo-modules-core+2.2.3.patch'))).toBe(false);
   });
 
   it('patch-only: 命中 patch 时强制依赖版本等于 patch 版本并复制 patch', () => {
-    const report = scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['expo-status-bar']).toBe('3.0.9');
     expect(fs.existsSync(path.join(tmp, 'patches/expo-status-bar+3.0.9.patch'))).toBe(true);
@@ -167,14 +167,14 @@ describe('scanAndAdapt', () => {
   });
 
   it('生成 package.json 依赖版本必须锁定，不能保留 ~ 或 ^', () => {
-    scanAndAdapt(tmp);
+    scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     const versions = Object.values({ ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) }) as string[];
     expect(versions.filter(version => /^[~^]/.test(version))).toEqual([]);
   });
 
   it('alias-map 合并: 保留 injector 写的 @expo/metro-runtime', () => {
-    scanAndAdapt(tmp);
+    scanAndAdapt(tmp, 'sdk-54');
     const aliasMap = JSON.parse(fs.readFileSync(path.join(tmp, 'shims/.alias-map.json'), 'utf8'));
     expect(aliasMap['@expo/metro-runtime']).toBe('./shims/expo-metro-runtime.ts');
   });
@@ -192,7 +192,7 @@ describe('scanAndAdapt', () => {
       needsAutolink: true,
     });
 
-    const report = scanAndAdapt(tmp);
+    const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     const nextAliases = JSON.parse(fs.readFileSync(path.join(tmp, 'shims/.alias-map.json'), 'utf8'));
 
@@ -205,13 +205,13 @@ describe('scanAndAdapt', () => {
     const pkg0 = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     pkg0.dependencies['react-native-webview'] = '13.15.0';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg0));
-    scanAndAdapt(tmp);
+    scanAndAdapt(tmp, 'sdk-54');
 
     const afterFirstScan = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     delete afterFirstScan.dependencies['react-native-webview'];
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(afterFirstScan));
 
-    scanAndAdapt(tmp);
+    scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     const aliases = JSON.parse(fs.readFileSync(path.join(tmp, 'shims/.alias-map.json'), 'utf8'));
 

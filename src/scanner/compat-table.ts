@@ -119,6 +119,7 @@ function buildCompatTable54(V: VersionMatrix): Record<string, CompatEntry> {
     'expo-splash-screen': { original: 'expo-splash-screen', status: 'unsupported' },
 
     // ===== patch-only =====
+    'expo-modules-core': { original: 'expo-modules-core', status: 'patch-only', patch: { sourceFile: 'content/patches/sdk-54/expo-modules-core+3.0.30.patch', targetPath: 'patches/expo-modules-core+3.0.30.patch' } },
     'expo-constants': { original: 'expo-constants', status: 'patch-only', patch: { sourceFile: 'content/patches/sdk-54/expo-constants+18.0.14.patch', targetPath: 'patches/expo-constants+18.0.14.patch' } },
     'expo-status-bar': { original: 'expo-status-bar', status: 'patch-only', patch: { sourceFile: 'content/patches/sdk-54/expo-status-bar+3.0.9.patch', targetPath: 'patches/expo-status-bar+3.0.9.patch' } },
     'expo-linking': { original: 'expo-linking', status: 'patch-only', patch: { sourceFile: 'content/patches/sdk-54/expo-linking+8.0.12.patch', targetPath: 'patches/expo-linking+8.0.12.patch' } },

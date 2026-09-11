@@ -102,12 +102,11 @@ function assertPackedDistContainsIconSymbolFallback(cwd: string, files: string[]
 function assertPackedDistContainsRequiredPackageJsonDependencies(cwd: string, files: string[]): void {
   expect(files).toContain('dist/injector/package-json.js');
   const content = fs.readFileSync(path.join(cwd, 'dist/injector/package-json.js'), 'utf8');
+  // v1.3.0: getVersionMatrix(sdk) 动态获取矩阵，bundled JS 不再包含字面 VERSION_MATRIX
   expect(content).toContain("'@babel/runtime'");
-  expect(content).toContain('VERSION_MATRIX.babelRuntime');
+  expect(content).toContain('getVersionMatrix');
   expect(content).toContain("'@react-navigation/elements'");
-  expect(content).toContain('VERSION_MATRIX.reactNavigationElements');
   expect(content).toContain("'@react-native/metro-config'");
-  expect(content).toContain('VERSION_MATRIX.reactNative');
 }
 
 function assertPackedContentContainsHarmonyRuntimeShims(cwd: string, files: string[]): void {
