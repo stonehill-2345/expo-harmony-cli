@@ -13,15 +13,6 @@
   <a href="https://github.com/stonehill-2345/expo-harmony-cli"><img src="https://img.shields.io/github/stars/stonehill-2345/expo-harmony-cli" alt="GitHub stars"></a>
 </p>
 
----
-
-- 创建 Expo 项目，固定所选 SDK 版本对应的 RN / RNOH 开发基线（支持的版本见下方[环境与支持范围](#环境与支持范围)）
-- 生成 HarmonyOS 原生工程、Metro 配置、RNOH 依赖和开发文档
-- 通过 CLI 管理三方依赖、patch、Metro alias 与 HarmonyOS 原生注册
-- 内置 `env` / `doctor` 诊断命令：工具链环境检查、项目健康诊断，退出码分级可接入 CI
-- HarmonyOS 原生文件变更保护：autolinking 托管文件被手动修改时阻断覆盖并给出指引，事务写入失败自动回滚
-- 保留 Android、iOS 与 Web 的 Expo 标准工作流
-
 ## 这是什么？
 
 **一句话**：`expo-harmony-cli` 是一个命令行工具，让你用 Expo SDK 创建项目，一键生成 HarmonyOS（OpenHarmony）原生工程，同一套 JS/TS 代码同时运行在鸿蒙、iOS、Android 上。
