@@ -1,3 +1,4 @@
+import type { SdkVersion } from '../version-matrix';
 import { injectHarmonyBlock } from './app-json';
 import { writeMetroConfig } from './metro-config';
 import { mergePackageJson } from './package-json';
@@ -12,18 +13,19 @@ import { ensureNpmrcHoisted } from './npmrc';
 export interface InjectOptions {
   slug: string;
   scheme: string;
+  sdk: SdkVersion;
 }
 
 /** 注入鸿蒙基线（create 流程步骤 2）。*/
 export function injectHarmonyBaseline(targetDir: string, opts: InjectOptions): void {
   injectHarmonyBlock(targetDir, opts.slug);
   writeMetroConfig(targetDir);
-  mergePackageJson(targetDir);
+  mergePackageJson(targetDir, opts.sdk);
   writePostinstall(targetDir);
   writeStartHarmony(targetDir);
   writeBundleHarmonyDev(targetDir);
   writeBundleHarmonyRelease(targetDir);
-  writeHarmonyEntry(targetDir, opts.scheme);
+  writeHarmonyEntry(targetDir, opts.scheme, opts.sdk);
   writeHarmonyIconSymbolFallback(targetDir);
   ensureNpmrcHoisted(targetDir);
 }

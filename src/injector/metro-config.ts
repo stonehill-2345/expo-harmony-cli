@@ -13,17 +13,20 @@ const {
   createHarmonyMetroConfig,
 } = require('@react-native-oh/react-native-harmony/metro.config');
 
-// 始终以 Expo 基线为准，保住 serializer / HMR / 虚拟入口；Harmony 只叠加 resolver 级字段。
+// 始终以 Expo 基线为准；Harmony bundle 时再叠加 RNOH serializer。
 const baseConfig = getDefaultConfig(__dirname);
 
 const harmonyConfig = createHarmonyMetroConfig({
   reactNativeHarmonyPackageName: '@react-native-oh/react-native-harmony',
 });
 
+// 保存 Expo 原始 getModulesRunBeforeMainModule，RN_BUNDLE_PLATFORM=harmony 时 Android 入口回退使用
+const expoGetModulesRunBeforeMainModule = baseConfig.serializer?.getModulesRunBeforeMainModule;
+
 const shimAliases = require('./shims/.alias-map.json');
 const harmonyResolveRequest = harmonyConfig.resolver?.resolveRequest;
 
-// resolver 级字段叠加（不碰 serializer）
+// resolver 级字段叠加。
 baseConfig.resolver.platforms = Array.from(
   new Set([...(baseConfig.resolver.platforms || []), ...(harmonyConfig.resolver?.platforms || [])]),
 );
@@ -35,6 +38,12 @@ function resolveAliasTarget(target) {
   return target.startsWith('.') ? path.resolve(__dirname, target) : target;
 }
 
+function isRequestFromHarmonyAlias(originModulePath, aliasTarget) {
+  if (!originModulePath || !aliasTarget.startsWith('@react-native-ohos/')) return false;
+  const packagePath = aliasTarget.split('/').join(path.sep);
+  return originModulePath.includes(path.sep + 'node_modules' + path.sep + packagePath + path.sep);
+}
+
 function resolveWithHarmony(context, moduleName, platform) {
   if (harmonyResolveRequest) {
     return harmonyResolveRequest(context, moduleName, platform);
@@ -42,12 +51,13 @@ function resolveWithHarmony(context, moduleName, platform) {
   return context.resolveRequest(context, moduleName, platform);
 }
 
-// 请求级分流（双保险）：platform=harmony 或离线 RN_BUNDLE_PLATFORM=harmony 走 RNOH + alias；其余走 Expo 默认，零污染。
-// 开发态 start-harmony 不注入 RN_BUNDLE_PLATFORM → 三端靠 platform 参数分流；离线 bundle 脚本注入 → release 兜底。
+// 请求级分流（双保险）：platform=harmony 或 RN_BUNDLE_PLATFORM=harmony 走 RNOH + alias；其余走 Expo 默认，零污染。
 baseConfig.resolver.resolveRequest = (context, moduleName, platform) => {
   if (platform === 'harmony' || process.env.RN_BUNDLE_PLATFORM === 'harmony') {
     const aliasTarget = shimAliases[moduleName];
-    if (aliasTarget) {
+    // Harmony adapter packages re-export their original package. Redirecting
+    // their internal import back to the adapter creates a self-referential module.
+    if (aliasTarget && !isRequestFromHarmonyAlias(context.originModulePath, aliasTarget)) {
       return context.resolveRequest(context, resolveAliasTarget(aliasTarget), platform);
     }
     if (moduleName.startsWith('@/')) {
@@ -58,12 +68,43 @@ baseConfig.resolver.resolveRequest = (context, moduleName, platform) => {
   return context.resolveRequest(context, moduleName, platform);
 };
 
-module.exports = mergeConfig(baseConfig, {
-  transformer: {
-    unstable_allowRequireContext: true,
-    babelTransformerPath: require.resolve('react-native-svg-transformer'),
+const finalConfig = mergeConfig(
+  baseConfig,
+  process.env.RN_BUNDLE_PLATFORM === 'harmony'
+    ? { serializer: harmonyConfig.serializer }
+    : {},
+  {
+    transformer: {
+      unstable_allowRequireContext: true,
+      babelTransformerPath: require.resolve('react-native-svg-transformer'),
+    },
   },
-});
+);
+
+const originalRunBeforeMainModule = finalConfig.serializer?.getModulesRunBeforeMainModule;
+if (originalRunBeforeMainModule) {
+  finalConfig.serializer.getModulesRunBeforeMainModule = (entryFile) => {
+    const preModules = originalRunBeforeMainModule(entryFile);
+    const isHarmonyEntry = String(entryFile).endsWith('index.harmony.js') || process.env.RN_BUNDLE_PLATFORM === 'harmony';
+    if (!isHarmonyEntry) return preModules;
+    // Android/iOS entry under RN_BUNDLE_PLATFORM=harmony:
+    // RNOH serializer 的 preModules 缺少 Expo winter runtime（URLSearchParams 等 polyfill），
+    // 回退到 Expo 原始 preModules。
+    if (!String(entryFile).endsWith('index.harmony.js') && expoGetModulesRunBeforeMainModule) {
+      return expoGetModulesRunBeforeMainModule(entryFile);
+    }
+    const formDataBootstrap = path.resolve(__dirname, 'shims/harmony-form-data.js');
+    const initializeCoreIndex = preModules.findIndex((modulePath) => modulePath.includes('Libraries/Core/InitializeCore'));
+    if (initializeCoreIndex === -1) return [formDataBootstrap, ...preModules];
+    return [
+      ...preModules.slice(0, initializeCoreIndex + 1),
+      formDataBootstrap,
+      ...preModules.slice(initializeCoreIndex + 1),
+    ];
+  };
+}
+
+module.exports = finalConfig;
 `;
 
 export function writeMetroConfig(targetDir: string): void {

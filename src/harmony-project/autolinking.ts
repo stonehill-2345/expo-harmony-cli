@@ -248,10 +248,10 @@ export function runAutolinking(opts: {
 function mergeOhPackageDependencies(
   ohPackagePath: string,
   libraries: HarmonyPackageMappingEntry[],
-  mapping: Record<string, HarmonyPackageMappingEntry>,
+  _mapping: Record<string, HarmonyPackageMappingEntry>,
   nodeModulesRelativePath: '../node_modules' | '../../node_modules',
 ): string {
-  void mapping;
+  void _mapping;
   const managedSpecs: Record<string, string> = {};
   for (const lib of libraries) {
     managedSpecs[lib.npmPackageName] = `file:${nodeModulesRelativePath}/${lib.npmPackageName}/harmony/${lib.harName}`;

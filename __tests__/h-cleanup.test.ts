@@ -19,22 +19,31 @@ const [loaded] = useFonts({
 });
 SplashScreen.preventAutoHideAsync();
 `);
-    fs.writeFileSync(path.join(tmp, 'components/HapticTab.tsx'), `
+    fs.writeFileSync(path.join(tmp, 'components/haptic-tab.tsx'), `
 import * as Haptics from 'expo-haptics';
 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 `);
-    // I-1: 真实 default 模版 ExternalLink.tsx —— 具名导入 openBrowserAsync（非 namespace）
-    fs.writeFileSync(path.join(tmp, 'components/ExternalLink.tsx'), `
-import { openBrowserAsync } from 'expo-web-browser';
-await openBrowserAsync(href);
+    fs.writeFileSync(path.join(tmp, 'components/external-link.tsx'), `
+import { Href, Link } from 'expo-router';
+import { openBrowserAsync, WebBrowserPresentationStyle } from 'expo-web-browser';
+import { type ComponentProps } from 'react';
+
+type Props = Omit<ComponentProps<typeof Link>, 'href'> & { href: Href & string };
+
+export function ExternalLink({ href, ...rest }: Props) {
+  return <Link target="_blank" {...rest} href={href} onPress={async (event) => {
+    event.preventDefault();
+    await openBrowserAsync(href, { presentationStyle: WebBrowserPresentationStyle.AUTOMATIC });
+  }} />;
+}
 `);
     // I-1: 真实 default 模版 IconSymbol.tsx —— 动态 type import('expo-symbols')
-    fs.writeFileSync(path.join(tmp, 'components/ui/IconSymbol.tsx'), `
+    fs.writeFileSync(path.join(tmp, 'components/ui/icon-symbol.tsx'), `
 import { SymbolWeight } from 'expo-symbols';
 const mapping: Partial<Record<import('expo-symbols').SymbolViewProps['name'], string>> = {};
 const w: SymbolWeight = 'regular';
 `);
-    fs.writeFileSync(path.join(tmp, 'components/ui/IconSymbol.ios.tsx'), "import { SymbolView } from 'expo-symbols';\n");
+    fs.writeFileSync(path.join(tmp, 'components/ui/icon-symbol.ios.tsx'), "import { SymbolView } from 'expo-symbols';\n");
     fs.writeFileSync(path.join(tmp, 'components/ui/TabBarBackground.tsx'), "export default undefined;\n\nexport function useBottomTabOverflow() {\n  return 0;\n}\n");
     fs.writeFileSync(path.join(tmp, 'components/ui/TabBarBackground.ios.tsx'), "import { BlurView } from 'expo-blur';\n");
   });
@@ -54,22 +63,24 @@ const w: SymbolWeight = 'regular';
 
   it('删 HapticTab 的 Haptics 调用 + import', () => {
     cleanupHTemplateCode(tmp, { removed: ['expo-haptics'], replaced: [] });
-    const tab = fs.readFileSync(path.join(tmp, 'components/HapticTab.tsx'), 'utf8');
+    const tab = fs.readFileSync(path.join(tmp, 'components/haptic-tab.tsx'), 'utf8');
     expect(tab).not.toContain('Haptics');
     expect(tab).not.toContain("from 'expo-haptics'");
   });
 
-  it('删 ExternalLink 的 openBrowserAsync（具名导入）+ import', () => {
+  it('SDK 54 external-link 移除 WebBrowser 并保留 Router Link', () => {
     cleanupHTemplateCode(tmp, { removed: ['expo-web-browser'], replaced: [] });
-    const link = fs.readFileSync(path.join(tmp, 'components/ExternalLink.tsx'), 'utf8');
+    const link = fs.readFileSync(path.join(tmp, 'components/external-link.tsx'), 'utf8');
     expect(link).not.toContain('WebBrowser');
     expect(link).not.toContain('openBrowserAsync');
     expect(link).not.toContain("from 'expo-web-browser'");
+    expect(link).toContain('export function ExternalLink');
+    expect(link).toContain('href={href}');
   });
 
   it('删 IconSymbol 的 SymbolWeight + 动态 type import(expo-symbols)', () => {
     cleanupHTemplateCode(tmp, { removed: ['expo-symbols'], replaced: [] });
-    const icon = fs.readFileSync(path.join(tmp, 'components/ui/IconSymbol.tsx'), 'utf8');
+    const icon = fs.readFileSync(path.join(tmp, 'components/ui/icon-symbol.tsx'), 'utf8');
     expect(icon).not.toContain('SymbolWeight');
     expect(icon).not.toContain("from 'expo-symbols'");
     // I-1: 确认动态 type import 也被删
@@ -79,7 +90,7 @@ const w: SymbolWeight = 'regular';
   it('删除 expo-blur 与 expo-symbols 后，移除会被 iOS Metro 优先解析的覆盖文件', () => {
     cleanupHTemplateCode(tmp, { removed: ['expo-blur', 'expo-symbols'], replaced: [] });
     expect(fs.existsSync(path.join(tmp, 'components/ui/TabBarBackground.ios.tsx'))).toBe(false);
-    expect(fs.existsSync(path.join(tmp, 'components/ui/IconSymbol.ios.tsx'))).toBe(false);
+    expect(fs.existsSync(path.join(tmp, 'components/ui/icon-symbol.ios.tsx'))).toBe(false);
   });
 
   it('删除 expo-blur 后，iOS 滚动内容避让完整 tab bar 高度', () => {
@@ -97,6 +108,6 @@ const w: SymbolWeight = 'regular';
     }));
     cleanupStaleIosTemplateOverrides(tmp);
     expect(fs.existsSync(path.join(tmp, 'components/ui/TabBarBackground.ios.tsx'))).toBe(true);
-    expect(fs.existsSync(path.join(tmp, 'components/ui/IconSymbol.ios.tsx'))).toBe(true);
+    expect(fs.existsSync(path.join(tmp, 'components/ui/icon-symbol.ios.tsx'))).toBe(true);
   });
 });

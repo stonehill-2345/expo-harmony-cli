@@ -1,6 +1,6 @@
 {
   "name": "expo-harmony-cli",
-  "version": "1.3.0",
+  "version": "1.4.0",
   "description": "CLI for creating Expo projects with HarmonyOS support",
   "keywords": [
     "expo",
@@ -26,18 +26,8 @@
     "test": "vitest run",
     "test:watch": "vitest"
   },
-  "files": [
-    "dist",
-    "content",
-    "templates",
-    "CHANGELOG.md",
-    "NOTICE.md",
-    "docs/guide.md",
-    "assets"
-  ],
-  "engines": {
-    "node": ">=18.18.0"
-  },
+  "files": ["dist", "content", "templates", "CHANGELOG.md", "NOTICE.md", "docs/guide.md", "assets"],
+  "engines": { "node": ">=20.19.4" },
   "dependencies": {
     "@expo/config": "^9.0.0",
     "@inquirer/prompts": "^7.0.0",

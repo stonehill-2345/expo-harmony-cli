@@ -5,7 +5,7 @@
 ## 项目基线
 
 - Expo {{expoSdk}}
-- React Native 0.77.1
+- React Native 0.82.1
 - React Native OpenHarmony {{rnohVersion}}
 - bundleName: `{{bundleName}}`
 

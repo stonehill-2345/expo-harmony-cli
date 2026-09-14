@@ -7,7 +7,15 @@ const { spawnSync } = require('child_process');
 const reactNative = process.platform === 'win32' ? 'react-native.cmd' : 'react-native';
 const result = spawnSync(
   reactNative,
-  ['bundle-harmony', '--dev', 'false', '--entry-file', 'index.harmony.js'],
+  [
+    'bundle-harmony',
+    '--dev',
+    'true',
+    '--minify',
+    'false',
+    '--entry-file',
+    'index.harmony.js',
+  ],
   {
     stdio: 'inherit',
     env: { ...process.env, RN_BUNDLE_PLATFORM: 'harmony' },

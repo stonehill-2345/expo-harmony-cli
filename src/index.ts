@@ -67,10 +67,10 @@ export async function dispatch(argv: string[]): Promise<void> {
     return;
   }
 
-  // 裸项目名兼容：其余参数全为 flag（如 --pnpm）时放行；近似命令拼写提示后仍按项目名创建，
+  // 裸项目名兼容：其余参数为 flag（含 --sdk 的值）时放行；近似命令拼写提示后仍按项目名创建，
   // 避免误拦 scanx 这类合法项目名。
   const nearMiss = COMMANDS.find(command => editDistance(cmd!, command) <= 2);
-  if (rest.some(arg => !arg.startsWith('-'))) {
+  if (rest.some((arg, index) => !arg.startsWith('-') && rest[index - 1] !== '--sdk')) {
     printHelp();
     throw new Error(`未知命令：${cmd}${nearMiss ? `（是否想输入 ${nearMiss}？）` : ''}`);
   }
@@ -101,7 +101,7 @@ function printHelp(): void {
 expo-harmony-cli <command> [args]
 
 Commands:
-  create [name]           创建含鸿蒙基线的 Expo 项目（默认命令）
+  create [name]           创建含鸿蒙基线的 Expo 项目（默认命令，--sdk=52|54 指定基线）
   install <pkg>           装 iOS/Android + 鸿蒙 JS 包 + 原生集成（--force 跳过 drift 保护）
   uninstall <pkg>         卸载包并清理 CLI 管理的 HarmonyOS 适配资产（remove 同义，--force 跳过 drift 保护）
   prebuild [args]         生成三端原生目录（透传 expo prebuild + harmony 走生成器）
@@ -112,11 +112,14 @@ Commands:
   list                    列出 compat-table（调试用）
 
 Options:
+  --sdk <52|54>           创建时指定 SDK（也支持 --sdk=52；非交互环境必填）
   -h, --help              显示帮助
   -v, --version           显示 CLI 版本
 
 Examples:
   npx expo-harmony-cli my-app
+  npx expo-harmony-cli my-app --sdk=54
+  npx expo-harmony-cli my-app --sdk 54
   pnpm dlx expo-harmony-cli my-app  # pnpm 用户可选
   pnpm dlx expo-harmony-cli install @shopify/flash-list
   pnpm dlx expo-harmony-cli uninstall @shopify/flash-list

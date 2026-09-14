@@ -30,9 +30,9 @@ describe('injectContent', () => {
     const c = fs.readFileSync(path.join(tmp, 'README.md'), 'utf8');
     // 不应残留任何占位符
     expect(c).not.toMatch(/\{\{rnohVersion\}\}|\{\{expoSdk\}\}/);
-    // 应含 version-matrix 的真实值（0.77.71 / sdk-52）
-    expect(c).toContain('0.77.71');
-    expect(c).toContain('sdk-52');
+    // 应含 version-matrix 的真实值（0.82.30 / sdk-54）
+    expect(c).toContain('0.82.30');
+    expect(c).toContain('sdk-54');
   });
 
   it('README 强调依赖和 HarmonyOS 工程必须通过 CLI 管理，并统一 pnpm 命令', () => {

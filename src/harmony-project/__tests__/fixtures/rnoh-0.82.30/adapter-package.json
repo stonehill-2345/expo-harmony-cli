@@ -1,0 +1,15 @@
+{
+  "name": "@react-native-ohos/react-native-gesture-handler",
+  "version": "2.30.2",
+  "harmony": {
+    "alias": "react-native-gesture-handler",
+    "redirectInternalImports": true,
+    "autolinking": {
+      "mainHarPath": "harmony",
+      "ohPackageName": "@react-native-ohos/react-native-gesture-handler",
+      "etsPackageClassName": "RnohReactNativeHarmonyGestureHandlerPackage",
+      "cppPackageClassName": "RnohReactNativeHarmonyGestureHandlerPackage",
+      "cmakeLibraryTargetName": "rnoh_gesture_handler"
+    }
+  }
+}

@@ -42,6 +42,26 @@ describe('prebuild 命令', () => {
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 
+  it.each([[], ['--platform', 'harmony', '--skip-preflight', '--force']].map(args => [args]))(
+    'SDK 53 → 在任何生成或清理前拒绝：%j', async args => {
+      fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ dependencies: { expo: '~53.0.0' } }));
+      const { prebuild } = await import('../src/commands/prebuild');
+      await expect(prebuild(args)).rejects.toThrow(/不支持 Expo SDK 53/);
+      expect(mockRunFile).not.toHaveBeenCalled();
+      expect(mockGen).not.toHaveBeenCalled();
+      expect(mockWriteMetroConfig).not.toHaveBeenCalled();
+      expect(fs.existsSync(path.join(tmp, 'components/ui/TabBarBackground.ios.tsx'))).toBe(true);
+    },
+  );
+
+  it('SDK 53 仅生成 iOS → 仍透传 Expo，不受 Harmony 限制', async () => {
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ dependencies: { expo: '~53.0.0' } }));
+    const { prebuild } = await import('../src/commands/prebuild');
+    await prebuild(['--platform', 'ios']);
+    expect(mockRunFile).toHaveBeenCalled();
+    expect(mockGen).not.toHaveBeenCalled();
+  });
+
   it('无 --platform → 调 expo prebuild（native）+ runHarmonyGeneration（harmony）', async () => {
     const { prebuild } = await import('../src/commands/prebuild');
     await prebuild([]);

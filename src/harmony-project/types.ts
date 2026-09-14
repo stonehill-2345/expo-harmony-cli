@@ -29,6 +29,8 @@ export interface HarmonyPackageMappingEntry {
   cppSourcePath?: string;
   /** CMake target；纯 ETS/codegen 包可省略。 */
   cmakeLibraryTargetName?: string;
+  /** 覆盖发布 HAR 内失效的本地传递依赖路径。 */
+  ohpmOverride?: boolean;
   /** 多个 ETS Package；空数组代表仅 C++ 注册。 */
   etsPackages?: HarmonyEtsPackage[];
   /** 多个 C++ Package；空数组代表纯 ETS/codegen 包。 */

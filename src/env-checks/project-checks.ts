@@ -1,6 +1,6 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import { VERSION_MATRIX } from '../version-matrix';
+import { getVersionMatrix, detectSdkVersion } from '../version-matrix';
 import { readManagedState } from '../lifecycle/managed-state';
 import { runAutolinking } from '../harmony-project/autolinking';
 import { collectDrift, hasDrift } from '../harmony-project/standalone';
@@ -17,20 +17,32 @@ function scope(version: string, kind: 'major' | 'majorMinor'): string {
   const p = version.replace(/^[^\d]*/, '').split('.').map(n => parseInt(n, 10) || 0);
   return kind === 'major' ? `${p[0]}` : `${p[0]}.${p[1]}`;
 }
-const BASELINE = [
-  { dep: 'react', value: VERSION_MATRIX.react, kind: 'majorMinor' as const },
-  { dep: 'react-native', value: VERSION_MATRIX.reactNative, kind: 'majorMinor' as const },
-  { dep: '@react-native-oh/react-native-harmony', value: VERSION_MATRIX.rnoh, kind: 'majorMinor' as const },
-  { dep: 'expo', value: VERSION_MATRIX.expo, kind: 'major' as const },
-];
+
+function getBaseline(projectRoot: string) {
+  const sdk = detectSdkVersion(projectRoot);
+  const V = getVersionMatrix(sdk);
+  return [
+    { dep: 'react', value: V.react, kind: 'majorMinor' as const },
+    { dep: 'react-native', value: V.reactNative, kind: 'majorMinor' as const },
+    { dep: '@react-native-oh/react-native-harmony', value: V.rnoh, kind: 'majorMinor' as const },
+    { dep: 'expo', value: V.expo, kind: 'major' as const },
+  ];
+}
+
 export const baselineCheck: Check = ctx => {
   if (!ctx.projectRoot) return { id: 'baseline', label: '依赖基线', status: 'skip', level: 'required', detail: '非项目目录，跳过' };
+  let pkg: any;
   try {
-    const pkg = JSON.parse(fs.readFileSync(path.join(ctx.projectRoot, 'package.json'), 'utf8')) as any;
-    const deps = { ...pkg.devDependencies, ...pkg.dependencies };
-    const mismatches = BASELINE.filter(item => typeof deps[item.dep] === 'string' && scope(deps[item.dep], item.kind) !== scope(item.value, item.kind)).map(item => `${item.dep} ${deps[item.dep]} ≠ 验证基线 ${item.value}`);
-    return mismatches.length ? { id: 'baseline', label: '依赖基线', status: 'warn', level: 'required', detail: `${mismatches.join('；')}（未验证组合）` } : { id: 'baseline', label: '依赖基线', status: 'ok', level: 'required', detail: '与验证基线一致' };
+    pkg = JSON.parse(fs.readFileSync(path.join(ctx.projectRoot, 'package.json'), 'utf8'));
   } catch { return { id: 'baseline', label: '依赖基线', status: 'warn', level: 'required', detail: '无法解析依赖清单（package.json）' }; }
+  try {
+    const deps = { ...pkg.devDependencies, ...pkg.dependencies };
+    const baseline = getBaseline(ctx.projectRoot);
+    const mismatches = baseline.filter(item => typeof deps[item.dep] === 'string' && scope(deps[item.dep], item.kind) !== scope(item.value, item.kind)).map(item => `${item.dep} ${deps[item.dep]} ≠ 验证基线 ${item.value}`);
+    return mismatches.length ? { id: 'baseline', label: '依赖基线', status: 'warn', level: 'required', detail: `${mismatches.join('；')}（未验证组合）` } : { id: 'baseline', label: '依赖基线', status: 'ok', level: 'required', detail: '与验证基线一致' };
+  } catch (error) {
+    return { id: 'baseline', label: '依赖基线', status: 'fail', level: 'required', detail: error instanceof Error ? error.message : String(error) };
+  }
 };
 
 export const driftCheck: Check = ctx => {

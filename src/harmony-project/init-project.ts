@@ -8,7 +8,7 @@ import { EntryIndexTemplate } from './templates/EntryIndexTemplate';
 import { EntryOhPackageJson5Template } from './templates/EntryOhPackageJson5Template';
 import { EntryStringVarTemplate } from './templates/EntryStringVarTemplate';
 import { resolveHarmonyTemplateSource } from './template-source';
-import { VERSION_MATRIX as V } from '../version-matrix';
+import { getVersionMatrix, detectSdkVersion } from '../version-matrix';
 
 export interface InitOptions {
   /** ★ 必须有，用于 findHvigorPluginFilename 在用户项目 node_modules 找 cli */
@@ -38,7 +38,8 @@ export async function initProject(opts: InitOptions): Promise<void> {
   } = opts;
 
   // 步骤 11：校验并拷贝包内模板目录（fs.cpSync，Node 16.7+）
-  const resolvedTemplate = resolveHarmonyTemplateSource({ source: templateSource });
+  const sdk = detectSdkVersion(projectRoot);
+  const resolvedTemplate = resolveHarmonyTemplateSource({ source: templateSource, sdk });
   // Windows 上目标目录可能由杀毒软件/同步工具短暂占用，不能假定 cpSync 会先创建目录。
   // 预创建后再复制，且复制完成后立即校验，避免后续 readdirSync 只抛出无上下文的 ENOENT。
   fs.mkdirSync(harmonyDir, { recursive: true });
@@ -57,11 +58,11 @@ export async function initProject(opts: InitOptions): Promise<void> {
   const dynamicFiles: Array<[string, string]> = [
     [
       path.join(harmonyDir, 'oh-package.json5'),
-      new OhPackageJson5Template(rnohNpmPackageName).build(),
+      new OhPackageJson5Template(rnohNpmPackageName, sdk).build(),
     ],
     [
       path.join(harmonyDir, 'entry', 'oh-package.json5'),
-      new EntryOhPackageJson5Template(rnohNpmPackageName).build(),
+      new EntryOhPackageJson5Template(rnohNpmPackageName, sdk).build(),
     ],
     [
       path.join(harmonyDir, 'hvigor', 'hvigor-config.json5'),
@@ -121,5 +122,7 @@ function findHvigorPluginFilename(projectRoot: string, rnohCliNpmPackageName: st
       .find(f => f.startsWith('rnoh-hvigor-plugin') && f.endsWith('.tgz'));
     if (found) return found;
   }
+  const sdk = detectSdkVersion(projectRoot);
+  const V = getVersionMatrix(sdk);
   return `rnoh-hvigor-plugin-${V.rnohCli}.tgz`; // fallback
 }

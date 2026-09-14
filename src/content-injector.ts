@@ -1,17 +1,20 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { copySkills } from './harmony-skills';
-import { VERSION_MATRIX as V } from './version-matrix';
+import { getVersionMatrix, type SdkVersion } from './version-matrix';
 
 export interface ContentInjectOptions {
   appName: string;
   slug: string;
   bundleName: string;
+  sdk: SdkVersion;
 }
 
 /** 注入用户文档（占位符替换）+ 2 skill。SIGNING.md 在 prebuild（P2）。*/
 export function injectContent(targetDir: string, opts: ContentInjectOptions): void {
   cleanupLegacyClaudeContent(targetDir);
+
+  const V = getVersionMatrix(opts.sdk);
 
   // I-4: 版本占位符从 version-matrix 取（DRY），不再硬编码
   const replacements: Record<string, string> = {

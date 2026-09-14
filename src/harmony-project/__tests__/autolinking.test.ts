@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import JSON5 from 'json5';
 import { runAutolinking } from '../autolinking';
 import { HARMONY_PACKAGE_MAPPING } from '../harmony-package-mapping';
 
@@ -12,7 +13,7 @@ describe('runAutolinking', () => {
     fs.mkdirSync(path.join(tmp, 'harmony', 'entry'), { recursive: true });
     fs.writeFileSync(
       path.join(tmp, 'harmony', 'oh-package.json5'),
-      `{ "dependencies": { "@rnoh/react-native-openharmony": "0.77.71" } }\n`,
+      `{ "dependencies": { "@rnoh/react-native-openharmony": "0.82.30" } }\n`,
     );
     fs.writeFileSync(
       path.join(tmp, 'harmony', 'entry', 'oh-package.json5'),
@@ -134,9 +135,32 @@ describe('runAutolinking', () => {
       mapping: HARMONY_PACKAGE_MAPPING,
     });
     const ohPkg = result.files.find(f => f.path.endsWith('oh-package.json5'))!.content;
-    expect(ohPkg).toContain('"@rnoh/react-native-openharmony": "0.77.71"');
+    expect(ohPkg).toContain('"@rnoh/react-native-openharmony": "0.82.30"');
     expect(ohPkg).toContain(
       '"@react-native-ohos/react-native-safe-area-context": "file:../node_modules/@react-native-ohos/react-native-safe-area-context/harmony/safe_area.har"',
+    );
+  });
+
+  it('Worklets HAR 写入根 dependencies（v1.3.0 已移除 ohpmOverride 机制）', () => {
+    const workletsDir = path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-worklets', 'harmony');
+    fs.mkdirSync(workletsDir, { recursive: true });
+    fs.writeFileSync(path.join(workletsDir, 'worklets.har'), 'har');
+    fs.writeFileSync(
+      path.join(tmp, 'harmony', 'oh-package.json5'),
+      `{ "dependencies": { "@rnoh/react-native-openharmony": "0.82.30" }, "overrides": { "custom": "1.0.0" } }\n`,
+    );
+
+    const result = runAutolinking({
+      projectRoot: tmp,
+      harmonyDir: path.join(tmp, 'harmony'),
+      mapping: HARMONY_PACKAGE_MAPPING,
+    });
+    const ohPkg = result.files.find(f => f.path.endsWith('oh-package.json5'))!.content;
+    const parsed = JSON5.parse(ohPkg);
+
+    expect(parsed.overrides.custom).toBe('1.0.0');
+    expect(parsed.dependencies['@react-native-ohos/react-native-worklets']).toBe(
+      'file:../node_modules/@react-native-ohos/react-native-worklets/harmony/worklets.har',
     );
   });
 
@@ -176,7 +200,7 @@ describe('runAutolinking', () => {
       fs.mkdirSync(path.join(emptyTmp, 'harmony'), { recursive: true });
       fs.writeFileSync(
         path.join(emptyTmp, 'harmony', 'oh-package.json5'),
-        `{ "dependencies": { "@rnoh/react-native-openharmony": "0.77.71" } }\n`,
+        `{ "dependencies": { "@rnoh/react-native-openharmony": "0.82.30" } }\n`,
       );
       // 不建 node_modules 下任何 @react-native-ohos 包目录
 
@@ -198,7 +222,7 @@ describe('runAutolinking', () => {
 
       // oh-package 保留原 @rnoh 条目，无新增 file: 引用
       const ohPkg = result.files.find(f => f.path.endsWith('oh-package.json5'))!.content;
-      expect(ohPkg).toContain('"@rnoh/react-native-openharmony": "0.77.71"');
+      expect(ohPkg).toContain('"@rnoh/react-native-openharmony": "0.82.30"');
       expect(ohPkg).not.toContain('file:../node_modules');
     } finally {
       fs.rmSync(emptyTmp, { recursive: true, force: true });
@@ -212,7 +236,7 @@ describe('runAutolinking', () => {
       fs.mkdirSync(path.join(multiTmp, 'harmony'), { recursive: true });
       fs.writeFileSync(
         path.join(multiTmp, 'harmony', 'oh-package.json5'),
-        `{ "dependencies": { "@rnoh/react-native-openharmony": "0.77.71" } }\n`,
+        `{ "dependencies": { "@rnoh/react-native-openharmony": "0.82.30" } }\n`,
       );
       fs.mkdirSync(
         path.join(multiTmp, 'node_modules', '@react-native-ohos', 'react-native-gesture-handler'),

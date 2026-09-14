@@ -7,13 +7,61 @@ import { log } from '../src/utils/log';
 
 const CONTENT = path.join(__dirname, '..', 'content');
 
+function expectPatchHunksToBeWellFormed(patchPath: string): void {
+  const lines = fs.readFileSync(patchPath, 'utf8').split('\n');
+  if (lines.at(-1) === '') lines.pop();
+
+  for (let index = 0; index < lines.length; index++) {
+    const header = lines[index].match(/^@@ -(\d+)(?:,(\d+))? \+(\d+)(?:,(\d+))? @@/);
+    if (!header) continue;
+    const headerLine = lines[index];
+
+    let originalLines = 0;
+    let patchedLines = 0;
+    for (index += 1; index < lines.length && !lines[index].startsWith('@@ ') && !lines[index].startsWith('diff --git '); index++) {
+      if (lines[index].startsWith('\\ No newline at end of file')) continue;
+      if (!lines[index].startsWith('+')) originalLines++;
+      if (!lines[index].startsWith('-')) patchedLines++;
+    }
+    index--;
+
+    expect(originalLines, `${patchPath}: ${headerLine}`).toBe(Number(header[2] ?? 1));
+    expect(patchedLines, `${patchPath}: ${headerLine}`).toBe(Number(header[4] ?? 1));
+  }
+}
+
 describe('content-library', () => {
-  it('14 patch 存在', () => {
-    const patches = fs.readdirSync(path.join(CONTENT, 'patches')).filter(f => f.endsWith('.patch'));
-    expect(patches.length).toBe(14);
+  it('内容库同时包含 SDK 52 和 SDK 54 两套 patch', () => {
+    const patchesSdk52 = fs.readdirSync(path.join(CONTENT, 'patches', 'sdk-52')).filter(f => f.endsWith('.patch'));
+    const patchesSdk54 = fs.readdirSync(path.join(CONTENT, 'patches', 'sdk-54')).filter(f => f.endsWith('.patch'));
+    const patches = [...patchesSdk52, ...patchesSdk54];
+
+    // SDK 54 patches
+    expect(patches).toContain('@react-native-oh+react-native-harmony+0.82.30.patch');
+    expect(patches).toContain('expo-router+6.0.24.patch');
+    expect(patches).toContain('expo-linear-gradient+15.0.8.patch');
+    expect(patches).toContain('expo-document-picker+14.0.8.patch');
+    expect(patches).toContain('expo-constants+18.0.14.patch');
+    expect(patches).toContain('expo-linking+8.0.12.patch');
+    expect(patches).toContain('expo-image+3.0.11.patch');
+
+    // SDK 52 patches
     expect(patches).toContain('@react-native-oh+react-native-harmony+0.77.71.patch');
-    expect(patches).toContain('expo-modules-core+2.2.3.patch');
     expect(patches).toContain('expo-router+4.0.22.patch');
+    expect(patches).toContain('@react-native-oh-tpl+react-native-fast-image+8.6.3-0.4.17.patch');
+    expect(patches).toContain('expo-constants+17.0.8.patch');
+    expect(patches).toContain('expo-linking+7.0.5.patch');
+    expect(patches).toContain('expo-image+2.0.7.patch');
+    expect(patches).toContain('expo-clipboard+7.0.1.patch');
+    expect(patches).toContain('expo-linear-gradient+14.0.2.patch');
+    expect(patches).toContain('expo-image-picker+16.0.6.patch');
+    expect(patches).toContain('expo-media-library+17.0.6.patch');
+    expect(patches).toContain('expo-document-picker+13.0.3.patch');
+    // expo-modules-core+2.2.3.patch 已随 v1.3.0 移除（不再需要）
+
+    // 共用 patch
+    expect(patches).toContain('expo-status-bar+3.0.9.patch');
+    expect(patches).toContain('@react-navigation+bottom-tabs+7.4.0.patch');
   });
 
   it('expo-metro-runtime shim 存在且导出 withErrorOverlay 透传', () => {
@@ -23,6 +71,17 @@ describe('content-library', () => {
 
   it('expo-av shim 存在（install 按需）', () => {
     expect(fs.existsSync(path.join(CONTENT, 'shims', 'expo-av', 'index.ts'))).toBe(true);
+  });
+
+  it('所有 patch 的 hunk header 行数可被 patch-package 严格解析', () => {
+    const patchDirs = ['sdk-52', 'sdk-54'];
+    for (const dir of patchDirs) {
+      const patchDir = path.join(CONTENT, 'patches', dir);
+      if (!fs.existsSync(patchDir)) continue;
+      for (const file of fs.readdirSync(patchDir).filter(name => name.endsWith('.patch'))) {
+        expectPatchHunksToBeWellFormed(path.join(patchDir, file));
+      }
+    }
   });
 
   it('用户修改内容库目标文件时跳过覆盖并发出警告', () => {

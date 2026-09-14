@@ -5,7 +5,7 @@
 ## 当前基线
 
 - Expo {{expoSdk}}
-- React Native 0.77.1
+- React Native 0.82.1
 - React Native OpenHarmony {{rnohVersion}}
 
 ## patch 的作用
@@ -13,13 +13,17 @@
 | patch | 作用 |
 | --- | --- |
 | `@react-native-oh+react-native-harmony+{{rnohVersion}}.patch` | RNOH 核心包适配。 |
-| `expo-modules-core+2.2.3.patch` | Expo NativeModulesProxy HarmonyOS 兼容。 |
-| `expo-router+4.0.22.patch` | Expo Router HarmonyOS 路由适配。 |
-| `expo-constants+17.0.8.patch` | Expo Constants HarmonyOS 兼容。 |
-| `expo-linking+7.0.5.patch` | Expo Linking HarmonyOS 兼容。 |
+| `expo-router+6.0.24.patch` | Expo Router HarmonyOS 平台入口与平台枚举。 |
+| `expo-constants+18.0.14.patch` | Expo Constants HarmonyOS 兼容。 |
+| `expo-linking+8.0.12.patch` | Expo Linking HarmonyOS 兼容。 |
 | `expo-status-bar+3.0.9.patch` | Expo StatusBar HarmonyOS 兼容。 |
+| `expo-image+3.0.11.patch` | Expo Image 使用 RNOH 内置 Image 的基础实现。 |
+| `expo-linear-gradient+15.0.8.patch` | Expo LinearGradient 转发到 0.82 Harmony 伴随包。 |
+| `expo-document-picker+14.0.8.patch` | Expo DocumentPicker 转发到 0.82 Harmony 伴随包。 |
 
 其它 patch 会在使用 CLI `install <pkg>` 命中兼容表时按需复制。
+
+`expo-modules-core@3.0.30` 不使用 patch-package。`scripts/postinstall-harmony.js` 会幂等补齐 `NativeModulesProxy` 的 RN NativeModules fallback，避免同时维护两套相同行为。
 
 ## 不要手动删除 patches/
 

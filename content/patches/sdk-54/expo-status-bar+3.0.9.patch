@@ -1,0 +1,121 @@
+diff --git a/node_modules/expo-status-bar/src/NativeStatusBarWrapper.tsx b/node_modules/expo-status-bar/src/NativeStatusBarWrapper.tsx
+index 8ad7a4b..7326902 100644
+--- a/node_modules/expo-status-bar/src/NativeStatusBarWrapper.tsx
++++ b/node_modules/expo-status-bar/src/NativeStatusBarWrapper.tsx
+@@ -3,13 +3,21 @@ import {
+   Appearance,
+   StatusBar as NativeStatusBar,
+   useColorScheme,
++  Platform,
++  NativeModules,
++  processColor,
+   type ColorSchemeName,
+   type ColorValue,
+ } from 'react-native';
+ 
++
+ import { StatusBarProps, StatusBarStyle, StatusBarAnimation } from './types';
+ 
++const isHarmony = Platform.OS === 'harmony';
++const StatusBarManager = isHarmony ? NativeModules.StatusBarManager : null;
++
+ /**
++
+  * A component that allows you to configure your status bar without directly calling imperative
+  * methods like `setBarStyle`.
+  *
+@@ -38,6 +46,23 @@ export function StatusBar({
+     backgroundColor = 'transparent';
+   }
+ 
++  React.useEffect(() => {
++    if (isHarmony && StatusBarManager) {
++      StatusBarManager.setStyle(barStyle);
++      StatusBarManager.setTranslucent(translucent);
++      if (backgroundColor) {
++        StatusBarManager.setColor(processColor(backgroundColor), false);
++      }
++      if (props.hidden !== undefined) {
++        StatusBarManager.setHidden(props.hidden);
++      }
++    }
++  }, [barStyle, translucent, backgroundColor, props.hidden]);
++
++  if (isHarmony) {
++    return null;
++  }
++
+   return (
+     <NativeStatusBar
+       {...props}
+@@ -50,15 +75,21 @@ export function StatusBar({
+ }
+ 
+ // @needsAudit
++
+ /**
+  * Set the bar style of the status bar.
+  * @param style The color of the status bar text.
+  * @param animated If the transition should be animated.
+  */
+ export function setStatusBarStyle(style: StatusBarStyle, animated?: boolean) {
+-  NativeStatusBar.setBarStyle(styleToBarStyle(style), animated);
++  if (isHarmony && StatusBarManager) {
++    StatusBarManager.setStyle(styleToBarStyle(style));
++  } else {
++    NativeStatusBar.setBarStyle(styleToBarStyle(style), animated);
++  }
+ }
+ 
++
+ // @needsAudit
+ /**
+  * Toggle visibility of the status bar.
+@@ -66,9 +97,14 @@ export function setStatusBarStyle(style: StatusBarStyle, animated?: boolean) {
+  * @param animation Animation to use when toggling hidden, defaults to `'none'`.
+  */
+ export function setStatusBarHidden(hidden: boolean, animation?: StatusBarAnimation) {
+-  NativeStatusBar.setHidden(hidden, animation);
++  if (isHarmony && StatusBarManager) {
++    StatusBarManager.setHidden(hidden);
++  } else {
++    NativeStatusBar.setHidden(hidden, animation);
++  }
+ }
+ 
++
+ // @needsAudit
+ /**
+  * Set the background color of the status bar.
+@@ -77,9 +113,14 @@ export function setStatusBarHidden(hidden: boolean, animation?: StatusBarAnimati
+  * @platform android
+  */
+ export function setStatusBarBackgroundColor(backgroundColor: ColorValue, animated?: boolean) {
+-  NativeStatusBar.setBackgroundColor(backgroundColor, animated);
++  if (isHarmony && StatusBarManager) {
++    StatusBarManager.setColor(processColor(backgroundColor), animated ?? false);
++  } else {
++    NativeStatusBar.setBackgroundColor(backgroundColor, animated);
++  }
+ }
+ 
++
+ // @needsAudit
+ /**
+  * Toggle visibility of the network activity indicator.
+@@ -98,9 +139,14 @@ export function setStatusBarNetworkActivityIndicatorVisible(visible: boolean) {
+  * @platform android
+  */
+ export function setStatusBarTranslucent(translucent: boolean) {
+-  NativeStatusBar.setTranslucent(translucent);
++  if (isHarmony && StatusBarManager) {
++    StatusBarManager.setTranslucent(translucent);
++  } else {
++    NativeStatusBar.setTranslucent(translucent);
++  }
+ }
+ 
++
+ function styleToBarStyle(
+   style: StatusBarStyle = 'auto',
+   colorScheme: ColorSchemeName = Appearance?.getColorScheme() ?? 'light'

@@ -2,7 +2,7 @@ import * as path from 'path';
 import { resolvePm } from '../lib/pkg-manager';
 import type { Check, CheckContext, CheckResult } from './types';
 
-const NODE_MIN = '18.18.0';
+const NODE_MIN = '20.19.4';
 
 export function compareAtLeast(actual: string, min: string): boolean {
   const parse = (v: string) => v.replace(/^[^\d]*/, '').split('.').map(n => parseInt(n, 10) || 0);

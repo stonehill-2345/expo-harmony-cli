@@ -12,6 +12,7 @@ describe('harmony-package-mapping', () => {
     expect(keys).toContain('@react-native-ohos/react-native-safe-area-context');
     expect(keys).toContain('@react-native-ohos/react-native-gesture-handler');
     expect(keys).toContain('@react-native-ohos/react-native-reanimated');
+    expect(keys).toContain('@react-native-ohos/react-native-worklets');
   });
 
   it('safe-area-context 条目字段完整且与 ohrn 实物一致', () => {
@@ -66,16 +67,32 @@ describe('harmony-package-mapping', () => {
     });
   });
 
-  it('camera-roll 条目与 ohrn 实物一致', () => {
-    const e = HARMONY_PACKAGE_MAPPING['@react-native-ohos/camera-roll'];
-    expect(e).toEqual({
-      npmPackageName: '@react-native-ohos/camera-roll',
-      cmakeLibraryTargetName: 'rnoh_camera_roll',
-      etsPackageClassName: 'CameraRollPackage',
-      cppPackageClassName: 'CameraRollPackage',
-      cppPackageNamespace: 'rnoh',
-      importStatement: "import { CameraRollPackage } from '@react-native-ohos/camera-roll/ts';",
-      harName: 'camera_roll.har',
+  it('worklets 条目与 1.0.1 发布物一致', () => {
+    expect(HARMONY_PACKAGE_MAPPING['@react-native-ohos/react-native-worklets']).toEqual({
+      npmPackageName: '@react-native-ohos/react-native-worklets',
+      cmakeLibraryTargetName: 'rnoh_worklets',
+      harName: 'worklets.har',
+      cppSourcePath: 'harmony/worklets/src/main/cpp',
+      ohpmOverride: true,
+      etsPackages: [{
+        importStatement: "import { ReanimatedWorkletPackage } from '@react-native-ohos/react-native-worklets/ts';",
+        classNames: ['ReanimatedWorkletPackage'],
+      }],
+      cppPackages: [{ className: 'ReanimatedWorkletPackage', namespace: 'rnoh' }],
+    });
+  });
+
+  it('blob-util 条目使用 0.82 发布物信息', () => {
+    expect(HARMONY_PACKAGE_MAPPING['@react-native-ohos/react-native-blob-util']).toEqual({
+      npmPackageName: '@react-native-ohos/react-native-blob-util',
+      cmakeLibraryTargetName: 'rnoh_blob_util',
+      harName: 'blobUtil.har',
+      cppSourcePath: 'harmony/blobUtil/src/main/cpp',
+      etsPackages: [{
+        importStatement: "import { BlobUtilPackage } from '@react-native-ohos/react-native-blob-util/ts';",
+        classNames: ['BlobUtilPackage'],
+      }],
+      cppPackages: [{ className: 'BlobUtilPackage', namespace: 'rnoh' }],
     });
   });
 
@@ -96,23 +113,15 @@ describe('harmony-package-mapping', () => {
 
   it('P1 常用三方原生包均有映射', () => {
     const required = [
-      '@react-native-ohos/react-native-mmkv',
       '@react-native-ohos/react-native-pager-view',
       '@react-native-ohos/react-native-linear-gradient',
-      '@react-native-ohos/clipboard',
       '@react-native-ohos/react-native-svg',
-      '@react-native-ohos/react-native-permissions',
-      '@react-native-ohos/react-native-device-info',
-      '@react-native-oh-tpl/react-native-fast-image',
-      '@react-native-ohos/react-native-image-picker',
       '@react-native-ohos/react-native-video',
-      '@react-native-ohos/react-native-sound',
       '@react-native-ohos/react-native-document-picker',
-      '@react-native-ohos/react-native-fs',
       '@react-native-ohos/lottie-react-native',
       '@react-native-ohos/slider',
       '@react-native-ohos/react-native-keyboard-controller',
-      '@react-native-oh-tpl/react-native-blob-util',
+      '@react-native-ohos/react-native-blob-util',
     ];
     for (const packageName of required) {
       expect(HARMONY_PACKAGE_MAPPING[packageName], packageName).toBeDefined();

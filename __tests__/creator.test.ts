@@ -1,7 +1,12 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+
+// mock @inquirer/prompts select（避免交互式阻塞）
+vi.mock('@inquirer/prompts', () => ({
+  select: vi.fn(() => Promise.resolve('sdk-54')),
+}));
 
 // mock exec（避免真跑 create-expo-app）
 vi.mock('../src/utils/exec', () => ({
@@ -16,11 +21,18 @@ vi.mock('../src/utils/exec', () => ({
       // 假 default 模版 package.json（含 B/C/H/A′ 各类依赖）
       fs.writeFileSync(path.join(dir, 'package.json'), JSON.stringify({
         name: projectName,
+        scripts: { start: 'expo start' },
         dependencies: {
-          expo: '~52.0.49',
-          'react-native': '0.76.9',
-          'react-native-screens': '4.4.0',
-          'expo-router': '~4.0.22',
+          expo: '~54.0.12',
+          react: '19.1.0',
+          'react-dom': '19.1.0',
+          'react-native': '0.81.4',
+          'react-native-screens': '~4.16.0',
+          'react-native-reanimated': '~4.1.1',
+          'react-native-worklets': '0.5.1',
+          'react-native-gesture-handler': '~2.28.0',
+          'react-native-safe-area-context': '~5.6.0',
+          'expo-router': '~6.0.10',
           'react-native-webview': '~13.15.0',
           'expo-haptics': '~14.0.1',
           'expo-blur': '~14.0.3',
@@ -31,12 +43,15 @@ vi.mock('../src/utils/exec', () => ({
           // H 类清理验证用：expo-font 删除 → 删 _layout 的 useFonts
           'expo-font': '~13.0.4',
         },
+        devDependencies: {
+          '@types/react': '~19.1.0',
+        },
       }));
       // 假模版 TSX（H 类清理验证用）—— C-1: useFonts 参数含 require() 嵌套括号（真实 default 形态）
       fs.writeFileSync(path.join(dir, 'app/_layout.tsx'), "import { useFonts } from 'expo-font';\nimport * as SplashScreen from 'expo-splash-screen';\nconst [loaded] = useFonts({\n  SpaceMono: require('./assets/fonts/SpaceMono-Regular.ttf'),\n});\nSplashScreen.preventAutoHideAsync();\n");
-      fs.writeFileSync(path.join(dir, 'components/HapticTab.tsx'), "import * as Haptics from 'expo-haptics';\nHaptics.impactAsync();\n");
-      fs.writeFileSync(path.join(dir, 'components/ui/IconSymbol.tsx'), "import MaterialIcons from '@expo/vector-icons/MaterialIcons';\nexport function IconSymbol() { return <MaterialIcons name=\"home\" />; }\n");
-      fs.writeFileSync(path.join(dir, 'components/ui/IconSymbol.ios.tsx'), "import { SymbolView } from 'expo-symbols';\n");
+      fs.writeFileSync(path.join(dir, 'components/haptic-tab.tsx'), "import * as Haptics from 'expo-haptics';\nHaptics.impactAsync();\n");
+      fs.writeFileSync(path.join(dir, 'components/ui/icon-symbol.tsx'), "import MaterialIcons from '@expo/vector-icons/MaterialIcons';\nexport function IconSymbol() { return <MaterialIcons name=\"home\" />; }\n");
+      fs.writeFileSync(path.join(dir, 'components/ui/icon-symbol.ios.tsx'), "import { SymbolView } from 'expo-symbols';\n");
       fs.writeFileSync(path.join(dir, 'components/ui/TabBarBackground.tsx'), "export default undefined;\n\nexport function useBottomTabOverflow() {\n  return 0;\n}\n");
       fs.writeFileSync(path.join(dir, 'components/ui/TabBarBackground.ios.tsx'), "import { BlurView } from 'expo-blur';\n");
     }
@@ -55,9 +70,19 @@ vi.mock('../src/utils/log', () => ({
 }));
 
 describe('runCreate', () => {
+  const streams = [process.stdin, process.stdout];
+  const ttyDescriptors = streams.map(stream => Object.getOwnPropertyDescriptor(stream, 'isTTY'));
+  afterEach(() => {
+    streams.forEach((stream, index) => {
+      const descriptor = ttyDescriptors[index];
+      if (descriptor) Object.defineProperty(stream, 'isTTY', descriptor);
+      else Reflect.deleteProperty(stream, 'isTTY');
+    });
+  });
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    streams.forEach(stream => Object.defineProperty(stream, 'isTTY', { configurable: true, value: true }));
   });
 
   it('编排：拉模版 → 注入基线 → 文档/skill → 扫描 → H清理', async () => {
@@ -68,10 +93,10 @@ describe('runCreate', () => {
     const { log } = await import('../src/utils/log');
     expect(runFileQuiet).toHaveBeenCalledWith(
       'npx',
-      ['create-expo-app', 'myapp', '--template', 'default@sdk-52', '--no-install'],
+      ['create-expo-app', 'myapp', '--template', 'default@sdk-54', '--no-install'],
       { cwd: tmp },
     );
-    expect(log.task).toHaveBeenCalledWith('1/4 创建 Expo SDK 52 模板');
+    expect(log.task).toHaveBeenCalledWith('1/4 创建 Expo SDK 54 模板');
     expect(log.task).toHaveBeenCalledWith('2/4 注入 HarmonyOS 基线');
     expect(log.task).toHaveBeenCalledWith('3/4 适配默认模板依赖');
     expect(log.task).toHaveBeenCalledWith('4/4 写入开发资料');
@@ -90,30 +115,15 @@ describe('runCreate', () => {
     const app = JSON.parse(fs.readFileSync(path.join(projectDir, 'app.json'), 'utf8'));
     expect(app.expo.harmony.package).toBe('com.example.myapp');
 
-    // 扫描产物（Task 6）：react-native bump + 鸿蒙包 + 删 H
+    // package.json 合并
     const pkg = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['react-native']).toBe('0.77.1');
-    expect(pkg.dependencies['@react-native-oh/react-native-harmony']).toBe('0.77.71');
-    expect(pkg.dependencies['react-native-screens']).toBe('4.8.0');
-    expect(pkg.dependencies['@react-native-ohos/react-native-screens']).toBe('4.8.1-rc.7');
-    expect(pkg.dependencies['@babel/runtime']).toBe('7.29.7');
-    expect(pkg.dependencies['@react-navigation/elements']).toBe('2.9.30');
-    expect(pkg.devDependencies['@react-native/metro-config']).toBe('0.77.1');
-    expect(pkg.dependencies['expo-haptics']).toBeUndefined();
-    expect(pkg.dependencies['expo-splash-screen']).toBeUndefined();
-    expect(pkg.dependencies['expo-splash-screen2']).toBeUndefined();
-    expect(pkg.dependencies['@expo/vector-icons']).toBeUndefined();
-    expect(pkg.dependencies['@react-native-ohos/react-native-vector-icons']).toBeUndefined();
-    expect(fs.existsSync(path.join(projectDir, 'components/ui/IconSymbol.ios.tsx'))).toBe(false);
-    expect(fs.existsSync(path.join(projectDir, 'components/ui/TabBarBackground.ios.tsx'))).toBe(false);
-    const tabBarBackground = fs.readFileSync(path.join(projectDir, 'components/ui/TabBarBackground.tsx'), 'utf8');
-    expect(tabBarBackground).toContain('useBottomTabBarHeight');
-    expect(tabBarBackground).toContain("Platform.OS === 'ios' ? tabHeight : 0");
-    expect(pkg.dependencies['react-native-svg']).toBe('15.12.0');
-    expect(pkg.dependencies['@react-native-ohos/react-native-svg']).toBe('15.12.1');
+    expect(pkg.scripts.start).toBe('expo start');
+    expect(pkg.scripts.postinstall).toContain('patch-package');
+    expect(pkg.dependencies['react-native-svg']).toBe('15.15.0');
+    expect(pkg.dependencies['@react-native-ohos/react-native-svg']).toBe('15.13.1');
     expect(pkg.dependencies['react-native-webview']).toBeUndefined();
     expect(pkg.dependencies['@react-native-ohos/react-native-webview']).toBeUndefined();
-    expect(fs.existsSync(path.join(projectDir, 'patches/@react-native-oh+react-native-harmony+0.77.71.patch'))).toBe(true);
+    expect(fs.existsSync(path.join(projectDir, 'patches/@react-native-oh+react-native-harmony+0.82.30.patch'))).toBe(true);
 
     const versions = Object.values({ ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) }) as string[];
     expect(versions.filter(version => /^[~^]/.test(version))).toEqual([]);
@@ -139,17 +149,99 @@ describe('runCreate', () => {
     expect(layout).not.toContain('expo-splash-screen');
     // C-1: 确认无损坏残留（const [loaded] = , 或 const [loaded] = ;）
     expect(layout).not.toMatch(/const\s*\[.*\]\s*=\s*[,;]/);
-    const hapticTab = fs.readFileSync(path.join(projectDir, 'components/HapticTab.tsx'), 'utf8');
+    const hapticTab = fs.readFileSync(path.join(projectDir, 'components/haptic-tab.tsx'), 'utf8');
     expect(hapticTab).not.toContain('Haptics');
 
     // IconSymbol 必须替换为 SVG，避免 @expo/vector-icons -> ExpoFontLoader 原生模块依赖。
-    const iconSymbol = fs.readFileSync(path.join(projectDir, 'components/ui/IconSymbol.tsx'), 'utf8');
+    const iconSymbol = fs.readFileSync(path.join(projectDir, 'components/ui/icon-symbol.tsx'), 'utf8');
     expect(iconSymbol).not.toContain('@expo/vector-icons');
     expect(iconSymbol).not.toContain('MaterialIcons');
     expect(iconSymbol).toContain("from 'react-native-svg'");
     expect(iconSymbol).toContain('export function IconSymbol');
 
     fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it('选择 SDK 52 → 使用 sdk-52 模板与矩阵', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-'));
+    const prompts = await import('@inquirer/prompts');
+    vi.mocked(prompts.select).mockResolvedValueOnce('sdk-52');
+
+    const { runCreate } = await import('../src/creator');
+    await runCreate(['myapp'], { cwd: tmp });
+
+    const { runFileQuiet } = await import('../src/utils/exec');
+    expect(runFileQuiet).toHaveBeenCalledWith(
+      'npx',
+      ['create-expo-app', 'myapp', '--template', 'default@sdk-52', '--no-install'],
+      { cwd: tmp },
+    );
+
+    const { log } = await import('../src/utils/log');
+    expect(log.task).toHaveBeenCalledWith('1/4 创建 Expo SDK 52 模板');
+
+    const projectDir = path.join(tmp, 'myapp');
+    expect(fs.existsSync(path.join(projectDir, 'patches/@react-native-oh+react-native-harmony+0.77.71.patch'))).toBe(true);
+    expect(fs.existsSync(path.join(projectDir, 'index.harmony.js'))).toBe(true);
+
+    fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it.each([
+    ['52', ['myapp', '--sdk=52']],
+    ['54', ['myapp', '--sdk=54']],
+    ['52', ['myapp', '--sdk', '52']],
+    ['54', ['myapp', '--sdk', '54']],
+    ['52', ['--sdk', '52', 'myapp']],
+  ])('非交互显式 SDK %s：%j → 使用对应模板且不询问', async (sdk, args) => {
+    streams.forEach(stream => Object.defineProperty(stream, 'isTTY', { configurable: true, value: false }));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk-'));
+    try {
+      const { runCreate } = await import('../src/creator');
+      const { runFileQuiet } = await import('../src/utils/exec');
+      const { select } = await import('@inquirer/prompts');
+      await runCreate(args as string[], { cwd: tmp });
+      expect(select).not.toHaveBeenCalled();
+      expect(runFileQuiet).toHaveBeenCalledWith('npx',
+        ['create-expo-app', 'myapp', '--template', `default@sdk-${sdk}`, '--no-install'], { cwd: tmp });
+      const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'myapp/package.json'), 'utf8'));
+      expect(pkg.dependencies.expo).toMatch(new RegExp(`^${sdk}\\.`));
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it.each([
+    ['--sdk', '53'], ['--sdk=53'], ['--sdk'], ['--sdk='],
+    ['--sdk', '--pnpm'], ['--sdk=52=54'], ['--sdk=52', '--sdk', '54'],
+  ].map(flags => [flags]))('非法 SDK 参数 %j → 创建前报错', async flags => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk-'));
+    try {
+      const { runCreate } = await import('../src/creator');
+      const { runFileQuiet } = await import('../src/utils/exec');
+      const { select } = await import('@inquirer/prompts');
+      await expect(runCreate(['myapp', ...flags], { cwd: tmp })).rejects.toThrow(/--sdk/);
+      expect(runFileQuiet).not.toHaveBeenCalled();
+      expect(select).not.toHaveBeenCalled();
+      expect(fs.readdirSync(tmp)).toEqual([]);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it.each([0, 1])('输入或输出非 TTY（%s）且无 SDK → 提示显式指定，不进入交互', async index => {
+    Object.defineProperty(streams[index], 'isTTY', { configurable: true, value: false });
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk-'));
+    try {
+      const { runCreate } = await import('../src/creator');
+      const { runFileQuiet } = await import('../src/utils/exec');
+      const { select } = await import('@inquirer/prompts');
+      await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/非交互.*--sdk/);
+      expect(select).not.toHaveBeenCalled();
+      expect(runFileQuiet).not.toHaveBeenCalled();
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   it('缺项目名 → 报错', async () => {
@@ -171,7 +263,7 @@ describe('runCreate', () => {
       throw new Error('network unavailable');
     });
     const { runCreate } = await import('../src/creator');
-    await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/创建 Expo SDK 52 模板失败.*network unavailable/s);
+    await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/创建 Expo SDK 54 模板失败.*network unavailable/s);
     const { log } = await import('../src/utils/log');
     expect(vi.mocked(log.task).mock.results[0].value.fail).toHaveBeenCalledOnce();
     fs.rmSync(tmp, { recursive: true, force: true });

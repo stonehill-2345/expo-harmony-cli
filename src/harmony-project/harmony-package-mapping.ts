@@ -77,14 +77,14 @@ export const HARMONY_PACKAGE_MAPPING: Record<string, HarmonyPackageMappingEntry>
       "import { ReanimatedPackage } from '@react-native-ohos/react-native-reanimated/ts';",
     harName: 'reanimated.har',
   },
-  '@react-native-ohos/camera-roll': {
-    npmPackageName: '@react-native-ohos/camera-roll',
-    cmakeLibraryTargetName: 'rnoh_camera_roll',
-    etsPackageClassName: 'CameraRollPackage',
-    cppPackageClassName: 'CameraRollPackage',
-    cppPackageNamespace: 'rnoh',
-    importStatement: "import { CameraRollPackage } from '@react-native-ohos/camera-roll/ts';",
-    harName: 'camera_roll.har',
+  '@react-native-ohos/react-native-worklets': {
+    npmPackageName: '@react-native-ohos/react-native-worklets',
+    cmakeLibraryTargetName: 'rnoh_worklets',
+    harName: 'worklets.har',
+    cppSourcePath: 'harmony/worklets/src/main/cpp',
+    ohpmOverride: true,
+    etsPackages: [{ importStatement: "import { ReanimatedWorkletPackage } from '@react-native-ohos/react-native-worklets/ts';", classNames: ['ReanimatedWorkletPackage'] }],
+    cppPackages: [{ className: 'ReanimatedWorkletPackage', namespace: 'rnoh' }],
   },
   '@react-native-ohos/react-native-screens': {
     npmPackageName: '@react-native-ohos/react-native-screens',
@@ -104,11 +104,6 @@ export const HARMONY_PACKAGE_MAPPING: Record<string, HarmonyPackageMappingEntry>
     cppPackages: [{ className: 'WebViewPackage', namespace: 'rnoh' }],
   },
 
-  '@react-native-ohos/react-native-mmkv': {
-    npmPackageName: '@react-native-ohos/react-native-mmkv', cmakeLibraryTargetName: 'rnoh_native_mmkv', harName: 'reactNativeMMKV.har', cppSourcePath: 'harmony/reactNativeMMKV/src/main/cpp',
-    etsPackages: [{ importStatement: "import { MmkvCxxPackage, MmkvPlatformContextPackage } from '@react-native-ohos/react-native-mmkv/ts';", classNames: ['MmkvPlatformContextPackage', 'MmkvCxxPackage'] }],
-    cppPackages: [{ className: 'NativeMMKVPackage', namespace: 'rnoh' }],
-  },
   '@react-native-ohos/react-native-pager-view': {
     npmPackageName: '@react-native-ohos/react-native-pager-view', cmakeLibraryTargetName: 'rnoh_pager_view', harName: 'pager_view.har', cppSourcePath: 'harmony/pager_view/src/main/cpp',
     etsPackages: [{ importStatement: "import { ViewPagerPackage } from '@react-native-ohos/react-native-pager-view/ts';", classNames: ['ViewPagerPackage'] }], cppPackages: [{ className: 'ViewPagerPackage', namespace: 'rnoh' }],
@@ -116,35 +111,14 @@ export const HARMONY_PACKAGE_MAPPING: Record<string, HarmonyPackageMappingEntry>
   '@react-native-ohos/react-native-linear-gradient': {
     npmPackageName: '@react-native-ohos/react-native-linear-gradient', cmakeLibraryTargetName: 'rnoh_linear_gradient', harName: 'linear_gradient.har', cppSourcePath: 'harmony/linear_gradient/src/main/cpp', etsPackages: [], cppPackages: [{ className: 'LinearGradientPackage', namespace: 'rnoh' }],
   },
-  '@react-native-ohos/clipboard': {
-    npmPackageName: '@react-native-ohos/clipboard', cmakeLibraryTargetName: 'rnoh_clipboard', harName: 'clipboard.har', cppSourcePath: 'harmony/clipboard/src/main/cpp', etsPackages: [{ importStatement: "import { ClipboardPackage } from '@react-native-ohos/clipboard/ts';", classNames: ['ClipboardPackage'] }], cppPackages: [{ className: 'ClipboardPackage', namespace: 'rnoh' }],
-  },
   '@react-native-ohos/react-native-svg': {
     npmPackageName: '@react-native-ohos/react-native-svg', cmakeLibraryTargetName: 'rnoh_svg', harName: 'svg.har', cppSourcePath: 'harmony/svg/src/main/cpp', etsPackages: [{ importStatement: "import { SvgPackage } from '@react-native-ohos/react-native-svg/ts';", classNames: ['SvgPackage'] }], cppPackages: [{ className: 'SVGPackage', namespace: 'rnoh' }],
-  },
-  '@react-native-ohos/react-native-permissions': {
-    npmPackageName: '@react-native-ohos/react-native-permissions', cmakeLibraryTargetName: 'rnoh_permissions', harName: 'permissions.har', cppSourcePath: 'harmony/permissions/src/main/cpp', etsPackages: [{ importStatement: "import { PermissionsPackage } from '@react-native-ohos/react-native-permissions/ts';", classNames: ['PermissionsPackage'] }], cppPackages: [{ className: 'PermissionsPackage', namespace: 'rnoh' }],
-  },
-  '@react-native-ohos/react-native-device-info': {
-    npmPackageName: '@react-native-ohos/react-native-device-info', cmakeLibraryTargetName: 'device_info', harName: 'device_info.har', cppSourcePath: 'harmony/device_info/src/main/cpp', etsPackages: [{ importStatement: "import { RNDeviceInfoPackage } from '@react-native-ohos/react-native-device-info/ts';", classNames: ['RNDeviceInfoPackage'] }], cppPackages: [{ className: 'RNDeviceInfoPackage', namespace: 'rnoh' }],
-  },
-  '@react-native-oh-tpl/react-native-fast-image': {
-    npmPackageName: '@react-native-oh-tpl/react-native-fast-image', cmakeLibraryTargetName: 'rnoh_fast_image', harName: 'fast_image.har', cppSourcePath: 'harmony/fast_image/src/main/cpp', etsPackages: [{ importStatement: "import { FastImagePackage } from '@react-native-oh-tpl/react-native-fast-image/ts';", classNames: ['FastImagePackage'] }], cppPackages: [{ className: 'FastImagePackage', namespace: 'rnoh' }],
-  },
-  '@react-native-ohos/react-native-image-picker': {
-    npmPackageName: '@react-native-ohos/react-native-image-picker', cmakeLibraryTargetName: 'rnoh_image_picker', harName: 'image_picker.har', cppSourcePath: 'harmony/image_picker/src/main/cpp', etsPackages: [{ importStatement: "import { ImagePickerViewPackage } from '@react-native-ohos/react-native-image-picker/ts';", classNames: ['ImagePickerViewPackage'] }], cppPackages: [{ className: 'RNImagePickerPackage', namespace: 'rnoh' }],
   },
   '@react-native-ohos/react-native-video': {
     npmPackageName: '@react-native-ohos/react-native-video', cmakeLibraryTargetName: 'rnoh_video', harName: 'rn_video.har', cppSourcePath: 'harmony/rn_video/src/main/cpp', etsPackages: [{ importStatement: "import { RNCVideoPackage } from '@react-native-ohos/react-native-video/ts';", classNames: ['RNCVideoPackage'] }], cppPackages: [{ className: 'RNCVideoPackage', namespace: 'rnoh' }],
   },
-  '@react-native-ohos/react-native-sound': {
-    npmPackageName: '@react-native-ohos/react-native-sound', cmakeLibraryTargetName: 'rnoh_sound', harName: 'sound.har', cppSourcePath: 'harmony/sound/src/main/cpp', etsPackages: [{ importStatement: "import { SoundPackage } from '@react-native-ohos/react-native-sound/ts';", classNames: ['SoundPackage'] }], cppPackages: [{ className: 'SoundPackage', namespace: 'rnoh' }],
-  },
   '@react-native-ohos/react-native-document-picker': {
     npmPackageName: '@react-native-ohos/react-native-document-picker', cmakeLibraryTargetName: 'rnoh_document_picker', harName: 'document_picker.har', cppSourcePath: 'harmony/document_picker/src/main/cpp', etsPackages: [{ importStatement: "import { DocumentPickerPackage } from '@react-native-ohos/react-native-document-picker/ts';", classNames: ['DocumentPickerPackage'] }], cppPackages: [{ className: 'DocumentPickerPackage', namespace: 'rnoh' }],
-  },
-  '@react-native-ohos/react-native-fs': {
-    npmPackageName: '@react-native-ohos/react-native-fs', cmakeLibraryTargetName: 'rnoh_fs', harName: 'fs.har', cppSourcePath: 'harmony/fs/src/main/cpp', etsPackages: [{ importStatement: "import { FsPackage } from '@react-native-ohos/react-native-fs/ts';", classNames: ['FsPackage'] }], cppPackages: [{ className: 'RNFSPackage', namespace: 'rnoh' }],
   },
   '@react-native-ohos/lottie-react-native': {
     npmPackageName: '@react-native-ohos/lottie-react-native', cmakeLibraryTargetName: 'rnoh_lottie', harName: 'lottie.har', cppSourcePath: 'harmony/lottie/src/main/cpp', etsPackages: [{ importStatement: "import { LottieAnimationViewPackage } from '@react-native-ohos/lottie-react-native/ts';", classNames: ['LottieAnimationViewPackage'] }], cppPackages: [{ className: 'LottieAnimationViewPackage', namespace: 'rnoh' }],
@@ -155,7 +129,7 @@ export const HARMONY_PACKAGE_MAPPING: Record<string, HarmonyPackageMappingEntry>
   '@react-native-ohos/react-native-keyboard-controller': {
     npmPackageName: '@react-native-ohos/react-native-keyboard-controller', cmakeLibraryTargetName: 'rnoh_keyboard_controller', harName: 'keyboard_controller.har', cppSourcePath: 'harmony/keyboard_controller/src/main/cpp', etsPackages: [{ importStatement: "import { RNKeyboardControllerPackage, RNStatusBarManagerCompatPackage } from '@react-native-ohos/react-native-keyboard-controller/ts';", classNames: ['RNKeyboardControllerPackage', 'RNStatusBarManagerCompatPackage'] }], cppPackages: [{ className: 'KeyboardControllerPackage', namespace: 'rnoh' }],
   },
-  '@react-native-oh-tpl/react-native-blob-util': {
-    npmPackageName: '@react-native-oh-tpl/react-native-blob-util', harName: 'blobUtil.har', etsPackages: [{ importStatement: "import { BlobUtilPackage } from '@react-native-oh-tpl/react-native-blob-util/ts';", classNames: ['BlobUtilPackage'] }], cppPackages: [],
+  '@react-native-ohos/react-native-blob-util': {
+    npmPackageName: '@react-native-ohos/react-native-blob-util', cmakeLibraryTargetName: 'rnoh_blob_util', harName: 'blobUtil.har', cppSourcePath: 'harmony/blobUtil/src/main/cpp', etsPackages: [{ importStatement: "import { BlobUtilPackage } from '@react-native-ohos/react-native-blob-util/ts';", classNames: ['BlobUtilPackage'] }], cppPackages: [{ className: 'BlobUtilPackage', namespace: 'rnoh' }],
   },
 };

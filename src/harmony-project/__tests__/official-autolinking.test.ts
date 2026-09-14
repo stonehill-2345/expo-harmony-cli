@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import * as fs from 'fs';
 import * as os from 'os';
 import * as path from 'path';
+import JSON5 from 'json5';
 import { runOfficialAutolinking } from '../official-autolinking';
 import { HARMONY_PACKAGE_MAPPING } from '../harmony-package-mapping';
 import { installFakeRnohCli as installFakeRnohCliHelper, installAdapterPkg as installAdapterPkgHelper } from './helpers/fake-rnoh-cli';
@@ -106,6 +107,25 @@ function installFakeCli(mode: 'ok' | 'no-func' | 'partial' | 'throw' | 'silent-f
 }
 
 /** 安装一个带 harmony 目录的适配包（无 metadata，属于 mapping 补充目标）。 */
+function installCapturedFixtureCli(): void {
+  const fixtureDir = path.join(__dirname, 'fixtures', 'rnoh-0.82.30');
+  const fixtureFiles = [
+    'entry/src/main/ets/RNOHPackagesFactory.ets',
+    'entry/src/main/cpp/RNOHPackagesFactory.h',
+    'entry/src/main/cpp/autolinking.cmake',
+    'oh-package.json5',
+  ];
+  const fixtureJson = JSON.stringify(Object.fromEntries(
+    fixtureFiles.map(rel => [rel, fs.readFileSync(path.join(fixtureDir, rel), 'utf8')]),
+  ));
+  const dist = `const fs = require('fs');
+const path = require('path');
+const files = ${fixtureJson};
+exports.commandLinkHarmony = { func: async (_argv, _config, rawArgs) => { for (const [rel, content] of Object.entries(files)) { const p = path.join(rawArgs.harmonyProjectPath, rel); fs.mkdirSync(path.dirname(p), { recursive: true }); fs.writeFileSync(p, content); } } };`;
+  write('node_modules/@react-native-oh/react-native-harmony-cli/package.json', JSON.stringify({ name: '@react-native-oh/react-native-harmony-cli', version: '0.82.30' }));
+  write('node_modules/@react-native-oh/react-native-harmony-cli/dist/commands/link-harmony.js', dist);
+}
+
 function installAdapterPkg(name: string, harName: string): void {
   write(`node_modules/${name}/package.json`, JSON.stringify({ name, version: '1.0.0', harmony: { alias: name } }));
   write(`node_modules/${name}/harmony/${harName}`, 'fake har bytes');
@@ -138,6 +158,39 @@ describe('runOfficialAutolinking', () => {
     const result = await runOfficialAutolinking({ projectRoot, harmonyDir });
     expect(result.ok).toBe(false);
     expect(result.failureReason).toBeTruthy();
+  });
+
+  it('真实 RNOH 0.82.30 非空 fixture：识别官方注册并保留四产物内容', async () => {
+    // 此测试回放真实 CLI 捕获产物，不会在单元测试中运行官方 CLI；来源与复现见 fixture README。
+    installCapturedFixtureCli();
+    const npmName = '@react-native-ohos/react-native-gesture-handler';
+    const className = 'RnohReactNativeHarmonyGestureHandlerPackage';
+    const fixtureDir = path.join(__dirname, 'fixtures', 'rnoh-0.82.30');
+    write('harmony/oh-package.json5', fs.readFileSync(path.join(fixtureDir, 'input-oh-package.json5'), 'utf8'));
+    installAdapterPkg(npmName, 'gesture_handler.har');
+    write(`node_modules/${npmName}/package.json`, fs.readFileSync(path.join(fixtureDir, 'adapter-package.json'), 'utf8'));
+    const result = await runOfficialAutolinking({ projectRoot, harmonyDir });
+
+    expect(result.ok).toBe(true);
+    expect(result.cliVersion).toBe('0.82.30');
+    expect(result.files).toHaveLength(4);
+    const ets = result.files.find(f => f.path.endsWith('RNOHPackagesFactory.ets'))!.content;
+    const cpp = result.files.find(f => f.path.endsWith('RNOHPackagesFactory.h'))!.content;
+    const cmake = result.files.find(f => f.path.endsWith('autolinking.cmake'))!.content;
+    const oh = JSON5.parse(result.files.find(f => f.path.endsWith('oh-package.json5'))!.content);
+    expect(ets).toContain(`import ${className} from '${npmName}';`);
+    expect(ets.split(`new ${className}(ctx)`)).toHaveLength(2);
+    expect(ets).toContain('createRNOHPackages(ctx: RNPackageContext): RNPackage[]');
+    expect(cpp).toContain(`#include "${className}.h"`);
+    expect(cpp.split(`std::make_shared<rnoh::${className}>(ctx)`)).toHaveLength(2);
+    expect(cmake).toContain('function(autolink_libraries target)');
+    expect(cmake).toContain(`add_subdirectory("\${OH_MODULES_DIR}/${npmName}/src/main/cpp" ./rnoh_gesture_handler)`);
+    expect(cmake).toContain('        rnoh_gesture_handler');
+    expect(oh.dependencies).toEqual({
+      [npmName]: `file:../node_modules/${npmName}/harmony/gesture_handler.har`,
+    });
+    expect(result.officialPackages).toEqual([npmName]);
+    expect(result.uncoveredPackages).toEqual([]);
   });
 
   it('官方成功：产物读出、覆盖以产物交叉验证、含 mapping 外的官方独有包', async () => {

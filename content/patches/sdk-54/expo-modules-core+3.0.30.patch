@@ -1,0 +1,15 @@
+diff --git a/node_modules/expo-modules-core/ios/JSI/EXJSIUtils.h b/node_modules/expo-modules-core/ios/JSI/EXJSIUtils.h
+index 0000000..0000000 100644
+--- a/node_modules/expo-modules-core/ios/JSI/EXJSIUtils.h
++++ b/node_modules/expo-modules-core/ios/JSI/EXJSIUtils.h
+@@ -8,6 +8,10 @@
+ #import <jsi/jsi.h>
+ #import <React/RCTBridgeModule.h>
+ #import <ReactCommon/TurboModuleUtils.h>
++#if REACT_NATIVE_TARGET_VERSION >= 82
++#include <ReactCommon/CallInvoker.h>
++#include <react/bridging/CallbackWrapper.h>
++#endif
+ #import <ExpoModulesCore/ObjectDeallocator.h>
+ 
+ namespace jsi = facebook::jsi;

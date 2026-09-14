@@ -11,7 +11,7 @@ description: Expo 插件鸿蒙(HarmonyOS)适配工作流。当适配 expo-image�
 
 使用方式：
 - `/expo-harmony-adapter expo-image-picker` → 自动搜索发现鸿蒙插件
-- `/expo-harmony-adapter expo-image @react-native-oh-tpl/react-native-fast-image` → 直接使用指定插件
+- `/expo-harmony-adapter expo-document-picker @react-native-ohos/react-native-document-picker` → 直接使用指定插件
 
 核心思路：在 expo 插件中添加鸿蒙平台检测（`Platform.OS === 'harmony'`），转发到社区鸿蒙化插件实现。
 
@@ -63,7 +63,7 @@ CLI 会优先调用 RNOH 官方 `link-harmony`（识别 `package.json` 带 `harm
 
 适用：小范围外科手术式修改，加几个 `if/else` 转发 API。
 
-- 参考：`patches/expo-clipboard+7.0.1.patch`（简单）、`patches/expo-image+2.0.7.patch`（复杂）
+- 参考：`patches/expo-linear-gradient+15.0.8.patch`（简单）、`patches/expo-image+3.0.11.patch`（平台文件）
 - 实施：修改 `node_modules/` → `npx patch-package <expo-plugin>` → 提交 patch 文件
 - 优点：简单直接，diff 清晰
 - 缺点：expo 插件升级时 patch 可能失效，需要重新生成
@@ -283,7 +283,7 @@ Expo 插件通常是对 RN 社区插件的封装。常见映射：
 
 | Expo 插件 | 底层 RN 社区插件 |
 |-----------|-----------------|
-| `expo-image` | `react-native-fast-image` |
+| `expo-image` | React Native 内置 `Image`（当前基线） |
 | `expo-image-picker` | `react-native-image-picker` |
 | `expo-clipboard` | `@react-native-clipboard/clipboard` |
 | `expo-linear-gradient` | `react-native-linear-gradient` |
@@ -293,17 +293,17 @@ Expo 插件通常是对 RN 社区插件的封装。常见映射：
 | `expo-file-system` | `react-native-fs` |
 | `expo-splash-screen` | `react-native-bootsplash` |
 | `expo-blur` | `@react-native-community/blur` |
-| `expo-media-library` | `@react-native-camera-roll/camera-roll`（复用已有） |
+| `expo-media-library` | `@react-native-camera-roll/camera-roll`（0.82 闭环未验证） |
 
 > 不在上表中？阅读 expo 插件源码的 import 语句和原生模块注册来推断底层插件。
 
 #### 0.2 按优先级搜索鸿蒙化插件
 
-**渠道 1：Gitee 官方文档（最高优先级）**
-读取 https://gitee.com/react-native-oh-library/usage-docs/blob/master/zh-cn/README.md 中的「RNOH 三方库总览」表格，搜索底层 RN 插件名称。关注 `HarmonyOSReleases` 列（`@react-native-oh-tpl/*` 或 `@react-native-ohos/*` 表示已适配）。
+**渠道 1：GitCode 官方文档（用于发现候选版本）**
+读取 https://gitcode.com/CPF-RN/usage-docs/blob/master/zh-cn/README.md 中的组件索引，再打开对应组件文档。
 
 **渠道 2：npm 验证**
-- `@react-native-ohos/<plugin>` — 新版（RN 0.77+，优先选择）
+- `@react-native-ohos/<plugin>` — 新版候选包
 - `@react-native-oh-tpl/<plugin>` — 旧版（RN 0.72 时代，多数已 deprecated）
 
 **渠道 3：Web 搜索（兜底）**
@@ -311,7 +311,7 @@ Expo 插件通常是对 RN 社区插件的封装。常见映射：
 
 #### 0.3 版本选择
 
-优先级：`@react-native-ohos/*@latest` > `@react-native-oh-tpl/*@latest`。**必须确认 RN 0.77 兼容性**（检查 `peerDependencies`）。
+版本不能按 `latest` 猜测。必须下载精确 npm tarball，检查 `peerDependencies`、依赖的原包版本、`harmony.autolinking`、HAR、CMake target 和 ETS/C++ 导出，并确认 RN 0.82 兼容性。
 
 #### 0.4 输出发现结果
 
@@ -324,7 +324,7 @@ Expo 插件 `<expo-plugin>` → 底层 RN 插件 `<rn-plugin>`
 
 | 渠道 | 包名 | 版本 | RN 兼容 | 状态 |
 |------|------|------|---------|------|
-| Gitee | @react-native-ohos/xxx | x.x.x | 0.77 ✅ | 推荐 |
+| GitCode | @react-native-ohos/xxx | x.x.x | 0.82 ✅ | 候选 |
 | npm | @react-native-oh-tpl/xxx | x.x.x | 0.72 ⚠️ | 已过期 |
 
 推荐使用：`@react-native-ohos/<plugin>@<version>`
@@ -332,12 +332,12 @@ Expo 插件 `<expo-plugin>` → 底层 RN 插件 `<rn-plugin>`
 
 #### 0.5 未找到时停下来
 
-如果三渠道均未找到 RN 0.77 兼容的鸿蒙插件，**必须停下来向用户报告**，给出可选方案：
+如果三渠道均未找到 RN 0.82 兼容的鸿蒙插件，**必须停下来向用户报告**，给出可选方案：
 
 1. **终止适配** — 当前暂不适配鸿蒙
 2. **尝试 RN 0.72 版本** — 可能存在兼容问题
 3. **寻找替代插件** — 如 `expo-image-picker` → `@react-native-ohos/react-native-image-crop-picker`
-4. **复用项目中已有的鸿蒙插件** — 分析已有鸿蒙插件的 API 覆盖范围，看是否能满足业务需求。如 `expo-media-library` → 复用已有的 `@react-native-ohos/camera-roll`
+4. **复用项目中已有的鸿蒙插件** — 仅在其发布物明确支持 RN 0.82 且 API 覆盖满足需求时采用
 5. **自行实现鸿蒙原生模块** — 参考 harmony-plugin-integration skill
 
 **等待用户选择后再决定是否继续。**
@@ -444,7 +444,7 @@ cat node_modules/<harmony-plugin>/src/index.tsx   # 或 index.ts
 - 在 patch 中自行处理参数转换和结果映射
 
 **验证原则**：
-- **以源码为准**：Gitee 文档可能过时，源码是 ground truth
+- **以源码为准**：GitCode 使用文档可能过时，npm 发布物及其源码是最终依据
 - **不能仅凭 TypeScript 类型判定**：有些字段声明了但原生未使用
 - **检查 `harmony.alias`**：鸿蒙插件 `package.json` 中可能有 alias（如 `@react-native-ohos/react-native-image-picker` 的 alias 是 `react-native-image-picker`），patch 中 `require()` 时应使用 alias
 - **JS 入口不是总能用**：当鸿蒙插件的 JS 入口内部依赖原始包且原始包不支持 harmony 时，需要绕过 JS 层
@@ -531,10 +531,10 @@ async function getDocumentAsyncHarmony({ type, multiple }) {
 
    ```bash
    # 简单示例（API 转发）
-   cat patches/expo-clipboard+7.0.1.patch
+   cat patches/expo-linear-gradient+15.0.8.patch
 
    # 复杂示例（组件替换 + 事件映射 + 静态方法）
-   cat patches/expo-image+2.0.7.patch
+   cat patches/expo-image+3.0.11.patch
    ```
 
 2. **修改 `node_modules/` 中的源码**，关键修改点：
@@ -675,7 +675,7 @@ async function getDocumentAsyncHarmony({ type, multiple }) {
 | 类型 | 说明 | 示例 |
 |------|------|------|
 | **TurboModule（纯 JS API 调用）** | 只有原生方法，无 UI 渲染，不继承 `ViewManager` | react-native-sound、react-native-document-picker |
-| **UI 组件（ViewManager）** | 需要在 RN 视图树中渲染，继承 `ViewManager` | react-native-fast-image、react-native-linear-gradient |
+| **UI 组件（ViewManager）** | 需要在 RN 视图树中渲染，继承 `ViewManager` | react-native-linear-gradient |
 
 ---
 
@@ -810,7 +810,7 @@ hdc file send test.pdf /mnt/user/100/sharefs/docs/currentUser/Download/test.pdf
 1. **版本锁定**：`package.json` 中的 expo 插件版本必须与 patch 文件名版本一致
 2. **降级处理**：鸿蒙插件加载失败时，应降级到 RN 原生实现
 3. **事件格式适配**：expo 和鸿蒙插件的事件格式可能不同，需转换
-4. **版本优先级**：`@react-native-ohos/*`（RN 0.77）> `@react-native-oh-tpl/*`（RN 0.72，多数已 deprecated）
+4. **版本选择**：只使用发布物已证明兼容 RN 0.82 的精确版本；`@react-native-oh-tpl/*` 多数已 deprecated
 5. **harmony.alias 规则**：`require()` 时使用 alias 而非原始包名
 
 ---
@@ -819,13 +819,10 @@ hdc file send test.pdf /mnt/user/100/sharefs/docs/currentUser/Download/test.pdf
 
 | 复杂度 | Expo 插件 | 适配方式 | 关键技术点 | 文档 | Patch / 位置 |
 |--------|-----------|---------|-----------|------|-------------|
-| 简单 | expo-linear-gradient | A (patch) | UI 组件，属性映射 | `docs/expo-linear-gradient-harmony-adapter.md` | `patches/expo-linear-gradient+14.0.2.patch` |
-| 简单 | expo-clipboard | A (patch) | TurboModule，API 转发 | — | `patches/expo-clipboard+7.0.1.patch` |
-| 简单 | expo-status-bar | A (patch) | 全局 ViewManager，无方法 | `docs/expo-status-bar-harmony-adapter.md` | `patches/expo-status-bar+2.0.1.patch` |
-| 复杂 | expo-image | A (patch) | 组件替换 + 事件映射 + 静态方法 | `docs/expo-image-harmony-adapter.md` | `patches/expo-image+2.0.7.patch` |
-| 复杂 | expo-image-picker | A (patch) | Promise 封装 + 结果映射 | `docs/expo-image-picker-harmony-adapter.md` | `patches/expo-image-picker+16.0.6.patch` |
-| 简单 | expo-document-picker | A (patch) | TurboModule 直调，绕过 JS 入口 | `docs/expo-document-picker-harmony-adapter.md` | `patches/expo-document-picker+13.0.3.patch` |
+| 简单 | expo-linear-gradient | A (patch) | UI 组件，属性映射 | `docs/expo-linear-gradient-harmony-adapter.md` | `patches/expo-linear-gradient+15.0.8.patch` |
+| 简单 | expo-status-bar | A (patch) | 全局 ViewManager，无方法 | `docs/expo-status-bar-harmony-adapter.md` | `patches/expo-status-bar+3.0.9.patch` |
+| 复杂 | expo-image | A (patch) | Harmony 平台文件 + RN Image 基础实现 | `docs/expo-image-harmony-adapter.md` | `patches/expo-image+3.0.11.patch` |
+| 简单 | expo-document-picker | A (patch) | TurboModule 直调，绕过 JS 入口 | `docs/expo-document-picker-harmony-adapter.md` | `patches/expo-document-picker+14.0.8.patch` |
 | 中等 | expo-av | D3 (Metro shim) | 完整 API 兼容，业务零改动 | `docs/expo-av-harmony-adapter.md` | `shims/expo-av/index.ts` |
-| **复杂** | **expo-media-library** | **A (patch)** | **顶层 NativeModule mock + Hook 适配 + 缓存模式** | `docs/expo-media-library-harmony-adapter.md` | `patches/expo-media-library+17.0.6.patch` |
 | 本地包 | expo-constants | C (包装包) | 独立包结构，可跨项目复用 | — | `packages/<plugin>-harmony/`（示例范式） |
 | 本地包 | expo-linking | C (包装包) | 独立包结构，可跨项目复用 | — | `packages/<plugin>-harmony/`（示例范式） |

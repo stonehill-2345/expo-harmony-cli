@@ -210,19 +210,28 @@ ensureExpoModulesCoreNativeModulesProxyNoWarn();
 setupHarmonyPortForwarding();
 
 const metroHostAndPort = getMetroHostAndPort();
-const metroHost = metroHostAndPort.replace(/^\[/, '').replace(/\]:\d+$/, '').split(':')[0];
+const metroHost = metroHostAndPort
+  .replace(/^\\[/, '')
+  .replace(/\\]:\\d+$/, '')
+  .replace(/:\\d+$/, '');
 console.log('[harmony] Metro LAN URL: http://' + metroHostAndPort);
 console.log('[harmony] If the app cannot load bundle on a real device, set RNOH Dev Settings to: ' + metroHostAndPort);
 
 const env = {
   ...process.env,
+  RN_BUNDLE_PLATFORM: 'harmony',
   EXPO_OFFLINE: '1',
   EXPO_PACKAGER_HOSTNAME: metroHost,
   REACT_NATIVE_PACKAGER_HOSTNAME: metroHost,
 };
 
 const metroArgs = ['start', '--offline', '--port', '8081'];
-if (process.env.HARMONY_METRO_CLEAR === '1' || process.env.HARMONY_METRO_CLEAR === 'true') {
+if (
+  process.argv.includes('--reset-cache') ||
+  process.argv.includes('--clear') ||
+  process.env.HARMONY_METRO_CLEAR === '1' ||
+  process.env.HARMONY_METRO_CLEAR === 'true'
+) {
   metroArgs.push('--clear');
 }
 

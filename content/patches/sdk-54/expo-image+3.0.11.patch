@@ -1,0 +1,116 @@
+diff --git a/node_modules/expo-image/src/ExpoImage.harmony.tsx b/node_modules/expo-image/src/ExpoImage.harmony.tsx
+new file mode 100644
+index 0000000..e30c65d
+--- /dev/null
++++ b/node_modules/expo-image/src/ExpoImage.harmony.tsx
+@@ -0,0 +1,73 @@
++import React from 'react';
++import { Image as RNImage, StyleSheet } from 'react-native';
++
++import type { ImageNativeProps } from './Image.types';
++
++const resizeModes = {
++  cover: 'cover',
++  contain: 'contain',
++  fill: 'stretch',
++  none: 'center',
++  'scale-down': 'center',
++} as const;
++
++class ExpoImage extends React.PureComponent<ImageNativeProps> {
++  startAnimating = () => undefined;
++  stopAnimating = () => undefined;
++  lockResourceAsync = async () => undefined;
++  unlockResourceAsync = async () => undefined;
++  reloadAsync = async () => undefined;
++
++  componentDidMount() {
++    this.setNativeViewRef(this);
++  }
++
++  componentWillUnmount() {
++    this.setNativeViewRef(null);
++  }
++
++  private setNativeViewRef(value: ExpoImage | null) {
++    const ref = this.props.nativeViewRef as React.MutableRefObject<ExpoImage | null> | undefined;
++    if (ref) ref.current = value;
++  }
++
++  render() {
++    const {
++      accessibilityLabel,
++      alt,
++      contentFit = 'cover',
++      nativeViewRef: _nativeViewRef,
++      containerViewRef,
++      onDisplay,
++      onLoad,
++      onError,
++      placeholder,
++      source,
++      style,
++      transition: _transition,
++      ...props
++    } = this.props;
++    const resolvedSource = Array.isArray(source) ? source[0] : source;
++    const defaultSource = Array.isArray(placeholder) ? placeholder[0] : placeholder;
++
++    return (
++      <RNImage
++        {...(props as any)}
++        ref={containerViewRef as any}
++        accessibilityLabel={accessibilityLabel ?? alt}
++        defaultSource={defaultSource as any}
++        resizeMode={resizeModes[contentFit] ?? 'cover'}
++        source={resolvedSource as any}
++        style={StyleSheet.flatten(style)}
++        onLoad={(event) => {
++          const { width, height, uri = '' } = event.nativeEvent.source;
++          onLoad?.({ cacheType: 'none', source: { url: uri, width, height, mediaType: null } });
++          onDisplay?.();
++        }}
++        onError={(event) => onError?.({ error: event.nativeEvent.error })}
++      />
++    );
++  }
++}
++
++export default ExpoImage;
+diff --git a/node_modules/expo-image/src/ImageModule.harmony.ts b/node_modules/expo-image/src/ImageModule.harmony.ts
+new file mode 100644
+index 0000000..77e1279
+--- /dev/null
++++ b/node_modules/expo-image/src/ImageModule.harmony.ts
+@@ -0,0 +1,31 @@
++import { Image as RNImage } from 'react-native';
++
++import type { ImageNativeModule } from './Image.types';
++
++const ImageModule = {
++  Image: null,
++  async prefetch(urls: string[]) {
++    const results = await Promise.all(urls.map((url) => RNImage.prefetch(url)));
++    return results.every(Boolean);
++  },
++  async clearMemoryCache() {
++    return true;
++  },
++  async clearDiskCache() {
++    return true;
++  },
++  async getCachePathAsync() {
++    return null;
++  },
++  async generateBlurhashAsync() {
++    return null;
++  },
++  async generateThumbhashAsync() {
++    return null;
++  },
++  async loadAsync() {
++    throw new Error('Image.loadAsync is not supported on HarmonyOS');
++  },
++} as unknown as ImageNativeModule;
++
++export default ImageModule;

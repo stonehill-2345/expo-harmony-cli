@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
+import { baselineCheck } from '../src/env-checks/project-checks';
 import { nodeCheck } from '../src/env-checks/tool-checks';
 import { doctor } from '../src/commands/doctor';
 import { env } from '../src/commands/env';
@@ -28,8 +29,12 @@ describe('nodeCheck 版本解析（规范 2.3：解析失败 = warn 版本未知
     expect(result.detail).toContain('版本未知');
   });
 
-  it('v20.11.0 → ok', () => {
-    expect(nodeCheck(ctxWith(probeReturning('v20.11.0\n'))).status).toBe('ok');
+  it('v20.19.3（低于 RN 0.82.1 最低要求）→ fail', () => {
+    expect(nodeCheck(ctxWith(probeReturning('v20.19.3\n'))).status).toBe('fail');
+  });
+
+  it('v20.19.4（满足 RN 0.82.1 最低要求）→ ok', () => {
+    expect(nodeCheck(ctxWith(probeReturning('v20.19.4\n'))).status).toBe('ok');
   });
 
   it('v16.0.0（低于最低要求）→ fail', () => {
@@ -41,6 +46,22 @@ describe('nodeCheck 版本解析（规范 2.3：解析失败 = warn 版本未知
   it('未找到 node → fail 未找到', () => {
     const probe = (() => ({ ok: false, stdout: '' })) as unknown as Probe;
     expect(nodeCheck(ctxWith(probe)).status).toBe('fail');
+  });
+});
+
+describe('依赖基线错误提示', () => {
+  it('SDK 53 明确报告不支持，不误报 package.json 解析失败', () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'doctor-sdk-'));
+    try {
+      fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ dependencies: { expo: '~53.0.0' } }));
+      const result = baselineCheck({ ...ctxWith(probeReturning('')), projectRoot: tmp });
+      expect(result.status).toBe('fail');
+      expect(result.detail).toMatch(/不支持 Expo SDK 53/);
+      fs.writeFileSync(path.join(tmp, 'package.json'), '{ invalid');
+      expect(baselineCheck({ ...ctxWith(probeReturning('')), projectRoot: tmp }).detail).toContain('无法解析依赖清单');
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 });
 
@@ -72,7 +93,7 @@ describe('doctor 三段式输出与退出码（规范第 4/5 节）', () => {
 
   const okProbe: Probe = ((cmd: string) => ({
     ok: true,
-    stdout: cmd === 'node' ? 'v20.11.0\n' : cmd === 'hdc' ? 'Ver: 1.2.3\n' : '1.0.0\n',
+    stdout: cmd === 'node' ? 'v20.19.4\n' : cmd === 'hdc' ? 'Ver: 1.2.3\n' : '1.0.0\n',
   })) as unknown as Probe;
   // deveco 与 harmony/ 存在，hvigorw 不存在（走 probe）
   const exists = (p: string) => p.endsWith('DevEco-Studio.app') || p.endsWith(`${path.sep}harmony`);

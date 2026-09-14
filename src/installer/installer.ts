@@ -9,6 +9,7 @@ import * as harmonyProject from '../harmony-project';
 import { assertNoDrift, UNCOVERED_HINT } from '../harmony-project/standalone';
 import { hasNativeFootprint } from '../harmony-project/official-autolinking';
 import { ensureAppJsonPlugin } from '../injector/app-json';
+import { detectSdkVersion } from '../version-matrix';
 
 const DEVECO_OHPM_PATH = '/Applications/DevEco-Studio.app/Contents/tools/ohpm/bin/ohpm';
 
@@ -22,6 +23,7 @@ export async function runInstall(args: string[]): Promise<void> {
     throw new Error('当前目录非项目根（缺 package.json）');
   }
   const skipHarmony = args.includes('--skip-harmony');
+  if (!skipHarmony) detectSdkVersion(projectRoot);
   const skipNative = args.includes('--skip-native');
   const force = args.includes('--force');
   const pm = resolvePm(args, projectRoot);

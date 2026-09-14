@@ -1,0 +1,23 @@
+diff --git a/node_modules/expo-linking/build/ExpoLinking.js b/node_modules/expo-linking/build/ExpoLinking.js
+index 7ea4cb4..06b3d30 100644
+--- a/node_modules/expo-linking/build/ExpoLinking.js
++++ b/node_modules/expo-linking/build/ExpoLinking.js
+@@ -1,4 +1,14 @@
+-import { requireNativeModule } from 'expo-modules-core';
+-const ExpoLinking = requireNativeModule('ExpoLinking');
++import { Platform } from 'react-native';
++let ExpoLinking;
++if (Platform.OS === 'harmony') {
++    ExpoLinking = {
++        getLinkingURL: () => null,
++        addListener: () => ({ remove: () => { } }),
++    };
++}
++else {
++    const { requireNativeModule } = require('expo-modules-core');
++    ExpoLinking = requireNativeModule('ExpoLinking');
++}
+ export default ExpoLinking;
+-//# sourceMappingURL=ExpoLinking.js.map
+\ No newline at end of file
++//# sourceMappingURL=ExpoLinking.js.map

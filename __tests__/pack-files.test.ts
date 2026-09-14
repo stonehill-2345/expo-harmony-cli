@@ -102,12 +102,11 @@ function assertPackedDistContainsIconSymbolFallback(cwd: string, files: string[]
 function assertPackedDistContainsRequiredPackageJsonDependencies(cwd: string, files: string[]): void {
   expect(files).toContain('dist/injector/package-json.js');
   const content = fs.readFileSync(path.join(cwd, 'dist/injector/package-json.js'), 'utf8');
+  // v1.3.0: getVersionMatrix(sdk) 动态获取矩阵，bundled JS 不再包含字面 VERSION_MATRIX
   expect(content).toContain("'@babel/runtime'");
-  expect(content).toContain('VERSION_MATRIX.babelRuntime');
+  expect(content).toContain('getVersionMatrix');
   expect(content).toContain("'@react-navigation/elements'");
-  expect(content).toContain('VERSION_MATRIX.reactNavigationElements');
   expect(content).toContain("'@react-native/metro-config'");
-  expect(content).toContain('VERSION_MATRIX.reactNative');
 }
 
 function assertPackedContentContainsHarmonyRuntimeShims(cwd: string, files: string[]): void {
@@ -151,13 +150,13 @@ describe('expo-harmony-cli npm pack files', () => {
     expect(files).toContain('content/templates/index.harmony.js');
     expect(files).toContain('content/templates/postinstall-harmony.js');
     expect(files).toContain('content/shims/expo-metro-runtime.ts');
-    expect(files).toContain('content/patches/@react-native-oh+react-native-harmony+0.77.71.patch');
+    expect(files).toContain('content/patches/sdk-54/@react-native-oh+react-native-harmony+0.82.30.patch');
     expect(files).toContain('content/docs/README.md');
     expect(files).toContain('content/docs/AGENTS.md');
     expect(files).toContain('content/docs/HARMONY.md');
     expect(files).toContain('content/skills/expo-harmony-adapter/SKILL.md');
     expect(files).toContain('content/skills/harmony-plugin-integration/SKILL.md');
-    expect(files).toContain('templates/harmony-template.manifest.json');
+    expect(files).toContain('templates/harmony-sdk-54.manifest.json');
     expect(files).toContain('templates/harmony/entry/src/main/cpp/CMakeLists.txt');
     expect(files).toContain('templates/harmony/entry/src/main/resources/rawfile/.gitkeep');
     expect(files.some(file => file.startsWith('examples/'))).toBe(false);
