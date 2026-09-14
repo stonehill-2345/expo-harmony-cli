@@ -53,17 +53,21 @@ export function getVersionMatrix(sdk: SdkVersion): VersionMatrix {
   return sdk === 'sdk-52' ? VERSION_MATRIX_52 : VERSION_MATRIX_54;
 }
 
-/** 从项目 package.json 的 expo 版本自动检测 SDK。默认返回 sdk-54。 */
+/** 从项目 package.json 的 expo 版本自动检测 SDK；明确拒绝 SDK 53，无法检测时默认 SDK 54。 */
 export function detectSdkVersion(projectRoot: string): SdkVersion {
+  let expoVersion: unknown;
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'));
-    const expoVersion: string | undefined = pkg.dependencies?.expo || pkg.devDependencies?.expo;
-    if (expoVersion) {
-      const major = parseInt(expoVersion.replace(/^[~^]/, '').split('.')[0], 10);
-      if (major >= 54) return 'sdk-54';
-      if (major <= 52) return 'sdk-52';
+    expoVersion = pkg.dependencies?.expo || pkg.devDependencies?.expo;
+  } catch { /* 无法读取版本时保留默认基线 */ }
+  if (typeof expoVersion === 'string') {
+    const major = parseInt(expoVersion.replace(/^[~^]/, '').split('.')[0], 10);
+    if (major === 53) {
+      throw new Error('暂不支持 Expo SDK 53 的 HarmonyOS 适配；请使用 Expo SDK 52 或 54。');
     }
-  } catch { /* ignore */ }
+    if (major >= 54) return 'sdk-54';
+    if (major <= 52) return 'sdk-52';
+  }
   return 'sdk-54';
 }
 

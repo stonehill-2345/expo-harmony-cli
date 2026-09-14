@@ -38,6 +38,21 @@ describe('runHarmonyGeneration (integration)', () => {
   });
   afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
+  it.each(['generate', 'sync'])('SDK 53 → %s --force 不删除或改写已有工程', async operation => {
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ dependencies: { expo: '~53.0.0' } }));
+    const harmonyDir = path.join(tmp, 'harmony');
+    fs.mkdirSync(harmonyDir);
+    fs.writeFileSync(path.join(harmonyDir, 'custom.txt'), 'keep');
+    fs.writeFileSync(path.join(harmonyDir, 'oh-package.json5'), '{}');
+    const action = operation === 'generate'
+      ? runHarmonyGeneration(tmp, { name: 'MyApp', slug: 'myapp' }, { force: true })
+      : syncHarmonyAutolinking(tmp, { force: true });
+    await expect(action).rejects.toThrow(/不支持 Expo SDK 53/);
+    expect(fs.readdirSync(harmonyDir).sort()).toEqual(['custom.txt', 'oh-package.json5']);
+    expect(fs.readFileSync(path.join(harmonyDir, 'custom.txt'), 'utf8')).toBe('keep');
+    expect(fs.readFileSync(path.join(harmonyDir, 'oh-package.json5'), 'utf8')).toBe('{}');
+  });
+
   it('生成 harmony/ 骨架 + autolinking 三文件 + app.json5 bundleName', async () => {
     fs.mkdirSync(path.join(tmp, 'node_modules', '@react-native-ohos', 'react-native-svg'), {
       recursive: true,

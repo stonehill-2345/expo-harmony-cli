@@ -10,6 +10,7 @@ import { HARMONY_PACKAGE_MAPPING } from './harmony-package-mapping';
 import JSON5 from 'json5';
 import packageJson from '../../package.json';
 import { log } from '../utils/log';
+import { detectSdkVersion } from '../version-matrix';
 import {
   findGeneratedFileDrift, readManagedEntries, readManagedState,
   withGeneratedFileBaselines, withManagedEntries, writeManagedState,
@@ -26,6 +27,7 @@ export async function runHarmonyGeneration(
   expoConfig: any,
   opts: HarmonyGenerationOptions = {},
 ): Promise<void> {
+  detectSdkVersion(projectRoot);
   const bundleName = opts.bundleName ?? resolveBundleName(expoConfig);
   const appName = opts.appName ?? resolveAppName(expoConfig);
   const rnohNpmPackageName = opts.rnohNpmPackageName ?? '@react-native-oh/react-native-harmony';
@@ -355,6 +357,7 @@ export async function syncHarmonyAutolinking(
   projectRoot: string,
   opts: SyncAutolinkingOptions = {},
 ): Promise<AutolinkingResult> {
+  detectSdkVersion(projectRoot);
   return syncHarmonyAutolinkingImpl(projectRoot, opts);
 }
 

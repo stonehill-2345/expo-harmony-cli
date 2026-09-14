@@ -60,6 +60,15 @@ describe('命令分发', () => {
     expect(mockCreate).toHaveBeenCalledWith(['my-app']);
   });
 
+  it.each([
+    ['myapp', '--sdk', '52'], ['myapp', '--sdk=54'],
+    ['create', 'myapp', '--sdk', '54'], ['create', 'myapp', '--sdk=52'],
+  ].map(args => [args]))('SDK 参数正确转交 create：%j', async args => {
+    const { dispatch } = await import('../src/index');
+    await dispatch(args);
+    expect(mockCreate).toHaveBeenCalledWith(args[0] === 'create' ? args.slice(1) : args);
+  });
+
   it('未知 flag → 报错并打印 help，不落入 create', async () => {
     const { dispatch } = await import('../src/index');
     const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);

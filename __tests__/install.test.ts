@@ -24,6 +24,27 @@ describe('runInstall', () => {
   });
   afterEach(() => { process.chdir(__dirname); fs.rmSync(tmp, { recursive: true, force: true }); });
 
+  it.each([[], ['--skip-native'], ['--force']].map(flags => [flags]))('SDK 53 → 安装和配置写入前拒绝：%j', async flags => {
+    const packagePath = path.join(tmp, 'package.json');
+    fs.writeFileSync(packagePath, JSON.stringify({ dependencies: { expo: '~53.0.0' } }));
+    const before = fs.readFileSync(packagePath, 'utf8');
+    const appBefore = fs.readFileSync(path.join(tmp, 'app.json'), 'utf8');
+    const { runInstall } = await import('../src/installer/installer');
+    await expect(runInstall(['react-native-permissions', ...flags])).rejects.toThrow(/不支持 Expo SDK 53/);
+    expect(mockRunFile).not.toHaveBeenCalled();
+    expect(mockSyncHarmonyAutolinking).not.toHaveBeenCalled();
+    expect(fs.readFileSync(packagePath, 'utf8')).toBe(before);
+    expect(fs.readFileSync(path.join(tmp, 'app.json'), 'utf8')).toBe(appBefore);
+  });
+
+  it('SDK 53 --skip-harmony → 保留普通 Expo 安装', async () => {
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ dependencies: { expo: '~53.0.0' } }));
+    const { runInstall } = await import('../src/installer/installer');
+    await runInstall(['react-native-video', '--skip-harmony']);
+    expect(mockRunFile).toHaveBeenCalled();
+    expect(mockSyncHarmonyAutolinking).not.toHaveBeenCalled();
+  });
+
   it('expo install 调用 + adaptPackage 命中 alias-only → 不自动 sync', async () => {
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['@shopify/flash-list']);

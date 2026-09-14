@@ -9,15 +9,16 @@ import { runHarmonyGeneration } from '../harmony-project';
 import { writeMetroConfig } from '../injector/metro-config';
 import { getConfig } from '@expo/config';
 import { cleanupStaleIosTemplateOverrides } from '../h-cleanup';
+import { detectSdkVersion } from '../version-matrix';
 
 export async function prebuild(args: string[]): Promise<void> {
   const projectRoot = process.cwd();
   const skipPreflight = args.includes('--skip-preflight');
 
   preflight(projectRoot, skipPreflight);
-  cleanupStaleIosTemplateOverrides(projectRoot);
-
   const { runNative, nativeArgs, runHarmony } = resolveTasks(args);
+  if (runHarmony) detectSdkVersion(projectRoot);
+  cleanupStaleIosTemplateOverrides(projectRoot);
 
   if (runNative) {
     // 工程未安装依赖时 npx 会静默拉取最新 expo（与锁定的 SDK 版本不符，如 52 工程被

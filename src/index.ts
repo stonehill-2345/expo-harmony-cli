@@ -67,10 +67,10 @@ export async function dispatch(argv: string[]): Promise<void> {
     return;
   }
 
-  // 裸项目名兼容：其余参数全为 flag（如 --pnpm）时放行；近似命令拼写提示后仍按项目名创建，
+  // 裸项目名兼容：其余参数为 flag（含 --sdk 的值）时放行；近似命令拼写提示后仍按项目名创建，
   // 避免误拦 scanx 这类合法项目名。
   const nearMiss = COMMANDS.find(command => editDistance(cmd!, command) <= 2);
-  if (rest.some(arg => !arg.startsWith('-'))) {
+  if (rest.some((arg, index) => !arg.startsWith('-') && rest[index - 1] !== '--sdk')) {
     printHelp();
     throw new Error(`未知命令：${cmd}${nearMiss ? `（是否想输入 ${nearMiss}？）` : ''}`);
   }
@@ -112,12 +112,14 @@ Commands:
   list                    列出 compat-table（调试用）
 
 Options:
+  --sdk <52|54>           创建时指定 SDK（也支持 --sdk=52；非交互环境必填）
   -h, --help              显示帮助
   -v, --version           显示 CLI 版本
 
 Examples:
   npx expo-harmony-cli my-app
   npx expo-harmony-cli my-app --sdk=54
+  npx expo-harmony-cli my-app --sdk 54
   pnpm dlx expo-harmony-cli my-app  # pnpm 用户可选
   pnpm dlx expo-harmony-cli install @shopify/flash-list
   pnpm dlx expo-harmony-cli uninstall @shopify/flash-list

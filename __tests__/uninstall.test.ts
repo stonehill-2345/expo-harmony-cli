@@ -34,6 +34,34 @@ describe('runUninstall', () => {
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 
+  it('SDK 53 → 卸载和 Harmony 资产清理前拒绝', async () => {
+    const packagePath = path.join(tmp, 'package.json');
+    const pkg = JSON.parse(fs.readFileSync(packagePath, 'utf8'));
+    pkg.dependencies.expo = '~53.0.0';
+    fs.writeFileSync(packagePath, JSON.stringify(pkg));
+    const { recordManagedPackage } = await import('../src/lifecycle/managed-state');
+    recordManagedPackage(tmp, 'react-native-webview', {
+      harmonyPackage: '@react-native-ohos/react-native-webview',
+      alias: 'react-native-webview',
+      needsAutolink: true,
+    });
+    const files = ['package.json', 'shims/.alias-map.json', '.expo-harmony/managed-state.json'];
+    const before = files.map(file => fs.readFileSync(path.join(tmp, file), 'utf8'));
+    const { runUninstall } = await import('../src/installer/uninstaller');
+    await expect(runUninstall(['react-native-webview', '--force'])).rejects.toThrow(/不支持 Expo SDK 53/);
+    expect(mockRunFile).not.toHaveBeenCalled();
+    expect(mockSync).not.toHaveBeenCalled();
+    expect(files.map(file => fs.readFileSync(path.join(tmp, file), 'utf8'))).toEqual(before);
+  });
+
+  it('SDK 53 --skip-harmony → 允许仅卸载原包', async () => {
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ dependencies: { expo: '~53.0.0' } }));
+    const { runUninstall } = await import('../src/installer/uninstaller');
+    await runUninstall(['react-native-webview', '--skip-harmony']);
+    expect(mockRunFile).toHaveBeenCalledWith('pnpm', ['remove', 'react-native-webview'], expect.anything());
+    expect(mockSync).not.toHaveBeenCalled();
+  });
+
   it('卸载 native 包会清理 CLI 管理资产并增量同步原生工程', async () => {
     const { recordManagedPackage } = await import('../src/lifecycle/managed-state');
     recordManagedPackage(tmp, 'react-native-webview', {

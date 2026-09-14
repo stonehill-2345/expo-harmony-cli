@@ -6,6 +6,7 @@ import { cleanupManagedPackage, readManagedState } from '../lifecycle/managed-st
 import { uninstallCmd, resolvePm, runScriptCmd } from '../lib/pkg-manager';
 import { runFile } from '../utils/exec';
 import { log } from '../utils/log';
+import { detectSdkVersion } from '../version-matrix';
 
 const DEVECO_OHPM_PATH = '/Applications/DevEco-Studio.app/Contents/tools/ohpm/bin/ohpm';
 
@@ -31,6 +32,7 @@ export async function runUninstall(args: string[]): Promise<void> {
   const projectRoot = process.cwd();
   const originalPackage = packageName(requested);
   const skipHarmony = args.includes('--skip-harmony');
+  if (!skipHarmony) detectSdkVersion(projectRoot);
   const skipNative = args.includes('--skip-native');
   const force = args.includes('--force');
   const pm = resolvePm(args, projectRoot);

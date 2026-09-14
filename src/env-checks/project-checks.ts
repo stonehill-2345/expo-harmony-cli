@@ -31,13 +31,18 @@ function getBaseline(projectRoot: string) {
 
 export const baselineCheck: Check = ctx => {
   if (!ctx.projectRoot) return { id: 'baseline', label: '依赖基线', status: 'skip', level: 'required', detail: '非项目目录，跳过' };
+  let pkg: any;
   try {
-    const pkg = JSON.parse(fs.readFileSync(path.join(ctx.projectRoot, 'package.json'), 'utf8')) as any;
+    pkg = JSON.parse(fs.readFileSync(path.join(ctx.projectRoot, 'package.json'), 'utf8'));
+  } catch { return { id: 'baseline', label: '依赖基线', status: 'warn', level: 'required', detail: '无法解析依赖清单（package.json）' }; }
+  try {
     const deps = { ...pkg.devDependencies, ...pkg.dependencies };
     const baseline = getBaseline(ctx.projectRoot);
     const mismatches = baseline.filter(item => typeof deps[item.dep] === 'string' && scope(deps[item.dep], item.kind) !== scope(item.value, item.kind)).map(item => `${item.dep} ${deps[item.dep]} ≠ 验证基线 ${item.value}`);
     return mismatches.length ? { id: 'baseline', label: '依赖基线', status: 'warn', level: 'required', detail: `${mismatches.join('；')}（未验证组合）` } : { id: 'baseline', label: '依赖基线', status: 'ok', level: 'required', detail: '与验证基线一致' };
-  } catch { return { id: 'baseline', label: '依赖基线', status: 'warn', level: 'required', detail: '无法解析依赖清单（package.json）' }; }
+  } catch (error) {
+    return { id: 'baseline', label: '依赖基线', status: 'fail', level: 'required', detail: error instanceof Error ? error.message : String(error) };
+  }
 };
 
 export const driftCheck: Check = ctx => {

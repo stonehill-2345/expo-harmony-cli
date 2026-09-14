@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
@@ -70,9 +70,19 @@ vi.mock('../src/utils/log', () => ({
 }));
 
 describe('runCreate', () => {
+  const streams = [process.stdin, process.stdout];
+  const ttyDescriptors = streams.map(stream => Object.getOwnPropertyDescriptor(stream, 'isTTY'));
+  afterEach(() => {
+    streams.forEach((stream, index) => {
+      const descriptor = ttyDescriptors[index];
+      if (descriptor) Object.defineProperty(stream, 'isTTY', descriptor);
+      else Reflect.deleteProperty(stream, 'isTTY');
+    });
+  });
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    streams.forEach(stream => Object.defineProperty(stream, 'isTTY', { configurable: true, value: true }));
   });
 
   it('编排：拉模版 → 注入基线 → 文档/skill → 扫描 → H清理', async () => {
@@ -175,6 +185,63 @@ describe('runCreate', () => {
     expect(fs.existsSync(path.join(projectDir, 'index.harmony.js'))).toBe(true);
 
     fs.rmSync(tmp, { recursive: true, force: true });
+  });
+
+  it.each([
+    ['52', ['myapp', '--sdk=52']],
+    ['54', ['myapp', '--sdk=54']],
+    ['52', ['myapp', '--sdk', '52']],
+    ['54', ['myapp', '--sdk', '54']],
+    ['52', ['--sdk', '52', 'myapp']],
+  ])('非交互显式 SDK %s：%j → 使用对应模板且不询问', async (sdk, args) => {
+    streams.forEach(stream => Object.defineProperty(stream, 'isTTY', { configurable: true, value: false }));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk-'));
+    try {
+      const { runCreate } = await import('../src/creator');
+      const { runFileQuiet } = await import('../src/utils/exec');
+      const { select } = await import('@inquirer/prompts');
+      await runCreate(args as string[], { cwd: tmp });
+      expect(select).not.toHaveBeenCalled();
+      expect(runFileQuiet).toHaveBeenCalledWith('npx',
+        ['create-expo-app', 'myapp', '--template', `default@sdk-${sdk}`, '--no-install'], { cwd: tmp });
+      const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'myapp/package.json'), 'utf8'));
+      expect(pkg.dependencies.expo).toMatch(new RegExp(`^${sdk}\\.`));
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it.each([
+    ['--sdk', '53'], ['--sdk=53'], ['--sdk'], ['--sdk='],
+    ['--sdk', '--pnpm'], ['--sdk=52=54'], ['--sdk=52', '--sdk', '54'],
+  ].map(flags => [flags]))('非法 SDK 参数 %j → 创建前报错', async flags => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk-'));
+    try {
+      const { runCreate } = await import('../src/creator');
+      const { runFileQuiet } = await import('../src/utils/exec');
+      const { select } = await import('@inquirer/prompts');
+      await expect(runCreate(['myapp', ...flags], { cwd: tmp })).rejects.toThrow(/--sdk/);
+      expect(runFileQuiet).not.toHaveBeenCalled();
+      expect(select).not.toHaveBeenCalled();
+      expect(fs.readdirSync(tmp)).toEqual([]);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it.each([0, 1])('输入或输出非 TTY（%s）且无 SDK → 提示显式指定，不进入交互', async index => {
+    Object.defineProperty(streams[index], 'isTTY', { configurable: true, value: false });
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk-'));
+    try {
+      const { runCreate } = await import('../src/creator');
+      const { runFileQuiet } = await import('../src/utils/exec');
+      const { select } = await import('@inquirer/prompts');
+      await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/非交互.*--sdk/);
+      expect(select).not.toHaveBeenCalled();
+      expect(runFileQuiet).not.toHaveBeenCalled();
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
   });
 
   it('缺项目名 → 报错', async () => {

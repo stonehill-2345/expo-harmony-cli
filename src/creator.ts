@@ -67,16 +67,22 @@ const SDK_CHOICES: Array<{ value: SdkVersion; label: string }> = [
 ];
 
 function parseSdkFlag(args: string[]): { sdk: SdkVersion | null; rest: string[] } {
-  const sdkArg = args.find(a => a.startsWith('--sdk='));
-  if (!sdkArg) return { sdk: null, rest: args };
-  const value = sdkArg.split('=')[1];
-  if (value !== '52' && value !== '54') {
-    throw new Error('--sdk 仅支持 52 或 54');
+  let sdk: SdkVersion | null = null;
+  const rest: string[] = [];
+  for (let i = 0; i < args.length; i++) {
+    const arg = args[i];
+    if (arg !== '--sdk' && !arg.startsWith('--sdk=')) {
+      rest.push(arg);
+      continue;
+    }
+    if (sdk !== null) throw new Error('--sdk 只能指定一次');
+    const value = arg === '--sdk' ? args[++i] : arg.slice('--sdk='.length);
+    if (value !== '52' && value !== '54') {
+      throw new Error('--sdk 仅支持 52 或 54，例如 --sdk=52 或 --sdk 54');
+    }
+    sdk = value === '52' ? 'sdk-52' : 'sdk-54';
   }
-  return {
-    sdk: value === '52' ? 'sdk-52' : 'sdk-54',
-    rest: args.filter(a => a !== sdkArg),
-  };
+  return { sdk, rest };
 }
 
 /** create 命令编排：选择 SDK → 创建模板 → 注入鸿蒙基线 → 适配依赖 → 写入开发资料。*/
@@ -90,6 +96,9 @@ export async function runCreate(args: string[], opts: CreateOptions = {}): Promi
   const cwd = opts.cwd || process.cwd();
 
   // 步骤 0：选择 Expo SDK 版本（--sdk flag 优先，否则交互式选择）
+  if (flagSdk === null && (!process.stdin.isTTY || !process.stdout.isTTY)) {
+    throw new Error('非交互环境必须显式指定 Expo SDK：请使用 --sdk=52 或 --sdk=54');
+  }
   const sdk: SdkVersion = flagSdk ?? await select({
     message: '选择 Expo SDK 模板版本',
     choices: SDK_CHOICES.map(({ value, label }) => ({ value, name: label })),
