@@ -101,7 +101,7 @@ function printHelp(): void {
 expo-harmony-cli <command> [args]
 
 Commands:
-  create [name]           创建含鸿蒙基线的 Expo 项目（默认命令）
+  create [name]           创建含鸿蒙基线的 Expo 项目（默认命令，--sdk=52|54 指定基线）
   install <pkg>           装 iOS/Android + 鸿蒙 JS 包 + 原生集成（--force 跳过 drift 保护）
   uninstall <pkg>         卸载包并清理 CLI 管理的 HarmonyOS 适配资产（remove 同义，--force 跳过 drift 保护）
   prebuild [args]         生成三端原生目录（透传 expo prebuild + harmony 走生成器）
@@ -117,6 +117,7 @@ Options:
 
 Examples:
   npx expo-harmony-cli my-app
+  npx expo-harmony-cli my-app --sdk=54
   pnpm dlx expo-harmony-cli my-app  # pnpm 用户可选
   pnpm dlx expo-harmony-cli install @shopify/flash-list
   pnpm dlx expo-harmony-cli uninstall @shopify/flash-list

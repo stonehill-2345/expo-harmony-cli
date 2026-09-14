@@ -39,7 +39,6 @@
 - pnpm `>= 10.19.0`
 - DevEco Studio 5.0+，并安装可用的 OpenHarmony SDK
 - HarmonyOS 真机已开启开发者模式和 USB 调试，或已创建可用模拟器
-- 
 
 建议在 macOS 上将 `ohpm` 加入 `PATH`：
 

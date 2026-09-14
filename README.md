@@ -1,6 +1,6 @@
 # expo-harmony-cli
 
-使用 Expo SDK 52（RN 0.77）或 SDK 54（RN 0.82）创建 React Native 项目，并注入 HarmonyOS（OpenHarmony）开发基线的命令行工具。
+使用 Expo SDK 创建 React Native 项目，并注入 HarmonyOS（OpenHarmony）开发基线的命令行工具。
 
 <p align="center">
   <strong>用 Expo 工作流，一套 React Native 代码同时覆盖 HarmonyOS、iOS、Android 三端</strong>
@@ -15,7 +15,7 @@
 
 ---
 
-- 创建 Expo SDK 52 或 SDK 54 项目，并固定对应版本的 RN / RNOH 开发基线
+- 创建 Expo 项目，固定所选 SDK 版本对应的 RN / RNOH 开发基线（支持的版本见下方[环境与支持范围](#环境与支持范围)）
 - 生成 HarmonyOS 原生工程、Metro 配置、RNOH 依赖和开发文档
 - 通过 CLI 管理三方依赖、patch、Metro alias 与 HarmonyOS 原生注册
 - 内置 `env` / `doctor` 诊断命令：工具链环境检查、项目健康诊断，退出码分级可接入 CI
@@ -24,7 +24,7 @@
 
 ## 这是什么？
 
-**一句话**：`expo-harmony-cli` 是一个命令行工具，让你用 Expo SDK 52 + React Native 0.77.1 创建项目，一键生成 HarmonyOS（OpenHarmony）原生工程，同一套 JS/TS 代码同时运行在鸿蒙、iOS、Android 上。
+**一句话**：`expo-harmony-cli` 是一个命令行工具，让你用 Expo SDK 创建项目，一键生成 HarmonyOS（OpenHarmony）原生工程，同一套 JS/TS 代码同时运行在鸿蒙、iOS、Android 上。
 
 - 🎯 **问题**：React Native 生态缺乏标准化的鸿蒙开发工具链，手动配置鸿蒙原生工程繁琐且易出错
 - ✅ **解决**：一条 `npx` 命令完成项目创建、鸿蒙工程生成、依赖管理、原生注册，沿用 Expo CNG（Continuous Native Generation）工作流
@@ -44,19 +44,15 @@
 ## 快速开始
 
 ```bash
-# 1. 创建项目
+# 1. 创建项目（npm / pnpm / yarn / bun 均可，省略 --sdk 时交互选择）
 npx expo-harmony-cli my-harmony-app [--sdk=52|54]
-# pnpm 用户也可以使用：
-pnpm dlx expo-harmony-cli my-harmony-app [--sdk=52|54]
-
-# 不指定 --sdk 时会弹出交互式选择：Expo SDK 54 模板 / Expo SDK 52 模板
 
 # 2. 安装 JS 依赖并应用 HarmonyOS patch
 cd my-harmony-app
 pnpm install
 
 # 3. 首次生成 HarmonyOS 原生工程
-pnpm dlx expo-harmony-cli prebuild --platform harmony
+npx expo-harmony-cli prebuild --platform harmony
 
 # 4. 安装 ArkTS / HAR 原生依赖
 cd harmony
@@ -71,15 +67,15 @@ pnpm start:harmony
 
 ## 核心能力
 
-| 能力 | 说明 |
-|------|------|
-| 🚀 **一键创建** | `npx expo-harmony-cli <目录名>` 创建 Expo SDK 52 项目，自动注入 HarmonyOS 开发基线 |
-| 🧬 **原生工程生成** | 生成 HarmonyOS 原生工程、Metro 配置、RNOH（React Native OpenHarmony）依赖和开发文档 |
-| 📦 **依赖管理** | 通过 CLI 统一管理三方依赖、patch、Metro alias 与 HarmonyOS 原生注册 |
+| 能力                | 说明                                                                                          |
+| ------------------- | --------------------------------------------------------------------------------------------- |
+| 🚀 **一键创建**     | `npx expo-harmony-cli <目录名> [--sdk=52\|54]` 创建 Expo 项目，自动注入 HarmonyOS 开发基线    |
+| 🧬 **原生工程生成** | 生成 HarmonyOS 原生工程、Metro 配置、RNOH（React Native OpenHarmony）依赖和开发文档           |
+| 📦 **依赖管理**     | 通过 CLI 统一管理三方依赖、patch、Metro alias 与 HarmonyOS 原生注册                           |
 | 🔗 **智能原生注册** | 官方优先：优先调用 RNOH 官方 `link-harmony`，未覆盖由内置映射表补充，均未覆盖逐包提示适配指引 |
-| 🩺 **环境诊断** | 内置 `env` / `doctor` 命令，工具链检查 + 项目健康诊断，退出码分级可接入 CI |
-| 🛡️ **文件保护** | autolinking 托管文件被手动修改时阻断覆盖，事务写入失败自动回滚 |
-| 🔄 **Expo 兼容** | 保留 Android、iOS 与 Web 的 Expo 标准工作流，不影响现有开发生态 |
+| 🩺 **环境诊断**     | 内置 `env` / `doctor` 命令，工具链检查 + 项目健康诊断，退出码分级可接入 CI                    |
+| 🛡️ **文件保护**     | autolinking 托管文件被手动修改时阻断覆盖，事务写入失败自动回滚                                |
+| 🔄 **Expo 兼容**    | 保留 Android、iOS 与 Web 的 Expo 标准工作流，不影响现有开发生态                               |
 
 ## 效果预览
 
@@ -89,27 +85,27 @@ pnpm start:harmony
 
 ## 常用命令
 
-| 命令 | 用途 |
-|------|------|
-| `npx expo-harmony-cli <目录名>` | 创建项目并注入 HarmonyOS 基线 |
-| `pnpm dlx expo-harmony-cli install <包名>` | 安装依赖，自动追加 HarmonyOS 适配 |
-| `pnpm dlx expo-harmony-cli prebuild --platform harmony` | 生成 HarmonyOS 原生工程 |
-| `pnpm dlx expo-harmony-cli doctor` | 环境 + 项目健康诊断（退出码可接入 CI） |
-| `pnpm start:harmony` | 启动 HarmonyOS Metro（端口 8081） |
+| 命令                                               | 用途                                   |
+| -------------------------------------------------- | -------------------------------------- |
+| `npx expo-harmony-cli <目录名>`                    | 创建项目并注入 HarmonyOS 基线          |
+| `npx expo-harmony-cli install <包名>`              | 安装依赖，自动追加 HarmonyOS 适配      |
+| `npx expo-harmony-cli prebuild --platform harmony` | 生成 HarmonyOS 原生工程                |
+| `npx expo-harmony-cli doctor`                      | 环境 + 项目健康诊断（退出码可接入 CI） |
+| `pnpm start:harmony`                               | 启动 HarmonyOS Metro（端口 8081）      |
 
 > 完整命令参考（`sync`、`scan`、`env`、`list`、`uninstall` 等）见 [使用指南 → 常用命令](./docs/guide.md#常用命令)。
 
 ## 环境与支持范围
 
-| 项 | 要求 / 基线 |
-|------|-------------|
-| Node.js | ≥ 18.18.0 |
-| pnpm | ≥ 10.19.0 |
-| DevEco Studio | 5.0+（含 OpenHarmony SDK、ohpm、hdc） |
-| Expo | SDK 52 |
-| React Native | 0.77.1 |
-| RNOH（React Native OpenHarmony） | 0.77.71 |
-| iOS 构建 | Xcode 16.4 及以下 |
+| 项                               | 要求 / 基线                               |
+| -------------------------------- | ----------------------------------------- |
+| Node.js                          | ≥ 20.19.4                                 |
+| pnpm                             | ≥ 10.19.0                                 |
+| DevEco Studio                    | 5.0+（含 OpenHarmony SDK、ohpm、hdc）     |
+| Expo                             | SDK 52（Expo 52.x）或 SDK 54（Expo 54.x） |
+| React Native                     | 0.77.x（SDK 52）或 0.82.x（SDK 54）       |
+| RNOH（React Native OpenHarmony） | 0.77.x（SDK 52）或 0.82.x（SDK 54）       |
+| iOS 构建                         | 遵循对应 Expo SDK 版本官方要求            |
 
 > 详细环境配置见 [使用指南 → 环境要求](./docs/guide.md#环境要求)。
 
@@ -128,7 +124,7 @@ pnpm start:harmony
 
 ### 为什么需要这个工具？直接用 Expo 不行吗？
 
-Expo 官方目前不支持 HarmonyOS 平台。`expo-harmony-cli` 在 Expo SDK 52 基础上，通过 RNOH（React Native OpenHarmony）桥接层，让同一套 React Native 代码能运行在鸿蒙设备上。
+Expo 官方目前不支持 HarmonyOS 平台。`expo-harmony-cli` 在 Expo SDK 基础上，通过 RNOH（React Native OpenHarmony）桥接层，让同一套 React Native 代码能运行在鸿蒙设备上。
 
 ### 支持哪些 React Native 库？
 
