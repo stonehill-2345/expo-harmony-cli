@@ -34,6 +34,17 @@ describe('injectHarmonyBaseline', () => {
     expect(fs.existsSync(path.join(tmp, 'scripts/bundle-harmony-dev.js'))).toBe(true);
   });
 
+  it.each([
+    ['sdk-52', 'expo-document-picker+13.0.3.patch', 'expo-linear-gradient+14.0.2.patch'],
+    ['sdk-54', 'expo-document-picker+14.0.8.patch', 'expo-linear-gradient+15.0.8.patch'],
+  ] as const)('不为 package.json 未声明的 %s 依赖复制 SDK patch', (sdk, documentPickerPatch, linearGradientPatch) => {
+    injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp', sdk });
+
+    expect(fs.existsSync(path.join(tmp, 'patches'))).toBe(true);
+    expect(fs.existsSync(path.join(tmp, `patches/${documentPickerPatch}`))).toBe(false);
+    expect(fs.existsSync(path.join(tmp, `patches/${linearGradientPatch}`))).toBe(false);
+  });
+
   it('app.json 注入 harmony 块 + android.package 兜底', () => {
     injectHarmonyBaseline(tmp, { slug: 'myapp', scheme: 'myapp', sdk: 'sdk-54' });
     const app = JSON.parse(fs.readFileSync(path.join(tmp, 'app.json'), 'utf8'));

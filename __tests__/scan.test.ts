@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
 import { scanAndAdapt } from '../src/scanner/scan';
-import { recordManagedPackage } from '../src/lifecycle/managed-state';
+import { readManagedState, recordManagedPackage } from '../src/lifecycle/managed-state';
 
 describe('scanAndAdapt', () => {
   let tmp: string;
@@ -46,6 +46,27 @@ describe('scanAndAdapt', () => {
     expect(pkg.dependencies['react-native']).toBe('0.82.1');
     expect(pkg.dependencies['@react-native-oh/react-native-harmony']).toBe('0.82.30');
     expect(report.bumped.find(b => b.from === 'react-native')).toBeTruthy();
+  });
+
+  it('SDK 54 screens 按依赖复制 Harmony patch，保留原包版本并登记托管状态', () => {
+    const patchPath = 'patches/@react-native-ohos+react-native-screens+4.9.0.patch';
+    const report = scanAndAdapt(tmp, 'sdk-54');
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
+    expect(report.patched).toContainEqual({ original: 'react-native-screens', patchPath });
+    expect(fs.existsSync(path.join(tmp, patchPath))).toBe(true);
+    expect(pkg.dependencies['react-native-screens']).toBe('4.17.1');
+    expect(pkg.dependencies['@react-native-ohos/react-native-screens']).toBe('4.9.0');
+    expect(readManagedState(tmp).packages['react-native-screens'].patchFiles).toEqual([
+      expect.objectContaining({ targetPath: patchPath }),
+    ]);
+  });
+
+  it.each(['sdk-52', 'sdk-54'] as const)('%s 不为未声明的 screens 复制补丁', (sdk) => {
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
+    delete pkg.dependencies['react-native-screens'];
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg));
+    scanAndAdapt(tmp, sdk);
+    expect(fs.readdirSync(path.join(tmp, 'patches')).some(name => name.includes('react-native-screens'))).toBe(false);
   });
 
   it('bump-native: react-native-screens 升级到 0.82 兼容版本并添加鸿蒙配套包', () => {

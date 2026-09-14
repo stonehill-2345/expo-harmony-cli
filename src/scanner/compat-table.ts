@@ -80,7 +80,7 @@ function buildCompatTable54(V: VersionMatrix): Record<string, CompatEntry> {
   return {
     // ===== B 类：bump + native =====
     'react-native': { original: 'react-native', status: 'bump-native', bumpTo: V.reactNative, harmony: { package: '@react-native-oh/react-native-harmony', version: V.rnoh } },
-    'react-native-screens': { original: 'react-native-screens', status: 'bump-native', bumpTo: V.rnScreens, harmony: { package: '@react-native-ohos/react-native-screens', version: '4.9.0' } },
+    'react-native-screens': { original: 'react-native-screens', status: 'bump-native', bumpTo: V.rnScreens, harmony: { package: '@react-native-ohos/react-native-screens', version: '4.9.0' }, patch: { sourceFile: 'content/patches/sdk-54/@react-native-ohos+react-native-screens+4.9.0.patch', targetPath: 'patches/@react-native-ohos+react-native-screens+4.9.0.patch', dependencyVersion: V.rnScreens } },
     'react-native-reanimated': { original: 'react-native-reanimated', status: 'bump-native', bumpTo: V.rnReanimated, harmony: { package: '@react-native-ohos/react-native-reanimated', version: '4.0.2' } },
     'react-native-worklets': { original: 'react-native-worklets', status: 'bump-native', bumpTo: V.rnWorklets, harmony: { package: '@react-native-ohos/react-native-worklets', version: '1.0.1', alias: 'react-native-worklets' } },
     'react-native-gesture-handler': { original: 'react-native-gesture-handler', status: 'bump-native', bumpTo: V.rnGestureHandler, harmony: { package: '@react-native-ohos/react-native-gesture-handler', version: '2.30.2' } },

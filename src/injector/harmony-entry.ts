@@ -31,17 +31,8 @@ export function writeHarmonyEntry(targetDir: string, scheme: string, sdk: SdkVer
     path.join(shimsDir, 'harmony-form-data.js'),
   );
 
-  // 从 SDK 对应目录复制所有 patch 到项目（patch-package 在 postinstall 阶段 apply）
-  const patchesDir = path.join(targetDir, 'patches');
-  fs.mkdirSync(patchesDir, { recursive: true });
-  const patchesSrc = path.join(__dirname, '..', '..', 'content', 'patches', sdk);
-  if (fs.existsSync(patchesSrc)) {
-    for (const f of fs.readdirSync(patchesSrc)) {
-      if (f.endsWith('.patch')) {
-        fs.copyFileSync(path.join(patchesSrc, f), path.join(patchesDir, f));
-      }
-    }
-  }
+  // 只创建 patch 目录；具体 patch 由 scanAndAdapt/adaptPackage 按实际依赖复制。
+  fs.mkdirSync(path.join(targetDir, 'patches'), { recursive: true });
 
   // 初始 .alias-map.json（scanAndAdapt Task 6 会合并更多）
   const aliasMap = {

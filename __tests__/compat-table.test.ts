@@ -1,8 +1,13 @@
 import { describe, it, expect } from 'vitest';
 import { HARMONY_PACKAGE_MAPPING } from '../src/harmony-project/harmony-package-mapping';
-import { COMPAT_TABLE } from '../src/scanner/compat-table';
+import { COMPAT_TABLE, getCompatTable } from '../src/scanner/compat-table';
 
 describe('COMPAT_TABLE', () => {
+  it('screens 的 SDK 54 补丁不影响 SDK 52 的版本配对', () => {
+    const entry = getCompatTable('sdk-52')['react-native-screens'];
+    expect(entry.harmony?.version).toBe('4.8.1-rc.7');
+    expect(entry.patch).toBeUndefined();
+  });
   it('含 default 模版核心依赖', () => {
     expect(COMPAT_TABLE['react-native'].status).toBe('bump-native');
     expect(COMPAT_TABLE['expo-router'].status).toBe('alias-only');

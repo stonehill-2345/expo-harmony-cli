@@ -14,6 +14,16 @@ describe('adaptPackage', () => {
   });
   afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
+  it('SDK 54 单包安装 screens 时复制 Harmony patch，不把原包降到补丁包版本', () => {
+    const patchPath = 'patches/@react-native-ohos+react-native-screens+4.9.0.patch';
+    const result = adaptPackage('react-native-screens', tmp);
+    expect(result.patchPath).toBe(patchPath);
+    expect(fs.existsSync(path.join(tmp, patchPath))).toBe(true);
+    const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
+    expect(pkg.dependencies['react-native-screens']).toBe('4.17.1');
+    expect(pkg.dependencies['@react-native-ohos/react-native-screens']).toBe('4.9.0');
+  });
+
   it('未命中 → skipped，不动 package.json', () => {
     const r = adaptPackage('lodash', tmp);
     expect(r.status).toBe('skipped');
