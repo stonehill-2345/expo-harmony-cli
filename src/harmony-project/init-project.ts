@@ -58,11 +58,11 @@ export async function initProject(opts: InitOptions): Promise<void> {
   const dynamicFiles: Array<[string, string]> = [
     [
       path.join(harmonyDir, 'oh-package.json5'),
-      new OhPackageJson5Template(rnohNpmPackageName).build(),
+      new OhPackageJson5Template(rnohNpmPackageName, sdk).build(),
     ],
     [
       path.join(harmonyDir, 'entry', 'oh-package.json5'),
-      new EntryOhPackageJson5Template(rnohNpmPackageName).build(),
+      new EntryOhPackageJson5Template(rnohNpmPackageName, sdk).build(),
     ],
     [
       path.join(harmonyDir, 'hvigor', 'hvigor-config.json5'),

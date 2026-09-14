@@ -41,8 +41,31 @@ describe('scan 命令', () => {
 });
 
 describe('list 命令', () => {
-  it('list 不抛错（列 compat-table）', async () => {
+  let listTmp: string;
+  beforeEach(() => {
+    listTmp = fs.mkdtempSync(path.join(os.tmpdir(), 'list-cmd-'));
+    process.chdir(listTmp);
+  });
+  afterEach(() => {
+    process.chdir(__dirname);
+    fs.rmSync(listTmp, { recursive: true, force: true });
+  });
+
+  it('list 按当前项目 Expo SDK 展示对应兼容表', async () => {
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     const { list } = await import('../src/commands/list');
-    expect(() => list()).not.toThrow();
+
+    fs.writeFileSync(path.join(process.cwd(), 'package.json'), JSON.stringify({ dependencies: { expo: '~52.0.49' } }));
+    await list();
+    const sdk52Output = output.mock.calls.flat().join('\n');
+    expect(sdk52Output).toContain('react-native-reanimated');
+    expect(sdk52Output).not.toContain('react-native-worklets');
+
+    output.mockClear();
+    fs.writeFileSync(path.join(process.cwd(), 'package.json'), JSON.stringify({ dependencies: { expo: '~54.0.37' } }));
+    await list();
+    const sdk54Output = output.mock.calls.flat().join('\n');
+    expect(sdk54Output).toContain('react-native-worklets');
+    output.mockRestore();
   });
 });

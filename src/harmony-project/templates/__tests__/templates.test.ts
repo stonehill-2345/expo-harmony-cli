@@ -14,6 +14,16 @@ describe('dynamic templates', () => {
     expect(out).toContain('"@rnoh/react-native-openharmony": "file:../node_modules/@react-native-oh/react-native-harmony/react_native_openharmony.har"');
   });
 
+  it('SDK 52 不生成 Worklets 依赖或 override', () => {
+    const root = new OhPackageJson5Template('@react-native-oh/react-native-harmony', 'sdk-52').build();
+    const entry = new EntryOhPackageJson5Template('@react-native-oh/react-native-harmony', 'sdk-52').build();
+
+    expect(root).not.toContain('react-native-worklets');
+    expect(root).not.toContain('worklets.har');
+    expect(entry).not.toContain('react-native-worklets');
+    expect(entry).not.toContain('worklets.har');
+  });
+
   it('EntryOhPackageJson5Template 注入 entry 可解析的 RNOH 包路径', () => {
     const out = new EntryOhPackageJson5Template('@react-native-oh/react-native-harmony').build();
     expect(out).toContain('"name": "entry"');
