@@ -1,0 +1,7 @@
+{
+  "name": "rnoh-autolinking-verification",
+  "version": "1.0.0",
+  "dependencies": {
+    "@react-native-ohos/react-native-gesture-handler": "file:../node_modules/@react-native-ohos/react-native-gesture-handler/harmony/gesture_handler.har"
+  }
+}
