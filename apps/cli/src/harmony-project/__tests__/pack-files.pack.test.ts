@@ -1,36 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
-import { execFileSync } from 'child_process';
-import { resolveCommand } from '../../utils/exec';
-
-interface PackFile {
-  path: string;
-}
-
-function packageRoot(): string {
-  return path.resolve(__dirname, '..', '..', '..');
-}
-
-function dryRunPackFiles(cwd: string): string[] {
-  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'npm-pack-cache-'));
-  try {
-    const output = execFileSync(resolveCommand('npm'), ['pack', '--dry-run', '--json'], {
-      cwd,
-      encoding: 'utf8',
-      env: {
-        ...process.env,
-        npm_config_cache: cacheDir,
-        npm_config_loglevel: 'silent',
-      },
-    });
-    const parsed = JSON.parse(output) as Array<{ files: PackFile[] }>;
-    return parsed[0].files.map(file => file.path).sort();
-  } finally {
-    fs.rmSync(cacheDir, { recursive: true, force: true });
-  }
-}
+import { readPackedCli } from '../../../__tests__/helpers/packed-cli';
 
 function assertPackedDistContainsMetro8081Provider(cwd: string, files: string[]): void {
   expect(files).toContain('dist/harmony-project/templates/EntryIndexTemplate.js');
@@ -57,8 +28,7 @@ function assertPackedFilesDoNotContainLocalState(cwd: string, files: string[]): 
 
 describe('内置 HarmonyOS 生成器 pack 文件', () => {
   it('ships the bundled HarmonyOS template, manifest, and runtime build output', () => {
-    const cwd = packageRoot();
-    const files = dryRunPackFiles(cwd);
+    const { root: cwd, files } = readPackedCli();
 
     expect(files).toContain('dist/harmony-project/index.js');
     expect(files).toContain('dist/harmony-project/template-source.js');

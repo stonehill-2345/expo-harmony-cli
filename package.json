@@ -11,6 +11,8 @@
     "type-check": "pnpm --filter expo-harmony-cli type-check",
     "test": "pnpm --filter expo-harmony-cli test",
     "test:watch": "pnpm --filter expo-harmony-cli test:watch",
+    "test:pack": "pnpm --filter expo-harmony-cli test:pack",
+    "check": "pnpm --filter expo-harmony-cli check",
     "clean": "pnpm --filter expo-harmony-cli clean",
     "pack:cli": "pnpm --dir apps/cli pack"
   }

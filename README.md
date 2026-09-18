@@ -59,14 +59,27 @@ expo-harmony-cli/
 
 ```bash
 pnpm install --frozen-lockfile
-pnpm type-check
-pnpm build
-pnpm test
+pnpm check
 ```
 
-根命令目前转发至 CLI。单独运行和打包：
+根命令目前转发至 CLI：
+
+| 命令 | 用途 |
+| --- | --- |
+| `pnpm test` | 源码测试，不需要先构建 |
+| `pnpm test:watch` | 监听源码测试 |
+| `pnpm test:pack` | 在临时目录构建、打包并验证实际安装包 |
+| `pnpm type-check` | TypeScript 类型检查 |
+| `pnpm check` | 类型检查 → 源码测试 → 产物测试；CI 使用相同入口 |
+| `pnpm build` | 生成本地调试用的 `apps/cli/dist` |
+| `pnpm pack:cli` | 自动清理、构建并生成 CLI 安装包 |
+
+产物测试不复用或修改工作区的 `dist`，两组产物测试共享一次真实打包结果。`pnpm check` 不生成本地调试用的 `dist`。
+
+运行本地 CLI 时先构建；单独打包会通过 `prepack` 自动构建：
 
 ```bash
+pnpm build
 pnpm --dir apps/cli exec node dist/index.js --help
 pnpm pack:cli --pack-destination /tmp/expo-harmony-cli-pack
 ```

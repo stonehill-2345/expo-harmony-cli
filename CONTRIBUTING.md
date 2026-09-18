@@ -5,11 +5,13 @@
 ## 开发流程
 
 ```bash
-pnpm install
-pnpm type-check
-pnpm build
-pnpm test
+pnpm install --frozen-lockfile
+pnpm check
 ```
+
+`pnpm test` 和 `pnpm test:watch` 只执行源码测试，无需 `dist`。`pnpm test:pack` 在临时副本执行一次真实打包，两组产物测试读取同一解包结果。新增产物测试使用 `*.pack.test.ts` 命名；其他测试使用 `*.test.ts`。
+
+`pnpm check` 串联类型检查、源码测试和产物测试；CI 调用同一命令。调试本地 CLI 前使用 `pnpm build`；`pnpm pack:cli` 会自动清理旧产物并构建。
 
 ## Pull Request 要求
 

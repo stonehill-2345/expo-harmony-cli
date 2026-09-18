@@ -1,13 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as fs from 'fs';
-import * as os from 'os';
 import * as path from 'path';
-import { execFileSync } from 'child_process';
-import { resolveCommand } from '../src/utils/exec';
-
-interface PackFile {
-  path: string;
-}
+import { readPackedCli } from './helpers/packed-cli';
 
 interface PackedPackageJson {
   name?: string;
@@ -17,44 +11,6 @@ interface PackedPackageJson {
   bugs?: { url?: string };
   homepage?: string;
   dependencies?: Record<string, string>;
-}
-
-function packageRoot(): string {
-  return path.resolve(__dirname, '..');
-}
-
-function dryRunPackFiles(cwd: string): string[] {
-  const cacheDir = fs.mkdtempSync(path.join(os.tmpdir(), 'npm-pack-cache-'));
-  try {
-    const output = execFileSync(resolveCommand('npm'), ['pack', '--dry-run', '--json'], {
-      cwd,
-      encoding: 'utf8',
-      env: {
-        ...process.env,
-        npm_config_cache: cacheDir,
-        npm_config_loglevel: 'silent',
-      },
-    });
-    const parsed = JSON.parse(output) as Array<{ files: PackFile[] }>;
-    return parsed[0].files.map(file => file.path).sort();
-  } finally {
-    fs.rmSync(cacheDir, { recursive: true, force: true });
-  }
-}
-
-function readPnpmPackedPackageJson(cwd: string): PackedPackageJson {
-  const destination = fs.mkdtempSync(path.join(os.tmpdir(), 'pnpm-pack-'));
-  try {
-    execFileSync(resolveCommand('pnpm'), ['pack', '--pack-destination', destination], { cwd, stdio: 'ignore' });
-    const tarball = fs.readdirSync(destination).find(file => file.endsWith('.tgz'));
-    if (!tarball) throw new Error('pnpm pack did not produce a tarball');
-    const content = execFileSync('tar', ['-xOf', path.join(destination, tarball), 'package/package.json'], {
-      encoding: 'utf8',
-    });
-    return JSON.parse(content) as PackedPackageJson;
-  } finally {
-    fs.rmSync(destination, { recursive: true, force: true });
-  }
 }
 
 function assertPackedDistContainsStartHarmonyScript(cwd: string, files: string[]): void {
@@ -134,10 +90,15 @@ function assertPackedContentDoesNotContainLocalState(cwd: string, files: string[
   }
 }
 
-describe('expo-harmony-cli npm pack files', () => {
+describe('expo-harmony-cli 实际打包产物', () => {
+  it('从源码生成入口，并清理旧编译文件', () => {
+    const { files } = readPackedCli();
+    expect(files).toContain('dist/index.js');
+    expect(files).not.toContain('dist/obsolete.js');
+  });
+
   it('ships CLI dist output and Harmony content assets', () => {
-    const cwd = packageRoot();
-    const files = dryRunPackFiles(cwd);
+    const { root: cwd, files } = readPackedCli();
 
     expect(files).toContain('dist/index.js');
     expect(files).toContain('README.md');
@@ -171,7 +132,8 @@ describe('expo-harmony-cli npm pack files', () => {
   });
 
   it('pnpm pack 是自包含的，不声明已合并的内部包依赖', () => {
-    const packedPackageJson = readPnpmPackedPackageJson(packageRoot());
+    const { root } = readPackedCli();
+    const packedPackageJson: PackedPackageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
     expect(packedPackageJson.name).toBe('expo-harmony-cli');
     expect(packedPackageJson.bin).toEqual({ 'expo-harmony-cli': 'dist/index.js' });
     expect(packedPackageJson.publishConfig).toBeUndefined();
