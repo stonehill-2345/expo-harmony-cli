@@ -35,7 +35,7 @@
 
 ```bash
 PROJECT="$HOME/Desktop/expo-harmony-sdk54-test"
-FIXTURE="$PWD/src/harmony-project/__tests__/fixtures/rnoh-0.82.30"
+FIXTURE="$PWD/apps/cli/src/harmony-project/__tests__/fixtures/rnoh-0.82.30"
 VERIFY="$(mktemp -d "$PROJECT/rnoh-08230-repro-XXXXXX")"
 
 node - "$PROJECT" "$FIXTURE" "$VERIFY" <<'NODE'

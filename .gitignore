@@ -3,6 +3,8 @@ dist/
 coverage/
 .turbo/
 .pnpm-store/
+.tmp/
+outputs/
 .DS_Store
 npm-debug.log*
 pnpm-debug.log*

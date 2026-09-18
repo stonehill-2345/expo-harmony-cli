@@ -176,7 +176,7 @@ describe('expo-harmony-cli npm pack files', () => {
     expect(packedPackageJson.bin).toEqual({ 'expo-harmony-cli': 'dist/index.js' });
     expect(packedPackageJson.publishConfig).toBeUndefined();
     expect(packedPackageJson.repository?.url).toBe('https://github.com/stonehill-2345/expo-harmony-cli.git');
-    expect(packedPackageJson.repository?.directory).toBeUndefined();
+    expect(packedPackageJson.repository?.directory).toBe('apps/cli');
     expect(packedPackageJson.bugs?.url).toBe('https://github.com/stonehill-2345/expo-harmony-cli/issues');
     expect(packedPackageJson.homepage).toBe('https://github.com/stonehill-2345/expo-harmony-cli#readme');
     expect(packedPackageJson.dependencies?.['expo-harmony-project']).toBeUndefined();

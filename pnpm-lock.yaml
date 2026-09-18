@@ -6,7 +6,9 @@ settings:
 
 importers:
 
-  .:
+  .: {}
+
+  apps/cli:
     dependencies:
       '@expo/config':
         specifier: ^9.0.0
