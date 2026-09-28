@@ -1,0 +1,23 @@
+{
+  "platforms": ["apple", "android", "harmony"],
+  "apple": {
+    "modules": ["ExpoSystemUIModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.systemui.SystemUIModule"]
+  },
+  "harmony": {
+    "kind": "turbo-module",
+    "cpp": {
+      "packageClass": "expo::systemui::harmony::ExpoSystemUIPackage",
+      "header": "ExpoSystemUIPackage.h",
+      "cmakeTarget": "rnoh_expo_system_ui",
+      "cmakePath": "harmony/src/main/cpp"
+    },
+    "ets": {
+      "packageClass": "ExpoSystemUIPackage",
+      "importPath": "expo-system-ui/harmony",
+      "entrypoint": "harmony/index.ets"
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "platforms": ["apple", "android", "web", "harmony"],
+  "apple": {
+    "modules": ["FontLoaderModule", "FontUtilsModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.font.FontLoaderModule", "expo.modules.font.FontUtilsModule"]
+  },
+  "harmony": {
+    "kind": "turbo-module",
+    "cpp": {
+      "packageClass": "expo::font::harmony::ExpoFontLoaderPackage",
+      "header": "ExpoFontLoaderPackage.h",
+      "cmakeTarget": "rnoh_expo_font",
+      "cmakePath": "harmony/src/main/cpp"
+    },
+    "ets": {
+      "packageClass": "ExpoFontLoaderPackage",
+      "importPath": "expo-font/harmony",
+      "entrypoint": "harmony/index.ets"
+    }
+  }
+}

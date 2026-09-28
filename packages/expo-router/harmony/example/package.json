@@ -1,0 +1,5 @@
+{
+  "name": "lane-b-router-fixture",
+  "private": true,
+  "main": "expo-router/entry"
+}

@@ -1,0 +1,32 @@
+{
+  "platforms": ["apple", "android", "web", "harmony"],
+  "apple": {
+    "modules": ["ExpoLinkingModule"],
+    "appDelegateSubscribers": ["LinkingAppDelegateSubscriber"]
+  },
+  "android": {
+    "modules": ["expo.modules.linking.ExpoLinkingModule"]
+  },
+  "harmony": {
+    "kind": "ability-lifecycle",
+    "cpp": {
+      "packageClass": "expo::linking::harmony::ExpoLinkingPackage",
+      "header": "ExpoLinkingPackage.h",
+      "cmakeTarget": "rnoh_expo_linking",
+      "cmakePath": "harmony/src/main/cpp"
+    },
+    "ets": {
+      "packageClass": "ExpoLinkingPackage",
+      "importPath": "expo-linking/harmony",
+      "entrypoint": "harmony/index.ets"
+    },
+    "lifecycleDependencies": [
+      {
+        "localName": "linkingLifecycle",
+        "className": "ExpoLinkingLifecycle",
+        "importPath": "expo-linking/harmony",
+        "appStorageKey": "ExpoLinkingLifecycle"
+      }
+    ]
+  }
+}

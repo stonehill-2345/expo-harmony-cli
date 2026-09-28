@@ -1,0 +1,10 @@
+{
+  "compatibilityId": "expo-rnoh-0.82.30-structured-rejection-v1",
+  "version": "0.82.30",
+  "inputHARSHA256": "cac2b5d1b9ce7d306079218931db12489aaceb240002c9c32e6c13185c577011",
+  "source": "package/src/main/cpp/RNOH/ArkTSTurboModule.cpp",
+  "sourceSHA256": "95c5a9ee8c7b3406dbea7f58c1f9333dbb38eedc7e47e2677c25da11c8814603",
+  "patchedSourceSHA256": "58edba183492fe6276cc02ba79425fdf14a8f48f306f550786efd04184546393",
+  "patch": "rnoh-0.82.30-structured-rejection.patch",
+  "patchSHA256": "cb6ef3428068f949d0b41a6fae05a8657913cdac0c8ef47ec0d445357ba0af52"
+}

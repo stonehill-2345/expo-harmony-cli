@@ -1,0 +1,26 @@
+{
+  "name": "expo-harmony-core-example",
+  "version": "0.1.0",
+  "private": true,
+  "main": "index.ts",
+  "scripts": {
+    "bundle:harmony": "node node_modules/expo-modules-core/harmony/example/bundle.cjs .",
+    "bundle:harmony:dev": "node node_modules/expo-modules-core/harmony/example/bundle.cjs . --dev"
+  },
+  "dependencies": {
+    "@babel/runtime": "7.29.7",
+    "@expo/metro-config": "file:artifacts/expo-metro-config-54.0.17-local.tgz",
+    "@react-native-oh/react-native-harmony": "0.82.30",
+    "@react-native-oh/react-native-harmony-cli": "0.82.30",
+    "babel-preset-expo": "54.0.12",
+    "expo": "54.0.37",
+    "expo-modules-core": "file:artifacts/expo-modules-core-3.0.30-core-example-20260918.tgz",
+    "react": "19.1.1",
+    "react-native": "0.82.1",
+    "react-refresh": "0.14.2"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.17",
+    "typescript": "5.9.2"
+  }
+}

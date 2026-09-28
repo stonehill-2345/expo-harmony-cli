@@ -1,0 +1,8 @@
+{
+  "expo": {
+    "name": "Lane B Router fixture",
+    "slug": "lane-b-router-fixture",
+    "version": "1.0.0",
+    "scheme": "lanebrouter"
+  }
+}

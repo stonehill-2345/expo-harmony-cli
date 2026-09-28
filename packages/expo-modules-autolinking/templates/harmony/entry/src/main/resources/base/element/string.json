@@ -1,0 +1,7 @@
+{
+  "string": [
+    { "name": "EntryAbility_desc", "value": "__EXPO_APP_NAME__" },
+    { "name": "EntryAbility_label", "value": "__EXPO_APP_NAME__" },
+    { "name": "module_desc", "value": "__EXPO_APP_NAME__" }
+  ]
+}

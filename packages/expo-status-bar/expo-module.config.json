@@ -1,0 +1,7 @@
+{
+  "platforms": ["harmony"],
+  "harmony": {
+    "kind": "rnoh-reuse",
+    "reason": "Uses the StatusBarManager supplied by RNOH."
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "platforms": ["apple", "android", "harmony"],
+  "apple": {
+    "modules": ["SplashScreenModule"],
+    "appDelegateSubscribers": ["SplashScreenAppDelegateSubscriber"]
+  },
+  "android": {
+    "modules": ["expo.modules.splashscreen.SplashScreenModule"]
+  },
+  "harmony": {
+    "kind": "ability-lifecycle",
+    "cpp": {
+      "packageClass": "expo::splashscreen::harmony::ExpoSplashScreenPackage",
+      "header": "ExpoSplashScreenPackage.h",
+      "cmakeTarget": "rnoh_expo_splash_screen",
+      "cmakePath": "harmony/src/main/cpp"
+    },
+    "ets": {
+      "packageClass": "ExpoSplashScreenPackage",
+      "importPath": "expo-splash-screen/harmony",
+      "entrypoint": "harmony/index.ets"
+    },
+    "lifecycleDependencies": [
+      {
+        "localName": "splashScreenController",
+        "className": "ExpoSplashScreenLifecycle",
+        "importPath": "expo-splash-screen/harmony",
+        "appStorageKey": "ExpoSplashScreenController",
+        "arkUIOverlay": {
+          "className": "ExpoSplashScreenView",
+          "importPath": "expo-splash-screen/harmony",
+          "controllerProperty": "controller"
+        }
+      }
+    ]
+  }
+}
