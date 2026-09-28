@@ -63,16 +63,29 @@ export function assertMvpBoundaries(rootDir) {
 
   const releases = collectText(path.join(rootDir, 'docs/releases'), new Set(['.md', '.json']));
   if (releases) {
-    if (/multiLevelDismissTo\s*:\s*true|multi[- ](?:level|screen)[^\n]*dismissTo/i.test(releases)) {
+    const releaseLines = releases.split(/\r?\n/);
+    const claimsMultiLevelDismissTo = releaseLines.some((line) => {
+      if (/multiLevelDismissTo\s*:\s*true/i.test(line)) return true;
+      if (!/multi[- ](?:level|screen)[^\n]*dismissTo/i.test(line)) return false;
+      return !/\b(?:not|unsupported|unimplemented)\b|未(?:实现|添加|支持)|不(?:支持|包含|覆盖|等价)/i.test(
+        line,
+      );
+    });
+
+    if (claimsMultiLevelDismissTo) {
       violations.push('Router MVP must not claim multi-level dismissTo support');
     }
     if (/OAuth\s+complete|complete\s+OAuth/i.test(releases)) {
       violations.push('WebBrowser MVP must not claim complete OAuth support');
     }
-    if (!/single-level\s+(?:POP_TO|dismissTo)/.test(releases)) {
+    if (!/single-level\s+(?:POP_TO|dismissTo)|单层\s*`?(?:POP_TO|dismissTo)`?/i.test(releases)) {
       violations.push('release docs must state the single-level dismissTo limit');
     }
-    if (!/ordinary ArkWeb open\/close/.test(releases)) {
+    if (
+      !/ordinary ArkWeb open\/close|(?:应用内|内嵌)\s*ArkWeb[^\n]*(?:不等价于|并非|不是)\s*系统浏览器/i.test(
+        releases,
+      )
+    ) {
       violations.push('release docs must state the ordinary ArkWeb open/close limit');
     }
   }

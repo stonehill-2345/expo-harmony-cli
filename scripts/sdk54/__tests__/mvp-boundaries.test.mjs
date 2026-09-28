@@ -76,6 +76,18 @@ test('accepts the documented single-level Router and ordinary ArkWeb limits', (t
   assert.deepEqual(assertMvpBoundaries(root), []);
 });
 
+test('accepts Chinese limits and negative multi-screen statements', (t) => {
+  const root = createFixture(t, {
+    ...validFiles,
+    'docs/releases/sdk54-mvp.md':
+      'Default 模板完成单层 `dismissTo` 验收。\n' +
+      'native-first `dismissTo` 只覆盖目标恰好为上一层路由的 Harmony `POP_TO`。\n' +
+      'WebBrowser 是应用内 ArkWeb，不等价于系统浏览器 Cookie/SSO 或完整认证会话。\n' +
+      'multi-screen dismissTo native animation is not added.\n',
+  });
+  assert.deepEqual(assertMvpBoundaries(root), []);
+});
+
 test('the current repository stays within the SDK54 MVP boundaries', () => {
   const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
   assert.deepEqual(assertMvpBoundaries(repositoryRoot), []);
