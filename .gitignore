@@ -15,3 +15,8 @@ docs/superpowers/
 
 # bing local changelog artifacts
 docs/changelog/local/
+
+.tmp/sdk54/
+outputs/sdk54/
+*.hap
+*.har
