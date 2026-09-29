@@ -7,6 +7,10 @@
 #import <jsi/jsi.h>
 #import <React/RCTBridgeModule.h>
 #import <ReactCommon/TurboModuleUtils.h>
+#if REACT_NATIVE_TARGET_VERSION >= 82
+#include <ReactCommon/CallInvoker.h>
+#include <react/bridging/CallbackWrapper.h>
+#endif
 #import <ExpoModulesCore/ObjectDeallocator.h>
 
 namespace jsi = facebook::jsi;

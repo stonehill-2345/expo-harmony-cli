@@ -199,6 +199,7 @@ const SDK54_RUNTIME_PATCH_EXACT = Object.freeze({
   expo: Object.freeze(['bundledNativeModules.json']),
   'expo-linking': Object.freeze(['build/Linking.js', 'src/Linking.ts']),
   'expo-modules-core': Object.freeze([
+    'ios/JSI/EXJSIUtils.h',
     'src/NativeModulesProxy.harmony.ts',
     'src/NativeViewManagerAdapter.harmony.tsx',
     'src/Platform.ts',

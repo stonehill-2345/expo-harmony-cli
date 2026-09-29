@@ -44,3 +44,20 @@ test('keeps expo-modules-core RNOH compatibility tooling used by official prebui
  const text = normalizePatchText(raw, 'expo-modules-core', '');
  assert.match(text, /harmony\/rnoh-compat\/prepare_har\.py/);
 });
+
+test('keeps the React Native 0.82 iOS JSI compatibility header', () => {
+ const raw = [
+  'diff --git a/node_modules/expo-modules-core/ios/JSI/EXJSIUtils.h b/node_modules/expo-modules-core/ios/JSI/EXJSIUtils.h',
+  '@@ -8,6 +8,10 @@',
+  ' #import <ReactCommon/TurboModuleUtils.h>',
+  '+#if REACT_NATIVE_TARGET_VERSION >= 82',
+  '+#include <ReactCommon/CallInvoker.h>',
+  '+#include <react/bridging/CallbackWrapper.h>',
+  '+#endif',
+  '',
+ ].join('\n');
+ const text = normalizePatchText(raw, 'expo-modules-core', '');
+ assert.match(text, /ios\/JSI\/EXJSIUtils\.h/);
+ assert.match(text, /ReactCommon\/CallInvoker\.h/);
+ assert.match(text, /react\/bridging\/CallbackWrapper\.h/);
+});

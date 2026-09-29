@@ -215,7 +215,7 @@
       "name": "expo-modules-core",
       "probes": [],
       "requiredFiles": [],
-      "sha256": "8dcdc6fe86fe6c529c0aae588189fa8b59892bc65a2821d883c4c24e978683da",
+      "sha256": "e3fb7531dfd115f6edc811066cb59f0d2471f075b0734a204b7e8cd0d28e2656",
       "templates": [
         "blank-typescript",
         "default"
