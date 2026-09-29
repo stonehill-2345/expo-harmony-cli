@@ -91,6 +91,26 @@ jest.mock('../exportHermes', () => {
 });
 
 describe('serializes', () => {
+  it('passes the graph platform to static getModulesRunBeforeMainModule', async () => {
+    const getModulesRunBeforeMainModule = jest.fn(() => []);
+    const serializer = createSerializerFromSerialProcessors(
+      {
+        projectRoot,
+        serializer: { getModulesRunBeforeMainModule },
+      },
+      [],
+      null
+    );
+    const serial = await microBundle({
+      fs: { 'index.js': 'console.log(\"hello\");' },
+      options: { dev: false, output: 'static', platform: 'harmony' },
+    });
+
+    await serializer(...serial);
+
+    expect(getModulesRunBeforeMainModule).toHaveBeenCalledWith('index.js', 'harmony');
+  });
+
   describe('plugin callbacks', () => {
     it(`runs plugin for each chunk`, async () => {
       const unstablePlugin = ({ premodules }: { premodules: Module[] }): Module[] => {

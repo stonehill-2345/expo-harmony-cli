@@ -193,6 +193,7 @@ const SDK54_RUNTIME_PATCH_EXACT = Object.freeze({
   '@expo/metro-config': Object.freeze([
     'build/ExpoMetroConfig.d.ts',
     'build/ExpoMetroConfig.js',
+    'build/serializer/serializeChunks.js',
     'build/withHarmony.d.ts',
     'build/withHarmony.js',
   ]),

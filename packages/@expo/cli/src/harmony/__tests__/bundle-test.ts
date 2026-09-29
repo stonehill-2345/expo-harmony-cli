@@ -53,12 +53,16 @@ describe(bundleHarmonyReleaseAsync, () => {
       const image = path.join(stagedAssets, 'assets/assets/images/partial-react-logo.png');
       const font = path.join(
         stagedAssets,
-        'assets/node_modules/@expo/vector-icons/MaterialIcons.ttf'
+        'assets/node_modules/.pnpm/@expo+vector-icons@15.0.3/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts/MaterialIcons.ttf'
       );
       fs.mkdirSync(path.dirname(image), { recursive: true });
       fs.mkdirSync(path.dirname(font), { recursive: true });
       fs.writeFileSync(image, 'image');
       fs.writeFileSync(font, 'font');
+      fs.writeFileSync(
+        options.bundleOutput,
+        'registerAsset({__packager_asset:!0,httpServerLocation:"/assets/node_modules/.pnpm/@expo+vector-icons@15.0.3/node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts",scales:[1],hash:"font-hash",name:"MaterialIcons",type:"ttf",fileHashes:["font-hash"]})'
+      );
     });
 
     await bundleHarmonyReleaseAsync(projectRoot);
@@ -70,18 +74,12 @@ describe(bundleHarmonyReleaseAsync, () => {
     expect(
       fs.readFileSync(path.join(rawfile, 'assets/assets/images/partial-react-logo.png'), 'utf8')
     ).toBe('image');
-    expect(
-      fs.readFileSync(
-        path.join(rawfile, 'assets/assets/node_modules/@expo/vector-icons/MaterialIcons.ttf'),
-        'utf8'
-      )
-    ).toBe('font');
-    expect(
-      fs.readFileSync(
-        path.join(rawfile, 'assets/node_modules/@expo/vector-icons/MaterialIcons.ttf'),
-        'utf8'
-      )
-    ).toBe('font');
+    expect(fs.readFileSync(path.join(rawfile, 'assets/MaterialIcons.ttf'), 'utf8')).toBe(
+      'font'
+    );
+    const bundle = fs.readFileSync(path.join(rawfile, 'bundle.harmony.js'), 'utf8');
+    expect(bundle).toContain('httpServerLocation:"/assets"');
+    expect(bundle).not.toContain('/assets/node_modules/.pnpm/');
   });
 
 });

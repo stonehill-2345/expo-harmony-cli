@@ -61,3 +61,16 @@ test('keeps the React Native 0.82 iOS JSI compatibility header', () => {
  assert.match(text, /ReactCommon\/CallInvoker\.h/);
  assert.match(text, /react\/bridging\/CallbackWrapper\.h/);
 });
+
+test('keeps Metro static serializer platform forwarding used by Harmony Release bundles', () => {
+ const raw = [
+  'diff --git a/node_modules/@expo/metro-config/build/serializer/serializeChunks.js b/node_modules/@expo/metro-config/build/serializer/serializeChunks.js',
+  '@@ -1 +1 @@',
+  '-getModulesRunBeforeMainModule(entryFile)',
+  '+getModulesRunBeforeMainModule(entryFile, this.getPlatform())',
+  '',
+ ].join('\n');
+ const text = normalizePatchText(raw, '@expo/metro-config', '');
+ assert.match(text, /build\/serializer\/serializeChunks\.js/);
+ assert.match(text, /this\.getPlatform\(\)/);
+});

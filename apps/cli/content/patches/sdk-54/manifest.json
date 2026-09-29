@@ -62,7 +62,7 @@
         "build/src/run/harmony/runHarmonyAsync.js",
         "build/src/prebuild/harmony/prebuildHarmonyAsync.js"
       ],
-      "sha256": "c4024b954a89cefffadbce839ca08207daa92897a90106217c8d5a05a9921204",
+      "sha256": "76ccdfbbdca80b88a6281fc931966039e4d2904c01766732e53668f596a8b8dc",
       "templates": [
         "blank-typescript",
         "default"
@@ -85,7 +85,7 @@
       "requiredFiles": [
         "build/withHarmony.js"
       ],
-      "sha256": "0c81808ec97731e7bbc5a11fb0c7c556bfe03831f78a7d3b5a3a26b61bba48ae",
+      "sha256": "674a87f80bd9f0a9c757a25619411ff58c064cb929870ae28f3a973f7f0053f8",
       "templates": [
         "blank-typescript",
         "default"

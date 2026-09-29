@@ -137,10 +137,10 @@ index 0000000..5226913
 \ No newline at end of file
 diff --git a/node_modules/@expo/cli/build/src/harmony/bundle.js b/node_modules/@expo/cli/build/src/harmony/bundle.js
 new file mode 100644
-index 0000000..4e8df2d
+index 0000000..d3a4228
 --- /dev/null
 +++ b/node_modules/@expo/cli/build/src/harmony/bundle.js
-@@ -0,0 +1,91 @@
+@@ -0,0 +1,129 @@
 +"use strict";
 +Object.defineProperty(exports, "__esModule", {
 +    value: true
@@ -201,6 +201,7 @@ index 0000000..4e8df2d
 +        verbose: false,
 +        bundleEncoding: 'utf8'
 +    });
++    await stageMaterialIconsAsync(bundleOutput, assets);
 +    await copyDirectoryContentsAsync(_path().default.join(assets, 'assets'), assets);
 +    return bundleOutput;
 +}
@@ -229,6 +230,43 @@ index 0000000..4e8df2d
 +            await _fs().default.promises.copyFile(sourcePath, destinationPath);
 +        }
 +    }
++}
++async function stageMaterialIconsAsync(bundleOutput, assets) {
++    const source = await findFileNamedAsync(assets, 'MaterialIcons.ttf');
++    if (!source) return;
++    const destination = _path().default.join(assets, 'MaterialIcons.ttf');
++    await _fs().default.promises.copyFile(source, destination);
++    const bundle = await _fs().default.promises.readFile(bundleOutput, 'utf8');
++    const marker = 'name:"MaterialIcons",type:"ttf"';
++    const markerIndex = bundle.indexOf(marker);
++    const assetStart = bundle.lastIndexOf('registerAsset({', markerIndex);
++    const locationPrefix = 'httpServerLocation:"';
++    const locationStart = bundle.indexOf(locationPrefix, assetStart) + locationPrefix.length;
++    const locationEnd = bundle.indexOf('"', locationStart);
++    if (markerIndex < 0 || assetStart < 0 || locationStart < locationPrefix.length || locationEnd < locationStart || locationEnd > markerIndex) {
++        throw new Error('Harmony Release could not rewrite the MaterialIcons asset location.');
++    }
++    await _fs().default.promises.writeFile(bundleOutput, `${bundle.slice(0, locationStart)}/assets${bundle.slice(locationEnd)}`);
++}
++async function findFileNamedAsync(root, name) {
++    let entries;
++    try {
++        entries = await _fs().default.promises.readdir(root, {
++            withFileTypes: true
++        });
++    } catch (error) {
++        if ((error == null ? void 0 : error.code) === 'ENOENT') return null;
++        throw error;
++    }
++    for (const entry of entries){
++        const file = _path().default.join(root, entry.name);
++        if (entry.isFile() && entry.name === name) return file;
++        if (entry.isDirectory()) {
++            const nested = await findFileNamedAsync(file, name);
++            if (nested) return nested;
++        }
++    }
++    return null;
 +}
 +
 +//# sourceMappingURL=bundle.js.map

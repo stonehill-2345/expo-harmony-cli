@@ -137,6 +137,19 @@ index 5c07ab3..7223b1d 100644
  }
  /** Use to access the Expo Metro transformer path */
  exports.unstable_transformerPath = require.resolve('./transform-worker/transform-worker');
+diff --git a/node_modules/@expo/metro-config/build/serializer/serializeChunks.js b/node_modules/@expo/metro-config/build/serializer/serializeChunks.js
+index 6351df5..3f14a94 100644
+--- a/node_modules/@expo/metro-config/build/serializer/serializeChunks.js
++++ b/node_modules/@expo/metro-config/build/serializer/serializeChunks.js
+@@ -193,7 +193,7 @@ class Chunk {
+         const dependencies = [...this.deps];
+         const jsSplitBundle = (0, baseJSBundle_1.baseJSBundleWithDependencies)(entryFile, preModules, dependencies, {
+             ...this.options,
+-            runBeforeMainModule: serializerConfig?.getModulesRunBeforeMainModule?.(path_1.default.relative(this.options.projectRoot, entryFile)) ?? [],
++            runBeforeMainModule: serializerConfig?.getModulesRunBeforeMainModule?.(path_1.default.relative(this.options.projectRoot, entryFile), this.getPlatform()) ?? [],
+             runModule: this.options.runModule && !this.isVendor && (this.isEntry || !this.isAsync),
+             modulesOnly: this.options.modulesOnly || preModules.length === 0,
+             platform: this.getPlatform(),
 diff --git a/node_modules/@expo/metro-config/build/withHarmony.d.ts b/node_modules/@expo/metro-config/build/withHarmony.d.ts
 new file mode 100644
 index 0000000..a2ec8c9

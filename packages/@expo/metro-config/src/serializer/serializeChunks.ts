@@ -281,8 +281,11 @@ export class Chunk {
     const jsSplitBundle = baseJSBundleWithDependencies(entryFile, preModules, dependencies, {
       ...this.options,
       runBeforeMainModule:
-        serializerConfig?.getModulesRunBeforeMainModule?.(
-          path.relative(this.options.projectRoot, entryFile)
+        (serializerConfig?.getModulesRunBeforeMainModule as
+          | ((entryFile: string, platform?: string) => string[])
+          | undefined)?.(
+          path.relative(this.options.projectRoot, entryFile),
+          this.getPlatform()
         ) ?? [],
       runModule: this.options.runModule && !this.isVendor && (this.isEntry || !this.isAsync),
       modulesOnly: this.options.modulesOnly || preModules.length === 0,
