@@ -22,6 +22,7 @@
 
 ## 目录
 
+- [1.5.0：SDK54 package-patch](#150sdk54-package-patch)
 - [快速开始](#快速开始)
 - [核心能力](#核心能力)
 - [效果预览](#效果预览)
@@ -32,11 +33,64 @@
 - [文档](#文档)
 - [源码仓库](#源码仓库)
 
-## 快速开始
+## 1.5.0：SDK54 package-patch
+
+SDK54 在 1.5.0 中使用官方 `create-expo-app@5.0.0` 创建 fresh 项目，并通过精确版本 package patches 提供 Harmony 能力；SDK52 继续使用原有 legacy 流程。
+
+### 创建 SDK54 Default + Expo Router
 
 ```bash
-# 1. 创建项目（npm / pnpm / yarn / bun 均可，省略 --sdk 时交互选择）
-npx expo-harmony-cli my-harmony-app [--sdk=52|54]
+npx expo-harmony-cli@1.5.0 create my-app \
+  --sdk 54 \
+  --template default \
+  --pnpm
+```
+
+### 创建 SDK54 Blank TypeScript
+
+```bash
+npx expo-harmony-cli@1.5.0 create my-blank-app \
+  --sdk 54 \
+  --template blank-typescript \
+  --pnpm
+```
+
+SDK54 支持 npm 和 pnpm；使用 npm 时将 `--pnpm` 换为 `--npm`。Yarn/Bun 会在创建目录前失败关闭。
+
+项目创建后使用项目内经过 patch 的官方 Expo CLI：
+
+```bash
+cd my-app
+npx expo prebuild --platform harmony
+npx expo start
+npx expo run:harmony
+
+# clean Release
+npx expo run:harmony --configuration Release --no-build-cache
+```
+
+SDK54 1.5.0 的公开保证范围是 fresh `default` 和 `blank-typescript`：
+
+- Default 模板只将 `app/(tabs)/index.tsx`、`app/(tabs)/explore.tsx` 中的 `expo-image` 用法替换为 React Native `Image`；本版本没有 `expo-image` Harmony backend。
+- Router `dismissTo` 验收范围为单层返回；ArkWeb 验收范围为普通页面打开/关闭。
+- 旧 SDK54 项目只诊断、不自动迁移；建议 fresh create 后迁移业务源码和配置，不要复制旧 `harmony/`、shim 或 patch。
+- SDK55 及更高版本会明确拒绝，不会静默套用 SDK54 patch。
+
+### 对 SDK52 的影响
+
+SDK52 的 creator、injector、scanner、cleanup、依赖管理和 Harmony generator 保持 legacy 流程。创建命令仍为：
+
+```bash
+npx expo-harmony-cli@1.5.0 create my-sdk52-app --sdk 52
+```
+
+## 快速开始
+
+> 以下步骤是 SDK52 legacy 工作流。SDK54 请使用上面的 1.5.0 package-patch 命令。
+
+```bash
+# 1. 创建 SDK52 项目
+npx expo-harmony-cli@1.5.0 my-harmony-app --sdk 52
 
 # 2. 安装 JS 依赖并应用 HarmonyOS patch
 cd my-harmony-app
@@ -75,6 +129,18 @@ pnpm start:harmony
 </p>
 
 ## 常用命令
+
+SDK54 项目使用官方 Expo 命令：
+
+| 命令 | 用途 |
+| --- | --- |
+| `npx expo-harmony-cli@1.5.0 doctor` | 检查 managed-state、patch、版本和 runtime probes |
+| `npx expo prebuild --platform harmony` | 生成 SDK54 Harmony 原生工程 |
+| `npx expo start` | 启动 SDK54 Harmony Metro |
+| `npx expo run:harmony` | Debug 构建、安装并启动 |
+| `npx expo run:harmony --configuration Release --no-build-cache` | clean Release 构建、安装并启动 |
+
+下面保留的 `expo-harmony-cli install/prebuild/scan/sync` 等命令对应 SDK52 legacy 流程：
 
 | 命令                                               | 用途                                   |
 | -------------------------------------------------- | -------------------------------------- |
@@ -120,6 +186,10 @@ Expo 官方目前不支持 HarmonyOS 平台。`expo-harmony-cli` 在 Expo SDK �
 ### 支持哪些 React Native 库？
 
 CLI 对依赖分五类自动处理：纯 JS 包、alias-only、native/bump-native、patch-only、unsupported。以 `pnpm dlx expo-harmony-cli list` 输出为准。详见 [使用指南 → 三方依赖](./docs/guide.md#三方依赖)。
+
+### 旧 SDK54 项目可以直接升级到 1.5.0 吗？
+
+不自动升级。1.5.0 只对旧 SDK54 项目做只读诊断，推荐使用同模板 fresh create 新项目后迁移业务代码、资源和应用配置。
 
 ### 和 [react-native-harmony](https://github.com/react-native-oh-library/react-native-harmony) 是什么关系？
 
