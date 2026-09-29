@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "cliTgz": {
     "file": "expo-harmony-cli-1.5.0.tgz",
-    "sha256": "04a856f3bc9b36555a8e6f9fac617d10a3a3a4980be38c926738b8623e5511d7"
+    "sha256": "6b779e6402fdafe43ac6bfa147215ffce30e971184486c1599496e07a0ff6aca"
   },
   "versions": {
     "cli": "1.5.0",
@@ -98,9 +98,9 @@
     "physicalBack": true,
     "customAnimation": true,
     "arkWebOpenCloseRounds": 2,
-    "hapSha256": "d5dd794b3694b1cb92797ed57a114a65dcd5107ee654595d8ee1eb625ab5ce82",
-    "bundleSha256": "e34f923866f529dc86f9c027b96b1284df5c5ca03c82fd94a1990ea39cc7412d",
-    "embeddedBundleSha256": "e34f923866f529dc86f9c027b96b1284df5c5ca03c82fd94a1990ea39cc7412d"
+    "hapSha256": "1087e67ddb7ad779448700a6086df8f82623d01678a3dc2d6d5f258d4a1851ab",
+    "bundleSha256": "7c60ea00a8a786d40bb31ba5bfa868369223a9396b4527b59156dd54f3eec70d",
+    "embeddedBundleSha256": "7c60ea00a8a786d40bb31ba5bfa868369223a9396b4527b59156dd54f3eec70d"
   },
   "coldStart": {
     "metroStopped": true,

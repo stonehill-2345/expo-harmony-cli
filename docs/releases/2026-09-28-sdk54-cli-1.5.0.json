@@ -27,7 +27,7 @@
   "patchSet": "sdk54-mvp-1",
   "cliTgz": {
     "file": "expo-harmony-cli-1.5.0.tgz",
-    "sha256": "04a856f3bc9b36555a8e6f9fac617d10a3a3a4980be38c926738b8623e5511d7"
+    "sha256": "6b779e6402fdafe43ac6bfa147215ffce30e971184486c1599496e07a0ff6aca"
   },
   "packageCounts": {
     "patches": 14,
@@ -47,8 +47,8 @@
       "passed": true
     },
     "sdk54Tools": {
-      "files": 15,
-      "tests": 228,
+      "files": 16,
+      "tests": 230,
       "passed": true
     },
     "typeCheck": {
@@ -87,6 +87,6 @@
   ],
   "source": {
     "state": "committed",
-    "commit": "dda523b64b64b8b27feafc2ca5a1c1f7b5457181"
+    "commit": "e26b4dab16ac438da9a39ecf0952e258454035ee"
   }
 }

@@ -1,9 +1,9 @@
 {
-  "date": "2026-09-28",
+  "date": "2026-09-29",
   "patchSet": "sdk54-mvp-1",
   "rounds": [
-    "C",
-    "D"
+    "MP9",
+    "MP10"
   ],
   "deterministic": true,
   "packages": 14,
@@ -12,13 +12,13 @@
       "name": "@expo/cli",
       "version": "54.0.27",
       "file": "@expo+cli+54.0.27.patch",
-      "sha256": "c4024b954a89cefffadbce839ca08207daa92897a90106217c8d5a05a9921204"
+      "sha256": "76ccdfbbdca80b88a6281fc931966039e4d2904c01766732e53668f596a8b8dc"
     },
     {
       "name": "@expo/metro-config",
       "version": "54.0.17",
       "file": "@expo+metro-config+54.0.17.patch",
-      "sha256": "b7ba4664cc2719d4d5a1b47ccd35609f78e1933a6c3ec91d331e97258068b239"
+      "sha256": "674a87f80bd9f0a9c757a25619411ff58c064cb929870ae28f3a973f7f0053f8"
     },
     {
       "name": "expo",
@@ -103,5 +103,5 @@
     "file": "@react-native-ohos+react-native-screens+4.9.0.patch",
     "sha256": "07b181d0d9720a8531404a7eab628f367a8fcf32c040a5b9a3a10d826d3d1a94"
   },
-  "sourceCommit": "dda523b64b64b8b27feafc2ca5a1c1f7b5457181"
+  "sourceCommit": "e26b4dab16ac438da9a39ecf0952e258454035ee"
 }
