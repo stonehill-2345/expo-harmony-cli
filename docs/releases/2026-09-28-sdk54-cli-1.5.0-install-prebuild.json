@@ -1,0 +1,234 @@
+{
+  "schemaVersion": 1,
+  "cliTgz": {
+    "file": "expo-harmony-cli-1.5.0.tgz",
+    "sha256": "04a856f3bc9b36555a8e6f9fac617d10a3a3a4980be38c926738b8623e5511d7"
+  },
+  "versions": {
+    "cli": "1.5.0",
+    "createExpoApp": "5.0.0",
+    "patchPackage": "8.0.0",
+    "expo": "54.0.37",
+    "expoCli": "54.0.27",
+    "expoMetroConfig": "54.0.17",
+    "expoRouter": "6.0.24",
+    "react": "19.1.1",
+    "reactNative": "0.82.1",
+    "rnoh": "0.82.30",
+    "rnohCli": "0.82.30",
+    "gestureHandler": "2.30.0",
+    "harmonyGestureHandler": "2.30.1",
+    "reanimated": "4.2.1",
+    "harmonyReanimated": "4.0.1",
+    "safeAreaContext": "5.6.2",
+    "harmonySafeAreaContext": "5.6.3",
+    "screens": "4.17.1",
+    "harmonyScreens": "4.9.0",
+    "worklets": "0.7.1",
+    "harmonyWorklets": "1.0.0"
+  },
+  "unsupportedPackageManagers": {
+    "yarn": {
+      "rejectedBeforeCreate": true,
+      "projectDirectoryCreated": false
+    },
+    "bun": {
+      "rejectedBeforeCreate": true,
+      "projectDirectoryCreated": false
+    }
+  },
+  "matrix": [
+    {
+      "template": "blank-typescript",
+      "packageManager": "npm",
+      "create": {
+        "argv": [
+          "npx",
+          "create-expo-app@5.0.0",
+          "fixture",
+          "--template",
+          "blank-typescript@sdk-54",
+          "--no-install"
+        ],
+        "exitCode": 0
+      },
+      "install": {
+        "exitCode": 0
+      },
+      "patchProbe": {
+        "success": true
+      },
+      "officialPrebuild": {
+        "argv": [
+          "npx",
+          "expo",
+          "prebuild",
+          "--platform",
+          "harmony"
+        ],
+        "exitCode": 0
+      },
+      "forbiddenFileScan": {
+        "success": true,
+        "found": []
+      },
+      "reinstall": {
+        "exitCode": 0,
+        "patchProbe": {
+          "success": true
+        }
+      },
+      "ignoreScripts": {
+        "installExitCode": 0,
+        "patchProbe": {
+          "success": false
+        },
+        "expectedFailure": true
+      }
+    },
+    {
+      "template": "blank-typescript",
+      "packageManager": "pnpm",
+      "create": {
+        "argv": [
+          "npx",
+          "create-expo-app@5.0.0",
+          "fixture",
+          "--template",
+          "blank-typescript@sdk-54",
+          "--no-install"
+        ],
+        "exitCode": 0
+      },
+      "install": {
+        "exitCode": 0
+      },
+      "patchProbe": {
+        "success": true
+      },
+      "officialPrebuild": {
+        "argv": [
+          "npx",
+          "expo",
+          "prebuild",
+          "--platform",
+          "harmony"
+        ],
+        "exitCode": 0
+      },
+      "forbiddenFileScan": {
+        "success": true,
+        "found": []
+      },
+      "reinstall": {
+        "exitCode": 0,
+        "patchProbe": {
+          "success": true
+        }
+      },
+      "ignoreScripts": {
+        "installExitCode": 0,
+        "patchProbe": {
+          "success": false
+        },
+        "expectedFailure": true
+      }
+    },
+    {
+      "template": "default",
+      "packageManager": "npm",
+      "create": {
+        "argv": [
+          "npx",
+          "create-expo-app@5.0.0",
+          "fixture",
+          "--template",
+          "default@sdk-54",
+          "--no-install"
+        ],
+        "exitCode": 0
+      },
+      "install": {
+        "exitCode": 0
+      },
+      "patchProbe": {
+        "success": true
+      },
+      "officialPrebuild": {
+        "argv": [
+          "npx",
+          "expo",
+          "prebuild",
+          "--platform",
+          "harmony"
+        ],
+        "exitCode": 0
+      },
+      "forbiddenFileScan": {
+        "success": true,
+        "found": []
+      },
+      "reinstall": {
+        "exitCode": 0,
+        "patchProbe": {
+          "success": true
+        }
+      },
+      "ignoreScripts": {
+        "installExitCode": 0,
+        "patchProbe": {
+          "success": false
+        },
+        "expectedFailure": true
+      }
+    },
+    {
+      "template": "default",
+      "packageManager": "pnpm",
+      "create": {
+        "argv": [
+          "npx",
+          "create-expo-app@5.0.0",
+          "fixture",
+          "--template",
+          "default@sdk-54",
+          "--no-install"
+        ],
+        "exitCode": 0
+      },
+      "install": {
+        "exitCode": 0
+      },
+      "patchProbe": {
+        "success": true
+      },
+      "officialPrebuild": {
+        "argv": [
+          "npx",
+          "expo",
+          "prebuild",
+          "--platform",
+          "harmony"
+        ],
+        "exitCode": 0
+      },
+      "forbiddenFileScan": {
+        "success": true,
+        "found": []
+      },
+      "reinstall": {
+        "exitCode": 0,
+        "patchProbe": {
+          "success": true
+        }
+      },
+      "ignoreScripts": {
+        "installExitCode": 0,
+        "patchProbe": {
+          "success": false
+        },
+        "expectedFailure": true
+      }
+    }
+  ]
+}

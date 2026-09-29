@@ -10,3 +10,7 @@
 - 建议修复方向
 
 维护者会在确认问题后安排修复和版本发布。
+
+## Patch distribution reports
+
+SDK54 patch reports should include the affected package/version and patch-set id, but must not include registry credentials, signing material, private artifact URLs, device identifiers, HAP/HAR/TGZ payloads, or local absolute paths.

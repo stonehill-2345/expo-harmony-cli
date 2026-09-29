@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "published": false,
+  "versions": {
+    "cli": "1.5.0",
+    "createExpoApp": "5.0.0",
+    "patchPackage": "8.0.0",
+    "expo": "54.0.37",
+    "expoCli": "54.0.27",
+    "expoMetroConfig": "54.0.17",
+    "expoRouter": "6.0.24",
+    "react": "19.1.1",
+    "reactNative": "0.82.1",
+    "rnoh": "0.82.30",
+    "rnohCli": "0.82.30",
+    "gestureHandler": "2.30.0",
+    "harmonyGestureHandler": "2.30.1",
+    "reanimated": "4.2.1",
+    "harmonyReanimated": "4.0.1",
+    "safeAreaContext": "5.6.2",
+    "harmonySafeAreaContext": "5.6.3",
+    "screens": "4.17.1",
+    "harmonyScreens": "4.9.0",
+    "worklets": "0.7.1",
+    "harmonyWorklets": "1.0.0"
+  },
+  "patchSet": "sdk54-mvp-1",
+  "cliTgz": {
+    "file": "expo-harmony-cli-1.5.0.tgz",
+    "sha256": "04a856f3bc9b36555a8e6f9fac617d10a3a3a4980be38c926738b8623e5511d7"
+  },
+  "packageCounts": {
+    "patches": 14,
+    "external": 11
+  },
+  "evidence": {
+    "patchGeneration": "2026-09-28-sdk54-cli-patch-generation.json",
+    "externalComparison": "2026-09-28-sdk54-external-package-comparison.json",
+    "installPrebuild": "2026-09-28-sdk54-cli-1.5.0-install-prebuild.json",
+    "blankDevice": "2026-09-28-sdk54-cli-1.5.0-blank-device.json",
+    "defaultDevice": "2026-09-28-sdk54-cli-1.5.0-default-device.json"
+  },
+  "tests": {
+    "cli": {
+      "files": 48,
+      "tests": 490,
+      "passed": true
+    },
+    "sdk54Tools": {
+      "files": 15,
+      "tests": 228,
+      "passed": true
+    },
+    "typeCheck": {
+      "passed": true
+    },
+    "pack": {
+      "passed": true
+    },
+    "repository": {
+      "passed": true
+    },
+    "testPack": {
+      "passed": true
+    },
+    "sdk54Validate": {
+      "passed": true
+    },
+    "sdk54PackCheck": {
+      "passed": true
+    },
+    "sdk54Audit": {
+      "passed": true
+    },
+    "sdk54PatchAudit": {
+      "passed": true
+    },
+    "sdk54Repository": {
+      "passed": true
+    }
+  },
+  "knownLimits": [
+    "expo-image Harmony backend is not implemented",
+    "Router dismissTo is limited to a single level",
+    "ArkWeb open/close is not a complete authentication session",
+    "unsigned simulator HAP only; no production signing or store flow"
+  ],
+  "source": {
+    "state": "committed",
+    "commit": "dda523b64b64b8b27feafc2ca5a1c1f7b5457181"
+  }
+}
