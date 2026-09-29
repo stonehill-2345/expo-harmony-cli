@@ -1,6 +1,6 @@
 import { VERSION_MATRIX_52, VERSION_MATRIX_54, type SdkVersion, type VersionMatrix } from '../version-matrix';
 
-export type CompatStatus = 'bump-native' | 'native' | 'alias-only' | 'shim' | 'patch-only' | 'remove' | 'replace' | 'unsupported';
+export type CompatStatus = 'bump-native' | 'native' | 'alias-only' | 'shim' | 'patch-only' | 'package-patch' | 'remove' | 'replace' | 'unsupported';
 
 export type CompatEntry = {
   original: string;
@@ -24,7 +24,7 @@ function buildCompatTable52(V: VersionMatrix): Record<string, CompatEntry> {
     'react-native-safe-area-context': { original: 'react-native-safe-area-context', status: 'bump-native', bumpTo: V.rnSafeArea, harmony: { package: '@react-native-ohos/react-native-safe-area-context', version: '5.1.1-rc.1' } },
 
     // ===== C 类：仅 native（不 bump）=====
-    'expo-router': { original: 'expo-router', originalVersion: '4.0.22', status: 'alias-only', harmony: { package: '@react-native-ohos/native-stack', version: '7.3.11-rc.1' }, patch: { sourceFile: 'content/patches/sdk-52/expo-router+4.0.22.patch', targetPath: 'patches/expo-router+4.0.22.patch' } },
+    'expo-router': { original: 'expo-router', originalVersion: V.expoRouter, status: 'package-patch' },
     'react-native-webview': { original: 'react-native-webview', originalVersion: '13.15.0', status: 'native', harmony: { package: '@react-native-ohos/react-native-webview', version: '13.15.1' } },
     'react-native-mmkv': { original: 'react-native-mmkv', originalVersion: '3.3.1', status: 'native', harmony: { package: '@react-native-ohos/react-native-mmkv', version: '3.3.1-rc.1', alias: 'react-native-mmkv' } },
     'react-native-pager-view': { original: 'react-native-pager-view', originalVersion: '6.9.1', status: 'native', harmony: { package: '@react-native-ohos/react-native-pager-view', version: '6.7.2-rc.1', alias: 'react-native-pager-view' } },
@@ -80,14 +80,14 @@ function buildCompatTable54(V: VersionMatrix): Record<string, CompatEntry> {
   return {
     // ===== B 类：bump + native =====
     'react-native': { original: 'react-native', status: 'bump-native', bumpTo: V.reactNative, harmony: { package: '@react-native-oh/react-native-harmony', version: V.rnoh } },
-    'react-native-screens': { original: 'react-native-screens', status: 'bump-native', bumpTo: V.rnScreens, harmony: { package: '@react-native-ohos/react-native-screens', version: '4.9.0' }, patch: { sourceFile: 'content/patches/sdk-54/@react-native-ohos+react-native-screens+4.9.0.patch', targetPath: 'patches/@react-native-ohos+react-native-screens+4.9.0.patch', dependencyVersion: V.rnScreens } },
-    'react-native-reanimated': { original: 'react-native-reanimated', status: 'bump-native', bumpTo: V.rnReanimated, harmony: { package: '@react-native-ohos/react-native-reanimated', version: '4.0.2' } },
-    'react-native-worklets': { original: 'react-native-worklets', status: 'bump-native', bumpTo: V.rnWorklets, harmony: { package: '@react-native-ohos/react-native-worklets', version: '1.0.1', alias: 'react-native-worklets' } },
-    'react-native-gesture-handler': { original: 'react-native-gesture-handler', status: 'bump-native', bumpTo: V.rnGestureHandler, harmony: { package: '@react-native-ohos/react-native-gesture-handler', version: '2.30.2' } },
-    'react-native-safe-area-context': { original: 'react-native-safe-area-context', status: 'bump-native', bumpTo: V.rnSafeArea, harmony: { package: '@react-native-ohos/react-native-safe-area-context', version: '5.6.4' } },
+    'react-native-screens': { original: 'react-native-screens', status: 'bump-native', bumpTo: V.rnScreens, harmony: { package: '@react-native-ohos/react-native-screens', version: '4.9.0' } },
+    'react-native-reanimated': { original: 'react-native-reanimated', status: 'bump-native', bumpTo: V.rnReanimated, harmony: { package: '@react-native-ohos/react-native-reanimated', version: '4.0.1' } },
+    'react-native-worklets': { original: 'react-native-worklets', status: 'bump-native', bumpTo: V.rnWorklets, harmony: { package: '@react-native-ohos/react-native-worklets', version: '1.0.0', alias: 'react-native-worklets' } },
+    'react-native-gesture-handler': { original: 'react-native-gesture-handler', status: 'bump-native', bumpTo: V.rnGestureHandler, harmony: { package: '@react-native-ohos/react-native-gesture-handler', version: '2.30.1' } },
+    'react-native-safe-area-context': { original: 'react-native-safe-area-context', status: 'bump-native', bumpTo: V.rnSafeArea, harmony: { package: '@react-native-ohos/react-native-safe-area-context', version: '5.6.3' } },
 
     // ===== C 类：仅 native（不 bump）=====
-    'expo-router': { original: 'expo-router', originalVersion: V.expoRouter, status: 'alias-only', harmony: { package: '@react-native-ohos/native-stack', version: '7.4.0-beta.13' }, patch: { sourceFile: 'content/patches/sdk-54/expo-router+6.0.24.patch', targetPath: 'patches/expo-router+6.0.24.patch' } },
+    'expo-router': { original: 'expo-router', originalVersion: V.expoRouter, status: 'package-patch' },
     'react-native-webview': { original: 'react-native-webview', originalVersion: '13.16.0', status: 'native', harmony: { package: '@react-native-ohos/react-native-webview', version: '13.16.2' } },
     'react-native-mmkv': { original: 'react-native-mmkv', status: 'unsupported' },
     'react-native-pager-view': { original: 'react-native-pager-view', originalVersion: '7.0.2', status: 'native', harmony: { package: '@react-native-ohos/react-native-pager-view', version: '7.0.3', alias: 'react-native-pager-view' } },
@@ -111,24 +111,24 @@ function buildCompatTable54(V: VersionMatrix): Record<string, CompatEntry> {
 
     // ===== H 类：删除 / 替换 =====
     'expo-blur': { original: 'expo-blur', status: 'remove' },
-    'expo-font': { original: 'expo-font', status: 'remove' },
+    'expo-font': { original: 'expo-font', originalVersion: '14.0.12', status: 'package-patch' },
     'expo-haptics': { original: 'expo-haptics', status: 'remove' },
     'expo-symbols': { original: 'expo-symbols', status: 'remove' },
-    'expo-system-ui': { original: 'expo-system-ui', status: 'remove' },
-    'expo-web-browser': { original: 'expo-web-browser', status: 'remove' },
-    'expo-splash-screen': { original: 'expo-splash-screen', status: 'unsupported' },
+    'expo-system-ui': { original: 'expo-system-ui', originalVersion: '6.0.9', status: 'package-patch' },
+    'expo-web-browser': { original: 'expo-web-browser', originalVersion: '15.0.11', status: 'package-patch' },
+    'expo-splash-screen': { original: 'expo-splash-screen', originalVersion: '31.0.13', status: 'package-patch' },
 
     // ===== patch-only =====
-    'expo-modules-core': { original: 'expo-modules-core', status: 'patch-only', patch: { sourceFile: 'content/patches/sdk-54/expo-modules-core+3.0.30.patch', targetPath: 'patches/expo-modules-core+3.0.30.patch' } },
-    'expo-constants': { original: 'expo-constants', status: 'patch-only', patch: { sourceFile: 'content/patches/sdk-54/expo-constants+18.0.14.patch', targetPath: 'patches/expo-constants+18.0.14.patch' } },
-    'expo-status-bar': { original: 'expo-status-bar', status: 'patch-only', patch: { sourceFile: 'content/patches/sdk-54/expo-status-bar+3.0.9.patch', targetPath: 'patches/expo-status-bar+3.0.9.patch' } },
-    'expo-linking': { original: 'expo-linking', status: 'patch-only', patch: { sourceFile: 'content/patches/sdk-54/expo-linking+8.0.12.patch', targetPath: 'patches/expo-linking+8.0.12.patch' } },
+    'expo-modules-core': { original: 'expo-modules-core', originalVersion: '3.0.30', status: 'package-patch' },
+    'expo-constants': { original: 'expo-constants', originalVersion: '18.0.14', status: 'package-patch' },
+    'expo-status-bar': { original: 'expo-status-bar', originalVersion: '3.0.9', status: 'package-patch' },
+    'expo-linking': { original: 'expo-linking', originalVersion: '8.0.12', status: 'package-patch' },
     'expo-clipboard': { original: 'expo-clipboard', status: 'unsupported' },
-    'expo-linear-gradient': { original: 'expo-linear-gradient', originalVersion: '15.0.8', status: 'native', harmony: { package: '@react-native-ohos/react-native-linear-gradient', version: '3.2.0' }, patch: { sourceFile: 'content/patches/sdk-54/expo-linear-gradient+15.0.8.patch', targetPath: 'patches/expo-linear-gradient+15.0.8.patch' } },
-    'expo-image': { original: 'expo-image', status: 'patch-only', patch: { sourceFile: 'content/patches/sdk-54/expo-image+3.0.11.patch', targetPath: 'patches/expo-image+3.0.11.patch' } },
+    'expo-linear-gradient': { original: 'expo-linear-gradient', status: 'unsupported' },
+    'expo-image': { original: 'expo-image', status: 'unsupported' },
     'expo-image-picker': { original: 'expo-image-picker', status: 'unsupported' },
     'expo-media-library': { original: 'expo-media-library', status: 'unsupported' },
-    'expo-document-picker': { original: 'expo-document-picker', originalVersion: '14.0.8', status: 'native', harmony: { package: '@react-native-ohos/react-native-document-picker', version: '9.4.0' }, patch: { sourceFile: 'content/patches/sdk-54/expo-document-picker+14.0.8.patch', targetPath: 'patches/expo-document-picker+14.0.8.patch' } },
+    'expo-document-picker': { original: 'expo-document-picker', status: 'unsupported' },
   };
 }
 

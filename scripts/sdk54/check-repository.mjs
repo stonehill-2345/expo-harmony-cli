@@ -8,8 +8,7 @@ import { SDK54_PACKAGES } from './catalog.mjs';
 const ROOT_IGNORED_DIRECTORIES = new Set([
   '.git', '.pnpm-store', 'coverage', 'dist', 'node_modules', 'outputs',
 ]);
-const APPROVED_STAGE_COMMAND =
-  'node scripts/sdk54/stage-e2e-packages.mjs --external /Users/chensq/Desktop/expo-harmony-sdk54-tgz --output /private/tmp/expo-sdk54-migration-tgz';
+const APPROVED_STAGE_COMMAND = 'node scripts/sdk54/stage-e2e-packages.mjs';
 const FORBIDDEN_DIRECTORY_NAMES = new Set([
   'node_modules', 'oh_modules', '.hvigor', '.cxx', 'build-cache',
 ]);

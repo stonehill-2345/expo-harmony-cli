@@ -2,7 +2,7 @@
 
 日期：2026-09-24
 目标分支：`feat/V1.5.0`
-目标仓库：`/Users/chensq/Desktop/2345/expo-harmony-cli`
+目标仓库：`<repository-root>`
 迁移来源：`expo-harmony-template@2704a48cc52781f510b3996af17c882fb82e1090`
 官方 Expo 基线：`expo/expo@5b42e3d21e0ac5e086752361ca8a5cb4de53bec1`
 
@@ -88,7 +88,7 @@
 以下目录作为只读外部输入：
 
 ```text
-/Users/chensq/Desktop/expo-harmony-sdk54-tgz
+<external-tgz-dir>
 ```
 
 只复用：

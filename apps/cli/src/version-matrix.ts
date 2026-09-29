@@ -65,7 +65,8 @@ export function detectSdkVersion(projectRoot: string): SdkVersion {
     if (major === 53) {
       throw new Error('暂不支持 Expo SDK 53 的 HarmonyOS 适配；请使用 Expo SDK 52 或 54。');
     }
-    if (major >= 54) return 'sdk-54';
+    if (major === 54) return 'sdk-54';
+    if (major >= 55) throw new Error('暂不支持 Expo SDK 55 及更高版本；仅支持 Expo SDK 52 或 54。');
     if (major <= 52) return 'sdk-52';
   }
   return 'sdk-54';

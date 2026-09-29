@@ -11,6 +11,7 @@ import { injectContent } from './content-injector';
 import { printTip } from './tips';
 import { buildBundleName } from './utils/bundle-name';
 import { getVersionMatrix, type SdkVersion } from './version-matrix';
+import { assertCreateSelectionSupported, parseCreateArgs } from './sdk54/create-options';
 
 const OPTIONAL_DEFAULT_TEMPLATE_DEPENDENCIES = ['react-native-webview'];
 
@@ -29,14 +30,6 @@ function removeOptionalDefaultTemplateDependencies(targetDir: string): void {
 
 export interface CreateOptions {
   cwd?: string;
-}
-
-const SAFE_PROJECT_NAME = /^[a-z0-9][a-z0-9._-]*$/;
-
-function assertValidProjectName(projectName: string): void {
-  if (!SAFE_PROJECT_NAME.test(projectName)) {
-    throw new Error('项目名仅支持小写字母、数字、点、下划线和连字符，且必须以字母或数字开头。');
-  }
 }
 
 function getCommandErrorDetail(error: unknown): string {
@@ -66,47 +59,36 @@ const SDK_CHOICES: Array<{ value: SdkVersion; label: string }> = [
   { value: 'sdk-52', label: 'Expo SDK 52 模板（RN 0.77）' },
 ];
 
-function parseSdkFlag(args: string[]): { sdk: SdkVersion | null; rest: string[] } {
-  let sdk: SdkVersion | null = null;
-  const rest: string[] = [];
-  for (let i = 0; i < args.length; i++) {
-    const arg = args[i];
-    if (arg !== '--sdk' && !arg.startsWith('--sdk=')) {
-      rest.push(arg);
-      continue;
-    }
-    if (sdk !== null) throw new Error('--sdk 只能指定一次');
-    const value = arg === '--sdk' ? args[++i] : arg.slice('--sdk='.length);
-    if (value !== '52' && value !== '54') {
-      throw new Error('--sdk 仅支持 52 或 54，例如 --sdk=52 或 --sdk 54');
-    }
-    sdk = value === '52' ? 'sdk-52' : 'sdk-54';
-  }
-  return { sdk, rest };
-}
-
 /** create 命令编排：选择 SDK → 创建模板 → 注入鸿蒙基线 → 适配依赖 → 写入开发资料。*/
 export async function runCreate(args: string[], opts: CreateOptions = {}): Promise<void> {
-  // 提取 --sdk flag（如有）
-  const { sdk: flagSdk, rest } = parseSdkFlag(args);
-  const projectName = rest[0];
-  if (!projectName) throw new Error('用法: expo-harmony-cli <project-name> [--sdk=52|54]');
-  assertValidProjectName(projectName);
-
+  const parsed = parseCreateArgs(args);
+  const projectName = parsed.projectName;
   const cwd = opts.cwd || process.cwd();
 
   // 步骤 0：选择 Expo SDK 版本（--sdk flag 优先，否则交互式选择）
-  if (flagSdk === null && (!process.stdin.isTTY || !process.stdout.isTTY)) {
+  if (parsed.requestedSdk === null && (!process.stdin.isTTY || !process.stdout.isTTY)) {
     throw new Error('非交互环境必须显式指定 Expo SDK：请使用 --sdk=52 或 --sdk=54');
   }
-  const sdk: SdkVersion = flagSdk ?? await select({
+  const sdk: SdkVersion = parsed.requestedSdk ?? await select({
     message: '选择 Expo SDK 模板版本',
     choices: SDK_CHOICES.map(({ value, label }) => ({ value, name: label })),
     default: 'sdk-54',
   });
+  if (sdk === 'sdk-54') {
+    assertCreateSelectionSupported(parsed, sdk);
+    const { runSdk54Create } = await import('./sdk54/create');
+    await runSdk54Create({
+      cwd,
+      projectName,
+      template: parsed.template,
+      packageManager: parsed.packageManager,
+    });
+    return;
+  }
 
+  assertCreateSelectionSupported(parsed, sdk);
   const V = getVersionMatrix(sdk);
-  const sdkLabel = sdk === 'sdk-52' ? 'SDK 52' : 'SDK 54';
+  const sdkLabel = 'SDK 52';
 
   // 步骤 1：拉 create-expo-app（不装依赖）
   try {
@@ -156,6 +138,6 @@ export async function runCreate(args: string[], opts: CreateOptions = {}): Promi
   });
 
   log.success(`已创建：${projectName}`);
-  const pm = resolvePm(rest, targetDir);
+  const pm = resolvePm(parsed.rawArgs, targetDir);
   printTip('create.complete', { pm, projectName });
 }

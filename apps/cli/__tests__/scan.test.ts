@@ -52,13 +52,11 @@ describe('scanAndAdapt', () => {
     const patchPath = 'patches/@react-native-ohos+react-native-screens+4.9.0.patch';
     const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(report.patched).toContainEqual({ original: 'react-native-screens', patchPath });
-    expect(fs.existsSync(path.join(tmp, patchPath))).toBe(true);
+    expect(report.patched).not.toContainEqual({ original: 'react-native-screens', patchPath });
+    expect(fs.existsSync(path.join(tmp, patchPath))).toBe(false);
     expect(pkg.dependencies['react-native-screens']).toBe('4.17.1');
     expect(pkg.dependencies['@react-native-ohos/react-native-screens']).toBe('4.9.0');
-    expect(readManagedState(tmp).packages['react-native-screens'].patchFiles).toEqual([
-      expect.objectContaining({ targetPath: patchPath }),
-    ]);
+    expect(readManagedState(tmp).packages['react-native-screens'].patchFiles).toBeUndefined();
   });
 
   it.each(['sdk-52', 'sdk-54'] as const)('%s 不为未声明的 screens 复制补丁', (sdk) => {
@@ -66,7 +64,8 @@ describe('scanAndAdapt', () => {
     delete pkg.dependencies['react-native-screens'];
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg));
     scanAndAdapt(tmp, sdk);
-    expect(fs.readdirSync(path.join(tmp, 'patches')).some(name => name.includes('react-native-screens'))).toBe(false);
+    const patchesDir = path.join(tmp, 'patches');
+    expect(fs.existsSync(patchesDir) && fs.readdirSync(patchesDir).some(name => name.includes('react-native-screens'))).toBe(false);
   });
 
   it('bump-native: react-native-screens 升级到 0.82 兼容版本并添加鸿蒙配套包', () => {
@@ -80,11 +79,12 @@ describe('scanAndAdapt', () => {
     }));
   });
 
-  it('alias-only: expo-router 加 @react-native-ohos/native-stack + copy patch，不计入 native', () => {
-    scanAndAdapt(tmp, 'sdk-54');
+  it('package-patch: expo-router 由 SDK54 全局 patch-set 管理，旧 scanner 不改写', () => {
+    const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['@react-native-ohos/native-stack']).toBe('7.4.0-beta.13');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-router+6.0.24.patch'))).toBe(true);
+    expect(pkg.dependencies['expo-router']).toBe('6.0.10');
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-router+6.0.24.patch'))).toBe(false);
+    expect(report.skipped).toContain('expo-router');
   });
 
   it('alias-only: @shopify/flash-list 加 @react-native-ohos/flash-list + alias，不计入 native', () => {
@@ -146,7 +146,7 @@ describe('scanAndAdapt', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['expo-splash-screen']).toBe('31.0.10');
     expect(pkg.dependencies['expo-splash-screen2']).toBeUndefined();
-    expect(report.unsupported).toContain('expo-splash-screen');
+    expect(report.skipped).toContain('expo-splash-screen');
   });
 
   it('unsupported: scan 不修改用户 app.json 中的 Splash plugin', () => {
@@ -164,9 +164,9 @@ describe('scanAndAdapt', () => {
   it('patch-only: expo-constants copy patch（不改依赖）', () => {
     const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['expo-constants']).toBe('18.0.14');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+18.0.14.patch'))).toBe(true);
-    expect(report.patched.find(p => p.original === 'expo-constants')).toBeTruthy();
+    expect(pkg.dependencies['expo-constants']).toBe('18.0.9');
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+18.0.14.patch'))).toBe(false);
+    expect(report.skipped).toContain('expo-constants');
   });
 
   it('强制注入: 只注入顶层 RNOH 核心 patch，并清理旧的 expo-modules-core 传递依赖 patch', () => {
@@ -175,16 +175,16 @@ describe('scanAndAdapt', () => {
 
     scanAndAdapt(tmp, 'sdk-54');
 
-    expect(fs.existsSync(path.join(tmp, 'patches/@react-native-oh+react-native-harmony+0.82.30.patch'))).toBe(true);
+    expect(fs.existsSync(path.join(tmp, 'patches/@react-native-oh+react-native-harmony+0.82.30.patch'))).toBe(false);
     expect(fs.existsSync(path.join(tmp, 'patches/expo-modules-core+2.2.3.patch'))).toBe(false);
   });
 
   it('patch-only: 命中 patch 时强制依赖版本等于 patch 版本并复制 patch', () => {
     const report = scanAndAdapt(tmp, 'sdk-54');
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['expo-status-bar']).toBe('3.0.9');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-status-bar+3.0.9.patch'))).toBe(true);
-    expect(report.patched.find(p => p.original === 'expo-status-bar')).toBeTruthy();
+    expect(pkg.dependencies['expo-status-bar']).toBe('3.0.8');
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-status-bar+3.0.9.patch'))).toBe(false);
+    expect(report.skipped).toContain('expo-status-bar');
   });
 
   it('生成 package.json 依赖版本必须锁定，不能保留 ~ 或 ^', () => {

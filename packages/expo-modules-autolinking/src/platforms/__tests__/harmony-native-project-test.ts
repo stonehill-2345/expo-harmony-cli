@@ -10,6 +10,7 @@ import path from 'path';
 
 import type { ModuleDescriptorHarmony } from '../../types';
 import {
+  copyHarmonyTemplateMediaAsync,
   prepareHarmonyNativeProjectAsync,
   prepareRnohCompatibilityHarAsync,
   renderExpoModulesAppOverlays,
@@ -667,5 +668,34 @@ describe('third-party HAR staging', () => {
         harmonyRoot
       )
     ).rejects.toThrow('duplicate Harmony OHPM package name "source-package"');
+  });
+});
+
+describe('copyHarmonyTemplateMediaAsync', () => {
+  it('materializes Harmony media from Expo app assets without binary template payloads', async () => {
+    const root = fs.mkdtempSync(path.join(os.tmpdir(), 'expo-harmony-media-'));
+    try {
+      fs.mkdirSync(path.join(root, 'assets'), { recursive: true });
+      fs.writeFileSync(path.join(root, 'assets/icon.png'), 'icon');
+      fs.writeFileSync(path.join(root, 'assets/adaptive.png'), 'foreground');
+      fs.writeFileSync(path.join(root, 'assets/splash.png'), 'splash');
+      fs.writeFileSync(path.join(root, 'app.json'), JSON.stringify({ expo: {
+        icon: './assets/icon.png',
+        android: { adaptiveIcon: { foregroundImage: './assets/adaptive.png' } },
+        splash: { image: './assets/splash.png' },
+      } }));
+      const harmonyRoot = path.join(root, 'harmony');
+      fs.mkdirSync(path.join(harmonyRoot, 'entry/src/main/resources/base/media'), { recursive: true });
+      fs.mkdirSync(path.join(harmonyRoot, 'AppScope/resources/base/media'), { recursive: true });
+
+      await copyHarmonyTemplateMediaAsync(root, harmonyRoot);
+
+      expect(fs.readFileSync(path.join(harmonyRoot, 'entry/src/main/resources/base/media/background.png'), 'utf8')).toBe('icon');
+      expect(fs.readFileSync(path.join(harmonyRoot, 'entry/src/main/resources/base/media/foreground.png'), 'utf8')).toBe('foreground');
+      expect(fs.readFileSync(path.join(harmonyRoot, 'entry/src/main/resources/base/media/startIcon.png'), 'utf8')).toBe('splash');
+      expect(fs.readFileSync(path.join(harmonyRoot, 'AppScope/resources/base/media/app_icon.png'), 'utf8')).toBe('icon');
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   });
 });

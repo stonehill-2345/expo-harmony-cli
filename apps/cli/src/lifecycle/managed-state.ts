@@ -23,11 +23,21 @@ export type ManagedPackage = {
   requiresCodegen?: boolean;
 };
 
+export type Sdk54ManagedState = {
+  sdk: 'sdk-54';
+  mode: 'sdk54-package-patch';
+  template: 'blank-typescript' | 'default';
+  patchSet: string;
+  expo: string;
+  rnoh: string;
+};
+
 export type ManagedState = {
   version: 2;
   packages: Record<string, ManagedPackage>;
   generatedFiles?: Record<string, { contentHash: string; cliVersion: string }>;
   managedEntries?: Record<string, { path: string; dependency: string; spec: string; cliVersion: string }>;
+  sdk54?: Sdk54ManagedState;
 };
 
 export type CleanupResult = {
@@ -72,6 +82,18 @@ function validEntries(projectRoot: string, value: unknown): value is ManagedStat
   return Object.values(value).every(entry => !!entry && typeof entry === 'object' && isRelPathSafe(projectRoot, (entry as any).path) && typeof (entry as any).dependency === 'string' && typeof (entry as any).spec === 'string' && typeof (entry as any).cliVersion === 'string');
 }
 
+function validSdk54(value: unknown): value is Sdk54ManagedState {
+  if (value === undefined) return true;
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+  const state = value as Record<string, unknown>;
+  return state.sdk === 'sdk-54'
+    && state.mode === 'sdk54-package-patch'
+    && (state.template === 'blank-typescript' || state.template === 'default')
+    && typeof state.patchSet === 'string' && state.patchSet.length > 0
+    && typeof state.expo === 'string' && state.expo.length > 0
+    && typeof state.rnoh === 'string' && state.rnoh.length > 0;
+}
+
 function materializeFiles(projectRoot: string, files: ManagedFile[] | undefined): ManagedFile[] | undefined {
   if (!files?.length) return undefined;
   return files.map(file => ({
@@ -89,6 +111,7 @@ export function readManagedState(projectRoot: string): ManagedState {
       const normalized: ManagedState = { ...state, version: 2 };
       if (!validGenerated(projectRoot, normalized.generatedFiles)) delete normalized.generatedFiles;
       if (!validEntries(projectRoot, normalized.managedEntries)) delete normalized.managedEntries;
+      if (!validSdk54(normalized.sdk54)) delete normalized.sdk54;
       return normalized;
     }
   } catch {

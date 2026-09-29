@@ -1,5 +1,10 @@
 export const FIXTURE_TEMPLATES = Object.freeze(['blank-typescript', 'default']);
 
+export const OFFICIAL_TEMPLATE_DEPENDENCIES = Object.freeze({
+  'blank-typescript': Object.freeze({ expo: '~54.0.36', react: '19.1.0', 'react-native': '0.81.5' }),
+  default: Object.freeze({ expo: '~54.0.36', react: '19.1.0', 'react-native': '0.81.5' }),
+});
+
 export const EXPO_ARCHIVE_VERSIONS = Object.freeze({
   '@expo/cli': '54.0.27',
   '@expo/metro-config': '54.0.17',

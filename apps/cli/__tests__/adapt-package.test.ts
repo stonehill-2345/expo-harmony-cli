@@ -14,11 +14,11 @@ describe('adaptPackage', () => {
   });
   afterEach(() => fs.rmSync(tmp, { recursive: true, force: true }));
 
-  it('SDK 54 单包安装 screens 时复制 Harmony patch，不把原包降到补丁包版本', () => {
+  it('SDK 54 screens 使用公共 Harmony 包且不复制 early patch', () => {
     const patchPath = 'patches/@react-native-ohos+react-native-screens+4.9.0.patch';
     const result = adaptPackage('react-native-screens', tmp);
-    expect(result.patchPath).toBe(patchPath);
-    expect(fs.existsSync(path.join(tmp, patchPath))).toBe(true);
+    expect(result.patchPath).toBeUndefined();
+    expect(fs.existsSync(path.join(tmp, patchPath))).toBe(false);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg.dependencies['react-native-screens']).toBe('4.17.1');
     expect(pkg.dependencies['@react-native-ohos/react-native-screens']).toBe('4.9.0');
@@ -95,17 +95,17 @@ describe('adaptPackage', () => {
     expect(pkg.dependencies['@react-native-ohos/react-native-blob-util']).toBe('0.23.0');
   });
 
-  it('patch-only（expo-constants）→ 锁定原包版本为 patch 版本并复制 patch', () => {
+  it('package-patch（expo-constants）→ 旧适配器不复制 patch', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     pkg.dependencies['expo-constants'] = '~18.0.9';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg));
 
     const r = adaptPackage('expo-constants', tmp);
-    expect(r.status).toBe('patch-only');
-    expect(r.patchPath).toBe('patches/expo-constants+18.0.14.patch');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+18.0.14.patch'))).toBe(true);
+    expect(r.status).toBe('package-patch');
+    expect(r.patchPath).toBeUndefined();
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+18.0.14.patch'))).toBe(false);
     const pkg2 = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg2.dependencies['expo-constants']).toBe('18.0.14');
+    expect(pkg2.dependencies['expo-constants']).toBe('18.0.9');
   });
 
   it('expo-linear-gradient → 同时锁定 SDK 54 patch 和 0.82 Harmony 包', () => {
@@ -115,12 +115,12 @@ describe('adaptPackage', () => {
 
     const r = adaptPackage('expo-linear-gradient', tmp);
 
-    expect(r.status).toBe('native');
-    expect(r.needsAutolink).toBe(true);
-    expect(r.patchPath).toBe('patches/expo-linear-gradient+15.0.8.patch');
+    expect(r.status).toBe('unsupported');
+    expect(r.needsAutolink).toBeUndefined();
+    expect(r.patchPath).toBeUndefined();
     const nextPkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(nextPkg.dependencies['expo-linear-gradient']).toBe('15.0.8');
-    expect(nextPkg.dependencies['@react-native-ohos/react-native-linear-gradient']).toBe('3.2.0');
+    expect(nextPkg.dependencies['@react-native-ohos/react-native-linear-gradient']).toBeUndefined();
   });
 
   it('expo-document-picker → 同时锁定 SDK 54 patch 和 0.82 Harmony 包', () => {
@@ -130,27 +130,24 @@ describe('adaptPackage', () => {
 
     const r = adaptPackage('expo-document-picker', tmp);
 
-    expect(r.status).toBe('native');
-    expect(r.needsAutolink).toBe(true);
-    expect(r.patchPath).toBe('patches/expo-document-picker+14.0.8.patch');
+    expect(r.status).toBe('unsupported');
+    expect(r.needsAutolink).toBeUndefined();
+    expect(r.patchPath).toBeUndefined();
     const nextPkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(nextPkg.dependencies['expo-document-picker']).toBe('14.0.8');
-    expect(nextPkg.dependencies['@react-native-ohos/react-native-document-picker']).toBe('9.4.0');
+    expect(nextPkg.dependencies['@react-native-ohos/react-native-document-picker']).toBeUndefined();
   });
 
-  it('alias-only + patch（expo-router）→ 锁定原包版本、加鸿蒙包并复制 patch，不需要 autolinking', () => {
+  it('package-patch（expo-router）→ 旧适配器不复制、不改写', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     pkg.dependencies['expo-router'] = '~6.0.10';
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg));
-
     const r = adaptPackage('expo-router', tmp);
-    expect(r.status).toBe('alias-only');
-    expect(r.needsAutolink).toBe(false);
-    expect(r.patchPath).toBe('patches/expo-router+6.0.24.patch');
     const pkg2 = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg2.dependencies['expo-router']).toBe('6.0.24');
-    expect(pkg2.dependencies['@react-native-ohos/native-stack']).toBe('7.4.0-beta.13');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-router+6.0.24.patch'))).toBe(true);
+    expect(r.status).toBe('package-patch');
+    expect(r.patchPath).toBeUndefined();
+    expect(pkg2.dependencies['expo-router']).toBe('6.0.10');
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-router+6.0.24.patch'))).toBe(false);
   });
 
   it('remove（expo-haptics）→ 从 package.json 删除', () => {
@@ -174,7 +171,7 @@ describe('adaptPackage', () => {
     fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify(pkg));
 
     const r = adaptPackage('expo-splash-screen', tmp);
-    expect(r.status).toBe('unsupported');
+    expect(r.status).toBe('package-patch');
     const pkg2 = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
     expect(pkg2.dependencies['expo-splash-screen']).toBe('0.29.24');
     expect(pkg2.dependencies['expo-splash-screen2']).toBeUndefined();

@@ -1,23 +1,295 @@
-diff --git a/node_modules/expo-linking/build/ExpoLinking.js b/node_modules/expo-linking/build/ExpoLinking.js
-index 7ea4cb4..06b3d30 100644
---- a/node_modules/expo-linking/build/ExpoLinking.js
-+++ b/node_modules/expo-linking/build/ExpoLinking.js
-@@ -1,4 +1,14 @@
--import { requireNativeModule } from 'expo-modules-core';
--const ExpoLinking = requireNativeModule('ExpoLinking');
-+import { Platform } from 'react-native';
-+let ExpoLinking;
-+if (Platform.OS === 'harmony') {
-+    ExpoLinking = {
-+        getLinkingURL: () => null,
-+        addListener: () => ({ remove: () => { } }),
-+    };
+diff --git a/node_modules/expo-linking/build/Linking.js b/node_modules/expo-linking/build/Linking.js
+index 4a576ba..f471f9c 100644
+--- a/node_modules/expo-linking/build/Linking.js
++++ b/node_modules/expo-linking/build/Linking.js
+@@ -90,7 +90,8 @@ export function getLinkingURL() {
+  */
+ export async function openURL(url) {
+     validateURL(url);
+-    return await RNLinking.openURL(url);
++    // RNOH resolves without a value after startAbility succeeds.
++    return (await RNLinking.openURL(url)) ?? true;
+ }
+ // @needsAudit
+ /**
+diff --git a/node_modules/expo-linking/expo-module.config.json b/node_modules/expo-linking/expo-module.config.json
+index 22f0bfd..55338dc 100644
+--- a/node_modules/expo-linking/expo-module.config.json
++++ b/node_modules/expo-linking/expo-module.config.json
+@@ -1,16 +1,32 @@
+ {
+-  "platforms": ["apple", "android", "web"],
++  "platforms": ["apple", "android", "web", "harmony"],
+   "apple": {
+     "modules": ["ExpoLinkingModule"],
+     "appDelegateSubscribers": ["LinkingAppDelegateSubscriber"]
+   },
+   "android": {
+-    "modules": ["expo.modules.linking.ExpoLinkingModule"],
+-    "publication": {
+-      "groupId": "host.exp.exponent",
+-      "artifactId": "expo.modules.linking",
+-      "version": "8.0.12",
+-      "repository": "local-maven-repo"
+-    }
++    "modules": ["expo.modules.linking.ExpoLinkingModule"]
++  },
++  "harmony": {
++    "kind": "ability-lifecycle",
++    "cpp": {
++      "packageClass": "expo::linking::harmony::ExpoLinkingPackage",
++      "header": "ExpoLinkingPackage.h",
++      "cmakeTarget": "rnoh_expo_linking",
++      "cmakePath": "harmony/src/main/cpp"
++    },
++    "ets": {
++      "packageClass": "ExpoLinkingPackage",
++      "importPath": "expo-linking/harmony",
++      "entrypoint": "harmony/index.ets"
++    },
++    "lifecycleDependencies": [
++      {
++        "localName": "linkingLifecycle",
++        "className": "ExpoLinkingLifecycle",
++        "importPath": "expo-linking/harmony",
++        "appStorageKey": "ExpoLinkingLifecycle"
++      }
++    ]
+   }
+ }
+diff --git a/node_modules/expo-linking/harmony/index.ets b/node_modules/expo-linking/harmony/index.ets
+new file mode 100644
+index 0000000..20774bc
+--- /dev/null
++++ b/node_modules/expo-linking/harmony/index.ets
+@@ -0,0 +1,2 @@
++export { ExpoLinkingPackage } from './src/main/ets/ExpoLinkingPackage';
++export { ExpoLinkingLifecycle } from './src/main/ets/ExpoLinkingLifecycle';
+diff --git a/node_modules/expo-linking/harmony/src/main/cpp/CMakeLists.txt b/node_modules/expo-linking/harmony/src/main/cpp/CMakeLists.txt
+new file mode 100644
+index 0000000..58c9f91
+--- /dev/null
++++ b/node_modules/expo-linking/harmony/src/main/cpp/CMakeLists.txt
+@@ -0,0 +1,10 @@
++cmake_minimum_required(VERSION 3.16)
++
++if(NOT TARGET rnoh)
++  message(FATAL_ERROR "Add RNOH 0.82.30 before expo-linking")
++endif()
++
++add_library(rnoh_expo_linking STATIC ExpoLinkingTurboModule.cpp)
++target_compile_features(rnoh_expo_linking PUBLIC cxx_std_20)
++target_include_directories(rnoh_expo_linking PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
++target_link_libraries(rnoh_expo_linking PUBLIC rnoh)
+diff --git a/node_modules/expo-linking/harmony/src/main/cpp/ExpoLinkingPackage.h b/node_modules/expo-linking/harmony/src/main/cpp/ExpoLinkingPackage.h
+new file mode 100644
+index 0000000..7c039cf
+--- /dev/null
++++ b/node_modules/expo-linking/harmony/src/main/cpp/ExpoLinkingPackage.h
+@@ -0,0 +1,24 @@
++#pragma once
++
++#include "ExpoLinkingTurboModule.h"
++#include "RNOH/Package.h"
++
++namespace expo::linking::harmony {
++
++class ExpoLinkingFactory final : public rnoh::TurboModuleFactoryDelegate {
++ public:
++  SharedTurboModule createTurboModule(Context context, const std::string& name) const override {
++    if (name != "ExpoLinking") return nullptr;
++    return std::make_shared<ExpoLinkingTurboModule>(std::move(context), name);
++  }
++};
++
++class ExpoLinkingPackage final : public rnoh::Package {
++ public:
++  using Package::Package;
++  std::unique_ptr<rnoh::TurboModuleFactoryDelegate> createTurboModuleFactoryDelegate() override {
++    return std::make_unique<ExpoLinkingFactory>();
++  }
++};
++
++} // namespace expo::linking::harmony
+diff --git a/node_modules/expo-linking/harmony/src/main/cpp/ExpoLinkingTurboModule.cpp b/node_modules/expo-linking/harmony/src/main/cpp/ExpoLinkingTurboModule.cpp
+new file mode 100644
+index 0000000..822902f
+--- /dev/null
++++ b/node_modules/expo-linking/harmony/src/main/cpp/ExpoLinkingTurboModule.cpp
+@@ -0,0 +1,24 @@
++#include "ExpoLinkingTurboModule.h"
++
++namespace expo::linking::harmony {
++
++ExpoLinkingTurboModule::ExpoLinkingTurboModule(Context context, const std::string& name)
++    : ArkTSTurboModule(context, name),
++      rnoh::ArkTSMessageHub::Observer(context.arkTSMessageHub),
++      urlEmitter_(std::make_shared<facebook::react::AsyncEventEmitter<folly::dynamic>>()) {
++  methodMap_ = {ARK_METHOD_METADATA(getLinkingURL, 0)};
++  eventEmitterMap_["onURLReceived"] = urlEmitter_;
 +}
-+else {
-+    const { requireNativeModule } = require('expo-modules-core');
-+    ExpoLinking = requireNativeModule('ExpoLinking');
++
++void ExpoLinkingTurboModule::onMessageReceived(const rnoh::ArkTSMessage& message) {
++  if (message.name != "ExpoLinking:onURLReceived") return;
++  const auto& url = message.payload["url"];
++  if (!url.isString() || url.getString().empty()) return;
++  urlEmitter_->emit([value = url.getString()](facebook::jsi::Runtime& runtime) {
++    facebook::jsi::Object event(runtime);
++    event.setProperty(runtime, "url", facebook::jsi::String::createFromUtf8(runtime, value));
++    return facebook::jsi::Value(std::move(event));
++  });
 +}
- export default ExpoLinking;
--//# sourceMappingURL=ExpoLinking.js.map
-\ No newline at end of file
-+//# sourceMappingURL=ExpoLinking.js.map
++
++} // namespace expo::linking::harmony
+diff --git a/node_modules/expo-linking/harmony/src/main/cpp/ExpoLinkingTurboModule.h b/node_modules/expo-linking/harmony/src/main/cpp/ExpoLinkingTurboModule.h
+new file mode 100644
+index 0000000..4857dd7
+--- /dev/null
++++ b/node_modules/expo-linking/harmony/src/main/cpp/ExpoLinkingTurboModule.h
+@@ -0,0 +1,17 @@
++#pragma once
++
++#include "RNOH/ArkTSTurboModule.h"
++
++namespace expo::linking::harmony {
++
++class ExpoLinkingTurboModule final : public rnoh::ArkTSTurboModule,
++                                    public rnoh::ArkTSMessageHub::Observer {
++ public:
++  ExpoLinkingTurboModule(Context context, const std::string& name);
++  void onMessageReceived(const rnoh::ArkTSMessage& message) override;
++
++ private:
++  std::shared_ptr<facebook::react::AsyncEventEmitter<folly::dynamic>> urlEmitter_;
++};
++
++} // namespace expo::linking::harmony
+diff --git a/node_modules/expo-linking/harmony/src/main/ets/ExpoLinkingLifecycle.ts b/node_modules/expo-linking/harmony/src/main/ets/ExpoLinkingLifecycle.ts
+new file mode 100644
+index 0000000..b84a49a
+--- /dev/null
++++ b/node_modules/expo-linking/harmony/src/main/ets/ExpoLinkingLifecycle.ts
+@@ -0,0 +1,42 @@
++export interface LinkingWant {
++  uri?: string;
++}
++
++// One instance per UIAbility, retained across RNInstance reloads.
++// The host passes real Wants from onCreate/onNewWant, never a synthesized URI.
++export class ExpoLinkingLifecycle {
++  private url: string | null = null;
++  private destroyed = false;
++  private readonly listeners = new Set<(url: string) => void>();
++
++  public onCreate(want: LinkingWant): void {
++    this.onNewWant(want);
++  }
++
++  public onNewWant(want: LinkingWant): void {
++    this.assertActive();
++    if (!want.uri) return;
++    this.url = want.uri;
++    this.listeners.forEach((listener) => listener(want.uri!));
++  }
++
++  public getLinkingURL(): string | null {
++    return this.url;
++  }
++
++  public subscribe(listener: (url: string) => void): () => void {
++    this.assertActive();
++    this.listeners.add(listener);
++    return () => { this.listeners.delete(listener); };
++  }
++
++  public onDestroy(): void {
++    this.destroyed = true;
++    this.listeners.clear();
++    this.url = null;
++  }
++
++  private assertActive(): void {
++    if (this.destroyed) throw new Error('ExpoLinking Ability lifecycle was destroyed');
++  }
++}
+diff --git a/node_modules/expo-linking/harmony/src/main/ets/ExpoLinkingPackage.ets b/node_modules/expo-linking/harmony/src/main/ets/ExpoLinkingPackage.ets
+new file mode 100644
+index 0000000..8a276dc
+--- /dev/null
++++ b/node_modules/expo-linking/harmony/src/main/ets/ExpoLinkingPackage.ets
+@@ -0,0 +1,22 @@
++import { RNOHPackage } from '@rnoh/react-native-openharmony';
++import type { RNPackageContext, UITurboModule, UITurboModuleContext } from '@rnoh/react-native-openharmony';
++import { ExpoLinkingLifecycle } from './ExpoLinkingLifecycle';
++import { ExpoLinkingTurboModule } from './ExpoLinkingTurboModule';
++
++export class ExpoLinkingPackage extends RNOHPackage {
++  private readonly lifecycle: ExpoLinkingLifecycle;
++
++  public constructor(ctx: RNPackageContext, lifecycle: ExpoLinkingLifecycle) {
++    super(ctx);
++    this.lifecycle = lifecycle;
++  }
++
++  public override getUITurboModuleFactoryByNameMap(): Map<string, (ctx: UITurboModuleContext) => UITurboModule | null> {
++    return new Map<string, (ctx: UITurboModuleContext) => UITurboModule>().set(
++      ExpoLinkingTurboModule.NAME,
++      (ctx: UITurboModuleContext) => new ExpoLinkingTurboModule(ctx, this.lifecycle)
++    );
++  }
++
++  public override getDebugName(): string { return 'expo-linking'; }
++}
+diff --git a/node_modules/expo-linking/harmony/src/main/ets/ExpoLinkingTurboModule.ets b/node_modules/expo-linking/harmony/src/main/ets/ExpoLinkingTurboModule.ets
+new file mode 100644
+index 0000000..70f1f33
+--- /dev/null
++++ b/node_modules/expo-linking/harmony/src/main/ets/ExpoLinkingTurboModule.ets
+@@ -0,0 +1,33 @@
++import { UITurboModule } from '@rnoh/react-native-openharmony';
++import type { UITurboModuleContext } from '@rnoh/react-native-openharmony';
++import { ExpoLinkingLifecycle } from './ExpoLinkingLifecycle';
++
++interface URLEvent { url: string; }
++
++export class ExpoLinkingTurboModule extends UITurboModule {
++  public static readonly NAME = 'ExpoLinking';
++  private readonly unsubscribe: () => void;
++  private destroyed = false;
++
++  private readonly lifecycle: ExpoLinkingLifecycle;
++
++  public constructor(ctx: UITurboModuleContext, lifecycle: ExpoLinkingLifecycle) {
++    super(ctx);
++    this.lifecycle = lifecycle;
++    this.unsubscribe = lifecycle.subscribe((url: string) => {
++      const event: URLEvent = { url };
++      this.ctx.rnInstance.postMessageToCpp('ExpoLinking:onURLReceived', event);
++    });
++  }
++
++  public getLinkingURL(): string | null {
++    if (this.destroyed) throw new Error('ExpoLinking module was destroyed');
++    return this.lifecycle.getLinkingURL();
++  }
++
++  public override __onDestroy__(): void {
++    this.destroyed = true;
++    this.unsubscribe();
++    super.__onDestroy__();
++  }
++}
+diff --git a/node_modules/expo-linking/src/Linking.ts b/node_modules/expo-linking/src/Linking.ts
+index 67efff2..87ed09a 100644
+--- a/node_modules/expo-linking/src/Linking.ts
++++ b/node_modules/expo-linking/src/Linking.ts
+@@ -100,7 +100,8 @@ export function getLinkingURL(): string | null {
+  */
+ export async function openURL(url: string): Promise<true> {
+   validateURL(url);
+-  return await RNLinking.openURL(url);
++  // RNOH resolves without a value after startAbility succeeds.
++  return (await RNLinking.openURL(url)) ?? true;
+ }
+ 
+ // @needsAudit

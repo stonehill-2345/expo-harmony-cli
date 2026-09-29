@@ -10,9 +10,17 @@ import { writeMetroConfig } from '../injector/metro-config';
 import { getConfig } from '@expo/config';
 import { cleanupStaleIosTemplateOverrides } from '../h-cleanup';
 import { detectSdkVersion } from '../version-matrix';
+import { classifyHarmonyProject } from '../sdk54/project-state';
 
 export async function prebuild(args: string[]): Promise<void> {
   const projectRoot = process.cwd();
+  const kind = classifyHarmonyProject(projectRoot);
+  if (kind === 'sdk54-package-patch') {
+    const forwarded = args.filter(arg => arg !== '--skip-preflight');
+    runFile('npx', ['--no-install', 'expo', 'prebuild', ...forwarded], { cwd: projectRoot });
+    return;
+  }
+  if (kind === 'sdk54-legacy') throw new Error('legacy SDK54 project：仅诊断，不自动迁移；请 fresh create 后迁移业务代码');
   const skipPreflight = args.includes('--skip-preflight');
 
   preflight(projectRoot, skipPreflight);

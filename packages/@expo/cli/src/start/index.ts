@@ -1,9 +1,24 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
+import fs from 'fs';
+import path from 'path';
 
 import { Command } from '../../bin/cli';
 import { assertArgs, getProjectRoot, printHelp } from '../utils/args';
 import { logCmdError } from '../utils/errors';
+
+export function enableHarmonyMetroForManagedProject(projectRoot: string): boolean {
+  try {
+    const state = JSON.parse(
+      fs.readFileSync(path.join(projectRoot, '.expo-harmony/managed-state.json'), 'utf8')
+    );
+    if (state?.sdk54?.mode !== 'sdk54-package-patch') return false;
+    process.env.EXPO_HARMONY_METRO = '1';
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 export const expoStart: Command = async (argv) => {
   const args = assertArgs(
@@ -82,6 +97,7 @@ export const expoStart: Command = async (argv) => {
   }
 
   const projectRoot = getProjectRoot(args);
+  enableHarmonyMetroForManagedProject(projectRoot);
 
   // NOTE(cedric): `./resolveOptions` loads the expo config when using dev clients, this needs to be initialized before that
   const { setNodeEnv, loadEnvFiles } = await import('../utils/nodeEnv.js');

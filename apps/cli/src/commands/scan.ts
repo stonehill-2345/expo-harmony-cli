@@ -4,6 +4,7 @@ import * as os from 'os';
 import { scanAndAdapt } from '../scanner/scan';
 import { log } from '../utils/log';
 import { detectSdkVersion } from '../version-matrix';
+import { classifyHarmonyProject } from '../sdk54/project-state';
 
 /** scan 命令：手动重跑扫描适配（用户后期加包后用）。*/
 export async function scan(_args: string[]): Promise<void> {
@@ -11,6 +12,9 @@ export async function scan(_args: string[]): Promise<void> {
   if (!fs.existsSync(path.join(projectRoot, 'package.json'))) {
     throw new Error('当前目录非项目根（缺 package.json）');
   }
+  const kind = classifyHarmonyProject(projectRoot);
+  if (kind === 'sdk54-package-patch') throw new Error('SDK54 package-patch 1.5.0 仅保证 fresh 基线，不支持旧 scan/injector');
+  if (kind === 'sdk54-legacy') throw new Error('legacy SDK54 project：仅诊断，不自动迁移');
   const apply = _args.includes('--apply');
   log.step(apply ? '应用扫描适配' : '预览扫描适配（只读）');
   let scanRoot = projectRoot;

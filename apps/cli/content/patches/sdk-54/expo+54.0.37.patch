@@ -1,0 +1,17 @@
+diff --git a/node_modules/expo/bundledNativeModules.json b/node_modules/expo/bundledNativeModules.json
+index 823eabe..b254b3b 100644
+--- a/node_modules/expo/bundledNativeModules.json
++++ b/node_modules/expo/bundledNativeModules.json
+@@ -94,9 +94,10 @@
+   "expo-web-browser": "~15.0.11",
+   "jest-expo": "~54.0.18",
+   "lottie-react-native": "~7.3.1",
+-  "react": "19.1.0",
++  "react": "19.1.1",
+   "react-dom": "19.1.0",
+-  "react-native": "0.81.5",
++  "react-native": "0.82.1",
++  "@react-native-oh/react-native-harmony": "0.82.30",
+   "react-native-web": "~0.21.0",
+   "react-native-gesture-handler": "~2.28.0",
+   "react-native-get-random-values": "~1.11.0",

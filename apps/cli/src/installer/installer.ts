@@ -10,6 +10,7 @@ import { assertNoDrift, UNCOVERED_HINT } from '../harmony-project/standalone';
 import { hasNativeFootprint } from '../harmony-project/official-autolinking';
 import { ensureAppJsonPlugin } from '../injector/app-json';
 import { detectSdkVersion } from '../version-matrix';
+import { classifyHarmonyProject } from '../sdk54/project-state';
 
 const DEVECO_OHPM_PATH = '/Applications/DevEco-Studio.app/Contents/tools/ohpm/bin/ohpm';
 
@@ -22,6 +23,9 @@ export async function runInstall(args: string[]): Promise<void> {
   if (!fs.existsSync(path.join(projectRoot, 'package.json'))) {
     throw new Error('当前目录非项目根（缺 package.json）');
   }
+  const kind = classifyHarmonyProject(projectRoot);
+  if (kind === 'sdk54-package-patch') throw new Error('SDK54 package-patch 1.5.0 仅保证 fresh 基线，不支持旧 install/injector');
+  if (kind === 'sdk54-legacy') throw new Error('legacy SDK54 project：仅诊断，不自动迁移');
   const skipHarmony = args.includes('--skip-harmony');
   if (!skipHarmony) detectSdkVersion(projectRoot);
   const skipNative = args.includes('--skip-native');

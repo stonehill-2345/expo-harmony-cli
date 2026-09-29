@@ -7,8 +7,7 @@ import test from 'node:test';
 
 import { checkRepository } from '../check-repository.mjs';
 
-const APPROVED_STAGE_COMMAND =
-  'node scripts/sdk54/stage-e2e-packages.mjs --external /Users/chensq/Desktop/expo-harmony-sdk54-tgz --output /private/tmp/expo-sdk54-migration-tgz';
+const APPROVED_STAGE_COMMAND = 'node scripts/sdk54/stage-e2e-packages.mjs';
 
 function git(root, ...args) {
   execFileSync('git', ['-C', root, ...args], { stdio: 'pipe' });
@@ -174,8 +173,7 @@ test('rejects shell operations appended to the approved staging command', (t) =>
   const report = checkRepository(root);
   assert.ok(report.failures.some((failure) => failure.includes('sdk54:e2e:stage')),
     JSON.stringify(report, null, 2));
-  assert.ok(report.forbiddenText.some((value) => value.startsWith('package.json:')),
-    JSON.stringify(report, null, 2));
+  assert.deepEqual(report.forbiddenText, [], JSON.stringify(report, null, 2));
 });
 
 test('rejects absolute local paths in every other root manifest field', (t) => {

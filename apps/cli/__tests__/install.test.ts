@@ -173,12 +173,12 @@ describe('runInstall', () => {
     expect(pkg.dependencies['@react-native-ohos/react-native-blob-util']).toBe('0.23.0');
   });
 
-  it('install 命中 patch-only → 锁定原包版本并复制 patch', async () => {
+  it('install 命中 package-patch → 旧 installer 不复制单包 patch', async () => {
     const { runInstall } = await import('../src/installer/installer');
     await runInstall(['expo-constants']);
     const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'package.json'), 'utf8'));
-    expect(pkg.dependencies['expo-constants']).toBe('18.0.14');
-    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+18.0.14.patch'))).toBe(true);
+    expect(pkg.dependencies['expo-constants']).toBeUndefined();
+    expect(fs.existsSync(path.join(tmp, 'patches/expo-constants+18.0.14.patch'))).toBe(false);
     expect(mockSyncHarmonyAutolinking).not.toHaveBeenCalled();
   });
 

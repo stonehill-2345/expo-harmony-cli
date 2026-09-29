@@ -161,3 +161,110 @@ export function getDescriptorByName(name) {
   }
   return descriptor;
 }
+
+export const SDK54_EXTERNAL_PATCHES = Object.freeze([
+  Object.freeze({
+    name: '@react-native-ohos/react-native-screens',
+    version: '4.9.0',
+    patchFile: '@react-native-ohos+react-native-screens+4.9.0.patch',
+  }),
+]);
+
+export const SDK54_CLI_PATCH_PACKAGES = Object.freeze(
+  [...SDK54_PACKAGES, ...SDK54_EXTERNAL_PATCHES]
+    .sort((left, right) => left.name.localeCompare(right.name, 'en')),
+);
+
+const SDK54_RUNTIME_PATCH_EXACT = Object.freeze({
+  '@expo/cli': Object.freeze([
+    'build/bin/cli',
+    'build/src/harmony/build.js',
+    'build/src/harmony/bundle.js',
+    'build/src/harmony/dependencies.js',
+    'build/src/harmony/device.js',
+    'build/src/harmony/paths.js',
+    'build/src/prebuild/harmony/prebuildHarmonyAsync.js',
+    'build/src/prebuild/index.js',
+    'build/src/run/harmony/index.js',
+    'build/src/run/harmony/runHarmonyAsync.js',
+    'build/src/run/index.js',
+    'build/src/start/index.js',
+  ]),
+  '@expo/metro-config': Object.freeze([
+    'build/ExpoMetroConfig.d.ts',
+    'build/ExpoMetroConfig.js',
+    'build/withHarmony.d.ts',
+    'build/withHarmony.js',
+  ]),
+  expo: Object.freeze(['bundledNativeModules.json']),
+  'expo-linking': Object.freeze(['build/Linking.js', 'src/Linking.ts']),
+  'expo-modules-core': Object.freeze([
+    'src/NativeModulesProxy.harmony.ts',
+    'src/NativeViewManagerAdapter.harmony.tsx',
+    'src/Platform.ts',
+    'src/ts-declarations/global.ts',
+  ]),
+  'expo-router': Object.freeze([
+    '_ctx.harmony.js',
+    'build/getRoutesCore.js',
+    'build/global-state/harmony-native-dismiss.d.ts',
+    'build/global-state/harmony-native-dismiss.js',
+    'build/global-state/routing.js',
+  ]),
+  'expo-web-browser': Object.freeze(['build/WebBrowser.d.ts', 'build/WebBrowser.js', 'src/WebBrowser.ts']),
+  '@react-native-ohos/react-native-screens': Object.freeze([
+    'lib/commonjs/components/ScreenStackItem.js',
+    'lib/commonjs/utils.js',
+    'lib/module/components/ScreenStackItem.js',
+    'lib/module/utils.js',
+    'src/components/ScreenStackItem.tsx',
+    'src/utils.ts',
+  ]),
+});
+
+const SDK54_RUNTIME_PATCH_PREFIXES = Object.freeze({
+  'expo-asset': Object.freeze(['harmony/src/']),
+  'expo-constants': Object.freeze(['harmony/src/']),
+  'expo-font': Object.freeze(['harmony/src/']),
+  'expo-linking': Object.freeze(['harmony/src/']),
+  'expo-modules-autolinking': Object.freeze([
+    'build/platforms/harmony/',
+    'scripts/harmony/',
+    'src/platforms/harmony/',
+    'templates/harmony/',
+  ]),
+  'expo-modules-core': Object.freeze(['harmony/rnoh-compat/', 'harmony/src/']),
+  'expo-splash-screen': Object.freeze(['harmony/src/']),
+  'expo-system-ui': Object.freeze(['harmony/src/']),
+  'expo-web-browser': Object.freeze(['harmony/src/']),
+});
+
+const AUTOLINKING_RUNTIME_FILES = new Set([
+  'build/ExpoModuleConfig.d.ts',
+  'build/ExpoModuleConfig.js',
+  'build/autolinking/findModules.js',
+  'build/autolinking/generatePackageList.d.ts',
+  'build/autolinking/generatePackageList.js',
+  'build/commands/autolinkingOptions.js',
+  'build/commands/generatePackageListCommand.js',
+  'build/exports.d.ts',
+  'build/exports.js',
+  'build/platforms/index.d.ts',
+  'build/platforms/index.js',
+  'build/types.d.ts',
+  'src/ExpoModuleConfig.ts',
+  'src/autolinking/findModules.ts',
+  'src/autolinking/generatePackageList.ts',
+  'src/commands/autolinkingOptions.ts',
+  'src/commands/generatePackageListCommand.ts',
+  'src/exports.ts',
+  'src/platforms/index.ts',
+  'src/types.ts',
+]);
+
+export function isSdk54RuntimePatchTarget(packageName, target) {
+  if (target === 'package.json' || target === 'expo-module.config.json' || target === 'harmony/index.ets') return true;
+  if (packageName === 'expo-modules-autolinking' && AUTOLINKING_RUNTIME_FILES.has(target)) return true;
+  if (SDK54_RUNTIME_PATCH_EXACT[packageName]?.includes(target)) return true;
+  return SDK54_RUNTIME_PATCH_PREFIXES[packageName]?.some(prefix => target.startsWith(prefix)) ?? false;
+}

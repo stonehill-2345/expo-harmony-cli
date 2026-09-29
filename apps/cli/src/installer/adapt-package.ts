@@ -84,6 +84,8 @@ export function adaptPackage(pkgName: string, targetDir: string, options: AdaptO
       aliasMap[baseName] = entry.shim!.targetPath;
       result.shimPath = entry.shim!.targetPath;
       break;
+    case 'package-patch':
+      break;
     case 'patch-only':
       result.patchPath = applyCompatPatch(targetDir, pkg, baseName, entry.patch!).patchPath;
       break;
@@ -116,7 +118,7 @@ export function adaptPackage(pkgName: string, targetDir: string, options: AdaptO
   fs.writeFileSync(pkgPath, JSON.stringify(pkg, null, 2));
   fs.writeFileSync(aliasMapPath, JSON.stringify(aliasMap, null, 2));
 
-  if (entry.status !== 'unsupported' && entry.status !== 'remove' && entry.status !== 'replace') {
+  if (entry.status !== 'unsupported' && entry.status !== 'package-patch' && entry.status !== 'remove' && entry.status !== 'replace') {
     recordManagedPackage(targetDir, baseName, {
       harmonyPackage: result.harmonyPackage,
       alias: result.alias,

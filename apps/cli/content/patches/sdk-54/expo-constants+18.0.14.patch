@@ -1,53 +1,321 @@
-diff --git a/node_modules/expo-constants/build/ExponentConstants.js b/node_modules/expo-constants/build/ExponentConstants.js
-index e89d719..780a7a8 100644
---- a/node_modules/expo-constants/build/ExponentConstants.js
-+++ b/node_modules/expo-constants/build/ExponentConstants.js
-@@ -1,3 +1,44 @@
--import { requireOptionalNativeModule } from 'expo-modules-core';
--export default requireOptionalNativeModule('ExponentConstants');
--//# sourceMappingURL=ExponentConstants.js.map
-\ No newline at end of file
-+import { NativeModules, Platform } from 'react-native';
-+let ExponentConstants;
-+if (Platform.OS === 'harmony') {
-+    let nativeModule;
+diff --git a/node_modules/expo-constants/expo-module.config.json b/node_modules/expo-constants/expo-module.config.json
+index 96956b9..8d3d051 100644
+--- a/node_modules/expo-constants/expo-module.config.json
++++ b/node_modules/expo-constants/expo-module.config.json
+@@ -1,9 +1,23 @@
+ {
+-  "platforms": ["apple", "android", "web"],
++  "platforms": ["apple", "android", "web", "harmony"],
+   "apple": {
+     "modules": ["ConstantsModule"]
+   },
+   "android": {
+     "modules": ["expo.modules.constants.ConstantsModule"]
++  },
++  "harmony": {
++    "kind": "turbo-module",
++    "cpp": {
++      "packageClass": "expo::constants::harmony::ExponentConstantsPackage",
++      "header": "ExponentConstantsPackage.h",
++      "cmakeTarget": "rnoh_expo_constants",
++      "cmakePath": "harmony/src/main/cpp"
++    },
++    "ets": {
++      "packageClass": "ExponentConstantsPackage",
++      "importPath": "expo-constants/harmony",
++      "entrypoint": "harmony/index.ets"
++    }
+   }
+ }
+diff --git a/node_modules/expo-constants/harmony/index.ets b/node_modules/expo-constants/harmony/index.ets
+new file mode 100644
+index 0000000..57a16cd
+--- /dev/null
++++ b/node_modules/expo-constants/harmony/index.ets
+@@ -0,0 +1 @@
++export { ExponentConstantsPackage } from './src/main/ets/ExponentConstantsPackage';
+diff --git a/node_modules/expo-constants/harmony/src/main/cpp/CMakeLists.txt b/node_modules/expo-constants/harmony/src/main/cpp/CMakeLists.txt
+new file mode 100644
+index 0000000..962523e
+--- /dev/null
++++ b/node_modules/expo-constants/harmony/src/main/cpp/CMakeLists.txt
+@@ -0,0 +1,10 @@
++cmake_minimum_required(VERSION 3.16)
++
++if(NOT TARGET rnoh)
++  message(FATAL_ERROR "Add the RNOH 0.82.30 native project before expo-constants")
++endif()
++
++add_library(rnoh_expo_constants STATIC ExponentConstantsTurboModule.cpp)
++target_compile_features(rnoh_expo_constants PUBLIC cxx_std_20)
++target_include_directories(rnoh_expo_constants PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
++target_link_libraries(rnoh_expo_constants PUBLIC rnoh)
+diff --git a/node_modules/expo-constants/harmony/src/main/cpp/ExponentConstantsPackage.h b/node_modules/expo-constants/harmony/src/main/cpp/ExponentConstantsPackage.h
+new file mode 100644
+index 0000000..882191c
+--- /dev/null
++++ b/node_modules/expo-constants/harmony/src/main/cpp/ExponentConstantsPackage.h
+@@ -0,0 +1,29 @@
++#pragma once
++
++#include "ExponentConstantsTurboModule.h"
++#include "RNOH/Package.h"
++
++namespace expo::constants::harmony {
++
++class ExponentConstantsFactory final : public rnoh::TurboModuleFactoryDelegate {
++ public:
++  SharedTurboModule createTurboModule(Context context,
++                                      const std::string& name) const override {
++    if (name != "ExponentConstants") {
++      return nullptr;
++    }
++    return std::make_shared<ExponentConstantsTurboModule>(std::move(context), name);
++  }
++};
++
++class ExponentConstantsPackage final : public rnoh::Package {
++ public:
++  using Package::Package;
++
++  std::unique_ptr<rnoh::TurboModuleFactoryDelegate>
++  createTurboModuleFactoryDelegate() override {
++    return std::make_unique<ExponentConstantsFactory>();
++  }
++};
++
++} // namespace expo::constants::harmony
+diff --git a/node_modules/expo-constants/harmony/src/main/cpp/ExponentConstantsTurboModule.cpp b/node_modules/expo-constants/harmony/src/main/cpp/ExponentConstantsTurboModule.cpp
+new file mode 100644
+index 0000000..a529eaf
+--- /dev/null
++++ b/node_modules/expo-constants/harmony/src/main/cpp/ExponentConstantsTurboModule.cpp
+@@ -0,0 +1,14 @@
++#include "ExponentConstantsTurboModule.h"
++
++namespace expo::constants::harmony {
++
++ExponentConstantsTurboModule::ExponentConstantsTurboModule(
++    rnoh::ArkTSTurboModule::Context context, const std::string& name)
++    : ArkTSTurboModule(std::move(context), name) {
++  methodMap_ = {
++      ARK_METHOD_METADATA(getConstants, 0),
++      ARK_ASYNC_METHOD_METADATA(getWebViewUserAgentAsync, 0),
++  };
++}
++
++} // namespace expo::constants::harmony
+diff --git a/node_modules/expo-constants/harmony/src/main/cpp/ExponentConstantsTurboModule.h b/node_modules/expo-constants/harmony/src/main/cpp/ExponentConstantsTurboModule.h
+new file mode 100644
+index 0000000..5019e47
+--- /dev/null
++++ b/node_modules/expo-constants/harmony/src/main/cpp/ExponentConstantsTurboModule.h
+@@ -0,0 +1,13 @@
++#pragma once
++
++#include "RNOH/ArkTSTurboModule.h"
++
++namespace expo::constants::harmony {
++
++class ExponentConstantsTurboModule final : public rnoh::ArkTSTurboModule {
++ public:
++  ExponentConstantsTurboModule(rnoh::ArkTSTurboModule::Context context,
++                               const std::string& name);
++};
++
++} // namespace expo::constants::harmony
+diff --git a/node_modules/expo-constants/harmony/src/main/ets/ConstantsData.ts b/node_modules/expo-constants/harmony/src/main/ets/ConstantsData.ts
+new file mode 100644
+index 0000000..d2ad502
+--- /dev/null
++++ b/node_modules/expo-constants/harmony/src/main/ets/ConstantsData.ts
+@@ -0,0 +1,60 @@
++export type ExpoPublicConfig = Record<string, unknown>;
++
++export type ConstantsDataInput = {
++  sessionId: string;
++  manifest: ExpoPublicConfig | null;
++  deviceName: string;
++  systemVersion: string;
++  statusBarHeight: number;
++  systemFonts: string[];
++  debugMode: boolean;
++  launchUri?: string;
++  versionCode: number;
++  versionName: string;
++};
++
++export function parseAppConfig(rawConfig: string | null): ExpoPublicConfig | null {
++  if (rawConfig === null) {
++    return null;
++  }
++
++  let parsed: unknown;
++  try {
++    parsed = JSON.parse(rawConfig);
++  } catch (error) {
++    throw new Error(`Invalid embedded app.config: ${String(error)}`);
++  }
++
++  if (parsed === null || typeof parsed !== 'object' || Array.isArray(parsed)) {
++    throw new Error('Embedded app.config must contain a JSON object');
++  }
++  return parsed as ExpoPublicConfig;
++}
++
++export function buildConstants(input: ConstantsDataInput) {
++  const launchUri = input.launchUri ?? '';
++  return {
++    name: 'ExponentConstants',
++    appOwnership: null,
++    debugMode: input.debugMode,
++    deviceName: input.deviceName,
++    deviceYearClass: null,
++    executionEnvironment: 'bare',
++    experienceUrl: launchUri,
++    expoRuntimeVersion: null,
++    expoVersion: null,
++    isHeadless: false,
++    linkingUri: launchUri,
++    manifest: input.manifest,
++    sessionId: input.sessionId,
++    statusBarHeight: input.statusBarHeight,
++    systemFonts: input.systemFonts,
++    systemVersion: input.systemVersion,
++    platform: {
++      harmony: {
++        versionCode: input.versionCode,
++        versionName: input.versionName,
++      },
++    },
++  };
++}
+diff --git a/node_modules/expo-constants/harmony/src/main/ets/ExponentConstantsPackage.ets b/node_modules/expo-constants/harmony/src/main/ets/ExponentConstantsPackage.ets
+new file mode 100644
+index 0000000..2d20d1e
+--- /dev/null
++++ b/node_modules/expo-constants/harmony/src/main/ets/ExponentConstantsPackage.ets
+@@ -0,0 +1,20 @@
++import type { UITurboModule, UITurboModuleContext } from '@rnoh/react-native-openharmony';
++import { RNOHPackage } from '@rnoh/react-native-openharmony';
++
++import { ExponentConstantsTurboModule } from './ExponentConstantsTurboModule';
++
++export class ExponentConstantsPackage extends RNOHPackage {
++  public override getUITurboModuleFactoryByNameMap(): Map<
++    string,
++    (ctx: UITurboModuleContext) => UITurboModule | null
++  > {
++    return new Map<string, (ctx: UITurboModuleContext) => UITurboModule>().set(
++      ExponentConstantsTurboModule.NAME,
++      (ctx) => new ExponentConstantsTurboModule(ctx)
++    );
++  }
++
++  public override getDebugName(): string {
++    return 'expo-constants';
++  }
++}
+diff --git a/node_modules/expo-constants/harmony/src/main/ets/ExponentConstantsTurboModule.ets b/node_modules/expo-constants/harmony/src/main/ets/ExponentConstantsTurboModule.ets
+new file mode 100644
+index 0000000..6fd25df
+--- /dev/null
++++ b/node_modules/expo-constants/harmony/src/main/ets/ExponentConstantsTurboModule.ets
+@@ -0,0 +1,97 @@
++import type { UITurboModuleContext } from '@rnoh/react-native-openharmony';
++import { UITurboModule } from '@rnoh/react-native-openharmony';
++import type { BusinessError } from '@ohos.base';
++import bundleManager from '@ohos.bundle.bundleManager';
++import deviceInfo from '@ohos.deviceInfo';
++import font from '@ohos.font';
++import util from '@ohos.util';
++import webview from '@ohos.web.webview';
++import window from '@ohos.window';
++
++import { buildConstants, parseAppConfig } from './ConstantsData';
++
++const APP_CONFIG_RAW_FILE = 'app.config';
++const RAW_FILE_NOT_FOUND = 9001005;
++
++declare function px2vp(value: number): number;
++
++export class ExponentConstantsTurboModule extends UITurboModule {
++  public static readonly NAME = 'ExponentConstants';
++
++  private readonly sessionId = util.generateRandomUUID();
++
++  public constructor(ctx: UITurboModuleContext) {
++    super(ctx);
++  }
++
++  public getConstants(): Object {
++    const bundleInfo = bundleManager.getBundleInfoForSelfSync(
++      bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION
++    );
++
++    return buildConstants({
++      sessionId: this.sessionId,
++      manifest: this.readManifest(),
++      deviceName: deviceInfo.productModel,
++      systemVersion: deviceInfo.osFullName,
++      statusBarHeight: this.readStatusBarHeight(),
++      systemFonts: this.readSystemFonts(),
++      debugMode: this.ctx.isDebugModeEnabled === true,
++      launchUri: this.ctx.launchUri,
++      versionCode: bundleInfo.versionCode,
++      versionName: bundleInfo.versionName,
++    });
++  }
++
++  public async getWebViewUserAgentAsync(): Promise<string | null> {
++    webview.WebviewController.initializeWebEngine();
++    return webview.WebviewController.getDefaultUserAgent();
++  }
++
++  private readManifest() {
 +    try {
-+        nativeModule = NativeModules.ExponentConstants;
++      const bytes = this.ctx.uiAbilityContext.resourceManager.getRawFileContentSync(
++        APP_CONFIG_RAW_FILE
++      );
++      const rawConfig = util.TextDecoder.create('utf-8', { fatal: true }).decode(bytes);
++      return parseAppConfig(rawConfig);
++    } catch (error) {
++      if ((error as BusinessError).code === RAW_FILE_NOT_FOUND) {
++        return null;
++      }
++      throw new Error(`Failed to read embedded app.config: ${String(error)}`);
 +    }
-+    catch {
-+        nativeModule = undefined;
++  }
++
++  private readStatusBarHeight(): number {
++    const mainWindow = this.ctx.uiAbilityContext.windowStage.getMainWindowSync();
++    const avoidArea = mainWindow.getWindowAvoidArea(window.AvoidAreaType.TYPE_SYSTEM);
++    return px2vp(avoidArea.topRect.height);
++  }
++
++  private readSystemFonts(): string[] {
++    const systemFonts = font.getSystemFontList();
++    if (systemFonts.length > 0) {
++      return systemFonts;
 +    }
-+    let baseConstants = typeof nativeModule?.getConstants === 'function'
-+        ? nativeModule.getConstants()
-+        : nativeModule ?? {};
-+    const expoConfigKeys = Object.keys(baseConstants.expoConfig || {});
-+    if (expoConfigKeys.length === 0) {
-+        try {
-+            const appJson = require('../../../app.json');
-+            const expo = appJson.expo || {};
-+            baseConstants = {
-+                ...baseConstants,
-+                name: baseConstants.name || expo.name || '',
-+                slug: baseConstants.slug || expo.slug || '',
-+                version: baseConstants.version || expo.version || '1.0.0',
-+                scheme: baseConstants.scheme || expo.scheme || '',
-+                expoConfig: { ...expo },
-+                manifest: baseConstants.manifest || { ...expo },
-+            };
-+        } catch {
-+            baseConstants = {
-+                ...baseConstants,
-+                expoConfig: { scheme: '' },
-+            };
-+        }
++
++    const configuredFonts = new Set<string>();
++    const fontConfig = font.getUIFontConfig();
++    fontConfig.generic.forEach((genericInfo) => {
++      configuredFonts.add(genericInfo.family);
++      genericInfo.alias.forEach((aliasInfo) => configuredFonts.add(aliasInfo.name));
++    });
++    fontConfig.fallbackGroups.forEach((fallbackGroup) => {
++      if (fallbackGroup.fontSetName.length > 0) {
++        configuredFonts.add(fallbackGroup.fontSetName);
++      }
++      fallbackGroup.fallback.forEach((fallbackInfo) => configuredFonts.add(fallbackInfo.family));
++    });
++
++    const result = Array.from(configuredFonts).filter((name) => name.length > 0).sort();
++    if (result.length === 0) {
++      throw new Error('Harmony returned no configured system fonts');
 +    }
-+    if (!baseConstants.appOwnership) baseConstants.appOwnership = 'standalone';
-+    if (!baseConstants.executionEnvironment) baseConstants.executionEnvironment = 'bare';
-+    ExponentConstants = baseConstants;
++    return result;
++  }
 +}
-+else {
-+    const { requireOptionalNativeModule } = require('expo-modules-core');
-+    ExponentConstants = requireOptionalNativeModule('ExponentConstants');
-+}
-+export default ExponentConstants;
-+//# sourceMappingURL=ExponentConstants.js.map

@@ -36,14 +36,13 @@ describe('content-library', () => {
     const patchesSdk54 = fs.readdirSync(path.join(CONTENT, 'patches', 'sdk-54')).filter(f => f.endsWith('.patch'));
     const patches = [...patchesSdk52, ...patchesSdk54];
 
-    // SDK 54 patches
-    expect(patches).toContain('@react-native-oh+react-native-harmony+0.82.30.patch');
-    expect(patches).toContain('expo-router+6.0.24.patch');
-    expect(patches).toContain('expo-linear-gradient+15.0.8.patch');
-    expect(patches).toContain('expo-document-picker+14.0.8.patch');
-    expect(patches).toContain('expo-constants+18.0.14.patch');
-    expect(patches).toContain('expo-linking+8.0.12.patch');
-    expect(patches).toContain('expo-image+3.0.11.patch');
+    // SDK 54 formal package patch-set is manifest-driven.
+    const manifest = JSON.parse(fs.readFileSync(path.join(CONTENT, 'patches', 'sdk-54', 'manifest.json'), 'utf8'));
+    expect(patchesSdk54.sort()).toEqual(manifest.patches.map((entry: any) => entry.file).sort());
+    expect(manifest.patches.filter((entry: any) => entry.name in manifest.catalog.expo)).toHaveLength(14);
+    expect(manifest.patches).toHaveLength(15);
+    expect(patchesSdk54).not.toContain('@react-native-oh+react-native-harmony+0.82.30.patch');
+    expect(patchesSdk54).not.toContain('expo-image+3.0.11.patch');
 
     // SDK 52 patches
     expect(patches).toContain('@react-native-oh+react-native-harmony+0.77.71.patch');
@@ -61,7 +60,6 @@ describe('content-library', () => {
 
     // 共用 patch
     expect(patches).toContain('expo-status-bar+3.0.9.patch');
-    expect(patches).toContain('@react-navigation+bottom-tabs+7.4.0.patch');
   });
 
   it('expo-metro-runtime shim 存在且导出 withErrorOverlay 透传', () => {

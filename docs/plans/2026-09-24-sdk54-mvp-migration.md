@@ -12,12 +12,12 @@
 
 ## Global Constraints
 
-- 正式目标仓库是 `/Users/chensq/Desktop/2345/expo-harmony-cli`；临时来源仓库只读。
+- 正式目标仓库是 `<repository-root>`；临时来源仓库只读。
 - 十四包来源固定为 `expo-harmony-template@2704a48cc52781f510b3996af17c882fb82e1090`。
 - 官方 Expo 来源固定为 `expo/expo@5b42e3d21e0ac5e086752361ca8a5cb4de53bec1`。
 - 本任务不得修改 `apps/cli` compatibility table、injector、scanner、creator、patch 分发或 template 产品逻辑。
 - Fresh 项目必须由官方 `npx create-expo-app@5.0.0` 创建，不复用桌面已有项目。
-- 十四个 Expo TGZ 必须从当前正式仓库重新生成；十一外部 TGZ只读复用 `/Users/chensq/Desktop/expo-harmony-sdk54-tgz`。
+- 十四个 Expo TGZ 必须从当前正式仓库重新生成；十一外部 TGZ只读复用 `<external-tgz-dir>`。
 - 不允许应用侧 `metro.config.js`、`index.harmony.js`、shim/polyfill、patch-package、postinstall 或手改 `harmony/`。
 - Default fixture 仅允许两处 `expo-image` → React Native `Image` substitution，并删除 fixture 的 `expo-image` 依赖。
 - 未获明确授权不得执行 HDC、HAP 安装/启动、模拟器或设备操作。
@@ -153,17 +153,17 @@ Add:
 
 ```json
 {
-  "sdk54:e2e:stage": "node scripts/sdk54/stage-e2e-packages.mjs --external /Users/chensq/Desktop/expo-harmony-sdk54-tgz --output /private/tmp/expo-sdk54-migration-tgz"
+  "sdk54:e2e:stage": "node scripts/sdk54/stage-e2e-packages.mjs"
 }
 ```
 
-The implementation must also support explicit `--external` and `--output` arguments so tests never depend on the desktop path.
+The command requires `--external` or `SDK54_EXTERNAL_DIR`; `--output`/`SDK54_STAGE_OUTPUT_DIR` is optional and otherwise uses `os.tmpdir()`, so tests never depend on a desktop path.
 
 - [ ] **Step 6: Run GREEN**
 
 ```bash
 pnpm test:sdk54-tools
-pnpm sdk54:e2e:stage
+SDK54_EXTERNAL_DIR=/path/to/public-tgzs pnpm sdk54:e2e:stage
 ```
 
 Expected: 25 packages and zero failures. Do not commit TGZ or staging output.
@@ -247,7 +247,7 @@ Create real temporary Git repositories. Assert ignored/untracked SDD and `.tmp` 
 Assert the exact approved root script value passes:
 
 ```text
-node scripts/sdk54/stage-e2e-packages.mjs --external /Users/chensq/Desktop/expo-harmony-sdk54-tgz --output /private/tmp/expo-sdk54-migration-tgz
+node scripts/sdk54/stage-e2e-packages.mjs --external /path/to/public-tgzs --output "$TMPDIR/expo-sdk54-migration-tgz"
 ```
 
 A changed path, appended shell operation, or another manifest field containing `/Users/` or `/private/tmp` must still fail.
@@ -354,7 +354,7 @@ Validate generic declared entrypoints plus required CLI/Metro/Autolinking runtim
 pnpm test:sdk54-tools
 pnpm sdk54:pack:check
 pnpm sdk54:audit
-pnpm sdk54:e2e:stage
+SDK54_EXTERNAL_DIR=/path/to/public-tgzs pnpm sdk54:e2e:stage
 ```
 
 Expected: build+pack deterministic, source unchanged, 14/22/0, fresh 25-package staging, runtime entrypoints present.

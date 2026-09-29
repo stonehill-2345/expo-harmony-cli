@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import * as fs from 'fs';
 import * as path from 'path';
 import * as os from 'os';
-import { resolvePm, installCmd, uninstallCmd, runScriptCmd } from '../src/lib/pkg-manager';
+import { resolvePm, installCmd, uninstallCmd, runScriptCmd, sdk54InstallCommand } from '../src/lib/pkg-manager';
 
 describe('resolvePm', () => {
   let tmp: string;
@@ -70,5 +70,17 @@ describe('runScriptCmd', () => {
     expect(runScriptCmd('npm', 'codegen')).toEqual({ file: 'npm', args: ['run', 'codegen'] });
     expect(runScriptCmd('yarn', 'codegen')).toEqual({ file: 'yarn', args: ['codegen'] });
     expect(runScriptCmd('bun', 'codegen')).toEqual({ file: 'bun', args: ['run', 'codegen'] });
+  });
+});
+
+
+describe('sdk54InstallCommand', () => {
+  it('supports only npm and pnpm install commands', () => {
+    expect(sdk54InstallCommand('npm')).toEqual({ file: 'npm', args: ['install'] });
+    expect(sdk54InstallCommand('pnpm')).toEqual({ file: 'pnpm', args: ['install'] });
+  });
+
+  it.each(['yarn', 'bun'] as const)('fails closed for %s at runtime', packageManager => {
+    expect(() => sdk54InstallCommand(packageManager as never)).toThrow(/SDK 54.*npm.*pnpm/);
   });
 });

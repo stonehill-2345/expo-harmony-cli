@@ -23,6 +23,11 @@ describe('detectSdkVersion', () => {
     expect(detectSdkVersion(tmp)).toBe(sdk);
   });
 
+  it.each(['55.0.0', '^56.0.0', '99.0.0'])('SDK55 及更高版本 %s 明确拒绝', expo => {
+    fs.writeFileSync(path.join(tmp, 'package.json'), JSON.stringify({ dependencies: { expo } }));
+    expect(() => detectSdkVersion(tmp)).toThrow(/SDK 55|更高|仅支持.*52.*54/);
+  });
+
   it('缺少或无法读取 expo 版本时保留原有 SDK 54 兜底', () => {
     expect(detectSdkVersion(tmp)).toBe('sdk-54');
     for (const content of ['{}', '{ invalid json']) {

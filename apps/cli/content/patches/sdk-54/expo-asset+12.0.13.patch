@@ -1,0 +1,456 @@
+diff --git a/node_modules/expo-asset/expo-module.config.json b/node_modules/expo-asset/expo-module.config.json
+index 93731b6..d8d81e9 100644
+--- a/node_modules/expo-asset/expo-module.config.json
++++ b/node_modules/expo-asset/expo-module.config.json
+@@ -1,15 +1,23 @@
+ {
+-  "platforms": ["apple", "android", "web"],
++  "platforms": ["apple", "android", "web", "harmony"],
+   "apple": {
+     "modules": ["AssetModule"]
+   },
+   "android": {
+-    "modules": ["expo.modules.asset.AssetModule"],
+-    "publication": {
+-      "groupId": "expo.modules.asset",
+-      "artifactId": "expo.modules.asset",
+-      "version": "12.0.13",
+-      "repository": "local-maven-repo"
++    "modules": ["expo.modules.asset.AssetModule"]
++  },
++  "harmony": {
++    "kind": "turbo-module",
++    "cpp": {
++      "packageClass": "expo::asset::harmony::ExpoAssetPackage",
++      "header": "ExpoAssetPackage.h",
++      "cmakeTarget": "rnoh_expo_asset",
++      "cmakePath": "harmony/src/main/cpp"
++    },
++    "ets": {
++      "packageClass": "ExpoAssetPackage",
++      "importPath": "expo-asset/harmony",
++      "entrypoint": "harmony/index.ets"
+     }
+   }
+ }
+diff --git a/node_modules/expo-asset/harmony/index.ets b/node_modules/expo-asset/harmony/index.ets
+new file mode 100644
+index 0000000..ff38bf9
+--- /dev/null
++++ b/node_modules/expo-asset/harmony/index.ets
+@@ -0,0 +1 @@
++export { ExpoAssetPackage } from './src/main/ets/ExpoAssetPackage';
+diff --git a/node_modules/expo-asset/harmony/src/main/cpp/CMakeLists.txt b/node_modules/expo-asset/harmony/src/main/cpp/CMakeLists.txt
+new file mode 100644
+index 0000000..7f0cc07
+--- /dev/null
++++ b/node_modules/expo-asset/harmony/src/main/cpp/CMakeLists.txt
+@@ -0,0 +1,9 @@
++cmake_minimum_required(VERSION 3.13)
++project(rnoh_expo_asset)
++
++set(CMAKE_CXX_STANDARD 17)
++set(CMAKE_CXX_STANDARD_REQUIRED ON)
++
++add_library(rnoh_expo_asset STATIC ExpoAssetTurboModule.cpp)
++target_include_directories(rnoh_expo_asset PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
++target_link_libraries(rnoh_expo_asset PUBLIC rnoh)
+diff --git a/node_modules/expo-asset/harmony/src/main/cpp/ExpoAssetPackage.h b/node_modules/expo-asset/harmony/src/main/cpp/ExpoAssetPackage.h
+new file mode 100644
+index 0000000..f921000
+--- /dev/null
++++ b/node_modules/expo-asset/harmony/src/main/cpp/ExpoAssetPackage.h
+@@ -0,0 +1,29 @@
++#pragma once
++
++#include "ExpoAssetTurboModule.h"
++#include "RNOH/Package.h"
++
++namespace expo::asset::harmony {
++
++class ExpoAssetFactory final : public rnoh::TurboModuleFactoryDelegate {
++ public:
++  SharedTurboModule createTurboModule(Context context,
++                                      const std::string& name) const override {
++    if (name != "ExpoAsset") {
++      return nullptr;
++    }
++    return std::make_shared<ExpoAssetTurboModule>(std::move(context), name);
++  }
++};
++
++class ExpoAssetPackage final : public rnoh::Package {
++ public:
++  using Package::Package;
++
++  std::unique_ptr<rnoh::TurboModuleFactoryDelegate>
++  createTurboModuleFactoryDelegate() override {
++    return std::make_unique<ExpoAssetFactory>();
++  }
++};
++
++} // namespace expo::asset::harmony
+diff --git a/node_modules/expo-asset/harmony/src/main/cpp/ExpoAssetTurboModule.cpp b/node_modules/expo-asset/harmony/src/main/cpp/ExpoAssetTurboModule.cpp
+new file mode 100644
+index 0000000..33ba326
+--- /dev/null
++++ b/node_modules/expo-asset/harmony/src/main/cpp/ExpoAssetTurboModule.cpp
+@@ -0,0 +1,13 @@
++#include "ExpoAssetTurboModule.h"
++
++namespace expo::asset::harmony {
++
++ExpoAssetTurboModule::ExpoAssetTurboModule(
++    rnoh::ArkTSTurboModule::Context context, const std::string& name)
++    : ArkTSTurboModule(std::move(context), name) {
++  methodMap_ = {
++      ARK_ASYNC_METHOD_METADATA(downloadAsync, 3),
++  };
++}
++
++} // namespace expo::asset::harmony
+diff --git a/node_modules/expo-asset/harmony/src/main/cpp/ExpoAssetTurboModule.h b/node_modules/expo-asset/harmony/src/main/cpp/ExpoAssetTurboModule.h
+new file mode 100644
+index 0000000..ff28b7b
+--- /dev/null
++++ b/node_modules/expo-asset/harmony/src/main/cpp/ExpoAssetTurboModule.h
+@@ -0,0 +1,13 @@
++#pragma once
++
++#include "RNOH/ArkTSTurboModule.h"
++
++namespace expo::asset::harmony {
++
++class ExpoAssetTurboModule final : public rnoh::ArkTSTurboModule {
++ public:
++  ExpoAssetTurboModule(rnoh::ArkTSTurboModule::Context context,
++                       const std::string& name);
++};
++
++} // namespace expo::asset::harmony
+diff --git a/node_modules/expo-asset/harmony/src/main/ets/AssetCache.ts b/node_modules/expo-asset/harmony/src/main/ets/AssetCache.ts
+new file mode 100644
+index 0000000..0ef95e5
+--- /dev/null
++++ b/node_modules/expo-asset/harmony/src/main/ets/AssetCache.ts
+@@ -0,0 +1,72 @@
++const MD5_PATTERN = /^[0-9a-f]{32}$/i;
++const ASSET_TYPE_PATTERN = /^[A-Za-z0-9_-]*$/;
++
++export function createCacheFilePath(cacheDirectory: string, cacheKey: string, type: string): string {
++  if (!cacheDirectory.startsWith('/')) {
++    throw new Error('Asset cache directory must be an absolute path');
++  }
++  if (!MD5_PATTERN.test(cacheKey)) {
++    throw new Error('Invalid asset cache key');
++  }
++  if (!ASSET_TYPE_PATTERN.test(type)) {
++    throw new Error('Invalid asset type');
++  }
++
++  const normalizedCacheDirectory = cacheDirectory.replace(/\/+$/, '');
++  return `${normalizedCacheDirectory}/ExponentAsset-${cacheKey}.${type}`;
++}
++
++export function toFileUri(path: string): string {
++  if (!path.startsWith('/')) {
++    throw new Error('File URI path must be absolute');
++  }
++  return `file://${path.split('/').map(encodeURIComponent).join('/')}`;
++}
++
++export function normalizeFileUri(uri: string): string {
++  if (!uri.startsWith('file:///')) {
++    throw new Error('Asset file URI must contain an absolute local path');
++  }
++
++  try {
++    return toFileUri(decodeURIComponent(uri.slice('file://'.length)));
++  } catch (error) {
++    throw new Error(`Invalid asset file URI: ${String(error)}`);
++  }
++}
++
++export function getEmbeddedRawFilePath(uri: string, assetsDirectory: string): string {
++  let encodedPath: string;
++  let prefix: string;
++  if (uri.startsWith('asset://')) {
++    encodedPath = uri.slice('asset://'.length);
++    prefix = assetsDirectory;
++  } else if (uri.startsWith('rawfile://')) {
++    encodedPath = uri.slice('rawfile://'.length);
++    prefix = '';
++  } else {
++    encodedPath = uri;
++    prefix = assetsDirectory;
++  }
++
++  let path: string;
++  try {
++    path = decodeURIComponent(encodedPath);
++  } catch (error) {
++    throw new Error(`Invalid embedded asset path: ${String(error)}`);
++  }
++
++  const normalizedPrefix = prefix.replace(/^\/+|\/+$/g, '');
++  const normalizedPath = path.replace(/^\/+/, '');
++  const segments = normalizedPath.split('/');
++  if (
++    path.startsWith('/') ||
++    path.includes('\\') ||
++    normalizedPath.length === 0 ||
++    segments.some((segment) => segment.length === 0 || segment === '.' || segment === '..')
++  ) {
++    throw new Error('Invalid embedded asset path');
++  }
++
++  return normalizedPrefix.length > 0 ? `${normalizedPrefix}/${normalizedPath}` : normalizedPath;
++}
+diff --git a/node_modules/expo-asset/harmony/src/main/ets/ExpoAssetPackage.ets b/node_modules/expo-asset/harmony/src/main/ets/ExpoAssetPackage.ets
+new file mode 100644
+index 0000000..e8ede46
+--- /dev/null
++++ b/node_modules/expo-asset/harmony/src/main/ets/ExpoAssetPackage.ets
+@@ -0,0 +1,23 @@
++import type {
++  AnyThreadTurboModule,
++  AnyThreadTurboModuleContext,
++} from '@rnoh/react-native-openharmony';
++import { RNOHPackage } from '@rnoh/react-native-openharmony';
++
++import { ExpoAssetTurboModule } from './ExpoAssetTurboModule';
++
++export class ExpoAssetPackage extends RNOHPackage {
++  public override getAnyThreadTurboModuleFactoryByNameMap(): Map<
++    string,
++    (ctx: AnyThreadTurboModuleContext) => AnyThreadTurboModule | null
++  > {
++    return new Map<string, (ctx: AnyThreadTurboModuleContext) => AnyThreadTurboModule>().set(
++      ExpoAssetTurboModule.NAME,
++      (ctx) => new ExpoAssetTurboModule(ctx)
++    );
++  }
++
++  public override getDebugName(): string {
++    return 'expo-asset';
++  }
++}
+diff --git a/node_modules/expo-asset/harmony/src/main/ets/ExpoAssetTurboModule.ets b/node_modules/expo-asset/harmony/src/main/ets/ExpoAssetTurboModule.ets
+new file mode 100644
+index 0000000..b08e8fc
+--- /dev/null
++++ b/node_modules/expo-asset/harmony/src/main/ets/ExpoAssetTurboModule.ets
+@@ -0,0 +1,213 @@
++import type { AnyThreadTurboModuleContext } from '@rnoh/react-native-openharmony';
++import { AnyThreadTurboModule } from '@rnoh/react-native-openharmony';
++import fileHash from '@ohos.file.hash';
++import fs from '@ohos.file.fs';
++import http from '@ohos.net.http';
++import cryptoFramework from '@ohos.security.cryptoFramework';
++import util from '@ohos.util';
++
++import {
++  createCacheFilePath,
++  getEmbeddedRawFilePath,
++  normalizeFileUri,
++  toFileUri,
++} from './AssetCache';
++
++export class ExpoAssetTurboModule extends AnyThreadTurboModule {
++  public static readonly NAME = 'ExpoAsset';
++
++  private readonly activeRequests = new Map<number, () => void>();
++  private readonly temporaryFiles = new Set<string>();
++  private nextRequestId = 1;
++  private destroyed = false;
++
++  public constructor(ctx: AnyThreadTurboModuleContext) {
++    super(ctx);
++  }
++
++  public async downloadAsync(url: string, md5Hash: string | null, type: string): Promise<string> {
++    this.assertActive();
++    if (url.startsWith('file://')) {
++      return normalizeFileUri(url);
++    }
++
++    try {
++      const cacheKey = md5Hash ?? this.md5String(url);
++      const cachePath = createCacheFilePath(this.ctx.uiAbilityContext.cacheDir, cacheKey, type);
++      const cached = await this.isValidCachedFile(cachePath, md5Hash);
++      this.assertActive();
++      if (cached) {
++        return toFileUri(cachePath);
++      }
++
++      const bytes = await this.readSource(url);
++      this.assertActive();
++      await this.writeAtomically(cachePath, bytes, md5Hash);
++      this.assertActive();
++      return toFileUri(cachePath);
++    } catch (error) {
++      throw new Error(`Unable to download asset from ${url}: ${String(error)}`);
++    }
++  }
++
++  public override __onDestroy__(): void {
++    this.destroyed = true;
++    this.activeRequests.forEach((cancel) => {
++      try {
++        cancel();
++      } catch (_) {
++      }
++    });
++    this.activeRequests.clear();
++
++    this.temporaryFiles.forEach((path) => {
++      try {
++        if (fs.accessSync(path)) {
++          fs.unlinkSync(path);
++        }
++      } catch (_) {
++      }
++    });
++    // A pending fs.open may create its file after this hook. Its writer owns
++    // final cleanup, so keep the path registered until that finally block runs.
++    super.__onDestroy__();
++  }
++
++  private assertActive(): void {
++    if (this.destroyed) {
++      throw new Error('ExpoAsset module was destroyed');
++    }
++  }
++
++  private async isValidCachedFile(path: string, md5Hash: string | null): Promise<boolean> {
++    if (!fs.accessSync(path)) {
++      return false;
++    }
++    if (md5Hash === null) {
++      return true;
++    }
++
++    try {
++      return (await fileHash.hash(path, 'md5')).toLowerCase() === md5Hash.toLowerCase();
++    } catch (_) {
++      return false;
++    }
++  }
++
++  private async readSource(url: string): Promise<Uint8Array> {
++    if (url.startsWith('http://') || url.startsWith('https://')) {
++      return this.downloadHttp(url);
++    }
++    if (url.startsWith('asset://') || url.startsWith('rawfile://') || !this.hasScheme(url)) {
++      const rawFilePath = getEmbeddedRawFilePath(url, this.ctx.rnInstance.getAssetsDest());
++      return this.ctx.uiAbilityContext.resourceManager.getRawFileContent(rawFilePath);
++    }
++    throw new Error('Unsupported asset URL scheme');
++  }
++
++  private hasScheme(url: string): boolean {
++    return /^[A-Za-z][A-Za-z0-9+.-]*:/.test(url);
++  }
++
++  private async downloadHttp(url: string): Promise<Uint8Array> {
++    const requestId = this.nextRequestId++;
++    const request = this.ctx.httpClient.sendRequest(url, {
++      method: http.RequestMethod.GET,
++      header: {},
++      connectTimeout: 30000,
++      readTimeout: 30000,
++      timeout: 60000,
++    });
++
++    // RNOH owns request settlement. Cancel its transport on destruction without
++    // injecting a second rejection into the Runtime that is being torn down.
++    this.activeRequests.set(requestId, request.cancel);
++    try {
++      const response = await request.promise.catch((error: Error) => {
++        throw new Error(`HTTP request failed: ${String(error)}`);
++      });
++      this.assertActive();
++      if (response.statusCode < 200 || response.statusCode >= 300) {
++        throw new Error(`HTTP ${response.statusCode}`);
++      }
++      if (typeof response.body === 'string') {
++        return util.TextEncoder.create('utf-8').encodeInto(response.body);
++      }
++      return new Uint8Array(response.body);
++    } finally {
++      this.activeRequests.delete(requestId);
++    }
++  }
++
++  private async writeAtomically(
++    destinationPath: string,
++    bytes: Uint8Array,
++    expectedMd5: string | null
++  ): Promise<void> {
++    const temporaryPath = `${destinationPath}.tmp-${util.generateRandomUUID()}`;
++    this.temporaryFiles.add(temporaryPath);
++    let file: fs.File | undefined;
++
++    try {
++      file = await fs.open(
++        temporaryPath,
++        fs.OpenMode.WRITE_ONLY | fs.OpenMode.CREATE | fs.OpenMode.TRUNC
++      );
++      this.assertActive();
++      let offset = 0;
++      while (offset < bytes.byteLength) {
++        this.assertActive();
++        const remaining = bytes.buffer.slice(
++          bytes.byteOffset + offset,
++          bytes.byteOffset + bytes.byteLength
++        );
++        const written = await fs.write(file.fd, remaining);
++        if (written <= 0) {
++          throw new Error('Asset file write made no progress');
++        }
++        offset += written;
++      }
++      await fs.fsync(file.fd);
++      await fs.close(file);
++      file = undefined;
++
++      if (expectedMd5 !== null) {
++        const actualMd5 = (await fileHash.hash(temporaryPath, 'md5')).toLowerCase();
++        if (actualMd5 !== expectedMd5.toLowerCase()) {
++          throw new Error(`Asset MD5 mismatch: expected ${expectedMd5}, received ${actualMd5}`);
++        }
++      }
++
++      this.assertActive();
++      await fs.rename(temporaryPath, destinationPath);
++      this.temporaryFiles.delete(temporaryPath);
++    } finally {
++      if (file !== undefined) {
++        try {
++          await fs.close(file);
++        } catch (_) {
++        }
++      }
++      if (this.temporaryFiles.has(temporaryPath)) {
++        try {
++          if (fs.accessSync(temporaryPath)) {
++            await fs.unlink(temporaryPath);
++          }
++        } catch (_) {
++        }
++        this.temporaryFiles.delete(temporaryPath);
++      }
++    }
++  }
++
++  private md5String(value: string): string {
++    const digest = cryptoFramework.createMd('MD5');
++    digest.updateSync({ data: util.TextEncoder.create('utf-8').encodeInto(value) });
++    const bytes = digest.digestSync().data;
++    let result = '';
++    for (let index = 0; index < bytes.length; index += 1) {
++      result += bytes[index].toString(16).padStart(2, '0');
++    }
++    return result;
++  }
++}

@@ -7,6 +7,7 @@ import { uninstallCmd, resolvePm, runScriptCmd } from '../lib/pkg-manager';
 import { runFile } from '../utils/exec';
 import { log } from '../utils/log';
 import { detectSdkVersion } from '../version-matrix';
+import { classifyHarmonyProject } from '../sdk54/project-state';
 
 const DEVECO_OHPM_PATH = '/Applications/DevEco-Studio.app/Contents/tools/ohpm/bin/ohpm';
 
@@ -30,6 +31,9 @@ export async function runUninstall(args: string[]): Promise<void> {
   if (!requested) throw new Error('用法: uninstall <pkg>');
 
   const projectRoot = process.cwd();
+  const kind = classifyHarmonyProject(projectRoot);
+  if (kind === 'sdk54-package-patch') throw new Error('SDK54 package-patch 1.5.0 仅保证 fresh 基线，不支持旧 uninstall/injector');
+  if (kind === 'sdk54-legacy') throw new Error('legacy SDK54 project：仅诊断，不自动迁移');
   const originalPackage = packageName(requested);
   const skipHarmony = args.includes('--skip-harmony');
   if (!skipHarmony) detectSdkVersion(projectRoot);

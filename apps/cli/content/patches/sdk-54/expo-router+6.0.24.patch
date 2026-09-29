@@ -1,20 +1,21 @@
 diff --git a/node_modules/expo-router/_ctx.harmony.js b/node_modules/expo-router/_ctx.harmony.js
 new file mode 100644
-index 0000000..4d0c41e
+index 0000000..8ff7120
 --- /dev/null
 +++ b/node_modules/expo-router/_ctx.harmony.js
 @@ -0,0 +1,6 @@
 +export const ctx = require.context(
 +  process.env.EXPO_ROUTER_APP_ROOT,
 +  true,
-+  /^(?:\.\/)(?!(?:(?:(?:.*\+api)|(?:\+html)|(?:\+middleware)))\.[tj]sx?$).*(?:\.android|\.ios|\.web)?\.[tj]sx?$/,
++  /^(?:\.\/)(?!(?:(?:(?:.*\+api)|(?:\+html)|(?:\+middleware)))\.[tj]sx?$).*\.[tj]sx?$/,
 +  process.env.EXPO_ROUTER_IMPORT_MODE
 +);
 diff --git a/node_modules/expo-router/build/getRoutesCore.js b/node_modules/expo-router/build/getRoutesCore.js
 index b110c14..b23fe89 100644
 --- a/node_modules/expo-router/build/getRoutesCore.js
 +++ b/node_modules/expo-router/build/getRoutesCore.js
-@@ -5,6 +5,6 @@ exports.generateDynamic = generateDynamic;
+@@ -5,7 +5,7 @@ exports.extrapolateGroups = extrapolateGroups;
+ exports.generateDynamic = generateDynamic;
  const matchers_1 = require("./matchers");
  const url_1 = require("./utils/url");
 -const validPlatforms = new Set(['android', 'ios', 'native', 'web']);
@@ -22,3 +23,100 @@ index b110c14..b23fe89 100644
  /**
   * Given a Metro context module, return an array of nested routes.
   *
+diff --git a/node_modules/expo-router/build/global-state/harmony-native-dismiss.d.ts b/node_modules/expo-router/build/global-state/harmony-native-dismiss.d.ts
+new file mode 100644
+index 0000000..b048040
+--- /dev/null
++++ b/node_modules/expo-router/build/global-state/harmony-native-dismiss.d.ts
+@@ -0,0 +1,8 @@
++import type { NavigationAction, NavigationState } from '@react-navigation/native';
++/**
++ * Harmony Screens must start a one-screen pop natively so the leaving screen
++ * stays mounted until its close transition finishes. The native `dismissed`
++ * event performs the matching React Navigation pop after the animation.
++ */
++export declare function emitHarmonyNativeDismissTo(action: NavigationAction, navigationState: NavigationState): boolean;
++//# sourceMappingURL=harmony-native-dismiss.d.ts.map
+\ No newline at end of file
+diff --git a/node_modules/expo-router/build/global-state/harmony-native-dismiss.js b/node_modules/expo-router/build/global-state/harmony-native-dismiss.js
+new file mode 100644
+index 0000000..3a5a3de
+--- /dev/null
++++ b/node_modules/expo-router/build/global-state/harmony-native-dismiss.js
+@@ -0,0 +1,26 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", { value: true });
++exports.emitHarmonyNativeDismissTo = emitHarmonyNativeDismissTo;
++const react_native_1 = require("react-native");
++/**
++ * Harmony Screens must start a one-screen pop natively so the leaving screen
++ * stays mounted until its close transition finishes. The native `dismissed`
++ * event performs the matching React Navigation pop after the animation.
++ */
++function emitHarmonyNativeDismissTo(action, navigationState) {
++    if (react_native_1.Platform.OS !== 'harmony' || action.type !== 'POP_TO') {
++        return false;
++    }
++    const currentIndex = navigationState.index;
++    const previousRoute = navigationState.routes[currentIndex - 1];
++    const targetName = action.payload?.name;
++    if (currentIndex < 1 || !targetName || previousRoute?.name !== targetName) {
++        return false;
++    }
++    react_native_1.DeviceEventEmitter.emit('screensJSRouterBack', {
++        target: action.target ?? navigationState.key,
++        data: { action },
++    });
++    return true;
++}
++//# sourceMappingURL=harmony-native-dismiss.js.map
+\ No newline at end of file
+diff --git a/node_modules/expo-router/build/global-state/routing.js b/node_modules/expo-router/build/global-state/routing.js
+index 138f67c..9771d20 100644
+--- a/node_modules/expo-router/build/global-state/routing.js
++++ b/node_modules/expo-router/build/global-state/routing.js
+@@ -54,6 +54,7 @@ const Linking = __importStar(require("expo-linking"));
+ const react_native_1 = require("react-native");
+ const router_store_1 = require("./router-store");
+ const emitDomEvent_1 = require("../domComponents/emitDomEvent");
++const harmony_native_dismiss_1 = require("./harmony-native-dismiss");
+ const getRoutesRedirects_1 = require("../getRoutesRedirects");
+ const href_1 = require("../link/href");
+ const matchers_1 = require("../matchers");
+@@ -206,7 +207,11 @@ function linkTo(originalHref, options = {}) {
+         console.error('Could not generate a valid navigation state for the given path: ' + href);
+         return;
+     }
+-    exports.routingQueue.add(getNavigateAction(state, rootState, options.event, options.withAnchor, options.dangerouslySingular, !!options.__internal__PreviewKey));
++    const { action, navigationState } = getNavigateAction(state, rootState, options.event, options.withAnchor, options.dangerouslySingular, !!options.__internal__PreviewKey);
++    if ((0, harmony_native_dismiss_1.emitHarmonyNativeDismissTo)(action, navigationState)) {
++        return;
++    }
++    exports.routingQueue.add(action);
+ }
+ function getNavigateAction(_actionState, _navigationState, type = 'NAVIGATE', withAnchor, singular, isPreviewNavigation) {
+     /**
+@@ -268,13 +273,16 @@ function getNavigateAction(_actionState, _navigationState, type = 'NAVIGATE', wi
+         : {};
+     const params = (0, navigationParams_1.appendInternalExpoRouterParams)(rootPayload.params, expoParams);
+     return {
+-        type,
+-        target: navigationState.key,
+-        payload: {
+-            // key: rootPayload.key,
+-            name: rootPayload.screen,
+-            params,
+-            singular,
++        navigationState: navigationState,
++        action: {
++            type,
++            target: navigationState.key,
++            payload: {
++                // key: rootPayload.key,
++                name: rootPayload.screen,
++                params,
++                singular,
++            },
+         },
+     };
+ }

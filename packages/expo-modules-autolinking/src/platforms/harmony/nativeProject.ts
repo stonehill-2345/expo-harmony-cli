@@ -80,6 +80,7 @@ export async function prepareHarmonyNativeProjectAsync({
 
   try {
     await fs.promises.cp(templateRoot, harmonyRoot, { recursive: true });
+    await copyHarmonyTemplateMediaAsync(projectRoot, harmonyRoot);
     await replaceTemplatePlaceholdersAsync(harmonyRoot, {
       __EXPO_APP_NAME__: appName,
       __EXPO_BUNDLE_NAME__: bundleName,
@@ -98,6 +99,40 @@ export async function prepareHarmonyNativeProjectAsync({
   } catch (error) {
     await fs.promises.rm(harmonyRoot, { recursive: true, force: true });
     throw error;
+  }
+}
+
+export async function copyHarmonyTemplateMediaAsync(
+  projectRoot: string,
+  harmonyRoot: string
+): Promise<void> {
+  const appJsonPath = path.join(projectRoot, 'app.json');
+  const app = JSON.parse(await fs.promises.readFile(appJsonPath, 'utf8'));
+  const expo = app?.expo ?? {};
+  const icon = expo.icon;
+  if (typeof icon !== 'string' || !icon) {
+    throw new Error('Expo app.json must define expo.icon for Harmony media generation');
+  }
+  const foreground = expo.android?.adaptiveIcon?.foregroundImage ?? icon;
+  const splash = expo.splash?.image ?? icon;
+  const resolveAsset = (relativePath: unknown, field: string): string => {
+    if (typeof relativePath !== 'string' || !relativePath) throw new Error(`${field} must be a project-relative asset path`);
+    const absolute = path.resolve(projectRoot, relativePath);
+    const relative = path.relative(projectRoot, absolute);
+    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) throw new Error(`${field} must stay inside the project`);
+    if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) throw new Error(`${field} asset is missing: ${relativePath}`);
+    return absolute;
+  };
+  const media = [
+    [resolveAsset(icon, 'expo.icon'), 'entry/src/main/resources/base/media/background.png'],
+    [resolveAsset(foreground, 'expo.android.adaptiveIcon.foregroundImage'), 'entry/src/main/resources/base/media/foreground.png'],
+    [resolveAsset(splash, 'expo.splash.image'), 'entry/src/main/resources/base/media/startIcon.png'],
+    [resolveAsset(icon, 'expo.icon'), 'AppScope/resources/base/media/app_icon.png'],
+  ] as const;
+  for (const [source, relativeTarget] of media) {
+    const target = path.join(harmonyRoot, relativeTarget);
+    await fs.promises.mkdir(path.dirname(target), { recursive: true });
+    await fs.promises.copyFile(source, target);
   }
 }
 

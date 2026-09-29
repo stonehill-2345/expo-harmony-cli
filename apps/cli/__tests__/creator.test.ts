@@ -69,6 +69,20 @@ vi.mock('../src/utils/log', () => ({
   },
 }));
 
+vi.mock('../src/sdk54/create', () => ({
+  runSdk54Create: vi.fn(async (request: {
+    cwd: string;
+    projectName: string;
+    template: 'blank-typescript' | 'default';
+    packageManager: 'npm' | 'pnpm';
+  }) => ({
+    projectRoot: path.resolve(request.cwd, request.projectName),
+    template: request.template,
+    packageManager: request.packageManager,
+    patchSet: 'sdk54-mvp-1',
+  })),
+}));
+
 describe('runCreate', () => {
   const streams = [process.stdin, process.stdout];
   const ttyDescriptors = streams.map(stream => Object.getOwnPropertyDescriptor(stream, 'isTTY'));
@@ -85,18 +99,20 @@ describe('runCreate', () => {
     streams.forEach(stream => Object.defineProperty(stream, 'isTTY', { configurable: true, value: true }));
   });
 
-  it('编排：拉模版 → 注入基线 → 文档/skill → 扫描 → H清理', async () => {
+  it('SDK52 legacy 编排：拉模版 → 注入基线 → 文档/skill → 扫描 → H清理', async () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-'));
+    const prompts = await import('@inquirer/prompts');
+    vi.mocked(prompts.select).mockResolvedValueOnce('sdk-52');
     const { runCreate } = await import('../src/creator');
     await runCreate(['myapp'], { cwd: tmp });
     const { runFileQuiet } = await import('../src/utils/exec');
     const { log } = await import('../src/utils/log');
     expect(runFileQuiet).toHaveBeenCalledWith(
       'npx',
-      ['create-expo-app', 'myapp', '--template', 'default@sdk-54', '--no-install'],
+      ['create-expo-app', 'myapp', '--template', 'default@sdk-52', '--no-install'],
       { cwd: tmp },
     );
-    expect(log.task).toHaveBeenCalledWith('1/4 创建 Expo SDK 54 模板');
+    expect(log.task).toHaveBeenCalledWith('1/4 创建 Expo SDK 52 模板');
     expect(log.task).toHaveBeenCalledWith('2/4 注入 HarmonyOS 基线');
     expect(log.task).toHaveBeenCalledWith('3/4 适配默认模板依赖');
     expect(log.task).toHaveBeenCalledWith('4/4 写入开发资料');
@@ -119,11 +135,9 @@ describe('runCreate', () => {
     const pkg = JSON.parse(fs.readFileSync(path.join(projectDir, 'package.json'), 'utf8'));
     expect(pkg.scripts.start).toBe('expo start');
     expect(pkg.scripts.postinstall).toContain('patch-package');
-    expect(pkg.dependencies['react-native-svg']).toBe('15.15.0');
-    expect(pkg.dependencies['@react-native-ohos/react-native-svg']).toBe('15.13.1');
     expect(pkg.dependencies['react-native-webview']).toBeUndefined();
     expect(pkg.dependencies['@react-native-ohos/react-native-webview']).toBeUndefined();
-    expect(fs.existsSync(path.join(projectDir, 'patches/@react-native-oh+react-native-harmony+0.82.30.patch'))).toBe(true);
+    expect(fs.existsSync(path.join(projectDir, 'patches/@react-native-oh+react-native-harmony+0.77.71.patch'))).toBe(true);
 
     const versions = Object.values({ ...(pkg.dependencies || {}), ...(pkg.devDependencies || {}) }) as string[];
     expect(versions.filter(version => /^[~^]/.test(version))).toEqual([]);
@@ -178,7 +192,12 @@ describe('runCreate', () => {
     );
 
     const { log } = await import('../src/utils/log');
-    expect(log.task).toHaveBeenCalledWith('1/4 创建 Expo SDK 52 模板');
+    expect(vi.mocked(log.task).mock.calls.map(([message]) => message)).toEqual([
+      '1/4 创建 Expo SDK 52 模板',
+      '2/4 注入 HarmonyOS 基线',
+      '3/4 适配默认模板依赖',
+      '4/4 写入开发资料',
+    ]);
 
     const projectDir = path.join(tmp, 'myapp');
     expect(fs.existsSync(path.join(projectDir, 'patches/@react-native-oh+react-native-harmony+0.77.71.patch'))).toBe(true);
@@ -189,11 +208,9 @@ describe('runCreate', () => {
 
   it.each([
     ['52', ['myapp', '--sdk=52']],
-    ['54', ['myapp', '--sdk=54']],
     ['52', ['myapp', '--sdk', '52']],
-    ['54', ['myapp', '--sdk', '54']],
     ['52', ['--sdk', '52', 'myapp']],
-  ])('非交互显式 SDK %s：%j → 使用对应模板且不询问', async (sdk, args) => {
+  ])('非交互显式 SDK %s：%j → 使用 legacy 模板且不询问', async (sdk, args) => {
     streams.forEach(stream => Object.defineProperty(stream, 'isTTY', { configurable: true, value: false }));
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk-'));
     try {
@@ -206,6 +223,47 @@ describe('runCreate', () => {
         ['create-expo-app', 'myapp', '--template', `default@sdk-${sdk}`, '--no-install'], { cwd: tmp });
       const pkg = JSON.parse(fs.readFileSync(path.join(tmp, 'myapp/package.json'), 'utf8'));
       expect(pkg.dependencies.expo).toMatch(new RegExp(`^${sdk}\\.`));
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+
+  it.each([
+    [['myapp', '--sdk=54'], 'default', 'pnpm'],
+    [['myapp', '--sdk', '54', '--template', 'blank-typescript', '--npm'], 'blank-typescript', 'npm'],
+  ] as const)('SDK54 %j → 早期分流后立即返回', async (args, template, packageManager) => {
+    streams.forEach(stream => Object.defineProperty(stream, 'isTTY', { configurable: true, value: false }));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk54-'));
+    try {
+      const { runCreate } = await import('../src/creator');
+      const { runSdk54Create } = await import('../src/sdk54/create');
+      const { runFileQuiet } = await import('../src/utils/exec');
+      await runCreate([...args], { cwd: tmp });
+      expect(runSdk54Create).toHaveBeenCalledOnce();
+      expect(runSdk54Create).toHaveBeenCalledWith({
+        cwd: tmp,
+        projectName: 'myapp',
+        template,
+        packageManager,
+      });
+      expect(runFileQuiet).not.toHaveBeenCalled();
+      expect(fs.readdirSync(tmp)).toEqual([]);
+    } finally {
+      fs.rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it.each(['--yarn', '--bun'])('SDK54 %s → 创建目录前失败关闭', async packageManagerFlag => {
+    streams.forEach(stream => Object.defineProperty(stream, 'isTTY', { configurable: true, value: false }));
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk54-pm-'));
+    try {
+      const { runCreate } = await import('../src/creator');
+      const { runSdk54Create } = await import('../src/sdk54/create');
+      await expect(runCreate(['myapp', '--sdk=54', packageManagerFlag], { cwd: tmp }))
+        .rejects.toThrow(/SDK 54.*npm.*pnpm/);
+      expect(runSdk54Create).not.toHaveBeenCalled();
+      expect(fs.readdirSync(tmp)).toEqual([]);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
@@ -263,7 +321,7 @@ describe('runCreate', () => {
       throw new Error('network unavailable');
     });
     const { runCreate } = await import('../src/creator');
-    await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/创建 Expo SDK 54 模板失败.*network unavailable/s);
+    await expect(runCreate(['myapp', '--sdk=52'], { cwd: tmp })).rejects.toThrow(/创建 Expo SDK 52 模板失败.*network unavailable/s);
     const { log } = await import('../src/utils/log');
     expect(vi.mocked(log.task).mock.results[0].value.fail).toHaveBeenCalledOnce();
     fs.rmSync(tmp, { recursive: true, force: true });
@@ -278,7 +336,7 @@ describe('runCreate', () => {
       return Promise.resolve();
     });
     const { runCreate } = await import('../src/creator');
-    await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/模板.*不完整.*删除.*重试/s);
+    await expect(runCreate(['myapp', '--sdk=52'], { cwd: tmp })).rejects.toThrow(/模板.*不完整.*删除.*重试/s);
     fs.rmSync(tmp, { recursive: true, force: true });
   });
 });

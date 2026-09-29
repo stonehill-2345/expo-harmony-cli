@@ -1,15 +1,1446 @@
-diff --git a/node_modules/expo-modules-core/ios/JSI/EXJSIUtils.h b/node_modules/expo-modules-core/ios/JSI/EXJSIUtils.h
-index 0000000..0000000 100644
---- a/node_modules/expo-modules-core/ios/JSI/EXJSIUtils.h
-+++ b/node_modules/expo-modules-core/ios/JSI/EXJSIUtils.h
-@@ -8,6 +8,10 @@
- #import <jsi/jsi.h>
- #import <React/RCTBridgeModule.h>
- #import <ReactCommon/TurboModuleUtils.h>
-+#if REACT_NATIVE_TARGET_VERSION >= 82
+diff --git a/node_modules/expo-modules-core/expo-module.config.json b/node_modules/expo-modules-core/expo-module.config.json
+index a1151c9..a4317e9 100644
+--- a/node_modules/expo-modules-core/expo-module.config.json
++++ b/node_modules/expo-modules-core/expo-module.config.json
+@@ -1,5 +1,5 @@
+ {
+-  "platforms": ["apple", "android"],
++  "platforms": ["apple", "android", "harmony"],
+   "apple": {
+     "podspecPath": "./ExpoModulesCore.podspec"
+   },
+@@ -12,5 +12,19 @@
+         "applyToRootProject": false
+       }
+     ]
++  },
++  "harmony": {
++    "kind": "turbo-module",
++    "cpp": {
++      "packageClass": "expo::harmony::ExpoModulesCorePackage",
++      "header": "ExpoModulesCorePackage.h",
++      "cmakeTarget": "rnoh_expo_modules_core",
++      "cmakePath": "harmony/src/main/cpp"
++    },
++    "ets": {
++      "packageClass": "ExpoModulesCorePackage",
++      "importPath": "expo-modules-core/harmony",
++      "entrypoint": "harmony/index.ets"
++    }
+   }
+ }
+diff --git a/node_modules/expo-modules-core/harmony/index.ets b/node_modules/expo-modules-core/harmony/index.ets
+new file mode 100644
+index 0000000..2b03d92
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/index.ets
+@@ -0,0 +1 @@
++export { ExpoModulesCorePackage } from './src/main/ets/ExpoModulesCorePackage';
+diff --git a/node_modules/expo-modules-core/harmony/rnoh-compat/prepare_har.py b/node_modules/expo-modules-core/harmony/rnoh-compat/prepare_har.py
+new file mode 100644
+index 0000000..b7bcf64
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/rnoh-compat/prepare_har.py
+@@ -0,0 +1,84 @@
++#!/usr/bin/env python3
++"""Build a pinned SDK dependency artifact; never patch an installed application."""
++import argparse
++import gzip
++import hashlib
++import io
++import json
++from pathlib import Path
++import subprocess
++import tarfile
++import tempfile
++
++
++def sha256_file(path):
++    with path.open('rb') as stream:
++        return hashlib.file_digest(stream, 'sha256').hexdigest()
++
++
++def prepare(input_har, output_har, profile):
++    base = Path(__file__).resolve().parent
++    name = f'rnoh-0.82.30-{profile}.json' if profile != 'structured-rejection-v1' else 'rnoh-0.82.30.json'
++    lock = json.loads((base / name).read_text())
++    patches = lock.get('patches', [lock])
++    record_path = Path(str(output_har) + '.manifest.json')
++    if output_har.exists() or record_path.exists():
++        raise ValueError('Output HAR or manifest already exists; use a new output path')
++    input_hash = sha256_file(input_har)
++    if input_hash != lock['inputHARSHA256']:
++        raise ValueError('Input HAR SHA256 mismatch; only the pinned RNOH 0.82.30 is supported')
++    patched_files = {}
++    with tarfile.open(input_har, 'r:gz') as archive:
++        package = json.load(archive.extractfile('package/oh-package.json5'))
++        if package['version'] != lock['version']:
++            raise ValueError('RNOH version mismatch')
++        with tempfile.TemporaryDirectory(prefix='expo-rnoh-patch-') as directory:
++            root = Path(directory)
++            for entry in patches:
++                patch = base / entry['patch']
++                if sha256_file(patch) != entry['patchSHA256']:
++                    raise ValueError('Patch SHA256 mismatch')
++                source = archive.extractfile(entry['source']).read()
++                if hashlib.sha256(source).hexdigest() != entry['sourceSHA256']:
++                    raise ValueError('RNOH source SHA256 mismatch')
++                target = root / entry['source'].removeprefix('package/')
++                target.parent.mkdir(parents=True, exist_ok=True)
++                target.write_bytes(source)
++                subprocess.run(['patch', '-p1', '--fuzz=0', '--batch', '-i', str(patch)],
++                               cwd=root, check=True, capture_output=True, text=True)
++                patched = target.read_bytes()
++                if hashlib.sha256(patched).hexdigest() != entry['patchedSourceSHA256']:
++                    raise ValueError('Patched source SHA256 mismatch')
++                patched_files[entry['source']] = patched
++
++    output_har.parent.mkdir(parents=True, exist_ok=True)
++    # Fixed gzip timestamp/name and preserved tar metadata make this reproducible.
++    with output_har.open('xb') as output:
++        try:
++            with gzip.GzipFile(filename='', mode='wb', fileobj=output, mtime=0) as compressed:
++                with tarfile.open(input_har, 'r|gz') as original, tarfile.open(fileobj=compressed, mode='w|') as result:
++                    for member in original:
++                        data = original.extractfile(member) if member.isfile() else None
++                        if member.name in patched_files:
++                            patched = patched_files[member.name]
++                            member.size = len(patched)
++                            data = io.BytesIO(patched)
++                        result.addfile(member, data)
++        except BaseException:
++            output_har.unlink(missing_ok=True)
++            raise
++    record = {**lock, 'inputHAR': str(input_har.resolve()), 'outputHAR': str(output_har.resolve()),
++              'inputSHA256': input_hash, 'outputSHA256': sha256_file(output_har)}
++    with record_path.open('x') as stream:
++        json.dump(record, stream, indent=2)
++        stream.write('\n')
++    print(json.dumps(record, indent=2))
++
++
++if __name__ == '__main__':
++    parser = argparse.ArgumentParser(description=__doc__)
++    parser.add_argument('--input-har', required=True, type=Path)
++    parser.add_argument('--output-har', required=True, type=Path)
++    parser.add_argument('--profile', choices=['structured-rejection-v1', 'core-v1-v3'], default='core-v1-v3')
++    args = parser.parse_args()
++    prepare(args.input_har, args.output_har, args.profile)
+diff --git a/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30-core-v1-v3.json b/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30-core-v1-v3.json
+new file mode 100644
+index 0000000..8b04e01
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30-core-v1-v3.json
+@@ -0,0 +1,21 @@
++{
++  "compatibilityId": "expo-rnoh-0.82.30-core-v1-v3",
++  "version": "0.82.30",
++  "inputHARSHA256": "cac2b5d1b9ce7d306079218931db12489aaceb240002c9c32e6c13185c577011",
++  "patches": [
++    {
++      "source": "package/src/main/cpp/RNOH/ArkTSTurboModule.cpp",
++      "sourceSHA256": "95c5a9ee8c7b3406dbea7f58c1f9333dbb38eedc7e47e2677c25da11c8814603",
++      "patchedSourceSHA256": "58edba183492fe6276cc02ba79425fdf14a8f48f306f550786efd04184546393",
++      "patch": "rnoh-0.82.30-structured-rejection.patch",
++      "patchSHA256": "cb6ef3428068f949d0b41a6fae05a8657913cdac0c8ef47ec0d445357ba0af52"
++    },
++    {
++      "source": "package/src/main/ets/RNApp.ets",
++      "sourceSHA256": "fc4a7b18f9822feae5767c985a7884176b6c2342e0bf9d2c964b9cb7e2cd0ecd",
++      "patchedSourceSHA256": "9d4194fa5a795831b191e36f3f6997b2f4c4aa2c653893f93c0064d84d2d79e8",
++      "patch": "rnoh-0.82.30-runtime-surface-generation.patch",
++      "patchSHA256": "fef75f09b873298ec6ca7feb5cc11ca9eb69e3c2c1367c3ad6fcadec1e2ab613"
++    }
++  ]
++}
+diff --git a/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30-runtime-surface-generation.patch b/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30-runtime-surface-generation.patch
+new file mode 100644
+index 0000000..981d6f1
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30-runtime-surface-generation.patch
+@@ -0,0 +1,71 @@
++--- a/src/main/ets/RNApp.ets
+++++ b/src/main/ets/RNApp.ets
++@@ -161,6 +161,9 @@
++   private rnInstance!: RNInstance;
++   /** Whether to show the rendered surface or not. */
++   @State private shouldShow: boolean = false;
+++  // RNInstanceRegistry reuses the numeric instance ID during reload. A local
+++  // generation forces a fresh Surface even if false/true coalesce in one frame.
+++  @State private surfaceGeneration: number = 0;
++   /** Debug log box controller for showing RN warnings and errors. */
++   private logBoxDialogController!: CustomDialogController;
++   /** Controller for debugger pause dialog (only in debug mode). */
++@@ -226,6 +229,8 @@
++       new Map(),
++       this.wrappedCustomRNComponentBuilder // backward compatibility
++     )
+++
+++    this.surfaceGeneration += 1;
++ 
++     // Initialize log box dialog for RN error/warning messages
++     this.logBoxDialogController = new CustomDialogController({
++@@ -332,28 +337,30 @@
++    */
++   build() {
++     if (this.shouldShow) {
++-      Stack() {
+++      ForEach([this.surfaceGeneration], (_generation: number) => {
+++        Stack() {
+++          if (this.rnohCoreContext!.isDebugModeEnabled) {
+++            RNPauseInDebuggerDialog({ ctx: this.ctx })
+++          }
+++          if (this.rnohCoreContext!.isDebugModeEnabled) {
+++            RNPerfMonitorView({ ctx: this.rnohCoreContext, rnInstance: this.rnInstance });
+++          }
+++          RNSurface({
+++            ctx: this.ctx,
+++            surfaceConfig: {
+++              initialProps: this.initialProps ?? {},
+++              appKey: this.appKey,
+++            },
+++          })
++         if (this.rnohCoreContext!.isDebugModeEnabled) {
++-          RNPauseInDebuggerDialog({ ctx: this.ctx })
+++          RNDevLoadingView({ useSafeAreaInsets: true, ctx: this.rnohCoreContext }).position({ x: 0, y: 0 })
++         }
++-        if (this.rnohCoreContext!.isDebugModeEnabled) {
++-          RNPerfMonitorView({ ctx: this.rnohCoreContext, rnInstance: this.rnInstance });
++         }
++-        RNSurface({
++-          ctx: this.ctx,
++-          surfaceConfig: {
++-            initialProps: this.initialProps ?? {},
++-            appKey: this.appKey,
++-          },
++-        })
++-      if (this.rnohCoreContext!.isDebugModeEnabled) {
++-        RNDevLoadingView({ useSafeAreaInsets: true, ctx: this.rnohCoreContext }).position({ x: 0, y: 0 })
++-      }
++-      }
++-      .expandSafeArea([SafeAreaType.KEYBOARD])
++-      .hitTestBehavior(HitTestMode.Transparent)
++-      .width("100%")
++-      .height("100%")
+++        .expandSafeArea([SafeAreaType.KEYBOARD])
+++        .hitTestBehavior(HitTestMode.Transparent)
+++        .width("100%")
+++        .height("100%")
+++      }, (generation: number) => generation.toString())
++     }
++   }
++ }
+diff --git a/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30-structured-rejection.patch b/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30-structured-rejection.patch
+new file mode 100644
+index 0000000..3040740
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30-structured-rejection.patch
+@@ -0,0 +1,50 @@
++--- a/src/main/cpp/RNOH/ArkTSTurboModule.cpp
+++++ b/src/main/cpp/RNOH/ArkTSTurboModule.cpp
++@@ -30,7 +30,7 @@
++ facebook::jsi::Value preparePromiseResolverResult(
++     facebook::jsi::Runtime& rt,
++     const std::vector<folly::dynamic> args);
++-std::string preparePromiseRejectionResult(
+++folly::dynamic preparePromiseRejectionResult(
++     const std::vector<folly::dynamic> args);
++ 
++ ArkTSTurboModule::ArkTSTurboModule(Context ctx, std::string name)
++@@ -205,7 +205,11 @@
++                         if (!jsiPromise) {
++                           return;
++                         }
++-                        jsiPromise->reject(preparePromiseRejectionResult(args));
+++                        // Preserve structured native errors; reject(string) drops code.
+++                        jsiPromise->reject_.call(
+++                            runtime2,
+++                            jsi::valueFromDynamic(
+++                                runtime2, preparePromiseRejectionResult(args)));
++                         jsiPromise->allowRelease();
++                       });
++                     });
++@@ -318,10 +322,10 @@
++   return jsi::valueFromDynamic(rt, args[0]);
++ }
++ 
++-std::string preparePromiseRejectionResult(
+++folly::dynamic preparePromiseRejectionResult(
++     const std::vector<folly::dynamic> args) {
++   if (args.size() == 0) {
++-    return "";
+++    return folly::dynamic::object("message", "");
++   }
++   if (args.size() > 1) {
++     throw std::invalid_argument("`reject` accepts only one argument");
++@@ -331,10 +335,10 @@
++   if (error.isObject()) {
++     auto message = error["message"];
++     if (message.isString()) {
++-      return message.getString();
+++      return error;
++     }
++   } else if (error.isString()) {
++-    return error.getString();
+++    return folly::dynamic::object("message", error.getString());
++   }
++   throw std::invalid_argument(
++       "The type of argument provided `reject` must be string or contain a string 'message' "
+diff --git a/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30.json b/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30.json
+new file mode 100644
+index 0000000..357d577
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/rnoh-compat/rnoh-0.82.30.json
+@@ -0,0 +1,10 @@
++{
++  "compatibilityId": "expo-rnoh-0.82.30-structured-rejection-v1",
++  "version": "0.82.30",
++  "inputHARSHA256": "cac2b5d1b9ce7d306079218931db12489aaceb240002c9c32e6c13185c577011",
++  "source": "package/src/main/cpp/RNOH/ArkTSTurboModule.cpp",
++  "sourceSHA256": "95c5a9ee8c7b3406dbea7f58c1f9333dbb38eedc7e47e2677c25da11c8814603",
++  "patchedSourceSHA256": "58edba183492fe6276cc02ba79425fdf14a8f48f306f550786efd04184546393",
++  "patch": "rnoh-0.82.30-structured-rejection.patch",
++  "patchSHA256": "cb6ef3428068f949d0b41a6fae05a8657913cdac0c8ef47ec0d445357ba0af52"
++}
+diff --git a/node_modules/expo-modules-core/harmony/src/main/cpp/CMakeLists.txt b/node_modules/expo-modules-core/harmony/src/main/cpp/CMakeLists.txt
+new file mode 100644
+index 0000000..8a1d158
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/cpp/CMakeLists.txt
+@@ -0,0 +1,35 @@
++cmake_minimum_required(VERSION 3.16)
++
++if(NOT TARGET rnoh OR NOT TARGET jsi)
++  message(FATAL_ERROR "Add the RNOH 0.82.30 native project before Expo Modules Core")
++endif()
++get_filename_component(EXPO_MODULES_CORE_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../.." ABSOLUTE)
++set(EXPO_MODULES_CORE_COMMON "${EXPO_MODULES_CORE_ROOT}/common/cpp")
++
++file(READ "${EXPO_MODULES_CORE_ROOT}/package.json" EXPO_CORE_PACKAGE_JSON)
++string(REGEX MATCH "\"version\"[ \t]*:[ \t]*\"([^\"]+)\"" EXPO_CORE_VERSION_MATCH "${EXPO_CORE_PACKAGE_JSON}")
++set(EXPO_CORE_VERSION "${CMAKE_MATCH_1}")
++if(NOT EXPO_CORE_VERSION MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)")
++  message(FATAL_ERROR "Invalid Expo Modules Core package version: ${EXPO_CORE_VERSION}")
++endif()
++set(EXPO_CORE_VERSION_MAJOR "${CMAKE_MATCH_1}")
++set(EXPO_CORE_VERSION_MINOR "${CMAKE_MATCH_2}")
++set(EXPO_CORE_VERSION_PATCH "${CMAKE_MATCH_3}")
++configure_file(ExpoModulesCoreVersion.h.in ExpoModulesCoreVersion.h @ONLY)
++
++add_library(rnoh_expo_modules_core STATIC
++  ExpoModulesCorePackage.cpp
++  ExpoModulesCoreRuntime.cpp
++  ExpoModulesCoreAsync.cpp
++  ExpoModulesCoreViewBinding.cpp
++  "${EXPO_MODULES_CORE_COMMON}/EventEmitter.cpp"
++  "${EXPO_MODULES_CORE_COMMON}/JSIUtils.cpp"
++  "${EXPO_MODULES_CORE_COMMON}/LazyObject.cpp"
++  "${EXPO_MODULES_CORE_COMMON}/NativeModule.cpp"
++  "${EXPO_MODULES_CORE_COMMON}/SharedObject.cpp"
++  "${EXPO_MODULES_CORE_COMMON}/SharedRef.cpp")
++target_compile_features(rnoh_expo_modules_core PUBLIC cxx_std_20)
++target_include_directories(rnoh_expo_modules_core
++  PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_CURRENT_BINARY_DIR}"
++  PRIVATE "${EXPO_MODULES_CORE_COMMON}")
++target_link_libraries(rnoh_expo_modules_core PUBLIC rnoh jsi)
+diff --git a/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreAsync.cpp b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreAsync.cpp
+new file mode 100644
+index 0000000..3679ae5
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreAsync.cpp
+@@ -0,0 +1,98 @@
++#include "ExpoModulesCoreAsync.h"
++#include "ExpoModulesCoreRuntime.h"
 +#include <ReactCommon/CallInvoker.h>
-+#include <react/bridging/CallbackWrapper.h>
-+#endif
- #import <ExpoModulesCore/ObjectDeallocator.h>
++#include <thread>
++#include <optional>
++
++namespace expo::harmony {
++namespace {
++struct AsyncFailure {
++  std::string code;
++  std::string message;
++};
++
++void reject(jsi::Runtime& runtime, detail::PendingAsyncCall& call,
++            const std::string& code, const std::string& message) {
++  auto error = runtime.global().getPropertyAsFunction(runtime, "Error")
++                   .callAsConstructor(runtime, jsi::String::createFromUtf8(runtime, message))
++                   .asObject(runtime);
++  error.setProperty(runtime, "code", jsi::String::createFromUtf8(runtime, code));
++  call.reject.call(runtime, error);
++}
++}
++
++AsyncTask startAsync(jsi::Runtime& runtime,
++                     std::shared_ptr<facebook::react::CallInvoker> jsInvoker,
++                     AsyncWork work) {
++  auto state = getRuntimeState(runtime);
++  if (!jsInvoker || !work) throw jsi::JSError(runtime, "Async work requires a JS invoker and worker");
++  const auto id = state->nextAsyncId_++;
++  auto cancelled = std::make_shared<std::atomic<bool>>(false);
++  auto executor = jsi::Function::createFromHostFunction(runtime,
++      jsi::PropNameID::forAscii(runtime, "expoAsyncExecutor"), 2,
++      [state, id, cancelled](jsi::Runtime& rt, const jsi::Value&,
++                             const jsi::Value* args, size_t count) {
++        if (count != 2) throw jsi::JSError(rt, "Invalid Promise executor arguments");
++        state->pendingAsync_.emplace(id, std::make_unique<detail::PendingAsyncCall>(
++            detail::PendingAsyncCall{args[0].asObject(rt).asFunction(rt),
++                                     args[1].asObject(rt).asFunction(rt), cancelled}));
++        return jsi::Value::undefined();
++      });
++  auto promise = runtime.global().getPropertyAsFunction(runtime, "Promise")
++                     .callAsConstructor(runtime, executor).asObject(runtime);
++  if (!state->pendingAsync_.contains(id)) {
++    throw jsi::JSError(runtime, "Promise constructor did not invoke the native executor");
++  }
++  std::weak_ptr<RuntimeState> weakState = state;
++  try {
++    std::thread([weakState, id, cancelled, jsInvoker, work = std::move(work)]() {
++      AsyncResult result;
++      std::optional<AsyncFailure> error;
++      try {
++        result = work(cancelled);
++        if (!result) throw std::runtime_error("Native async worker returned no result converter");
++      } catch (const NativeAsyncError& exception) {
++        error = AsyncFailure{exception.code, exception.what()};
++      } catch (const std::exception& exception) {
++        error = AsyncFailure{"ERR_NATIVE_ASYNC", exception.what()};
++      } catch (...) {
++        error = AsyncFailure{"ERR_NATIVE_ASYNC", "Unknown native async exception"};
++      }
++      jsInvoker->invokeAsync([weakState, id, result = std::move(result), error = std::move(error)]
++                            (jsi::Runtime& rt) {
++        auto owner = weakState.lock();
++        if (!owner || !owner->isActive()) return;
++        auto entry = owner->pendingAsync_.extract(id);
++        if (entry.empty()) return; // Canceled on the JS thread; never settle twice.
++        auto call = std::move(entry.mapped());
++        if (error) {
++          reject(rt, *call, error->code, error->message);
++          return;
++        }
++        try {
++          auto value = result(rt);
++          call->resolve.call(rt, std::move(value));
++        } catch (const NativeAsyncError& exception) {
++          reject(rt, *call, exception.code, exception.what());
++        } catch (const std::exception& exception) {
++          reject(rt, *call, "ERR_NATIVE_ASYNC", exception.what());
++        }
++      });
++    }).detach();
++  } catch (const std::exception& exception) {
++    auto entry = state->pendingAsync_.extract(id);
++    cancelled->store(true);
++    reject(runtime, *entry.mapped(), "ERR_NATIVE_ASYNC", exception.what());
++  }
++  return {std::move(promise), id};
++}
++
++bool cancelAsync(jsi::Runtime& runtime, AsyncTaskId id) {
++  auto state = getRuntimeState(runtime);
++  auto entry = state->pendingAsync_.extract(id);
++  if (entry.empty()) return false;
++  entry.mapped()->cancelled->store(true);
++  reject(runtime, *entry.mapped(), "ERR_CANCELED", "Native async operation was canceled");
++  return true;
++}
++} // namespace expo::harmony
+diff --git a/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreAsync.h b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreAsync.h
+new file mode 100644
+index 0000000..5972d9e
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreAsync.h
+@@ -0,0 +1,48 @@
++#pragma once
++
++#include <jsi/jsi.h>
++#include <atomic>
++#include <cstdint>
++#include <functional>
++#include <memory>
++#include <stdexcept>
++#include <string>
++#include <utility>
++
++namespace facebook::react { class CallInvoker; }
++
++namespace expo::harmony {
++namespace jsi = facebook::jsi;
++// Native modules opt into a coded rejection; ordinary exceptions stay generic.
++class NativeAsyncError final : public std::runtime_error {
++public:
++  NativeAsyncError(std::string code, std::string message)
++      : std::runtime_error(std::move(message)), code(std::move(code)) {}
++  const std::string code;
++};
++
++using AsyncTaskId = uint64_t;
++using CancellationSignal = std::shared_ptr<const std::atomic<bool>>;
++// Work and the returned converter may capture native data, never JSI handles.
++// Only the converter is called on the owning JS thread.
++using AsyncResult = std::function<jsi::Value(jsi::Runtime&)>;
++using AsyncWork = std::function<AsyncResult(CancellationSignal)>;
++struct AsyncTask {
++  jsi::Object promise;
++  AsyncTaskId id;
++};
++namespace detail {
++struct PendingAsyncCall {
++  jsi::Function resolve;
++  jsi::Function reject;
++  std::shared_ptr<std::atomic<bool>> cancelled;
++};
++}
++
++// Call these on the owning JS thread. Work runs on a native worker thread.
++// Cancellation is cooperative for work and suppresses any late completion.
++AsyncTask startAsync(jsi::Runtime& runtime,
++                     std::shared_ptr<facebook::react::CallInvoker> jsInvoker,
++                     AsyncWork work);
++bool cancelAsync(jsi::Runtime& runtime, AsyncTaskId id);
++} // namespace expo::harmony
+diff --git a/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCorePackage.cpp b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCorePackage.cpp
+new file mode 100644
+index 0000000..475bfa9
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCorePackage.cpp
+@@ -0,0 +1,123 @@
++#include "ExpoModulesCorePackage.h"
++#include "RNOH/ArkTSTurboModule.h"
++#include "ExpoModulesCoreVersion.h"
++#include "RNOH/TurboModuleFactory.h"
++#include "RNOH/TurboModuleProvider.h"
++
++namespace expo::harmony {
++namespace {
++
++class ExpoModulesCoreTurboModule final : public rnoh::ArkTSTurboModule,
++                                        public std::enable_shared_from_this<ExpoModulesCoreTurboModule> {
++public:
++  ExpoModulesCoreTurboModule(const rnoh::TurboModuleFactoryDelegate::Context& context, std::vector<ModuleDefinition> modules)
++      : ArkTSTurboModule(context, "ExpoModulesCore"), modules_(std::move(modules)),
++        context_{context.jsInvoker, context.safeInstance, context.taskExecutor} {
++    methodMap_["installModules"] = {0, [](jsi::Runtime& runtime,
++        facebook::react::TurboModule& module, const jsi::Value*, size_t) {
++      static_cast<ExpoModulesCoreTurboModule&>(module).installModules(runtime);
++      return jsi::Value::undefined();
++    }};
++  }
++
++  void installModules(jsi::Runtime& runtime) {
++    // Read actual platform state before publishing an initialized Core runtime.
++    // The ETS getter is synchronous and must never wait back on the JS thread.
++    auto directories = call(runtime, "getConstants", nullptr, 0).asObject(runtime);
++    install(runtime);
++    auto core = runtime.global().getPropertyAsObject(runtime, "expo");
++    jsi::Object version(runtime);
++    version.setProperty(runtime, "version", EXPO_CORE_VERSION);
++    version.setProperty(runtime, "major", EXPO_CORE_VERSION_MAJOR);
++    version.setProperty(runtime, "minor", EXPO_CORE_VERSION_MINOR);
++    version.setProperty(runtime, "patch", EXPO_CORE_VERSION_PATCH);
++    core.setProperty(runtime, "expoModulesCoreVersion", version);
++    core.setProperty(runtime, "cacheDir", directories.getProperty(runtime, "cacheDir"));
++    core.setProperty(runtime, "documentsDir", directories.getProperty(runtime, "documentsDir"));
++    bindPlatformFunction(runtime, core, "uuidv4", 0, false);
++    bindPlatformFunction(runtime, core, "uuidv5", 2, false);
++    bindPlatformFunction(runtime, core, "reloadAppAsync", 1, true);
++    auto registry = core.getPropertyAsObject(runtime, "modules");
++    for (const auto& definition : modules_) {
++      if (!registry.hasProperty(runtime, definition.name.c_str())) {
++        registerModule(runtime, definition.name, [&](auto& rt, auto& module) {
++          definition.initialize(rt, module, context_);
++        });
++      }
++    }
++  }
++
++private:
++  void bindPlatformFunction(jsi::Runtime& runtime, jsi::Object& core,
++                            const char* name, size_t argumentCount, bool asynchronous) {
++    const std::weak_ptr<ExpoModulesCoreTurboModule> weak = shared_from_this();
++    core.setProperty(runtime, name, jsi::Function::createFromHostFunction(
++        runtime, jsi::PropNameID::forAscii(runtime, name), argumentCount,
++        [weak, method = std::string(name), argumentCount, asynchronous](
++            jsi::Runtime& rt, const jsi::Value&, const jsi::Value* args, size_t count) {
++          getRuntimeState(rt);
++          auto owner = weak.lock();
++          if (!owner) throw jsi::JSError(rt, "Expo Core platform module was released");
++          if (count != argumentCount) throw jsi::JSError(rt, "Invalid Expo Core platform argument count");
++          for (size_t i = 0; i < count; i++) {
++            if (!args[i].isString()) throw jsi::JSError(rt, "Expo Core platform arguments must be strings");
++          }
++          return asynchronous ? owner->callAsync(rt, method, args, count)
++                              : owner->call(rt, method, args, count);
++        }));
++  }
++
++  const std::vector<ModuleDefinition> modules_;
++  const ModuleContext context_;
++};
++
++class ExpoModulesCoreFactory final : public rnoh::TurboModuleFactoryDelegate {
++public:
++  explicit ExpoModulesCoreFactory(std::vector<ModuleDefinition> modules)
++      : modules_(std::move(modules)) {}
++  SharedTurboModule createTurboModule(Context context, const std::string& name) const override {
++    if (name == "ExpoModulesCore") {
++      return std::make_shared<ExpoModulesCoreTurboModule>(context, modules_);
++    }
++    return nullptr;
++  }
++private:
++  const std::vector<ModuleDefinition> modules_;
++};
++
++class ExpoModulesCoreJSIBinder final : public rnoh::GlobalJSIBinder {
++public:
++  explicit ExpoModulesCoreJSIBinder(const Context& context) : GlobalJSIBinder(context) {}
++  void createBindings(jsi::Runtime& runtime,
++                      std::shared_ptr<rnoh::TurboModuleProvider> provider) override {
++    auto module = std::dynamic_pointer_cast<ExpoModulesCoreTurboModule>(
++        provider->getTurboModule("ExpoModulesCore"));
++    if (!module) throw jsi::JSError(runtime, "Expo Modules Core native factory is not registered");
++    module->installModules(runtime);
++  }
++};
++
++} // namespace
++
++ExpoModulesCorePackage::ExpoModulesCorePackage(rnoh::Package::Context context,
++                                               std::vector<ModuleDefinition> modules)
++    : rnoh::Package(context), modules_(std::move(modules)) {
++  std::unordered_set<std::string> names;
++  for (const auto& module : modules_) {
++    if (module.name.empty() || !module.initialize || !names.insert(module.name).second) {
++      throw std::invalid_argument("Expo module definitions require unique names and initializers");
++    }
++  }
++}
++
++rnoh::GlobalJSIBinders ExpoModulesCorePackage::createGlobalJSIBinders(
++    const rnoh::GlobalJSIBinder::Context& context) {
++  return {std::make_shared<ExpoModulesCoreJSIBinder>(context)};
++}
++
++std::unique_ptr<rnoh::TurboModuleFactoryDelegate>
++ExpoModulesCorePackage::createTurboModuleFactoryDelegate() {
++  return std::make_unique<ExpoModulesCoreFactory>(modules_);
++}
++
++} // namespace expo::harmony
+diff --git a/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCorePackage.h b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCorePackage.h
+new file mode 100644
+index 0000000..b80dba6
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCorePackage.h
+@@ -0,0 +1,36 @@
++#pragma once
++
++#include "RNOH/Package.h"
++#include "ExpoModulesCoreRuntime.h"
++#include <ReactCommon/CallInvoker.h>
++
++namespace expo::harmony {
++
++struct ModuleContext {
++  std::shared_ptr<facebook::react::CallInvoker> jsInvoker;
++  rnoh::RNInstance::SafeWeak instance;
++  rnoh::TaskExecutor::Shared taskExecutor;
++};
++
++struct ModuleDefinition {
++  std::string name;
++  std::function<void(jsi::Runtime&, jsi::Object&,
++                     const ModuleContext&)> initialize;
++};
++
++// The native modules provider supplies definitions; autolinking can generate
++// this list without putting any module initialization into the JS application.
++class ExpoModulesCorePackage final : public rnoh::Package {
++public:
++  explicit ExpoModulesCorePackage(rnoh::Package::Context context,
++                                  std::vector<ModuleDefinition> modules = {});
++
++  std::unique_ptr<rnoh::TurboModuleFactoryDelegate> createTurboModuleFactoryDelegate() override;
++  rnoh::GlobalJSIBinders createGlobalJSIBinders(
++      const rnoh::GlobalJSIBinder::Context& context) override;
++
++private:
++  std::vector<ModuleDefinition> modules_;
++};
++
++} // namespace expo::harmony
+diff --git a/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreRuntime.cpp b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreRuntime.cpp
+new file mode 100644
+index 0000000..3f6dadb
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreRuntime.cpp
+@@ -0,0 +1,221 @@
++#include "ExpoModulesCoreRuntime.h"
++
++#include "EventEmitter.h"
++#include "JSIUtils.h"
++#include "NativeModule.h"
++#include "SharedObject.h"
++#include "SharedRef.h"
++
++#include <utility>
++
++namespace expo::harmony {
++namespace {
++
++// The JS-owned token must invalidate state even when native callers keep a
++// shared_ptr to it after the Hermes runtime has been destroyed.
++class RuntimeStateOwner final : public jsi::NativeState {
++public:
++  explicit RuntimeStateOwner(std::shared_ptr<RuntimeState> state) : state(std::move(state)) {}
++  ~RuntimeStateOwner() override { state->invalidate(); }
++
++  const std::shared_ptr<RuntimeState> state;
++};
++
++// Only attachments made by this Core runtime may resolve through its registry.
++class SharedResourceBinding final : public expo::SharedObject::NativeState {
++public:
++  SharedResourceBinding(RuntimeState::ObjectId id, expo::SharedObject::ObjectReleaser releaser,
++                        const std::shared_ptr<RuntimeState>& owner)
++      : NativeState(id, std::move(releaser)), owner(owner) {}
++  const std::weak_ptr<RuntimeState> owner;
++};
++
++} // namespace
++
++RuntimeState::~RuntimeState() {
++  invalidate();
++}
++
++void RuntimeState::invalidate() noexcept {
++  active_ = false;
++  for (auto& [id, call] : pendingAsync_) call->cancelled->store(true);
++  pendingAsync_.clear();
++  resources_.clear();
++  moduleNames_.clear();
++  viewConfigs_.clear();
++}
++
++bool RuntimeState::isActive() const noexcept {
++  return active_;
++}
++
++size_t RuntimeState::resourceCount() const noexcept {
++  return resources_.size();
++}
++
++size_t RuntimeState::pendingAsyncCount() const noexcept {
++  return pendingAsync_.size();
++}
++
++RuntimeState::ObjectId RuntimeState::retain(std::shared_ptr<void> resource) {
++  const auto id = nextObjectId_++;
++  resources_.emplace(id, std::move(resource));
++  return id;
++}
++
++void RuntimeState::release(ObjectId id) noexcept {
++  // Expo's SharedObject invokes release explicitly and again during NativeState
++  // destruction. Erasing the resource makes these two paths safely idempotent.
++  resources_.erase(id);
++}
++
++std::shared_ptr<RuntimeState> getRuntimeState(jsi::Runtime& runtime) {
++  auto value = runtime.global().getProperty(runtime, "expo");
++  if (!value.isObject() || !value.asObject(runtime).hasNativeState<RuntimeStateOwner>(runtime)) {
++    throw jsi::JSError(runtime, "Expo Modules Core Harmony is not installed in this runtime");
++  }
++  auto state = value.asObject(runtime).getNativeState<RuntimeStateOwner>(runtime)->state;
++  if (!state->isActive()) {
++    throw jsi::JSError(runtime, "Expo Modules Core Harmony runtime has been invalidated");
++  }
++  return state;
++}
++
++std::shared_ptr<RuntimeState> install(jsi::Runtime& runtime) {
++  if (!runtime.global().getProperty(runtime, "expo").isUndefined()) {
++    // Do not accept a JS shim or silently replace another platform's runtime.
++    return getRuntimeState(runtime);
++  }
++
++  auto state = std::make_shared<RuntimeState>();
++  jsi::Object core(runtime);
++  core.setNativeState(runtime, std::make_shared<RuntimeStateOwner>(state));
++  auto objectConstructor = runtime.global().getPropertyAsObject(runtime, "Object");
++  auto modules = objectConstructor.getPropertyAsFunction(runtime, "create")
++                     .call(runtime, jsi::Value::null())
++                     .asObject(runtime);
++  core.setProperty(runtime, "modules", modules);
++  core.setProperty(runtime, "getViewConfig", jsi::Function::createFromHostFunction(
++      runtime, jsi::PropNameID::forAscii(runtime, "getViewConfig"), 2,
++      [](jsi::Runtime& rt, const jsi::Value&, const jsi::Value* args, size_t count) -> jsi::Value {
++        if (count < 1 || !args[0].isString() ||
++            (count > 1 && !args[1].isUndefined() && !args[1].isString())) {
++          throw jsi::JSError(rt, "View config requires a module name and optional view name");
++        }
++        auto state = getRuntimeState(rt);
++        auto key = args[0].asString(rt).utf8(rt) + std::string(1, '\0');
++        if (count > 1 && args[1].isString()) key += args[1].asString(rt).utf8(rt);
++        auto found = state->viewConfigs_.find(key);
++        if (found == state->viewConfigs_.end()) return jsi::Value::null();
++        jsi::Object config(rt), props(rt), events(rt);
++        for (const auto& prop : found->second.props) props.setProperty(rt, prop.c_str(), true);
++        for (const auto& event : found->second.events) {
++          props.setProperty(rt, event.c_str(), true);
++          jsi::Object registration(rt);
++          registration.setProperty(rt, "registrationName", jsi::String::createFromUtf8(rt, event));
++          events.setProperty(rt, ("top" + event.substr(2)).c_str(), registration);
++        }
++        config.setProperty(rt, "validAttributes", props);
++        config.setProperty(rt, "directEventTypes", events);
++        return config;
++      }));
++  runtime.global().setProperty(runtime, "expo", core);
++
++  try {
++    expo::EventEmitter::installClass(runtime);
++    expo::NativeModule::installClass(runtime);
++    const std::weak_ptr<RuntimeState> weakState = state;
++    expo::SharedObject::installBaseClass(runtime, [weakState](auto id) {
++      if (auto owner = weakState.lock()) {
++        owner->release(id);
++      }
++    });
++    expo::SharedRef::installBaseClass(runtime);
++  } catch (...) {
++    state->invalidate();
++    runtime.global().setProperty(runtime, "expo", jsi::Value::undefined());
++    throw;
++  }
++  return state;
++}
++
++void registerViewConfig(jsi::Runtime& runtime, const std::string& moduleName,
++                        const std::string& viewName, ViewConfig config) {
++  auto state = getRuntimeState(runtime);
++  if (moduleName.empty()) throw jsi::JSError(runtime, "View config requires a module name");
++  for (const auto& event : config.events) {
++    if (!event.starts_with("on") || event.size() <= 2) {
++      throw jsi::JSError(runtime, "View event names must use the onEvent form");
++    }
++  }
++  if (!state->viewConfigs_.emplace(moduleName + std::string(1, '\0') + viewName, std::move(config)).second) {
++    throw jsi::JSError(runtime, "View config already registered: " + moduleName + "/" + viewName);
++  }
++}
++
++void registerModule(jsi::Runtime& runtime, const std::string& name,
++                    const ModuleInitializer& initialize) {
++  auto state = getRuntimeState(runtime);
++  if (name.empty() || !initialize) {
++    throw jsi::JSError(runtime, "Expo module registration requires a name and initializer");
++  }
++  if (!state->moduleNames_.insert(name).second) {
++    throw jsi::JSError(runtime, "Expo module is already registered: " + name);
++  }
++  try {
++    auto module = expo::NativeModule::createInstance(runtime);
++    initialize(runtime, module);
++    if (!state->isActive()) {
++      throw jsi::JSError(runtime, "Expo module initialization invalidated its runtime");
++    }
++    auto modules = expo::common::getCoreObject(runtime).getPropertyAsObject(runtime, "modules");
++    modules.setProperty(runtime, name.c_str(), module);
++  } catch (...) {
++    state->moduleNames_.erase(name);
++    throw;
++  }
++}
++
++void attachSharedObject(jsi::Runtime& runtime, jsi::Object& object,
++                        std::shared_ptr<void> resource) {
++  auto state = getRuntimeState(runtime);
++  if (!resource || !object.instanceOf(runtime, expo::SharedObject::getBaseClass(runtime))) {
++    throw jsi::JSError(runtime, "Native resources require an Expo SharedObject instance");
++  }
++  if (object.hasNativeState<expo::SharedObject::NativeState>(runtime)) {
++    throw jsi::JSError(runtime, "Expo SharedObject already owns a native resource");
++  }
++  const auto id = state->retain(std::move(resource));
++  const std::weak_ptr<RuntimeState> weakState = state;
++  try {
++    auto nativeState = std::make_shared<SharedResourceBinding>(id, [weakState](auto id) {
++      if (auto owner = weakState.lock()) {
++        owner->release(id);
++      }
++    }, state);
++    if (object.hasNativeState<expo::EventEmitter::NativeState>(runtime)) {
++      nativeState->listeners = std::move(
++          object.getNativeState<expo::EventEmitter::NativeState>(runtime)->listeners);
++    }
++    object.setNativeState(runtime, std::move(nativeState));
++  } catch (...) {
++    state->release(id);
++    throw;
++  }
++}
++
++std::shared_ptr<void> getSharedObjectResource(jsi::Runtime& runtime, const jsi::Value& receiver) {
++  auto state = getRuntimeState(runtime);
++  if (!receiver.isObject()) throw jsi::JSError(runtime, "Native resource receiver is not an object");
++  auto object = receiver.asObject(runtime);
++  if (!object.hasNativeState<SharedResourceBinding>(runtime)) {
++    throw jsi::JSError(runtime, "Native resource binding has been released");
++  }
++  auto binding = object.getNativeState<SharedResourceBinding>(runtime);
++  if (binding->owner.lock() != state) throw jsi::JSError(runtime, "Native resource belongs to another runtime");
++  auto entry = state->resources_.find(binding->objectId);
++  if (entry == state->resources_.end()) throw jsi::JSError(runtime, "Native resource binding has been released");
++  return entry->second;
++}
++
++} // namespace expo::harmony
+diff --git a/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreRuntime.h b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreRuntime.h
+new file mode 100644
+index 0000000..0d68aba
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreRuntime.h
+@@ -0,0 +1,72 @@
++#pragma once
++
++#include <jsi/jsi.h>
++#include "ExpoModulesCoreAsync.h"
++
++#include <functional>
++#include <memory>
++#include <string>
++#include <unordered_map>
++#include <unordered_set>
++#include <vector>
++
++namespace expo::harmony {
++namespace jsi = facebook::jsi;
++
++// Owned by the Expo global's NativeState, never a process-wide singleton.
++// All access, including invalidation, must take place on the owning JS thread.
++// Resources must not retain JSI handles back into the owning runtime.
++struct ViewConfig {
++  std::vector<std::string> props;
++  std::vector<std::string> events;
++};
++
++class RuntimeState final {
++public:
++  using ObjectId = long;
++
++  ~RuntimeState();
++  void invalidate() noexcept;
++  bool isActive() const noexcept;
++  size_t resourceCount() const noexcept;
++  size_t pendingAsyncCount() const noexcept;
++
++private:
++  friend AsyncTask startAsync(jsi::Runtime&, std::shared_ptr<facebook::react::CallInvoker>, AsyncWork);
++  friend bool cancelAsync(jsi::Runtime&, AsyncTaskId);
++  friend void registerViewConfig(jsi::Runtime&, const std::string&, const std::string&, ViewConfig);
++  friend std::shared_ptr<RuntimeState> install(jsi::Runtime& runtime);
++  friend void registerModule(jsi::Runtime&, const std::string&,
++                             const std::function<void(jsi::Runtime&, jsi::Object&)>&);
++  friend void attachSharedObject(jsi::Runtime&, jsi::Object&, std::shared_ptr<void>);
++  friend std::shared_ptr<void> getSharedObjectResource(jsi::Runtime&, const jsi::Value&);
++
++  ObjectId retain(std::shared_ptr<void> resource);
++  void release(ObjectId id) noexcept;
++
++  AsyncTaskId nextAsyncId_ = 1;
++  std::unordered_map<AsyncTaskId, std::unique_ptr<detail::PendingAsyncCall>> pendingAsync_;
++  std::unordered_map<std::string, ViewConfig> viewConfigs_;
++  bool active_ = true;
++  ObjectId nextObjectId_ = 1;
++  std::unordered_map<ObjectId, std::shared_ptr<void>> resources_;
++  std::unordered_set<std::string> moduleNames_;
++};
++
++using ModuleInitializer = std::function<void(jsi::Runtime&, jsi::Object&)>;
++
++std::shared_ptr<RuntimeState> install(jsi::Runtime& runtime);
++std::shared_ptr<RuntimeState> getRuntimeState(jsi::Runtime& runtime);
++void registerViewConfig(jsi::Runtime& runtime, const std::string& moduleName,
++                        const std::string& viewName, ViewConfig config);
++void registerModule(jsi::Runtime& runtime, const std::string& name,
++                    const ModuleInitializer& initialize);
++void attachSharedObject(jsi::Runtime& runtime, jsi::Object& object,
++                        std::shared_ptr<void> resource);
++
++// Read through the live JS binding, not through the underlying resource's lifetime.
++// Native methods must also validate their receiver/resource type before casting.
++std::shared_ptr<void> getSharedObjectResource(jsi::Runtime& runtime,
++                                              const jsi::Value& receiver);
++
++} // namespace expo::harmony
+diff --git a/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreVersion.h.in b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreVersion.h.in
+new file mode 100644
+index 0000000..c3d55c2
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreVersion.h.in
+@@ -0,0 +1,6 @@
++#pragma once
++// Generated from this package's package.json by CMake.
++#define EXPO_CORE_VERSION "@EXPO_CORE_VERSION@"
++#define EXPO_CORE_VERSION_MAJOR @EXPO_CORE_VERSION_MAJOR@
++#define EXPO_CORE_VERSION_MINOR @EXPO_CORE_VERSION_MINOR@
++#define EXPO_CORE_VERSION_PATCH @EXPO_CORE_VERSION_PATCH@
+diff --git a/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreViewBinding.cpp b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreViewBinding.cpp
+new file mode 100644
+index 0000000..2469fcd
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreViewBinding.cpp
+@@ -0,0 +1,70 @@
++#include "ExpoModulesCoreViewBinding.h"
++#include "RNOH/RNInstanceCAPI.h"
++
++namespace expo::harmony {
++namespace {
++class ViewBindingOwner final : public jsi::NativeState {
++public:
++  explicit ViewBindingOwner(std::shared_ptr<NativeViewBinding> binding) : binding(std::move(binding)) {}
++  ~ViewBindingOwner() override { binding->active.store(false); }
++  const std::shared_ptr<NativeViewBinding> binding;
++};
++}
++
++void mountNativeView(jsi::Runtime& runtime, const jsi::Value& receiver, const ModuleContext& context) {
++  getRuntimeState(runtime);
++  if (!receiver.isObject()) throw jsi::JSError(runtime, "Native view receiver is not an object");
++  auto object = receiver.asObject(runtime);
++  auto tag = object.getProperty(runtime, "nativeTag");
++  if (!tag.isNumber()) throw jsi::JSError(runtime, "Native view is not mounted");
++  if (object.hasNativeState<ViewBindingOwner>(runtime)) {
++    object.getNativeState<ViewBindingOwner>(runtime)->binding->active.store(false);
++  }
++  auto binding = std::make_shared<NativeViewBinding>();
++  binding->tag = static_cast<facebook::react::Tag>(tag.asNumber());
++  binding->instance = context.instance;
++  // React's mount callback can precede the Fabric UI mutation. Do not block JS
++  // or require the UI registry to contain the view yet; bind once on first use.
++  object.setNativeState(runtime, std::make_shared<ViewBindingOwner>(std::move(binding)));
++}
++
++void unmountNativeView(jsi::Runtime& runtime, const jsi::Value& receiver) {
++  if (!receiver.isObject()) return;
++  auto object = receiver.asObject(runtime);
++  if (object.hasNativeState<ViewBindingOwner>(runtime)) {
++    object.getNativeState<ViewBindingOwner>(runtime)->binding->active.store(false);
++  }
++}
++
++NativeViewBinding::Weak getNativeViewBinding(jsi::Runtime& runtime, const jsi::Value& receiver) {
++  getRuntimeState(runtime);
++  if (!receiver.isObject()) throw jsi::JSError(runtime, "Native view receiver is not an object");
++  auto object = receiver.asObject(runtime);
++  if (!object.hasNativeState<ViewBindingOwner>(runtime)) throw jsi::JSError(runtime, "Native view has no mount binding");
++  auto binding = object.getNativeState<ViewBindingOwner>(runtime)->binding;
++  auto tag = object.getProperty(runtime, "nativeTag");
++  if (!binding->active.load() || !tag.isNumber() || tag.asNumber() != binding->tag) {
++    throw jsi::JSError(runtime, "Native view is not mounted");
++  }
++  return binding;
++}
++
++rnoh::ComponentInstance::Shared resolveNativeView(const NativeViewBinding::Weak& weak) {
++  auto binding = weak.lock();
++  if (binding && binding->active.load()) {
++    auto owner = std::dynamic_pointer_cast<rnoh::RNInstanceCAPI>(binding->instance.lock());
++    if (owner && !binding->resolved) {
++      auto first = owner->findComponentInstanceByTag(binding->tag);
++      if (first && !first->getParent().expired()) {
++        binding->view = first;
++        binding->resolved = true;
++      }
++    }
++    auto view = binding->view.lock();
++    if (owner && view && owner->findComponentInstanceByTag(binding->tag) == view && !view->getParent().expired()) {
++      return view;
++    }
++  }
++  throw NativeAsyncError("ERR_VIEW_UNMOUNTED", "Native view is not mounted");
++}
++} // namespace expo::harmony
+diff --git a/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreViewBinding.h b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreViewBinding.h
+new file mode 100644
+index 0000000..768f076
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/cpp/ExpoModulesCoreViewBinding.h
+@@ -0,0 +1,24 @@
++#pragma once
++#include "ExpoModulesCorePackage.h"
++#include <atomic>
++
++namespace expo::harmony {
++
++// A JS wrapper owns this token, not the native view. Resolve only on MAIN.
++// Capture Weak in queued work so neither the wrapper nor native view is kept alive.
++struct NativeViewBinding final {
++  using Weak = std::weak_ptr<NativeViewBinding>;
++  std::atomic<bool> active{true};
++  facebook::react::Tag tag;
++  rnoh::RNInstance::SafeWeak instance;
++  rnoh::ComponentInstance::Weak view;
++  bool resolved = false; // MAIN only; never rebind after the first real resolution.
++};
++
++void mountNativeView(jsi::Runtime& runtime, const jsi::Value& receiver, const ModuleContext& context);
++void unmountNativeView(jsi::Runtime& runtime, const jsi::Value& receiver);
++NativeViewBinding::Weak getNativeViewBinding(jsi::Runtime& runtime, const jsi::Value& receiver);
++// Throws NativeAsyncError(ERR_VIEW_UNMOUNTED), never returns a replacement tag's view.
++rnoh::ComponentInstance::Shared resolveNativeView(const NativeViewBinding::Weak& binding);
++
++} // namespace expo::harmony
+diff --git a/node_modules/expo-modules-core/harmony/src/main/ets/ExpoModulesCorePackage.ets b/node_modules/expo-modules-core/harmony/src/main/ets/ExpoModulesCorePackage.ets
+new file mode 100644
+index 0000000..52a9f9f
+--- /dev/null
++++ b/node_modules/expo-modules-core/harmony/src/main/ets/ExpoModulesCorePackage.ets
+@@ -0,0 +1,106 @@
++import util from '@ohos.util';
++import cryptoFramework from '@ohos.security.cryptoFramework';
++import { RNOHPackage, UITurboModule, UITurboModuleContext } from '@rnoh/react-native-openharmony';
++
++export class CoreDirectories {
++  cacheDir: string;
++  documentsDir: string;
++  constructor(cacheDir: string, documentsDir: string) {
++    this.cacheDir = cacheDir;
++    this.documentsDir = documentsDir;
++  }
++}
++
++export class CorePlatformError extends Error {
++  code: string;
++  constructor(code: string, message: string) { super(message); this.code = code; }
++}
++
++// This is Core's own platform backend, not data injected by an application.
++export class ExpoModulesCore extends UITurboModule {
++  private destroyed: boolean = false;
++  private reloadTimer: number | undefined = undefined;
++  private finishReload: (() => void) | undefined = undefined;
++
++  private checkAlive(): void {
++    if (this.destroyed) throw new CorePlatformError('ERR_CORE_CONTEXT_DESTROYED', 'Expo Core context destroyed');
++  }
++
++  __onDestroy__(): void {
++    if (this.destroyed) return;
++    this.destroyed = true;
++    if (this.reloadTimer !== undefined) clearTimeout(this.reloadTimer);
++    this.reloadTimer = undefined;
++    const finish = this.finishReload;
++    this.finishReload = undefined;
++    if (finish) finish();
++  }
++
++  uuidv4(): string {
++    this.checkAlive();
++    // The platform API specifies a cryptographically secure RFC 4122 v4 UUID.
++    return util.generateRandomUUID(false).toLowerCase();
++  }
++
++  uuidv5(name: string, namespace: string): string {
++    this.checkAlive();
++    if (namespace.length !== 36 || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(namespace)) {
++      throw new CorePlatformError('ERR_INVALID_UUID_NAMESPACE', 'Invalid UUID namespace');
++    }
++    const hex = namespace.replace(/-/g, '');
++    // The platform's legacy encoder can return undefined for empty input.
++    // An empty UUID name contributes exactly zero UTF-8 bytes.
++    const nameBytes = name.length === 0 ? new Uint8Array(0) : new util.TextEncoder().encodeInto(name);
++    const input = new Uint8Array(16 + nameBytes.length);
++    for (let i = 0; i < 16; i++) input[i] = parseInt(hex.slice(i * 2, i * 2 + 2), 16);
++    input.set(nameBytes, 16);
++    const md = cryptoFramework.createMd('SHA1');
++    md.updateSync({ data: input });
++    const bytes = md.digestSync().data;
++    bytes[6] = (bytes[6] & 0x0f) | 0x50;
++    bytes[8] = (bytes[8] & 0x3f) | 0x80;
++    let result = '';
++    for (let i = 0; i < 16; i++) {
++      if (i === 4 || i === 6 || i === 8 || i === 10) result += '-';
++      result += bytes[i].toString(16).padStart(2, '0');
++    }
++    return result;
++  }
++
++  async reloadAppAsync(reason: string): Promise<void> {
++    this.checkAlive();
++    if (this.finishReload) throw new CorePlatformError('ERR_RELOAD_IN_PROGRESS', 'Core reload already requested');
++    return new Promise<void>((resolve, reject) => {
++      this.finishReload = resolve;
++      // RNApp subscribes to this native controller in both Debug and Release.
++      // A host that does not actually destroy/recreate this instance must fail,
++      // rather than receive a successful no-op Promise.
++      this.reloadTimer = setTimeout(() => {
++        this.finishReload = undefined;
++        this.reloadTimer = undefined;
++        reject(new CorePlatformError('ERR_RELOAD_UNAVAILABLE', 'Native host did not accept the reload request'));
++      }, 5000);
++      try {
++        this.ctx.devToolsController.reload(reason);
++      } catch (error) {
++        if (this.reloadTimer !== undefined) clearTimeout(this.reloadTimer);
++        this.reloadTimer = undefined;
++        this.finishReload = undefined;
++        reject(error);
++      }
++    });
++  }
++
++  getConstants(): CoreDirectories {
++    this.checkAlive();
++    return new CoreDirectories(this.ctx.uiAbilityContext.cacheDir, this.ctx.uiAbilityContext.filesDir);
++  }
++}
++
++export class ExpoModulesCorePackage extends RNOHPackage {
++  getUITurboModuleFactoryByNameMap(): Map<string, (ctx: UITurboModuleContext) => UITurboModule> {
++    return new Map<string, (ctx: UITurboModuleContext) => UITurboModule>([
++      ['ExpoModulesCore', (ctx: UITurboModuleContext): UITurboModule => new ExpoModulesCore(ctx)],
++    ]);
++  }
++}
+diff --git a/node_modules/expo-modules-core/src/NativeModulesProxy.harmony.ts b/node_modules/expo-modules-core/src/NativeModulesProxy.harmony.ts
+new file mode 100644
+index 0000000..808ae2a
+--- /dev/null
++++ b/node_modules/expo-modules-core/src/NativeModulesProxy.harmony.ts
+@@ -0,0 +1,12 @@
++import { ensureNativeModulesAreInstalled } from './ensureNativeModulesAreInstalled';
++import type { ProxyNativeModule } from './NativeModulesProxy.types';
++
++// RNOH's buffered GlobalJSIBinder can run after bundle evaluation. Use the
++// synchronous native installation path before exposing the real module table.
++ensureNativeModulesAreInstalled();
++
++if (!globalThis.expo?.modules) {
++  throw new Error('Expo Modules Core Harmony native module registry is not installed');
++}
++
++export default globalThis.expo.modules as Record<string, ProxyNativeModule>;
+diff --git a/node_modules/expo-modules-core/src/NativeViewManagerAdapter.harmony.tsx b/node_modules/expo-modules-core/src/NativeViewManagerAdapter.harmony.tsx
+new file mode 100644
+index 0000000..0aaf4d7
+--- /dev/null
++++ b/node_modules/expo-modules-core/src/NativeViewManagerAdapter.harmony.tsx
+@@ -0,0 +1,153 @@
++// Copyright © 2024 650 Industries.
++
++/// <reference path="ts-declarations/NativeComponentRegistry.d.ts" />
++
++'use client';
++
++import { type Component, type ComponentType, createRef, PureComponent } from 'react';
++import {
++  findNodeHandle,
++  type HostComponent,
++  type NativeMethods,
++} from 'react-native';
++import { get as componentRegistryGet } from 'react-native/Libraries/NativeComponent/NativeComponentRegistry';
++
++import { requireNativeModule } from './requireNativeModule';
++
++// To make the transition from React Native's `requireNativeComponent` to Expo's
++// `requireNativeViewManager` as easy as possible, `requireNativeViewManager` is a drop-in
++// replacement for `requireNativeComponent`.
++//
++// For each view manager, we create a wrapper component that accepts all the props available to
++// the author of the universal module. This wrapper component splits the props into two sets: props
++// passed to React Native's View (ex: style, testID) and custom view props, which are passed to the
++// adapter view component in a prop called `proxiedProperties`.
++
++/**
++ * A map that caches registered native components.
++ */
++const nativeComponentsCache = new Map<string, HostComponent<any>>();
++
++// TODO(@kitten): Optimally, this is defined on ExpoGlobal, but we treat `__expo_app_identifier__` as internal
++declare namespace globalThis {
++  const expo:
++    | undefined
++    | {
++        __expo_app_identifier__?: string;
++        getViewConfig(
++          moduleName: string,
++          viewName?: string
++        ): {
++          validAttributes: Record<string, any>;
++          directEventTypes: Record<string, { registrationName: string }>;
++        } | null;
++      };
++}
++
++/**
++ * Requires a React Native component using the static view config from an Expo module.
++ */
++function requireNativeComponent<Props>(
++  moduleName: string,
++  viewName?: string
++): HostComponent<Props> {
++  const appIdentifier = globalThis.expo?.['__expo_app_identifier__'] ?? '';
++  const viewNameSuffix = appIdentifier ? `_${appIdentifier}` : '';
++
++  const nativeViewName = viewName
++    ? `ViewManagerAdapter_${moduleName}_${viewName}${viewNameSuffix}`
++    : `ViewManagerAdapter_${moduleName}${viewNameSuffix}`;
++
++  return componentRegistryGet<Props>(nativeViewName, () => {
++    const expoViewConfig = globalThis.expo?.getViewConfig(moduleName, viewName);
++
++    if (!expoViewConfig) {
++      console.warn(
++        'Unable to get the view config for %s from module &s',
++        viewName ?? 'default view',
++        moduleName
++      );
++    }
++
++    return {
++      uiViewClassName: nativeViewName,
++      ...expoViewConfig,
++    };
++  });
++}
++
++/**
++ * Requires a React Native component from cache if possible. This prevents
++ * "Tried to register two views with the same name" errors on fast refresh, but
++ * also when there are multiple versions of the same package with native component.
++ */
++function requireCachedNativeComponent<Props>(
++  moduleName: string,
++  viewName?: string
++): HostComponent<Props> {
++  const cacheKey = `${moduleName}_${viewName}`;
++  const cachedNativeComponent = nativeComponentsCache.get(cacheKey);
++
++  if (!cachedNativeComponent) {
++    const nativeComponent = requireNativeComponent<Props>(moduleName, viewName);
++    nativeComponentsCache.set(cacheKey, nativeComponent);
++    return nativeComponent;
++  }
++  return cachedNativeComponent;
++}
++
++/**
++ * A drop-in replacement for `requireNativeComponent`.
++ */
++export function requireNativeViewManager<P>(
++  moduleName: string,
++  viewName?: string
++): ComponentType<P> {
++  if (!globalThis.expo?.getViewConfig(moduleName, viewName)) {
++    throw new Error(`Native Harmony view is not registered: ${moduleName}/${viewName ?? 'default'}`);
++  }
++
++  const ReactNativeComponent = requireCachedNativeComponent(moduleName, viewName);
++
++  class NativeComponent extends PureComponent<P> {
++    static displayName = viewName ? viewName : moduleName;
++
++    nativeRef = createRef<Component & NativeMethods>();
++
++    // This will be accessed from native when the prototype functions are called,
++    // in order to find the associated native view.
++    nativeTag: number | null = null;
++
++    componentDidMount(): void {
++      this.nativeTag = findNodeHandle(this.nativeRef.current);
++      (this as unknown as { __expoMountView?: () => void }).__expoMountView?.();
++    }
++
++    componentWillUnmount(): void {
++      try { (this as unknown as { __expoUnmountView?: () => void }).__expoUnmountView?.(); }
++      finally { this.nativeTag = null; }
++    }
++
++    render() {
++      return <ReactNativeComponent {...this.props} ref={this.nativeRef} />;
++    }
++  }
++
++  try {
++    const nativeModule = requireNativeModule(moduleName);
++    const nativeViewPrototype =
++      nativeModule.ViewPrototypes[viewName ? `${moduleName}_${viewName}` : moduleName];
++    if (nativeViewPrototype) {
++      // Assign native view functions to the component prototype, so they can be accessed from the ref.
++      Object.assign(NativeComponent.prototype, nativeViewPrototype);
++    }
++  } catch {
++    // `requireNativeModule` may throw an error when the native module cannot be found.
++    // In some tests we don't mock the entire modules, but we do want to mock native views. For now,
++    // until we still have to support the legacy modules proxy and don't have better ways to mock,
++    // let's just gracefully skip assigning the prototype functions.
++    // See: https://github.com/expo/expo/blob/main/packages/expo-modules-core/src/__tests__/NativeViewManagerAdapter-test.native.tsx
++  }
++
++  return NativeComponent;
++}
+diff --git a/node_modules/expo-modules-core/src/Platform.ts b/node_modules/expo-modules-core/src/Platform.ts
+index a6d6c37..04914c4 100644
+--- a/node_modules/expo-modules-core/src/Platform.ts
++++ b/node_modules/expo-modules-core/src/Platform.ts
+@@ -7,7 +7,7 @@ import {
+   isAsyncDebugging,
+ } from './environment/browser';
  
- namespace jsi = facebook::jsi;
+-export type PlatformSelectOSType = PlatformOSType | 'native' | 'electron' | 'default';
++export type PlatformSelectOSType = PlatformOSType | 'harmony' | 'native' | 'electron' | 'default';
+ 
+ export type PlatformSelect = <T>(specifics: { [platform in PlatformSelectOSType]?: T }) => T;
+ 
+@@ -38,15 +38,16 @@ const nativeSelect =
+ const Platform = {
+   /**
+    * Denotes the currently running platform.
+-   * Can be one of ios, android, web.
++   * Can be one of ios, android, harmony, web.
+    */
+   OS: process.env.EXPO_OS || ReactNativePlatform.OS,
+   /**
+    * Returns the value with the matching platform.
+-   * Object keys can be any of ios, android, native, web, default.
++   * Object keys can be any of ios, android, harmony, native, web, default.
+    *
+    * @ios ios, native, default
+    * @android android, native, default
++   * @harmony harmony, native, default
+    * @web web, default
+    */
+   select: nativeSelect as PlatformSelect,
+diff --git a/node_modules/expo-modules-core/src/ts-declarations/global.ts b/node_modules/expo-modules-core/src/ts-declarations/global.ts
+index 0d41f08..eadc10a 100644
+--- a/node_modules/expo-modules-core/src/ts-declarations/global.ts
++++ b/node_modules/expo-modules-core/src/ts-declarations/global.ts
+@@ -51,6 +51,7 @@ declare namespace ExpoGlobal {
+    * The version of the `expo-modules-core` package.
+    * @platform android
+    * @platform ios
++   * @platform harmony
+    */
+   export const expoModulesCoreVersion:
+     | undefined
+@@ -65,6 +66,7 @@ declare namespace ExpoGlobal {
+    * The path to the cache directory
+    * @platform android
+    * @platform ios
++   * @platform harmony
+    */
+   export const cacheDir: undefined | string;
+ 
+@@ -72,6 +74,7 @@ declare namespace ExpoGlobal {
+    * The path to the documents directory
+    * @platform android
+    * @platform ios
++   * @platform harmony
+    */
+   export const documentsDir: undefined | string;
+ 

@@ -12,7 +12,7 @@
     "test": "pnpm --filter expo-harmony-cli test",
     "test:watch": "pnpm --filter expo-harmony-cli test:watch",
     "test:pack": "pnpm --filter expo-harmony-cli test:pack",
-    "check": "pnpm type-check && pnpm test && pnpm test:pack && pnpm test:sdk54-tools && pnpm sdk54:validate && pnpm sdk54:pack:check && pnpm sdk54:audit && pnpm sdk54:repo-check",
+    "check": "pnpm type-check && pnpm test && pnpm test:pack && pnpm test:sdk54-tools && pnpm sdk54:validate && pnpm sdk54:pack:check && pnpm sdk54:audit && pnpm sdk54:patch:audit && pnpm sdk54:repo-check",
     "clean": "pnpm --filter expo-harmony-cli clean",
     "pack:cli": "pnpm --dir apps/cli pack",
     "test:sdk54-tools": "node --test scripts/sdk54/__tests__/*.test.mjs",
@@ -22,11 +22,17 @@
     "sdk54:pack:check": "node scripts/sdk54/pack-packages.mjs --compare-rounds",
     "sdk54:audit": "node scripts/sdk54/audit-packages.mjs",
     "sdk54:repo-check": "node scripts/sdk54/check-repository.mjs",
-    "sdk54:e2e:stage": "node scripts/sdk54/stage-e2e-packages.mjs --external /Users/chensq/Desktop/expo-harmony-sdk54-tgz --output /private/tmp/expo-sdk54-migration-tgz",
-    "sdk54:fixture:prepare": "node scripts/sdk54/prepare-create-expo-fixture.mjs"
+    "sdk54:e2e:stage": "node scripts/sdk54/stage-e2e-packages.mjs",
+    "sdk54:fixture:prepare": "node scripts/sdk54/prepare-create-expo-fixture.mjs",
+    "sdk54:patch:generate": "node scripts/sdk54/generate-cli-patches.mjs --round RC --output outputs/sdk54/cli-patches",
+    "sdk54:patch:audit": "node scripts/sdk54/audit-cli-patches.mjs apps/cli/content/patches/sdk-54 apps/cli/content/patches/sdk-54/manifest.json",
+    "sdk54:external:compare": "node scripts/sdk54/compare-external-packages.mjs --approved-dir \"$SDK54_APPROVED_EXTERNAL_DIR\" --output docs/releases/2026-09-28-sdk54-external-package-comparison.json",
+    "sdk54:e2e:packed": "node scripts/sdk54/blackbox-packed-cli.mjs --cli-tgz \"$CLI_TGZ\" --work-dir \"$SDK54_BLACKBOX_DIR\" --template all --package-manager all --lifecycle all --no-device",
+    "sdk54:acceptance:verify": "node scripts/sdk54/verify-cli-acceptance.mjs --final docs/releases/2026-09-28-sdk54-cli-1.5.0.json"
   },
   "devDependencies": {
     "npm-packlist": "^10.0.4",
+    "patch-package": "8.0.0",
     "tar": "^7.5.22"
   }
 }

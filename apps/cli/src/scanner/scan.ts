@@ -72,6 +72,10 @@ export function scanAndAdapt(targetDir: string, sdk: SdkVersion): ScanReport {
         report.shimmed.push({ original: depName, shimPath: entry.shim!.targetPath });
         break;
       }
+      case 'package-patch': {
+        report.skipped.push(depName);
+        break;
+      }
       case 'patch-only': {
         const applied = applyCompatPatch(targetDir, pkg, depName, entry.patch!);
         patchPath = applied.patchPath;
@@ -106,7 +110,7 @@ export function scanAndAdapt(targetDir: string, sdk: SdkVersion): ScanReport {
       report.patched.push({ original: depName, patchPath: applied.patchPath });
     }
 
-    if (entry.status !== 'unsupported' && entry.status !== 'remove' && entry.status !== 'replace') {
+    if (entry.status !== 'unsupported' && entry.status !== 'package-patch' && entry.status !== 'remove' && entry.status !== 'replace') {
       managedEntries.push([depName, {
         harmonyPackage: entry.harmony?.package,
         alias: entry.status === 'shim' ? depName : entry.harmony?.alias,
@@ -118,16 +122,14 @@ export function scanAndAdapt(targetDir: string, sdk: SdkVersion): ScanReport {
     }
   }
 
-  // ★ 强制注入 RNOH 核心 patch（传递依赖，扫不到）
-  const rnohPatchPath = `patches/@react-native-oh+react-native-harmony+${V.rnoh}.patch`;
-  copyFromLibrary(`content/patches/${sdk}/${path.basename(rnohPatchPath)}`, targetDir, rnohPatchPath);
-  report.patched.push({ original: '@react-native-oh/react-native-harmony', patchPath: rnohPatchPath });
-
-  // ★ 强制注入 @react-navigation/bottom-tabs patch（传递依赖，修复 CommonActions.navigate 旧 API 警告）
-  const bottomTabsVer = sdk === 'sdk-52' ? '7.2.0' : '7.4.0';
-  const bottomTabsPatchPath = `patches/@react-navigation+bottom-tabs+${bottomTabsVer}.patch`;
-  copyFromLibrary(`content/patches/${sdk}/@react-navigation+bottom-tabs+${bottomTabsVer}.patch`, targetDir, bottomTabsPatchPath);
-  report.patched.push({ original: '@react-navigation/bottom-tabs', patchPath: bottomTabsPatchPath });
+  if (sdk === 'sdk-52') {
+    const rnohPatchPath = `patches/@react-native-oh+react-native-harmony+${V.rnoh}.patch`;
+    copyFromLibrary(`content/patches/${sdk}/${path.basename(rnohPatchPath)}`, targetDir, rnohPatchPath);
+    report.patched.push({ original: '@react-native-oh/react-native-harmony', patchPath: rnohPatchPath });
+    const bottomTabsPatchPath = 'patches/@react-navigation+bottom-tabs+7.2.0.patch';
+    copyFromLibrary('content/patches/sdk-52/@react-navigation+bottom-tabs+7.2.0.patch', targetDir, bottomTabsPatchPath);
+    report.patched.push({ original: '@react-navigation/bottom-tabs', patchPath: bottomTabsPatchPath });
+  }
 
   // expo-modules-core 是 Expo 传递依赖，pnpm 下通常不是顶层 node_modules 包。
   // 不再复制 patch-package patch，运行时由 Metro shim 与 postinstall/start-harmony fallback 处理。

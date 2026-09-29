@@ -70,7 +70,7 @@ export async function dispatch(argv: string[]): Promise<void> {
   // 裸项目名兼容：其余参数为 flag（含 --sdk 的值）时放行；近似命令拼写提示后仍按项目名创建，
   // 避免误拦 scanx 这类合法项目名。
   const nearMiss = COMMANDS.find(command => editDistance(cmd!, command) <= 2);
-  if (rest.some((arg, index) => !arg.startsWith('-') && rest[index - 1] !== '--sdk')) {
+  if (rest.some((arg, index) => !arg.startsWith('-') && !['--sdk', '--template'].includes(rest[index - 1]))) {
     printHelp();
     throw new Error(`未知命令：${cmd}${nearMiss ? `（是否想输入 ${nearMiss}？）` : ''}`);
   }
@@ -101,7 +101,7 @@ function printHelp(): void {
 expo-harmony-cli <command> [args]
 
 Commands:
-  create [name]           创建含鸿蒙基线的 Expo 项目（默认命令，--sdk=52|54 指定基线）
+  create [name]           创建 Expo Harmony 项目（SDK52 legacy；SDK54 package patch）
   install <pkg>           装 iOS/Android + 鸿蒙 JS 包 + 原生集成（--force 跳过 drift 保护）
   uninstall <pkg>         卸载包并清理 CLI 管理的 HarmonyOS 适配资产（remove 同义，--force 跳过 drift 保护）
   prebuild [args]         生成三端原生目录（透传 expo prebuild + harmony 走生成器）
@@ -113,6 +113,9 @@ Commands:
 
 Options:
   --sdk <52|54>           创建时指定 SDK（也支持 --sdk=52；非交互环境必填）
+  --template <blank-typescript|default>
+                          SDK 54 模板（默认 default；SDK 52 仅支持 default）
+  --npm, --pnpm           SDK 54 支持的包管理器（默认 pnpm）
   -h, --help              显示帮助
   -v, --version           显示 CLI 版本
 

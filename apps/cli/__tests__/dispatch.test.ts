@@ -34,6 +34,16 @@ describe('命令分发', () => {
     expect(mockCreate).toHaveBeenCalledWith([]);
   });
 
+  it('--help → 展示 SDK54 template 与 npm/pnpm 支持范围', async () => {
+    const { dispatch } = await import('../src/index');
+    const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
+    await dispatch(['--help']);
+    const help = output.mock.calls.map(args => args.join(' ')).join('\n');
+    expect(help).toContain('--template <blank-typescript|default>');
+    expect(help).toMatch(/SDK 54.*npm.*pnpm/s);
+    output.mockRestore();
+  });
+
   it('--version/-v → 输出 package.json 版本且不创建项目', async () => {
     const { dispatch } = await import('../src/index');
     const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
@@ -41,9 +51,9 @@ describe('命令分发', () => {
     await dispatch(['--version']);
     await dispatch(['-v']);
 
-    // 跟随 package.json 版本，避免每次发版都要改此断言
-    expect(output).toHaveBeenNthCalledWith(1, packageJson.version);
-    expect(output).toHaveBeenNthCalledWith(2, packageJson.version);
+    expect(packageJson.version).toBe('1.5.0');
+    expect(output).toHaveBeenNthCalledWith(1, '1.5.0');
+    expect(output).toHaveBeenNthCalledWith(2, '1.5.0');
     expect(mockCreate).not.toHaveBeenCalled();
     output.mockRestore();
   });
@@ -85,6 +95,15 @@ describe('命令分发', () => {
     expect(err).toHaveBeenCalledWith(expect.stringContaining('prebuild'));
     expect(mockCreate).toHaveBeenCalledWith(['prebuld']);
     err.mockRestore();
+  });
+
+  it.each([
+    ['myapp', '--sdk', '54', '--template', 'default', '--pnpm'],
+    ['myapp', '--sdk', '54', '--template', 'blank-typescript', '--npm'],
+  ].map(args => [args]))('裸项目名 + 分离 template 参数正确转交 create：%j', async args => {
+    const { dispatch } = await import('../src/index');
+    await dispatch(args);
+    expect(mockCreate).toHaveBeenCalledWith(args);
   });
 
   it('裸项目名 + flag（如 --pnpm）→ 放行落入 create，不误判未知命令', async () => {

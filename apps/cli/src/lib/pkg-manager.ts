@@ -37,3 +37,11 @@ export function runScriptCmd(pm: Pm, script: string): CommandParts {
     ? { file: pm, args: [script] }
     : { file: pm, args: ['run', script] };
 }
+
+
+/** SDK54 package-patch create 仅支持已验收的 npm/pnpm 安装链路。 */
+export function sdk54InstallCommand(pm: 'npm' | 'pnpm'): CommandParts {
+  if (pm === 'npm') return { file: 'npm', args: ['install'] };
+  if (pm === 'pnpm') return { file: 'pnpm', args: ['install'] };
+  throw new Error('SDK 54 仅支持 npm 或 pnpm；Yarn/Bun 暂不支持');
+}

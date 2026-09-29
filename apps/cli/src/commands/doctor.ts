@@ -6,6 +6,9 @@ import type { Probe } from '../env-checks/types';
 import { probeCommand } from '../utils/exec';
 import { log } from '../utils/log';
 import { exitCodeFor } from './env';
+import { classifyHarmonyProject } from '../sdk54/project-state';
+import { loadSdk54PatchManifest } from '../sdk54/patch-manifest';
+import { runSdk54DoctorChecks } from '../sdk54/doctor';
 
 function printResult(r: CheckResult, indent = ''): void {
   const line = `${indent}${r.label.padEnd(12)}${r.detail ?? ''}`;
@@ -42,7 +45,10 @@ export async function doctor(_args: string[], deps: { probe?: Probe; existsSync?
   log.info(`环境（复用 env 注册表，仅计数）   ✓ ${ok} / ⚠ ${warn} / ✗ ${fail}`);
   // 段二：项目明细
   console.log('项目');
-  const projects = PROJECT_CHECKS.map(check => check(ctx));
+  const kind = classifyHarmonyProject(projectRoot);
+  const projects = kind === 'sdk54-package-patch' || kind === 'sdk54-legacy'
+    ? runSdk54DoctorChecks(projectRoot, loadSdk54PatchManifest())
+    : PROJECT_CHECKS.map(check => check(ctx));
   projects.forEach(r => printResult(r, '  '));
   // 段三：汇总 + 下一步
   const all = [...tools, ...projects];

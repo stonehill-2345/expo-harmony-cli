@@ -180,11 +180,26 @@ function argumentValue(args, name, fallback) {
   return index >= 0 ? args[index + 1] : fallback;
 }
 
+export function parseStageArgs(
+  args,
+  { cwd = process.cwd(), tmpDir = os.tmpdir(), env = process.env } = {},
+) {
+  const external = argumentValue(args, '--external', env.SDK54_EXTERNAL_DIR);
+  if (!external) throw new Error('--external or SDK54_EXTERNAL_DIR is required');
+  const output = argumentValue(
+    args,
+    '--output',
+    env.SDK54_STAGE_OUTPUT_DIR ?? path.join(tmpDir, 'expo-sdk54-migration-tgz'),
+  );
+  return {
+    externalDir: path.resolve(cwd, external),
+    outputDir: path.resolve(cwd, output),
+  };
+}
+
 async function main() {
-  const args = process.argv.slice(2);
   const rootDir = process.cwd();
-  const externalDir = argumentValue(args, '--external', '/Users/chensq/Desktop/expo-harmony-sdk54-tgz');
-  const outputDir = argumentValue(args, '--output', '/private/tmp/expo-sdk54-migration-tgz');
+  const { externalDir, outputDir } = parseStageArgs(process.argv.slice(2), { cwd: rootDir });
   const manifest = await stageE2ePackages({ rootDir, externalDir, outputDir });
   process.stdout.write(`${JSON.stringify(stableValue(manifest), null, 2)}\n`);
   if (manifest.failures.length > 0 || manifest.packages !== 25) process.exitCode = 1;

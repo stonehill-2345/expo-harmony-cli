@@ -1,5 +1,17 @@
 # expo-harmony-cli
 
+## 1.5.0 - 2026-09-28
+
+### Minor Changes
+
+- Expo SDK52 继续使用 legacy patch/injector/generator 流程。
+- Expo SDK54 fresh blank/default 使用 `create-expo-app@5.0.0`、精确依赖和 package-level patch。
+- SDK54 支持 npm/pnpm，主路径为官方 Expo prebuild/run/start 命令。
+- Default 模板只替换两处 `expo-image` Image；本版本不提供 expo-image Harmony backend。
+- 旧 SDK54 项目只诊断不迁移，SDK55 及更高版本拒绝。
+- 当前为未发布的 1.5.0 release candidate。
+
+
 ## 1.4.0
 
 ### Minor Changes
