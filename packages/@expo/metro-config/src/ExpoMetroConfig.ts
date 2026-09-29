@@ -18,7 +18,7 @@ import path from 'path';
 import resolveFrom from 'resolve-from';
 
 import { getDefaultCustomizeFrame, INTERNAL_CALLSITES_REGEX } from './customizeFrame';
-import { withHarmony } from './withHarmony';
+import { withHarmony, withHarmonySerializer } from './withHarmony';
 import { env } from './env';
 import { FileStore } from './file-store';
 import { getModulesPaths } from './getModulesPaths';
@@ -428,12 +428,15 @@ export function getDefaultConfig(
     expoMetroConfig
   );
 
-  return withExpoSerializers(
-    platform === 'harmony' || process.env.EXPO_HARMONY_METRO === '1'
-      ? withHarmony(metroConfig, projectRoot)
-      : metroConfig,
-    { unstable_beforeAssetSerializationPlugins }
-  );
+  const harmonyEnabled =
+    platform === 'harmony' || process.env.EXPO_HARMONY_METRO === '1';
+  const platformConfig = harmonyEnabled
+    ? withHarmony(metroConfig, projectRoot, { platform })
+    : metroConfig;
+  const serializerConfig = withExpoSerializers(platformConfig, {
+    unstable_beforeAssetSerializationPlugins,
+  });
+  return harmonyEnabled ? withHarmonySerializer(serializerConfig) : serializerConfig;
 }
 
 /** Use to access the Expo Metro transformer path */

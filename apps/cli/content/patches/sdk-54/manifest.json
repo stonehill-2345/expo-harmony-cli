@@ -85,7 +85,7 @@
       "requiredFiles": [
         "build/withHarmony.js"
       ],
-      "sha256": "b7ba4664cc2719d4d5a1b47ccd35609f78e1933a6c3ec91d331e97258068b239",
+      "sha256": "0c81808ec97731e7bbc5a11fb0c7c556bfe03831f78a7d3b5a3a26b61bba48ae",
       "templates": [
         "blank-typescript",
         "default"

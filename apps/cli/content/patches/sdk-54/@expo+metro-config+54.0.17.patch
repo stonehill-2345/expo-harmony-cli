@@ -101,7 +101,7 @@ index 7b2dca6..ffcd341 100644
 -export declare const EXPO_DEBUG: boolean;
 +export declare const EXPO_DEBUG: any;
 diff --git a/node_modules/@expo/metro-config/build/ExpoMetroConfig.js b/node_modules/@expo/metro-config/build/ExpoMetroConfig.js
-index 5c07ab3..2eabc28 100644
+index 5c07ab3..7223b1d 100644
 --- a/node_modules/@expo/metro-config/build/ExpoMetroConfig.js
 +++ b/node_modules/@expo/metro-config/build/ExpoMetroConfig.js
 @@ -16,6 +16,7 @@ const path_1 = __importDefault(require("path"));
@@ -121,48 +121,74 @@ index 5c07ab3..2eabc28 100644
      const { getDefaultConfig: getDefaultMetroConfig, mergeConfig, } = require('@expo/metro/metro-config');
      if (isCSSEnabled) {
          patchMetroGraphToSupportUncachedModules();
-@@ -331,7 +332,9 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
+@@ -331,7 +332,14 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
      // nor InputConfigT which is inexact and partial. Instead, we want an exact type combination of
      // the default config and Expo's config
      metroDefaultValues, expoMetroConfig);
 -    return (0, withExpoSerializers_1.withExpoSerializers)(metroConfig, { unstable_beforeAssetSerializationPlugins });
-+    return (0, withExpoSerializers_1.withExpoSerializers)(platform === 'harmony' || process.env.EXPO_HARMONY_METRO === '1'
-+        ? (0, withHarmony_1.withHarmony)(metroConfig, projectRoot)
-+        : metroConfig, { unstable_beforeAssetSerializationPlugins });
++    const harmonyEnabled = platform === 'harmony' || process.env.EXPO_HARMONY_METRO === '1';
++    const platformConfig = harmonyEnabled
++        ? (0, withHarmony_1.withHarmony)(metroConfig, projectRoot, { platform })
++        : metroConfig;
++    const serializerConfig = (0, withExpoSerializers_1.withExpoSerializers)(platformConfig, {
++        unstable_beforeAssetSerializationPlugins,
++    });
++    return harmonyEnabled ? (0, withHarmony_1.withHarmonySerializer)(serializerConfig) : serializerConfig;
  }
  /** Use to access the Expo Metro transformer path */
  exports.unstable_transformerPath = require.resolve('./transform-worker/transform-worker');
 diff --git a/node_modules/@expo/metro-config/build/withHarmony.d.ts b/node_modules/@expo/metro-config/build/withHarmony.d.ts
 new file mode 100644
-index 0000000..d2b1f23
+index 0000000..a2ec8c9
 --- /dev/null
 +++ b/node_modules/@expo/metro-config/build/withHarmony.d.ts
-@@ -0,0 +1,3 @@
+@@ -0,0 +1,10 @@
 +import type { ConfigT as MetroConfig } from '@expo/metro/metro-config';
++type GetModulesRunBeforeMainModule = NonNullable<MetroConfig['serializer']['getModulesRunBeforeMainModule']>;
++export declare function createPlatformModulesRunBeforeMainModule(beforeMain: GetModulesRunBeforeMainModule | undefined, harmonyInitializeCore: string): (entryFile: string, platform?: string) => string[];
 +/** SDK-owned platform integration; applications do not need a Metro config file. */
-+export declare function withHarmony(config: MetroConfig, projectRoot: string): MetroConfig;
++export declare function withHarmony(config: MetroConfig, projectRoot: string, { platform }?: {
++    platform?: string;
++}): MetroConfig;
++/** Select platform-specific premodules after Metro has built the per-request graph. */
++export declare function withHarmonySerializer<Config extends MetroConfig>(config: Config): Config;
++export {};
 diff --git a/node_modules/@expo/metro-config/build/withHarmony.js b/node_modules/@expo/metro-config/build/withHarmony.js
 new file mode 100644
-index 0000000..1da900e
+index 0000000..df95085
 --- /dev/null
 +++ b/node_modules/@expo/metro-config/build/withHarmony.js
-@@ -0,0 +1,44 @@
+@@ -0,0 +1,70 @@
 +"use strict";
 +var __importDefault = (this && this.__importDefault) || function (mod) {
 +    return (mod && mod.__esModule) ? mod : { "default": mod };
 +};
 +Object.defineProperty(exports, "__esModule", { value: true });
++exports.createPlatformModulesRunBeforeMainModule = createPlatformModulesRunBeforeMainModule;
 +exports.withHarmony = withHarmony;
++exports.withHarmonySerializer = withHarmonySerializer;
 +const path_1 = __importDefault(require("path"));
 +const resolve_from_1 = __importDefault(require("resolve-from"));
++function createPlatformModulesRunBeforeMainModule(beforeMain, harmonyInitializeCore) {
++    return (entryFile, platform) => {
++        const standardModules = beforeMain?.(entryFile) ?? [];
++        if (platform !== 'harmony')
++            return standardModules;
++        return [
++            harmonyInitializeCore,
++            ...standardModules.filter((file) => !file.replaceAll('\\', '/').includes('/Libraries/Core/InitializeCore')),
++        ];
++    };
++}
 +/** SDK-owned platform integration; applications do not need a Metro config file. */
-+function withHarmony(config, projectRoot) {
++function withHarmony(config, projectRoot, { platform } = {}) {
 +    const harmonyPackage = '@react-native-oh/react-native-harmony';
 +    const harmonyRoot = path_1.default.dirname((0, resolve_from_1.default)(projectRoot, `${harmonyPackage}/package.json`));
 +    const { createHarmonyMetroConfig } = require(path_1.default.join(harmonyRoot, 'metro.config'));
 +    const harmony = createHarmonyMetroConfig({ reactNativeHarmonyPackageName: harmonyPackage });
 +    const resolveRequest = config.resolver.resolveRequest;
 +    const beforeMain = config.serializer.getModulesRunBeforeMainModule;
++    const getModulesForPlatform = createPlatformModulesRunBeforeMainModule(beforeMain, require.resolve(path_1.default.join(harmonyRoot, 'Libraries/Core/InitializeCore')));
 +    return {
 +        ...config,
 +        resolver: {
@@ -183,12 +209,24 @@ index 0000000..1da900e
 +        },
 +        serializer: {
 +            ...config.serializer,
-+            getModulesRunBeforeMainModule: (entryFile) => [
-+                require.resolve(path_1.default.join(harmonyRoot, 'Libraries/Core/InitializeCore')),
-+                ...(beforeMain?.(entryFile) ?? []).filter((file) => !file.replaceAll('\\', '/').includes('/Libraries/Core/InitializeCore')),
-+            ],
++            getModulesRunBeforeMainModule: ((entryFile, requestPlatform) => getModulesForPlatform(entryFile, requestPlatform ?? platform)),
 +        },
 +    };
++}
++/** Select platform-specific premodules after Metro has built the per-request graph. */
++function withHarmonySerializer(config) {
++    const customSerializer = config.serializer.customSerializer;
++    if (!customSerializer)
++        return config;
++    const getModulesRunBeforeMainModule = config.serializer
++        .getModulesRunBeforeMainModule;
++    const platformSerializer = async (entryPoint, preModules, graph, options) => customSerializer(entryPoint, preModules, graph, {
++        ...options,
++        runBeforeMainModule: getModulesRunBeforeMainModule(entryPoint, graph.transformOptions?.platform),
++    });
++    Object.assign(platformSerializer, customSerializer);
++    config.serializer.customSerializer = platformSerializer;
++    return config;
 +}
 +//# sourceMappingURL=withHarmony.js.map
 \ No newline at end of file
