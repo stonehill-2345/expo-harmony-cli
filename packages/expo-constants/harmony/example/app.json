@@ -1,0 +1,8 @@
+{
+  "expo": {
+    "name": "Lane B public API fixture",
+    "slug": "lane-b-public-api-fixture",
+    "version": "1.0.0",
+    "scheme": "lane-b-fixture"
+  }
+}

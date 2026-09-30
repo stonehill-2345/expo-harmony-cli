@@ -1,0 +1,707 @@
+diff --git a/node_modules/expo-web-browser/build/WebBrowser.d.ts b/node_modules/expo-web-browser/build/WebBrowser.d.ts
+index 374498c..459d89d 100644
+--- a/node_modules/expo-web-browser/build/WebBrowser.d.ts
++++ b/node_modules/expo-web-browser/build/WebBrowser.d.ts
+@@ -56,7 +56,7 @@ export declare function coolDownAsync(browserPackage?: string): Promise<WebBrows
+  *
+  * @return The promise behaves differently based on the platform.
+  * On Android promise resolves with `{ type: 'opened' }` if we were able to open browser.
+- * On iOS:
++ * On iOS and Harmony:
+  * - If the user closed the web browser, the Promise resolves with `{ type: 'cancel' }`.
+  * - If the browser is closed using [`dismissBrowser`](#webbrowserdismissbrowser), the Promise resolves with `{ type: 'dismiss' }`.
+  */
+@@ -66,6 +66,7 @@ export declare function openBrowserAsync(url: string, browserParams?: WebBrowser
+  *
+  * @return The promise that resolves with `{ type: 'dismiss' }` on the successful attempt or throws an error if dismiss functionality is not available.
+  * @platform ios
++ * @platform harmony
+  */
+ export declare function dismissBrowser(): Promise<{
+     type: WebBrowserResultType.DISMISS;
+@@ -83,6 +84,11 @@ export declare function dismissBrowser(): Promise<{
+  * For example, `demo://` not `https://` protocol.
+  * Using `Linking.addEventListener` is not needed and can have side effects.
+  *
++ * # On Harmony:
++ * Opens an application-owned ArkWeb modal. A matching top-level redirect completes the session.
++ * Cookies belong to the application's WebView store, not the system browser. Providers that
++ * disallow embedded user agents may reject this flow. Ephemeral sessions are not supported.
++ *
+  * # On web:
+  * > This API can only be used in a secure environment (localhost/https).
+  * to test this. Otherwise, an error with code [`ERR_WEB_BROWSER_CRYPTO`](#err_web_browser_crypto) will be thrown.
+@@ -127,6 +133,7 @@ export declare function openAuthSessionAsync(url: string, redirectUrl?: string |
+  *
+  * @platform ios
+  * @platform web
++ * @platform harmony
+  */
+ export declare function dismissAuthSession(): void;
+ /**
+diff --git a/node_modules/expo-web-browser/build/WebBrowser.js b/node_modules/expo-web-browser/build/WebBrowser.js
+index 0807df7..b60c842 100644
+--- a/node_modules/expo-web-browser/build/WebBrowser.js
++++ b/node_modules/expo-web-browser/build/WebBrowser.js
+@@ -110,7 +110,7 @@ export async function coolDownAsync(browserPackage) {
+  *
+  * @return The promise behaves differently based on the platform.
+  * On Android promise resolves with `{ type: 'opened' }` if we were able to open browser.
+- * On iOS:
++ * On iOS and Harmony:
+  * - If the user closed the web browser, the Promise resolves with `{ type: 'cancel' }`.
+  * - If the browser is closed using [`dismissBrowser`](#webbrowserdismissbrowser), the Promise resolves with `{ type: 'dismiss' }`.
+  */
+@@ -126,6 +126,7 @@ export async function openBrowserAsync(url, browserParams = {}) {
+  *
+  * @return The promise that resolves with `{ type: 'dismiss' }` on the successful attempt or throws an error if dismiss functionality is not available.
+  * @platform ios
++ * @platform harmony
+  */
+ export function dismissBrowser() {
+     return ExponentWebBrowser.dismissBrowser?.();
+@@ -144,6 +145,11 @@ export function dismissBrowser() {
+  * For example, `demo://` not `https://` protocol.
+  * Using `Linking.addEventListener` is not needed and can have side effects.
+  *
++ * # On Harmony:
++ * Opens an application-owned ArkWeb modal. A matching top-level redirect completes the session.
++ * Cookies belong to the application's WebView store, not the system browser. Providers that
++ * disallow embedded user agents may reject this flow. Ephemeral sessions are not supported.
++ *
+  * # On web:
+  * > This API can only be used in a secure environment (localhost/https).
+  * to test this. Otherwise, an error with code [`ERR_WEB_BROWSER_CRYPTO`](#err_web_browser_crypto) will be thrown.
+@@ -185,7 +191,7 @@ export async function openAuthSessionAsync(url, redirectUrl, options = {}) {
+         if (!ExponentWebBrowser.openAuthSessionAsync) {
+             throw new UnavailabilityError('WebBrowser', 'openAuthSessionAsync');
+         }
+-        if (['ios', 'macos', 'web'].includes(Platform.OS)) {
++        if (['ios', 'macos', 'web', 'harmony'].includes(Platform.OS)) {
+             return ExponentWebBrowser.openAuthSessionAsync(url, redirectUrl, _processOptions(options));
+         }
+         return ExponentWebBrowser.openAuthSessionAsync(url, redirectUrl);
+@@ -201,6 +207,7 @@ export async function openAuthSessionAsync(url, redirectUrl, options = {}) {
+  *
+  * @platform ios
+  * @platform web
++ * @platform harmony
+  */
+ export function dismissAuthSession() {
+     if (_authSessionIsNativelySupported()) {
+diff --git a/node_modules/expo-web-browser/expo-module.config.json b/node_modules/expo-web-browser/expo-module.config.json
+index 05ffb5e..c6452cb 100644
+--- a/node_modules/expo-web-browser/expo-module.config.json
++++ b/node_modules/expo-web-browser/expo-module.config.json
+@@ -1,15 +1,34 @@
+ {
+-  "platforms": ["apple", "android"],
++  "platforms": ["apple", "android", "harmony"],
+   "apple": {
+     "modules": ["WebBrowserModule"]
+   },
+   "android": {
+-    "modules": ["expo.modules.webbrowser.WebBrowserModule"],
+-    "publication": {
+-      "groupId": "host.exp.exponent",
+-      "artifactId": "expo.modules.webbrowser",
+-      "version": "15.0.11",
+-      "repository": "local-maven-repo"
+-    }
++    "modules": ["expo.modules.webbrowser.WebBrowserModule"]
++  },
++  "harmony": {
++    "kind": "ability-lifecycle",
++    "cpp": {
++      "packageClass": "expo::webbrowser::harmony::ExpoWebBrowserPackage",
++      "header": "ExpoWebBrowserPackage.h",
++      "cmakeTarget": "rnoh_expo_web_browser",
++      "cmakePath": "harmony/src/main/cpp"
++    },
++    "ets": {
++      "packageClass": "ExpoWebBrowserPackage",
++      "importPath": "expo-web-browser/harmony",
++      "entrypoint": "harmony/index.ets"
++    },
++    "lifecycleDependencies": [{
++      "localName": "webBrowserController",
++      "className": "ExpoWebBrowserLifecycle",
++      "importPath": "expo-web-browser/harmony",
++      "appStorageKey": "ExpoWebBrowserController",
++      "arkUIOverlay": {
++        "className": "ExpoWebBrowserView",
++        "importPath": "expo-web-browser/harmony",
++        "controllerProperty": "controller"
++      }
++    }]
+   }
+ }
+diff --git a/node_modules/expo-web-browser/harmony/index.ets b/node_modules/expo-web-browser/harmony/index.ets
+new file mode 100644
+index 0000000..1c6e648
+--- /dev/null
++++ b/node_modules/expo-web-browser/harmony/index.ets
+@@ -0,0 +1,4 @@
++export { ExpoWebBrowserController } from './src/main/ets/ExpoWebBrowserController';
++export { ExpoWebBrowserLifecycle } from './src/main/ets/ExpoWebBrowserLifecycle';
++export { ExpoWebBrowserPackage } from './src/main/ets/ExpoWebBrowserPackage';
++export { ExpoWebBrowserView } from './src/main/ets/ExpoWebBrowserView';
+diff --git a/node_modules/expo-web-browser/harmony/src/main/cpp/CMakeLists.txt b/node_modules/expo-web-browser/harmony/src/main/cpp/CMakeLists.txt
+new file mode 100644
+index 0000000..85c1f72
+--- /dev/null
++++ b/node_modules/expo-web-browser/harmony/src/main/cpp/CMakeLists.txt
+@@ -0,0 +1,10 @@
++cmake_minimum_required(VERSION 3.16)
++
++if(NOT TARGET rnoh)
++  message(FATAL_ERROR "Add RNOH 0.82.30 before expo-web-browser")
++endif()
++
++add_library(rnoh_expo_web_browser STATIC ExpoWebBrowserTurboModule.cpp)
++target_compile_features(rnoh_expo_web_browser PUBLIC cxx_std_20)
++target_include_directories(rnoh_expo_web_browser PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
++target_link_libraries(rnoh_expo_web_browser PUBLIC rnoh)
+diff --git a/node_modules/expo-web-browser/harmony/src/main/cpp/ExpoWebBrowserPackage.h b/node_modules/expo-web-browser/harmony/src/main/cpp/ExpoWebBrowserPackage.h
+new file mode 100644
+index 0000000..0f5a34b
+--- /dev/null
++++ b/node_modules/expo-web-browser/harmony/src/main/cpp/ExpoWebBrowserPackage.h
+@@ -0,0 +1,24 @@
++#pragma once
++
++#include "ExpoWebBrowserTurboModule.h"
++#include "RNOH/Package.h"
++
++namespace expo::webbrowser::harmony {
++
++class ExpoWebBrowserFactory final : public rnoh::TurboModuleFactoryDelegate {
++ public:
++  SharedTurboModule createTurboModule(Context context, const std::string& name) const override {
++    if (name != "ExpoWebBrowser") return nullptr;
++    return std::make_shared<ExpoWebBrowserTurboModule>(std::move(context), name);
++  }
++};
++
++class ExpoWebBrowserPackage final : public rnoh::Package {
++ public:
++  using Package::Package;
++  std::unique_ptr<rnoh::TurboModuleFactoryDelegate> createTurboModuleFactoryDelegate() override {
++    return std::make_unique<ExpoWebBrowserFactory>();
++  }
++};
++
++} // namespace expo::webbrowser::harmony
+diff --git a/node_modules/expo-web-browser/harmony/src/main/cpp/ExpoWebBrowserTurboModule.cpp b/node_modules/expo-web-browser/harmony/src/main/cpp/ExpoWebBrowserTurboModule.cpp
+new file mode 100644
+index 0000000..9c8caaa
+--- /dev/null
++++ b/node_modules/expo-web-browser/harmony/src/main/cpp/ExpoWebBrowserTurboModule.cpp
+@@ -0,0 +1,15 @@
++#include "ExpoWebBrowserTurboModule.h"
++
++namespace expo::webbrowser::harmony {
++
++ExpoWebBrowserTurboModule::ExpoWebBrowserTurboModule(Context context, const std::string& name)
++    : ArkTSTurboModule(std::move(context), name) {
++  methodMap_ = {
++      ARK_ASYNC_METHOD_METADATA(openBrowserAsync, 2),
++      ARK_ASYNC_METHOD_METADATA(dismissBrowser, 0),
++      ARK_ASYNC_METHOD_METADATA(openAuthSessionAsync, 3),
++      ARK_METHOD_METADATA(dismissAuthSession, 0),
++  };
++}
++
++} // namespace expo::webbrowser::harmony
+diff --git a/node_modules/expo-web-browser/harmony/src/main/cpp/ExpoWebBrowserTurboModule.h b/node_modules/expo-web-browser/harmony/src/main/cpp/ExpoWebBrowserTurboModule.h
+new file mode 100644
+index 0000000..71dfdfc
+--- /dev/null
++++ b/node_modules/expo-web-browser/harmony/src/main/cpp/ExpoWebBrowserTurboModule.h
+@@ -0,0 +1,12 @@
++#pragma once
++
++#include "RNOH/ArkTSTurboModule.h"
++
++namespace expo::webbrowser::harmony {
++
++class ExpoWebBrowserTurboModule final : public rnoh::ArkTSTurboModule {
++ public:
++  ExpoWebBrowserTurboModule(Context context, const std::string& name);
++};
++
++} // namespace expo::webbrowser::harmony
+diff --git a/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserController.ts b/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserController.ts
+new file mode 100644
+index 0000000..2af811e
+--- /dev/null
++++ b/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserController.ts
+@@ -0,0 +1,214 @@
++import url from '@ohos.url';
++
++export interface ExpoWebBrowserOptions {
++  toolbarColor?: number | null;
++  controlsColor?: number | null;
++  preferEphemeralSession?: boolean;
++}
++
++export interface ExpoWebBrowserResult {
++  type: string;
++  url?: string;
++}
++
++export interface ExpoWebBrowserSession {
++  id: number;
++  url: string;
++  auth: boolean;
++  redirectUrl?: string;
++  toolbarColor: number;
++  controlsColor: number;
++}
++
++export class ExpoWebBrowserError extends Error {
++  public readonly code: string;
++
++  public constructor(code: string, message: string) {
++    super(message);
++    this.code = code;
++  }
++}
++
++type SessionListener = (session: ExpoWebBrowserSession | undefined) => void;
++
++export class ExpoWebBrowserController {
++  private runtime = 0;
++  private nextId = 0;
++  private destroyed = false;
++  private session: ExpoWebBrowserSession | undefined;
++  private resolve: ((result: ExpoWebBrowserResult) => void) | undefined;
++  private reject: ((error: Error) => void) | undefined;
++  private readonly listeners = new Set<SessionListener>();
++
++  public beginRuntime(): number {
++    this.assertActive();
++    this.invalidate();
++    return ++this.runtime;
++  }
++
++  public endRuntime(runtime: number): void {
++    if (runtime !== this.runtime || this.destroyed) return;
++    this.invalidate();
++    this.runtime++;
++  }
++
++  public getSession(): ExpoWebBrowserSession | undefined {
++    return this.session;
++  }
++
++  public attachHost(listener: SessionListener, deferUpdates: boolean = false): () => void {
++    this.assertActive();
++    let attached = true;
++    let updateToken = 0;
++    const notify: SessionListener = (session) => {
++      const token = ++updateToken;
++      if (!deferUpdates) {
++        listener(session);
++        return;
++      }
++      setTimeout(() => {
++        if (attached && token === updateToken) listener(session);
++      }, 0);
++    };
++    this.listeners.add(notify);
++    notify(this.session);
++    return () => {
++      attached = false;
++      updateToken++;
++      this.listeners.delete(notify);
++      if (this.listeners.size === 0) this.invalidate();
++    };
++  }
++
++  public async open(
++    runtime: number,
++    target: string,
++    options: ExpoWebBrowserOptions,
++    auth: boolean,
++    redirectUrl?: string | null,
++  ): Promise<ExpoWebBrowserResult> {
++    this.assertRuntime(runtime);
++    if (this.session) {
++      if (auth) throw new ExpoWebBrowserError('ERR_WEB_BROWSER_ALREADY_OPEN', 'A browser is already open');
++      return { type: 'locked' };
++    }
++    this.validateUrl(target, true);
++    if (redirectUrl) this.validateUrl(redirectUrl, false);
++    if (auth && options.preferEphemeralSession) {
++      throw new ExpoWebBrowserError('ERR_WEB_BROWSER_UNSUPPORTED_OPTION', 'Ephemeral authentication is not supported on Harmony');
++    }
++    if (this.listeners.size === 0) {
++      throw new ExpoWebBrowserError('ERR_WEB_BROWSER_UNAVAILABLE', 'The browser host is no longer available');
++    }
++    const session: ExpoWebBrowserSession = {
++      id: ++this.nextId,
++      url: target,
++      auth,
++      redirectUrl: redirectUrl ?? undefined,
++      toolbarColor: options.toolbarColor ?? 0xffffffff,
++      controlsColor: options.controlsColor ?? 0xff000000,
++    };
++    return new Promise<ExpoWebBrowserResult>((resolve, reject) => {
++      this.resolve = resolve;
++      this.reject = reject;
++      this.session = session;
++      try {
++        this.notify();
++      } catch (error) {
++        this.fail(session.id, 'ERR_WEB_BROWSER_PRESENTATION_FAILED', 'Unable to present the browser');
++      }
++    });
++  }
++
++  public dismiss(runtime: number, authOnly: boolean = false): ExpoWebBrowserResult {
++    this.assertRuntime(runtime);
++    if (authOnly && !this.session?.auth) return { type: 'dismiss' };
++    if (!this.session) throw new ExpoWebBrowserError('ERR_WEB_BROWSER_NOT_OPEN', 'No browser is open');
++    this.finish({ type: 'dismiss' });
++    return { type: 'dismiss' };
++  }
++
++  public cancel(id: number): void {
++    if (this.session?.id === id) this.finish({ type: 'cancel' });
++  }
++
++  public fail(id: number, code: string, message: string): void {
++    if (this.session?.id !== id) return;
++    const reject = this.reject;
++    this.clear();
++    reject?.(new ExpoWebBrowserError(code, message));
++  }
++
++  // Called only from an actual ArkWeb navigation callback. No synthetic Linking events.
++  public onNavigation(id: number, target: string, mainFrame: boolean): boolean {
++    const session = this.session;
++    if (!session || session.id !== id) return true;
++    if (mainFrame && session.auth && session.redirectUrl && this.matchesRedirect(target, session.redirectUrl)) {
++      this.finish({ type: 'success', url: target });
++      return true;
++    }
++    if (/^https?:\/\//i.test(target)) return false;
++    // Embedded frames cannot complete authentication or launch external applications.
++    if (mainFrame) this.fail(id, 'ERR_WEB_BROWSER_UNSUPPORTED_SCHEME', 'The page requested an unsupported URL scheme');
++    return true;
++  }
++
++  public destroy(): void {
++    if (this.destroyed) return;
++    this.invalidate();
++    this.destroyed = true;
++    this.listeners.clear();
++  }
++
++  private matchesRedirect(target: string, redirect: string): boolean {
++    if (target === redirect) return true;
++    if (!target.startsWith(redirect)) return false;
++    const next = target.charAt(redirect.length);
++    return next === '?' || next === '#' || (next === '&' && redirect.includes('?'));
++  }
++
++  private validateUrl(target: string, httpOnly: boolean): void {
++    try {
++      const parsed = new url.URL(target);
++      const isHttp = parsed.protocol === 'http:' || parsed.protocol === 'https:';
++      if (!parsed.protocol || /\s/.test(target) || (httpOnly && (!isHttp || !parsed.hostname)) ||
++        ['javascript:', 'data:', 'file:', 'about:'].includes(parsed.protocol)) {
++        throw new Error('Unsupported URL');
++      }
++    } catch (error) {
++      throw new ExpoWebBrowserError('ERR_WEB_BROWSER_INVALID_URL', 'Expected a valid browser or redirect URL');
++    }
++  }
++
++  private finish(result: ExpoWebBrowserResult): void {
++    const resolve = this.resolve;
++    this.clear();
++    resolve?.(result);
++  }
++
++  private clear(): void {
++    this.session = undefined;
++    this.resolve = undefined;
++    this.reject = undefined;
++    this.notify();
++  }
++
++  private invalidate(): void {
++    if (this.session) this.fail(this.session.id, 'ERR_WEB_BROWSER_UNAVAILABLE', 'The browser session is no longer available');
++  }
++
++  private assertActive(): void {
++    if (this.destroyed) throw new ExpoWebBrowserError('ERR_WEB_BROWSER_UNAVAILABLE', 'The browser Ability is no longer available');
++  }
++
++  private assertRuntime(runtime: number): void {
++    this.assertActive();
++    if (runtime === 0 || runtime !== this.runtime) {
++      throw new ExpoWebBrowserError('ERR_WEB_BROWSER_UNAVAILABLE', 'The browser runtime is no longer available');
++    }
++  }
++
++  private notify(): void {
++    this.listeners.forEach((listener) => listener(this.session));
++  }
++}
+diff --git a/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserLifecycle.ets b/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserLifecycle.ets
+new file mode 100644
+index 0000000..daa039b
+--- /dev/null
++++ b/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserLifecycle.ets
+@@ -0,0 +1,10 @@
++import { Want } from '@kit.AbilityKit';
++import { ExpoWebBrowserController } from './ExpoWebBrowserController';
++
++export class ExpoWebBrowserLifecycle extends ExpoWebBrowserController {
++  public onCreate(_want: Want): void {}
++  public onNewWant(_want: Want): void {}
++  public onDestroy(): void {
++    this.destroy();
++  }
++}
+diff --git a/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserPackage.ets b/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserPackage.ets
+new file mode 100644
+index 0000000..5fa3c49
+--- /dev/null
++++ b/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserPackage.ets
+@@ -0,0 +1,26 @@
++import { RNOHPackage } from '@rnoh/react-native-openharmony';
++import type { RNPackageContext, UITurboModule, UITurboModuleContext } from '@rnoh/react-native-openharmony';
++import { ExpoWebBrowserController } from './ExpoWebBrowserController';
++import { ExpoWebBrowserTurboModule } from './ExpoWebBrowserTurboModule';
++
++export class ExpoWebBrowserPackage extends RNOHPackage {
++  private readonly controller: ExpoWebBrowserController;
++  private readonly runtime: number;
++
++  public constructor(ctx: RNPackageContext, controller: ExpoWebBrowserController) {
++    super(ctx);
++    this.controller = controller;
++    this.runtime = controller.beginRuntime();
++  }
++
++  public override getUITurboModuleFactoryByNameMap(): Map<string, (ctx: UITurboModuleContext) => UITurboModule | null> {
++    return new Map<string, (ctx: UITurboModuleContext) => UITurboModule>().set(
++      ExpoWebBrowserTurboModule.NAME,
++      (ctx: UITurboModuleContext) => new ExpoWebBrowserTurboModule(ctx, this.controller, this.runtime),
++    );
++  }
++
++  public override getDebugName(): string {
++    return 'expo-web-browser';
++  }
++}
+diff --git a/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserTurboModule.ets b/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserTurboModule.ets
+new file mode 100644
+index 0000000..549a569
+--- /dev/null
++++ b/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserTurboModule.ets
+@@ -0,0 +1,44 @@
++import { UITurboModule } from '@rnoh/react-native-openharmony';
++import type { UITurboModuleContext } from '@rnoh/react-native-openharmony';
++import { ExpoWebBrowserController, ExpoWebBrowserOptions, ExpoWebBrowserResult } from './ExpoWebBrowserController';
++
++export class ExpoWebBrowserTurboModule extends UITurboModule {
++  public static readonly NAME = 'ExpoWebBrowser';
++  private readonly controller: ExpoWebBrowserController;
++  private readonly runtime: number;
++  private readonly unsubscribeReload: () => void;
++  private destroyed = false;
++
++  public constructor(ctx: UITurboModuleContext, controller: ExpoWebBrowserController, runtime: number) {
++    super(ctx);
++    this.controller = controller;
++    this.runtime = runtime;
++    this.unsubscribeReload = ctx.devToolsController.eventEmitter.subscribe('RELOAD', () => {
++      this.controller.endRuntime(this.runtime);
++    });
++  }
++
++  public async openBrowserAsync(url: string, options: ExpoWebBrowserOptions): Promise<ExpoWebBrowserResult> {
++    return this.controller.open(this.runtime, url, options, false);
++  }
++
++  public async dismissBrowser(): Promise<ExpoWebBrowserResult> {
++    return this.controller.dismiss(this.runtime);
++  }
++
++  public async openAuthSessionAsync(url: string, redirectUrl: string | null, options: ExpoWebBrowserOptions): Promise<ExpoWebBrowserResult> {
++    return this.controller.open(this.runtime, url, options, true, redirectUrl);
++  }
++
++  public dismissAuthSession(): void {
++    this.controller.dismiss(this.runtime, true);
++  }
++
++  public override __onDestroy__(): void {
++    if (this.destroyed) return;
++    this.destroyed = true;
++    this.unsubscribeReload();
++    this.controller.endRuntime(this.runtime);
++    super.__onDestroy__();
++  }
++}
+diff --git a/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserView.ets b/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserView.ets
+new file mode 100644
+index 0000000..5baa7a8
+--- /dev/null
++++ b/node_modules/expo-web-browser/harmony/src/main/ets/ExpoWebBrowserView.ets
+@@ -0,0 +1,100 @@
++import webview from '@ohos.web.webview';
++import { ExpoWebBrowserController, ExpoWebBrowserSession } from './ExpoWebBrowserController';
++
++@Component
++struct BrowserContent {
++  @Require controller!: ExpoWebBrowserController;
++  @Require session!: ExpoWebBrowserSession;
++  private webController: webview.WebviewController = new webview.WebviewController();
++  @State private currentUrl: string = '';
++
++  aboutToAppear(): void {
++    this.currentUrl = this.session.url;
++  }
++
++  build() {
++    Column() {
++      Row() {
++        Text(this.currentUrl)
++          .layoutWeight(1)
++          .maxLines(1)
++          .textOverflow({ overflow: TextOverflow.Ellipsis })
++          .fontColor(this.session.controlsColor)
++        Button('Close')
++          .fontColor(this.session.controlsColor)
++          .backgroundColor(Color.Transparent)
++          .onClick(() => this.controller.cancel(this.session.id))
++      }
++      .width('100%')
++      .padding(12)
++      .backgroundColor(this.session.toolbarColor)
++      Web({ src: this.session.url, controller: this.webController })
++        .layoutWeight(1)
++        .width('100%')
++        .javaScriptAccess(true)
++        .domStorageAccess(true)
++        .fileAccess(false)
++        .mixedMode(MixedMode.None)
++        .onPageBegin((event) => { this.currentUrl = event.url; })
++        .onLoadIntercept((event) => this.controller.onNavigation(
++          this.session.id, event.data.getRequestUrl(), event.data.isMainFrame(),
++        ))
++        .onErrorReceive((event) => {
++          if (event.request.isMainFrame()) {
++            this.controller.fail(this.session.id, 'ERR_WEB_BROWSER_LOAD_FAILED', event.error.getErrorInfo());
++          }
++        })
++        .onSslErrorEventReceive((event) => {
++          event.handler.handleCancel();
++          this.controller.fail(this.session.id, 'ERR_WEB_BROWSER_TLS_FAILED', 'The browser rejected an invalid TLS certificate');
++        })
++        .onRenderExited(() => {
++          this.controller.fail(this.session.id, 'ERR_WEB_BROWSER_RENDER_FAILED', 'The browser renderer exited');
++        })
++    }
++    .width('100%')
++    .height('100%')
++    .backgroundColor(Color.White)
++  }
++}
++
++@Component
++export struct ExpoWebBrowserView {
++  @Require public controller!: ExpoWebBrowserController;
++  @State private visible: boolean = false;
++  @State private sessions: ExpoWebBrowserSession[] = [];
++  private unsubscribe: (() => void) | undefined;
++
++  public aboutToAppear(): void {
++    this.unsubscribe = this.controller.attachHost((session) => {
++      this.sessions = session ? [session] : [];
++      this.visible = session !== undefined;
++    }, true);
++  }
++
++  public aboutToDisappear(): void {
++    this.unsubscribe?.();
++    this.unsubscribe = undefined;
++  }
++
++  @Builder
++  private browserContent() {
++    ForEach(this.sessions, (session: ExpoWebBrowserSession) => {
++      BrowserContent({ controller: this.controller, session })
++    }, (session: ExpoWebBrowserSession) => `${session.id}`)
++  }
++
++  build() {
++    Column() {}
++      .width(0)
++      .height(0)
++      .bindContentCover(this.visible, this.browserContent, {
++        modalTransition: ModalTransition.NONE,
++        onWillDismiss: (action: DismissContentCoverAction) => {
++          const session = this.controller.getSession();
++          if (session) this.controller.cancel(session.id);
++          action.dismiss();
++        },
++      })
++  }
++}
+diff --git a/node_modules/expo-web-browser/src/WebBrowser.ts b/node_modules/expo-web-browser/src/WebBrowser.ts
+index 923c8d5..c4ecd38 100644
+--- a/node_modules/expo-web-browser/src/WebBrowser.ts
++++ b/node_modules/expo-web-browser/src/WebBrowser.ts
+@@ -155,7 +155,7 @@ export async function coolDownAsync(browserPackage?: string): Promise<WebBrowser
+  *
+  * @return The promise behaves differently based on the platform.
+  * On Android promise resolves with `{ type: 'opened' }` if we were able to open browser.
+- * On iOS:
++ * On iOS and Harmony:
+  * - If the user closed the web browser, the Promise resolves with `{ type: 'cancel' }`.
+  * - If the browser is closed using [`dismissBrowser`](#webbrowserdismissbrowser), the Promise resolves with `{ type: 'dismiss' }`.
+  */
+@@ -176,6 +176,7 @@ export async function openBrowserAsync(
+  *
+  * @return The promise that resolves with `{ type: 'dismiss' }` on the successful attempt or throws an error if dismiss functionality is not available.
+  * @platform ios
++ * @platform harmony
+  */
+ export function dismissBrowser(): Promise<{ type: WebBrowserResultType.DISMISS }> {
+   return ExponentWebBrowser.dismissBrowser?.();
+@@ -195,6 +196,11 @@ export function dismissBrowser(): Promise<{ type: WebBrowserResultType.DISMISS }
+  * For example, `demo://` not `https://` protocol.
+  * Using `Linking.addEventListener` is not needed and can have side effects.
+  *
++ * # On Harmony:
++ * Opens an application-owned ArkWeb modal. A matching top-level redirect completes the session.
++ * Cookies belong to the application's WebView store, not the system browser. Providers that
++ * disallow embedded user agents may reject this flow. Ephemeral sessions are not supported.
++ *
+  * # On web:
+  * > This API can only be used in a secure environment (localhost/https).
+  * to test this. Otherwise, an error with code [`ERR_WEB_BROWSER_CRYPTO`](#err_web_browser_crypto) will be thrown.
+@@ -240,7 +246,7 @@ export async function openAuthSessionAsync(
+     if (!ExponentWebBrowser.openAuthSessionAsync) {
+       throw new UnavailabilityError('WebBrowser', 'openAuthSessionAsync');
+     }
+-    if (['ios', 'macos', 'web'].includes(Platform.OS)) {
++    if (['ios', 'macos', 'web', 'harmony'].includes(Platform.OS)) {
+       return ExponentWebBrowser.openAuthSessionAsync(url, redirectUrl, _processOptions(options));
+     }
+     return ExponentWebBrowser.openAuthSessionAsync(url, redirectUrl);
+@@ -256,6 +262,7 @@ export async function openAuthSessionAsync(
+  *
+  * @platform ios
+  * @platform web
++ * @platform harmony
+  */
+ export function dismissAuthSession(): void {
+   if (_authSessionIsNativelySupported()) {

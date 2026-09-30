@@ -1,0 +1,21 @@
+{
+  "compatibilityId": "expo-rnoh-0.82.30-core-v1-v3",
+  "version": "0.82.30",
+  "inputHARSHA256": "cac2b5d1b9ce7d306079218931db12489aaceb240002c9c32e6c13185c577011",
+  "patches": [
+    {
+      "source": "package/src/main/cpp/RNOH/ArkTSTurboModule.cpp",
+      "sourceSHA256": "95c5a9ee8c7b3406dbea7f58c1f9333dbb38eedc7e47e2677c25da11c8814603",
+      "patchedSourceSHA256": "58edba183492fe6276cc02ba79425fdf14a8f48f306f550786efd04184546393",
+      "patch": "rnoh-0.82.30-structured-rejection.patch",
+      "patchSHA256": "cb6ef3428068f949d0b41a6fae05a8657913cdac0c8ef47ec0d445357ba0af52"
+    },
+    {
+      "source": "package/src/main/ets/RNApp.ets",
+      "sourceSHA256": "fc4a7b18f9822feae5767c985a7884176b6c2342e0bf9d2c964b9cb7e2cd0ecd",
+      "patchedSourceSHA256": "9d4194fa5a795831b191e36f3f6997b2f4c4aa2c653893f93c0064d84d2d79e8",
+      "patch": "rnoh-0.82.30-runtime-surface-generation.patch",
+      "patchSHA256": "fef75f09b873298ec6ca7feb5cc11ca9eb69e3c2c1367c3ad6fcadec1e2ab613"
+    }
+  ]
+}

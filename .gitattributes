@@ -1,0 +1,2 @@
+*.patch -whitespace
+scripts/sdk54/external-overlays/** -whitespace

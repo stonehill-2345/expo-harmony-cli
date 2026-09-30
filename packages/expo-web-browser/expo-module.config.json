@@ -1,0 +1,34 @@
+{
+  "platforms": ["apple", "android", "harmony"],
+  "apple": {
+    "modules": ["WebBrowserModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.webbrowser.WebBrowserModule"]
+  },
+  "harmony": {
+    "kind": "ability-lifecycle",
+    "cpp": {
+      "packageClass": "expo::webbrowser::harmony::ExpoWebBrowserPackage",
+      "header": "ExpoWebBrowserPackage.h",
+      "cmakeTarget": "rnoh_expo_web_browser",
+      "cmakePath": "harmony/src/main/cpp"
+    },
+    "ets": {
+      "packageClass": "ExpoWebBrowserPackage",
+      "importPath": "expo-web-browser/harmony",
+      "entrypoint": "harmony/index.ets"
+    },
+    "lifecycleDependencies": [{
+      "localName": "webBrowserController",
+      "className": "ExpoWebBrowserLifecycle",
+      "importPath": "expo-web-browser/harmony",
+      "appStorageKey": "ExpoWebBrowserController",
+      "arkUIOverlay": {
+        "className": "ExpoWebBrowserView",
+        "importPath": "expo-web-browser/harmony",
+        "controllerProperty": "controller"
+      }
+    }]
+  }
+}

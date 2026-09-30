@@ -1,0 +1,23 @@
+{
+  "platforms": ["apple", "android", "web", "harmony"],
+  "apple": {
+    "modules": ["AssetModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.asset.AssetModule"]
+  },
+  "harmony": {
+    "kind": "turbo-module",
+    "cpp": {
+      "packageClass": "expo::asset::harmony::ExpoAssetPackage",
+      "header": "ExpoAssetPackage.h",
+      "cmakeTarget": "rnoh_expo_asset",
+      "cmakePath": "harmony/src/main/cpp"
+    },
+    "ets": {
+      "packageClass": "ExpoAssetPackage",
+      "importPath": "expo-asset/harmony",
+      "entrypoint": "harmony/index.ets"
+    }
+  }
+}

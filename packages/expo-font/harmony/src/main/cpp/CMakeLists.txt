@@ -1,0 +1,8 @@
+cmake_minimum_required(VERSION 3.16)
+if(NOT TARGET rnoh)
+  message(FATAL_ERROR "Add RNOH 0.82.30 before expo-font")
+endif()
+add_library(rnoh_expo_font STATIC ExpoFontLoaderTurboModule.cpp)
+target_compile_features(rnoh_expo_font PUBLIC cxx_std_20)
+target_include_directories(rnoh_expo_font PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_link_libraries(rnoh_expo_font PUBLIC rnoh)

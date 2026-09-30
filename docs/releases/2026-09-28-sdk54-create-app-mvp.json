@@ -1,0 +1,113 @@
+{
+  "date": "2026-09-28",
+  "status": "pass_with_documented_limits",
+  "published": false,
+  "source": {
+    "mvpCommit": "2704a48cc52781f510b3996af17c882fb82e1090",
+    "expoCommit": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1",
+    "targetHead": "375875354c6526ca37e7c6d40af81dd07c0b2822"
+  },
+  "packages": {
+    "workspace": 14,
+    "external": 11,
+    "staged": 25,
+    "internalEdges": 22,
+    "auditFailures": 0,
+    "deterministic": true,
+    "publishableWorkspacePackages": [
+      "expo-harmony-cli"
+    ]
+  },
+  "versions": {
+    "expo": "54.0.37",
+    "expoCli": "54.0.27",
+    "expoRouter": "6.0.24",
+    "expoWebBrowser": "15.0.11",
+    "react": "19.1.1",
+    "reactNative": "0.82.1",
+    "rnoh": "0.82.30"
+  },
+  "blank": {
+    "createCommand": "npx create-expo-app@5.0.0 blank-app --template blank-typescript",
+    "applicationFilesChanged": [],
+    "debug": {
+      "build": true,
+      "installed": true,
+      "launched": true,
+      "dev": true,
+      "embeddedBundle": false,
+      "officialBlankText": true,
+      "hapSha256": "bbe1184cfcb40d8167ac4d1274f5143bfbb06f54f79f69d75ababab8bbdd49a1"
+    },
+    "release": {
+      "cleanBuild": true,
+      "installed": true,
+      "launched": true,
+      "dev": false,
+      "metroStoppedColdStart": true,
+      "officialBlankText": true,
+      "hapSha256": "977e4caddef7acf993bb58bd899362f7d88cfc229d2d9b4d6b33148f9afc94c2",
+      "bundleSha256": "7807637cf61f88bfa038ef82ecf0fcb4dd0bd14c58446e2695f85b74aba31d4e",
+      "embeddedBundleSha256": "7807637cf61f88bfa038ef82ecf0fcb4dd0bd14c58446e2695f85b74aba31d4e"
+    }
+  },
+  "defaultRouter": {
+    "createCommand": "npx create-expo-app@5.0.0 default-app --template default@sdk-54",
+    "fixtureSubstitutions": [
+      "app/(tabs)/index.tsx: expo-image Image replaced with React Native Image",
+      "app/(tabs)/explore.tsx: expo-image Image replaced with React Native Image",
+      "expo-image removed from the temporary fixture dependency graph"
+    ],
+    "protectedTemplateFilesUnchanged": [
+      "app/modal.tsx",
+      "app/_layout.tsx",
+      "app.json"
+    ],
+    "debug": {
+      "build": true,
+      "installed": true,
+      "launched": true,
+      "welcomeHomeExplore": true,
+      "tabs": true,
+      "materialIcons": true,
+      "reactNativeImages": true,
+      "reload": true,
+      "dismissToNativeAnimation": true,
+      "physicalBackNativeAnimation": true,
+      "webBrowserOpenCloseRounds": 1
+    },
+    "release": {
+      "cleanBuild": true,
+      "installed": true,
+      "launched": true,
+      "dev": false,
+      "metroStoppedColdStart": true,
+      "welcomeHomeExplore": true,
+      "tabs": true,
+      "materialIcons": true,
+      "reactNativeImages": true,
+      "dismissToNativeAnimation": true,
+      "physicalBackNativeAnimation": true,
+      "webBrowserOpenCloseRounds": 2,
+      "hapSha256": "7b8197754229f3a44219a2d88d9d906900d0b42b78b4979429da3815c8d17bc3",
+      "bundleSha256": "00bb52b0c3c0e6dfe4bdceed849b0025b1c16fc45a52d86c6893cda8d10affb8",
+      "embeddedBundleSha256": "00bb52b0c3c0e6dfe4bdceed849b0025b1c16fc45a52d86c6893cda8d10affb8"
+    }
+  },
+  "verification": {
+    "sdk54ToolTests": 144,
+    "cliTestFiles": 34,
+    "cliTests": 372,
+    "typeCheck": true,
+    "gitDiffCheck": true,
+    "stagedFiles": 0
+  },
+  "limits": [
+    "expo-image Harmony backend is not implemented",
+    "multi-screen dismissTo native animation is not added",
+    "embedded ArkWeb is not a system browser authentication session",
+    "unsigned simulator HAP only",
+    "no production signing, obfuscation, physical-device matrix, store flow, or complete Android/iOS regression",
+    "apps/cli product compatibility and distribution flow are outside this migration task"
+  ]
+}

@@ -1,0 +1,14 @@
+import assert from 'node:assert/strict'; import crypto from 'node:crypto'; import { execFileSync } from 'node:child_process'; import fs from 'node:fs'; import os from 'node:os'; import path from 'node:path'; import test from 'node:test';
+const root=path.resolve('apps/cli/content/patches/sdk-54'); const manifest=JSON.parse(fs.readFileSync(path.join(root,'manifest.json'),'utf8'));
+test('repository contains exactly the declared fourteen formal Expo patches',()=>{assert.equal(manifest.patches.filter(p=>p.name in manifest.catalog.expo).length,14);assert.equal(manifest.patches.length,15);const actual=fs.readdirSync(root).filter(x=>x.endsWith('.patch')).sort();assert.deepEqual(actual,manifest.patches.map(x=>x.file).sort());for(const patch of manifest.patches){const file=path.join(root,patch.file);assert.equal(crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex'),patch.sha256);for(const license of patch.licenses)assert.ok(fs.existsSync(path.join(root,license)));}});
+test('formal set contains critical runtime hunks and no early application bypass patches',()=>{const byName=Object.fromEntries(manifest.patches.map(x=>[x.name,fs.readFileSync(path.join(root,x.file),'utf8')]));assert.match(byName['@expo/cli'],/build\/bin\/cli|runHarmonyAsync/);assert.match(byName['@expo/metro-config'],/build\/withHarmony\.js/);assert.match(byName['expo-modules-autolinking'],/build\/platforms\/harmony/);for(const forbidden of ['expo-image+3.0.11.patch','expo-document-picker+14.0.8.patch','expo-linear-gradient+15.0.8.patch','@react-navigation+bottom-tabs+7.4.0.patch'])assert.ok(!fs.existsSync(path.join(root,forbidden)));});
+
+test('patch-package rejects the formal patch set against a wrong installed package version', (t) => {
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-wrong-version-')); t.after(() => fs.rmSync(temp, { recursive: true, force: true }));
+  fs.mkdirSync(path.join(temp, 'node_modules/@expo/cli'), { recursive: true }); fs.mkdirSync(path.join(temp, 'patches'));
+  fs.writeFileSync(path.join(temp, 'package.json'), JSON.stringify({ name: 'wrong', version: '1.0.0', dependencies: { '@expo/cli': '54.0.26' } }));
+  fs.writeFileSync(path.join(temp, 'package-lock.json'), JSON.stringify({ name: 'wrong', version: '1.0.0', lockfileVersion: 3, packages: { '': { dependencies: { '@expo/cli': '54.0.26' } }, 'node_modules/@expo/cli': { version: '54.0.26' } } }));
+  fs.writeFileSync(path.join(temp, 'node_modules/@expo/cli/package.json'), JSON.stringify({ name: '@expo/cli', version: '54.0.26' }));
+  fs.copyFileSync(path.join(root, '@expo+cli+54.0.27.patch'), path.join(temp, 'patches/@expo+cli+54.0.27.patch'));
+  assert.throws(() => execFileSync(process.execPath, [path.resolve('node_modules/patch-package/dist/index.js'), '--error-on-fail', '--error-on-warn'], { cwd: temp, stdio: 'pipe' }));
+});

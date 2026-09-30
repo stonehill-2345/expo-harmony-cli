@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "EntryAbility_desc",
+      "value": "Core native integration tests"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "Expo Core Harmony Test"
+    },
+    {
+      "name": "module_desc",
+      "value": "Core integration test host"
+    }
+  ]
+}

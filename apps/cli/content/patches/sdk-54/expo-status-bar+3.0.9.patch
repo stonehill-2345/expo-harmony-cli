@@ -1,0 +1,13 @@
+diff --git a/node_modules/expo-status-bar/expo-module.config.json b/node_modules/expo-status-bar/expo-module.config.json
+new file mode 100644
+index 0000000..7394d73
+--- /dev/null
++++ b/node_modules/expo-status-bar/expo-module.config.json
+@@ -0,0 +1,7 @@
++{
++  "platforms": ["harmony"],
++  "harmony": {
++    "kind": "rnoh-reuse",
++    "reason": "Uses the StatusBarManager supplied by RNOH."
++  }
++}

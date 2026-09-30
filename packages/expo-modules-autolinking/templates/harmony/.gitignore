@@ -1,0 +1,12 @@
+/local.properties
+/.idea
+/.hvigor
+/.expo-autolinking
+/oh_modules
+**/build
+**/.cxx
+**/oh_modules
+/dependencies/*.har
+/dependencies/*.manifest.json
+/expo-modules/*
+!/expo-modules/.gitignore

@@ -1,0 +1,23 @@
+{
+  "platforms": ["apple", "android", "web", "harmony"],
+  "apple": {
+    "modules": ["ConstantsModule"]
+  },
+  "android": {
+    "modules": ["expo.modules.constants.ConstantsModule"]
+  },
+  "harmony": {
+    "kind": "turbo-module",
+    "cpp": {
+      "packageClass": "expo::constants::harmony::ExponentConstantsPackage",
+      "header": "ExponentConstantsPackage.h",
+      "cmakeTarget": "rnoh_expo_constants",
+      "cmakePath": "harmony/src/main/cpp"
+    },
+    "ets": {
+      "packageClass": "ExponentConstantsPackage",
+      "importPath": "expo-constants/harmony",
+      "entrypoint": "harmony/index.ets"
+    }
+  }
+}

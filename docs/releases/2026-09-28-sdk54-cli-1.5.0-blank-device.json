@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "cliTgz": {
+    "file": "expo-harmony-cli-1.5.0.tgz",
+    "sha256": "6b779e6402fdafe43ac6bfa147215ffce30e971184486c1599496e07a0ff6aca"
+  },
+  "versions": {
+    "cli": "1.5.0",
+    "createExpoApp": "5.0.0",
+    "patchPackage": "8.0.0",
+    "expo": "54.0.37",
+    "expoCli": "54.0.27",
+    "expoMetroConfig": "54.0.17",
+    "expoRouter": "6.0.24",
+    "react": "19.1.1",
+    "reactNative": "0.82.1",
+    "rnoh": "0.82.30",
+    "rnohCli": "0.82.30",
+    "gestureHandler": "2.30.0",
+    "harmonyGestureHandler": "2.30.1",
+    "reanimated": "4.2.1",
+    "harmonyReanimated": "4.0.1",
+    "safeAreaContext": "5.6.2",
+    "harmonySafeAreaContext": "5.6.3",
+    "screens": "4.17.1",
+    "harmonyScreens": "4.9.0",
+    "worklets": "0.7.1",
+    "harmonyWorklets": "1.0.0"
+  },
+  "packageManager": "pnpm",
+  "freshCreate": {
+    "success": true
+  },
+  "officialPrebuild": {
+    "argv": [
+      "npx",
+      "expo",
+      "prebuild",
+      "--platform",
+      "harmony"
+    ],
+    "exitCode": 0
+  },
+  "forbiddenFileScan": {
+    "success": true,
+    "found": []
+  },
+  "template": "blank-typescript",
+  "applicationFiles": {
+    "changed": [],
+    "baselineSha256": "b50a2c8807ce9a060c4d00ba2126a8c3c808588b182b1423d4da6b4a587b0580",
+    "actualSha256": "b50a2c8807ce9a060c4d00ba2126a8c3c808588b182b1423d4da6b4a587b0580"
+  },
+  "debug": {
+    "build": true,
+    "installed": true,
+    "launched": true,
+    "dev": true,
+    "officialBlankText": true
+  },
+  "release": {
+    "cleanBuild": true,
+    "installed": true,
+    "launched": true,
+    "dev": false,
+    "officialBlankText": true,
+    "hapSha256": "06a746688b518adffc058c50975f36ddb9a724d7ca40c90a8230db97405339ac",
+    "bundleSha256": "7807637cf61f88bfa038ef82ecf0fcb4dd0bd14c58446e2695f85b74aba31d4e",
+    "embeddedBundleSha256": "7807637cf61f88bfa038ef82ecf0fcb4dd0bd14c58446e2695f85b74aba31d4e"
+  },
+  "coldStart": {
+    "metroStopped": true,
+    "launched": true,
+    "officialBlankText": true
+  }
+}

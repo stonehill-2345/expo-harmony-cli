@@ -1,0 +1,50 @@
+--- a/src/main/cpp/RNOH/ArkTSTurboModule.cpp
++++ b/src/main/cpp/RNOH/ArkTSTurboModule.cpp
+@@ -30,7 +30,7 @@
+ facebook::jsi::Value preparePromiseResolverResult(
+     facebook::jsi::Runtime& rt,
+     const std::vector<folly::dynamic> args);
+-std::string preparePromiseRejectionResult(
++folly::dynamic preparePromiseRejectionResult(
+     const std::vector<folly::dynamic> args);
+ 
+ ArkTSTurboModule::ArkTSTurboModule(Context ctx, std::string name)
+@@ -205,7 +205,11 @@
+                         if (!jsiPromise) {
+                           return;
+                         }
+-                        jsiPromise->reject(preparePromiseRejectionResult(args));
++                        // Preserve structured native errors; reject(string) drops code.
++                        jsiPromise->reject_.call(
++                            runtime2,
++                            jsi::valueFromDynamic(
++                                runtime2, preparePromiseRejectionResult(args)));
+                         jsiPromise->allowRelease();
+                       });
+                     });
+@@ -318,10 +322,10 @@
+   return jsi::valueFromDynamic(rt, args[0]);
+ }
+ 
+-std::string preparePromiseRejectionResult(
++folly::dynamic preparePromiseRejectionResult(
+     const std::vector<folly::dynamic> args) {
+   if (args.size() == 0) {
+-    return "";
++    return folly::dynamic::object("message", "");
+   }
+   if (args.size() > 1) {
+     throw std::invalid_argument("`reject` accepts only one argument");
+@@ -331,10 +335,10 @@
+   if (error.isObject()) {
+     auto message = error["message"];
+     if (message.isString()) {
+-      return message.getString();
++      return error;
+     }
+   } else if (error.isString()) {
+-    return error.getString();
++    return folly::dynamic::object("message", error.getString());
+   }
+   throw std::invalid_argument(
+       "The type of argument provided `reject` must be string or contain a string 'message' "

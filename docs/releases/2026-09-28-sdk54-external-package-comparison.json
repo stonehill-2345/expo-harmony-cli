@@ -1,0 +1,134 @@
+{
+  "failures": [],
+  "packages": [
+    {
+      "approvedSha256": "056486222bcffdbc2db023ef05faf3b2b3fca6b7bac1ce0134b22117235248be",
+      "binaryDiff": [],
+      "decision": "public-identical",
+      "manifestDiff": [],
+      "name": "@react-native-oh/react-native-harmony",
+      "publicAvailable": true,
+      "publicSha256": "865807ef057215315044d99e7625816c9ae758c5aec8e86eb2d14c72081c1614",
+      "textDiff": [],
+      "version": "0.82.30"
+    },
+    {
+      "approvedSha256": "bb5cd8443e8f0fb4b94d6a9487e1e5efc99052a5a676d94d414f23d76b5ed9c5",
+      "binaryDiff": [],
+      "decision": "public-identical",
+      "manifestDiff": [],
+      "name": "@react-native-ohos/react-native-gesture-handler",
+      "publicAvailable": true,
+      "publicSha256": "bb5cd8443e8f0fb4b94d6a9487e1e5efc99052a5a676d94d414f23d76b5ed9c5",
+      "textDiff": [],
+      "version": "2.30.1"
+    },
+    {
+      "approvedSha256": "226b83ac4b0c8da36b24ff41071092ec73039723966fcb21e51a4c4d0c83e8ca",
+      "binaryDiff": [],
+      "decision": "public-identical",
+      "manifestDiff": [],
+      "name": "@react-native-ohos/react-native-reanimated",
+      "publicAvailable": true,
+      "publicSha256": "226b83ac4b0c8da36b24ff41071092ec73039723966fcb21e51a4c4d0c83e8ca",
+      "textDiff": [],
+      "version": "4.0.1"
+    },
+    {
+      "approvedSha256": "ba7f04dd3e81be54c22f0997da8072460d9123d69b6187f588e0051d21734890",
+      "binaryDiff": [],
+      "decision": "public-identical",
+      "manifestDiff": [],
+      "name": "@react-native-ohos/react-native-safe-area-context",
+      "publicAvailable": true,
+      "publicSha256": "ba7f04dd3e81be54c22f0997da8072460d9123d69b6187f588e0051d21734890",
+      "textDiff": [],
+      "version": "5.6.3"
+    },
+    {
+      "approvedSha256": "e7ff0e51db375e69a1b15340c5edd7bbfc005dbedb53a6957605e50f63fa948c",
+      "binaryDiff": [],
+      "decision": "public-text-patch",
+      "manifestDiff": [],
+      "name": "@react-native-ohos/react-native-screens",
+      "publicAvailable": true,
+      "publicSha256": "e7ff0e51db375e69a1b15340c5edd7bbfc005dbedb53a6957605e50f63fa948c",
+      "textDiff": [
+        "lib/commonjs/components/ScreenStackItem.js",
+        "lib/commonjs/utils.js",
+        "lib/module/components/ScreenStackItem.js",
+        "lib/module/utils.js",
+        "src/components/ScreenStackItem.tsx",
+        "src/utils.ts"
+      ],
+      "version": "4.9.0"
+    },
+    {
+      "approvedSha256": "13b095b673d5ba8c544ff725ad351efb8620050a4c64576eedd9f595a8e48b11",
+      "binaryDiff": [],
+      "decision": "public-identical",
+      "manifestDiff": [],
+      "name": "@react-native-ohos/react-native-worklets",
+      "publicAvailable": true,
+      "publicSha256": "13b095b673d5ba8c544ff725ad351efb8620050a4c64576eedd9f595a8e48b11",
+      "textDiff": [],
+      "version": "1.0.0"
+    },
+    {
+      "approvedSha256": "092e18250523d07e8ebed14f89033295c066ffecde19a7f216472d152720b34c",
+      "binaryDiff": [],
+      "decision": "public-identical",
+      "manifestDiff": [],
+      "name": "react-native-gesture-handler",
+      "publicAvailable": true,
+      "publicSha256": "092e18250523d07e8ebed14f89033295c066ffecde19a7f216472d152720b34c",
+      "textDiff": [],
+      "version": "2.30.0"
+    },
+    {
+      "approvedSha256": "76b3af1dc477e547f9146cacbe81b3e72b44079e59aac87715b74bbf75412f4e",
+      "binaryDiff": [],
+      "decision": "public-identical",
+      "manifestDiff": [],
+      "name": "react-native-reanimated",
+      "publicAvailable": true,
+      "publicSha256": "76b3af1dc477e547f9146cacbe81b3e72b44079e59aac87715b74bbf75412f4e",
+      "textDiff": [],
+      "version": "4.2.1"
+    },
+    {
+      "approvedSha256": "cbe52e3d39c4d3f3e3612f6e7b9b8a7d000a44e50ebda5236e9f1809af2729e6",
+      "binaryDiff": [],
+      "decision": "public-identical",
+      "manifestDiff": [],
+      "name": "react-native-safe-area-context",
+      "publicAvailable": true,
+      "publicSha256": "cbe52e3d39c4d3f3e3612f6e7b9b8a7d000a44e50ebda5236e9f1809af2729e6",
+      "textDiff": [],
+      "version": "5.6.2"
+    },
+    {
+      "approvedSha256": "04ab21be055387e4d604a74f855965f38d080597a9e84eec13f399633e47c0de",
+      "binaryDiff": [],
+      "decision": "public-identical",
+      "manifestDiff": [],
+      "name": "react-native-screens",
+      "publicAvailable": true,
+      "publicSha256": "04ab21be055387e4d604a74f855965f38d080597a9e84eec13f399633e47c0de",
+      "textDiff": [],
+      "version": "4.17.1"
+    },
+    {
+      "approvedSha256": "1eac180d07900ddbaa4b6af3105896ac4519753e13ad33486e31284eeccd2441",
+      "binaryDiff": [],
+      "decision": "public-identical",
+      "manifestDiff": [],
+      "name": "react-native-worklets",
+      "publicAvailable": true,
+      "publicSha256": "1eac180d07900ddbaa4b6af3105896ac4519753e13ad33486e31284eeccd2441",
+      "textDiff": [],
+      "version": "0.7.1"
+    }
+  ],
+  "schemaVersion": 1
+}

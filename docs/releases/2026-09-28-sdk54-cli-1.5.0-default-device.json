@@ -1,0 +1,117 @@
+{
+  "schemaVersion": 1,
+  "cliTgz": {
+    "file": "expo-harmony-cli-1.5.0.tgz",
+    "sha256": "6b779e6402fdafe43ac6bfa147215ffce30e971184486c1599496e07a0ff6aca"
+  },
+  "versions": {
+    "cli": "1.5.0",
+    "createExpoApp": "5.0.0",
+    "patchPackage": "8.0.0",
+    "expo": "54.0.37",
+    "expoCli": "54.0.27",
+    "expoMetroConfig": "54.0.17",
+    "expoRouter": "6.0.24",
+    "react": "19.1.1",
+    "reactNative": "0.82.1",
+    "rnoh": "0.82.30",
+    "rnohCli": "0.82.30",
+    "gestureHandler": "2.30.0",
+    "harmonyGestureHandler": "2.30.1",
+    "reanimated": "4.2.1",
+    "harmonyReanimated": "4.0.1",
+    "safeAreaContext": "5.6.2",
+    "harmonySafeAreaContext": "5.6.3",
+    "screens": "4.17.1",
+    "harmonyScreens": "4.9.0",
+    "worklets": "0.7.1",
+    "harmonyWorklets": "1.0.0"
+  },
+  "packageManager": "pnpm",
+  "freshCreate": {
+    "success": true
+  },
+  "officialPrebuild": {
+    "argv": [
+      "npx",
+      "expo",
+      "prebuild",
+      "--platform",
+      "harmony"
+    ],
+    "exitCode": 0
+  },
+  "forbiddenFileScan": {
+    "success": true,
+    "found": []
+  },
+  "template": "default",
+  "applicationChanges": {
+    "files": [
+      "app/(tabs)/explore.tsx",
+      "app/(tabs)/index.tsx"
+    ],
+    "dependencyAdjustments": true
+  },
+  "protectedFiles": {
+    "app/modal.tsx": {
+      "beforeSha256": "5a88c22a8eebe5b2b41bd21c89f8d6068d93fe823813c0594011e64543267372",
+      "afterSha256": "5a88c22a8eebe5b2b41bd21c89f8d6068d93fe823813c0594011e64543267372"
+    },
+    "app/_layout.tsx": {
+      "beforeSha256": "6504dc6809b5bd740da152889b4f77634c2377bdac9ef28d57ac43c39a61715b",
+      "afterSha256": "6504dc6809b5bd740da152889b4f77634c2377bdac9ef28d57ac43c39a61715b"
+    },
+    "app.json": {
+      "beforeSha256": "e3a5f6117dd8c319fc8c83949d5af58c140744f6e9d1d5b68b9c789a0e67f922",
+      "afterSha256": "e3a5f6117dd8c319fc8c83949d5af58c140744f6e9d1d5b68b9c789a0e67f922"
+    }
+  },
+  "expoImage": {
+    "backendSupported": false
+  },
+  "debug": {
+    "build": true,
+    "installed": true,
+    "launched": true,
+    "dev": true,
+    "tabs": true,
+    "materialIcons": true,
+    "reactNativeImages": true,
+    "modal": true,
+    "singleLevelDismissTo": true,
+    "physicalBack": true,
+    "customAnimation": true,
+    "arkWebOpenCloseRounds": 1,
+    "reload": true
+  },
+  "release": {
+    "cleanBuild": true,
+    "installed": true,
+    "launched": true,
+    "dev": false,
+    "tabs": true,
+    "materialIcons": true,
+    "reactNativeImages": true,
+    "modal": true,
+    "singleLevelDismissTo": true,
+    "physicalBack": true,
+    "customAnimation": true,
+    "arkWebOpenCloseRounds": 2,
+    "hapSha256": "1087e67ddb7ad779448700a6086df8f82623d01678a3dc2d6d5f258d4a1851ab",
+    "bundleSha256": "7c60ea00a8a786d40bb31ba5bfa868369223a9396b4527b59156dd54f3eec70d",
+    "embeddedBundleSha256": "7c60ea00a8a786d40bb31ba5bfa868369223a9396b4527b59156dd54f3eec70d"
+  },
+  "coldStart": {
+    "metroStopped": true,
+    "launched": true,
+    "tabs": true,
+    "reactNativeImages": true,
+    "modal": true,
+    "arkWebOpenClose": true
+  },
+  "boundaries": {
+    "routerDismissTo": "single-level",
+    "webBrowser": "arkweb-open-close"
+  }
+}

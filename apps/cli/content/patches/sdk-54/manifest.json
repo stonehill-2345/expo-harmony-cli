@@ -1,0 +1,396 @@
+{
+  "catalog": {
+    "expo": {
+      "@expo/cli": "54.0.27",
+      "@expo/metro-config": "54.0.17",
+      "expo": "54.0.37",
+      "expo-asset": "12.0.13",
+      "expo-constants": "18.0.14",
+      "expo-font": "14.0.12",
+      "expo-linking": "8.0.12",
+      "expo-modules-autolinking": "3.0.27",
+      "expo-modules-core": "3.0.30",
+      "expo-router": "6.0.24",
+      "expo-splash-screen": "31.0.13",
+      "expo-status-bar": "3.0.9",
+      "expo-system-ui": "6.0.9",
+      "expo-web-browser": "15.0.11"
+    },
+    "external": {
+      "@react-native-oh/react-native-harmony": "0.82.30",
+      "@react-native-ohos/react-native-gesture-handler": "2.30.1",
+      "@react-native-ohos/react-native-reanimated": "4.0.1",
+      "@react-native-ohos/react-native-safe-area-context": "5.6.3",
+      "@react-native-ohos/react-native-screens": "4.9.0",
+      "@react-native-ohos/react-native-worklets": "1.0.0",
+      "react-native-gesture-handler": "2.30.0",
+      "react-native-reanimated": "4.2.1",
+      "react-native-safe-area-context": "5.6.2",
+      "react-native-screens": "4.17.1",
+      "react-native-worklets": "0.7.1"
+    }
+  },
+  "createExpoApp": "5.0.0",
+  "defaultImage": {
+    "files": [
+      "app/(tabs)/explore.tsx",
+      "app/(tabs)/index.tsx"
+    ],
+    "replacementImport": "import { Image, Platform, StyleSheet } from 'react-native';",
+    "sourceImport": "import { Image } from 'expo-image';\nimport { Platform, StyleSheet } from 'react-native';"
+  },
+  "patches": [
+    {
+      "file": "@expo+cli+54.0.27.patch",
+      "licenses": [
+        "licenses/@expo__cli/LICENSE",
+        "licenses/@expo__cli/LICENSE-third-party"
+      ],
+      "name": "@expo/cli",
+      "probes": [
+        {
+          "args": [
+            "--help"
+          ],
+          "expected": "run:harmony",
+          "kind": "command",
+          "target": "build/bin/cli"
+        }
+      ],
+      "requiredFiles": [
+        "build/bin/cli",
+        "build/src/run/harmony/runHarmonyAsync.js",
+        "build/src/prebuild/harmony/prebuildHarmonyAsync.js"
+      ],
+      "sha256": "76ccdfbbdca80b88a6281fc931966039e4d2904c01766732e53668f596a8b8dc",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "54.0.27"
+    },
+    {
+      "file": "@expo+metro-config+54.0.17.patch",
+      "licenses": [
+        "licenses/@expo__metro-config/LICENSE"
+      ],
+      "name": "@expo/metro-config",
+      "probes": [
+        {
+          "kind": "require",
+          "target": "build/withHarmony.js",
+          "expected": "export:withHarmony"
+        }
+      ],
+      "requiredFiles": [
+        "build/withHarmony.js"
+      ],
+      "sha256": "674a87f80bd9f0a9c757a25619411ff58c064cb929870ae28f3a973f7f0053f8",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "54.0.17"
+    },
+    {
+      "name": "@react-native-ohos/react-native-screens",
+      "version": "4.9.0",
+      "file": "@react-native-ohos+react-native-screens+4.9.0.patch",
+      "sha256": "07b181d0d9720a8531404a7eab628f367a8fcf32c040a5b9a3a10d826d3d1a94",
+      "templates": [
+        "default"
+      ],
+      "requiredFiles": [
+        "lib/commonjs/components/ScreenStackItem.js"
+      ],
+      "probes": [],
+      "licenses": [
+        "licenses/@react-native-ohos__react-native-screens/LICENSE"
+      ]
+    },
+    {
+      "file": "expo+54.0.37.patch",
+      "licenses": [
+        "licenses/expo/LICENSE"
+      ],
+      "name": "expo",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "00584a4fe6115172dd806ff6481a4dfc98c6dda76d3fc4fda9ba9afec8479cce",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "54.0.37"
+    },
+    {
+      "file": "expo-asset+12.0.13.patch",
+      "licenses": [
+        "licenses/expo-asset/LICENSE"
+      ],
+      "name": "expo-asset",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "0f8e9a0c804af207b70bc1180911b69a48ff35c5ac493de9cd9f7cb767222ed0",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "12.0.13"
+    },
+    {
+      "file": "expo-constants+18.0.14.patch",
+      "licenses": [
+        "licenses/expo-constants/LICENSE"
+      ],
+      "name": "expo-constants",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "b3a465ebd235ed420ef8876f2af637e58ebd884fd72109e1e19b5a3237bed78c",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "18.0.14"
+    },
+    {
+      "file": "expo-font+14.0.12.patch",
+      "licenses": [
+        "licenses/expo-font/LICENSE"
+      ],
+      "name": "expo-font",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "7a48391030b0dc55eaa71eb1b343ab9aff9d6387437ae34eebbb8a8e1c6216f2",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "14.0.12"
+    },
+    {
+      "file": "expo-linking+8.0.12.patch",
+      "licenses": [
+        "licenses/expo-linking/LICENSE"
+      ],
+      "name": "expo-linking",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "6ef5ff244c8a29e3b83eb99e8a0842d4ccd69a3aec25742530ac32e91b85b4dd",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "8.0.12"
+    },
+    {
+      "file": "expo-modules-autolinking+3.0.27.patch",
+      "licenses": [
+        "licenses/expo-modules-autolinking/LICENSE"
+      ],
+      "name": "expo-modules-autolinking",
+      "probes": [
+        {
+          "kind": "require",
+          "target": "build/platforms/harmony/index.js",
+          "expected": "export:resolveModuleAsync"
+        }
+      ],
+      "requiredFiles": [
+        "build/platforms/harmony/index.js",
+        "build/platforms/harmony/nativeProject.js"
+      ],
+      "sha256": "c179bb7840c12887e8bb4f8eec66e22a0180801d5074de7988fe8d964b0c7d9a",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "3.0.27"
+    },
+    {
+      "file": "expo-modules-core+3.0.30.patch",
+      "licenses": [
+        "licenses/expo-modules-core/LICENSE"
+      ],
+      "name": "expo-modules-core",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "e3fb7531dfd115f6edc811066cb59f0d2471f075b0734a204b7e8cd0d28e2656",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "3.0.30"
+    },
+    {
+      "file": "expo-router+6.0.24.patch",
+      "licenses": [
+        "licenses/expo-router/LICENSE"
+      ],
+      "name": "expo-router",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "e5d2197fa10a1767171c426420bb20ba37a75556b6deb0b3fa70c6df31e37154",
+      "templates": [
+        "default"
+      ],
+      "version": "6.0.24"
+    },
+    {
+      "file": "expo-splash-screen+31.0.13.patch",
+      "licenses": [
+        "licenses/expo-splash-screen/LICENSE"
+      ],
+      "name": "expo-splash-screen",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "fff0ec9fe15e070e0364d152c132c9399b7a3636b5f91a87e1497d6d2029acde",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "31.0.13"
+    },
+    {
+      "file": "expo-status-bar+3.0.9.patch",
+      "licenses": [
+        "licenses/expo-status-bar/LICENSE"
+      ],
+      "name": "expo-status-bar",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "e3dcf19a3057ef1e694eb47cd74611d54e28b8dbfa41b7697285d6f0b65b87aa",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "3.0.9"
+    },
+    {
+      "file": "expo-system-ui+6.0.9.patch",
+      "licenses": [
+        "licenses/expo-system-ui/LICENSE"
+      ],
+      "name": "expo-system-ui",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "fd1d6c0613c677f1a4823ea387bdff18ca4c1d24d55625769bcbacce2846902f",
+      "templates": [
+        "blank-typescript",
+        "default"
+      ],
+      "version": "6.0.9"
+    },
+    {
+      "file": "expo-web-browser+15.0.11.patch",
+      "licenses": [
+        "licenses/expo-web-browser/LICENSE"
+      ],
+      "name": "expo-web-browser",
+      "probes": [],
+      "requiredFiles": [],
+      "sha256": "4a87e4a45c486c1380822f0a5f03f7edd84c86c7c284cbdbb4745ea8a9793b28",
+      "templates": [
+        "default"
+      ],
+      "version": "15.0.11"
+    }
+  ],
+  "patchPackageVersion": "8.0.0",
+  "patchSet": "sdk54-mvp-1",
+  "schemaVersion": 1,
+  "templates": {
+    "blank-typescript": {
+      "dependencies": {
+        "@react-native-oh/react-native-harmony-cli": "0.82.30",
+        "react": "19.1.1",
+        "react-native": "0.82.1"
+      },
+      "devDependencies": {
+        "@types/react": "19.1.17",
+        "typescript": "5.9.2"
+      },
+      "expoPackages": [
+        "@expo/cli",
+        "@expo/metro-config",
+        "expo",
+        "expo-asset",
+        "expo-constants",
+        "expo-font",
+        "expo-linking",
+        "expo-modules-autolinking",
+        "expo-modules-core",
+        "expo-splash-screen",
+        "expo-status-bar",
+        "expo-system-ui"
+      ],
+      "externalPackages": [
+        "@react-native-oh/react-native-harmony"
+      ],
+      "sourceDependencies": {
+        "expo": "~54.0.36",
+        "react": "19.1.0",
+        "react-native": "0.81.5"
+      }
+    },
+    "default": {
+      "dependencies": {
+        "@expo/metro-runtime": "6.1.2",
+        "@expo/vector-icons": "15.0.3",
+        "@react-native-oh/react-native-harmony-cli": "0.82.30",
+        "@react-navigation/bottom-tabs": "7.4.0",
+        "@react-navigation/core": "7.12.4",
+        "@react-navigation/elements": "2.6.3",
+        "@react-navigation/native": "7.1.17",
+        "@react-navigation/native-stack": "7.3.16",
+        "@react-navigation/routers": "7.5.1",
+        "expo-haptics": "15.0.8",
+        "expo-symbols": "1.0.8",
+        "react": "19.1.1",
+        "react-dom": "19.1.1",
+        "react-native": "0.82.1",
+        "react-native-web": "0.21.0"
+      },
+      "devDependencies": {
+        "@types/react": "19.1.17",
+        "eslint": "9.25.0",
+        "eslint-config-expo": "10.0.0",
+        "typescript": "5.9.2"
+      },
+      "expoPackages": [
+        "@expo/cli",
+        "@expo/metro-config",
+        "expo",
+        "expo-asset",
+        "expo-constants",
+        "expo-font",
+        "expo-linking",
+        "expo-modules-autolinking",
+        "expo-modules-core",
+        "expo-router",
+        "expo-splash-screen",
+        "expo-status-bar",
+        "expo-system-ui",
+        "expo-web-browser"
+      ],
+      "externalPackages": [
+        "@react-native-oh/react-native-harmony",
+        "react-native-gesture-handler",
+        "@react-native-ohos/react-native-gesture-handler",
+        "react-native-reanimated",
+        "@react-native-ohos/react-native-reanimated",
+        "react-native-safe-area-context",
+        "@react-native-ohos/react-native-safe-area-context",
+        "react-native-screens",
+        "@react-native-ohos/react-native-screens",
+        "react-native-worklets",
+        "@react-native-ohos/react-native-worklets"
+      ],
+      "sourceDependencies": {
+        "expo": "~54.0.36",
+        "react": "19.1.0",
+        "react-native": "0.81.5"
+      }
+    }
+  }
+}

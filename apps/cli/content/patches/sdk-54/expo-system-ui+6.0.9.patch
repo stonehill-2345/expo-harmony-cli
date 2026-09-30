@@ -1,0 +1,252 @@
+diff --git a/node_modules/expo-system-ui/expo-module.config.json b/node_modules/expo-system-ui/expo-module.config.json
+index 27cb7b9..d334179 100644
+--- a/node_modules/expo-system-ui/expo-module.config.json
++++ b/node_modules/expo-system-ui/expo-module.config.json
+@@ -1,15 +1,23 @@
+ {
+-  "platforms": ["apple", "android"],
++  "platforms": ["apple", "android", "harmony"],
+   "apple": {
+     "modules": ["ExpoSystemUIModule"]
+   },
+   "android": {
+-    "modules": ["expo.modules.systemui.SystemUIModule"],
+-    "publication": {
+-      "groupId": "host.exp.exponent",
+-      "artifactId": "expo.modules.systemui",
+-      "version": "6.0.9",
+-      "repository": "local-maven-repo"
++    "modules": ["expo.modules.systemui.SystemUIModule"]
++  },
++  "harmony": {
++    "kind": "turbo-module",
++    "cpp": {
++      "packageClass": "expo::systemui::harmony::ExpoSystemUIPackage",
++      "header": "ExpoSystemUIPackage.h",
++      "cmakeTarget": "rnoh_expo_system_ui",
++      "cmakePath": "harmony/src/main/cpp"
++    },
++    "ets": {
++      "packageClass": "ExpoSystemUIPackage",
++      "importPath": "expo-system-ui/harmony",
++      "entrypoint": "harmony/index.ets"
+     }
+   }
+ }
+diff --git a/node_modules/expo-system-ui/harmony/index.ets b/node_modules/expo-system-ui/harmony/index.ets
+new file mode 100644
+index 0000000..a3d96e6
+--- /dev/null
++++ b/node_modules/expo-system-ui/harmony/index.ets
+@@ -0,0 +1 @@
++export { ExpoSystemUIPackage } from './src/main/ets/ExpoSystemUIPackage';
+diff --git a/node_modules/expo-system-ui/harmony/src/main/cpp/CMakeLists.txt b/node_modules/expo-system-ui/harmony/src/main/cpp/CMakeLists.txt
+new file mode 100644
+index 0000000..b7b6452
+--- /dev/null
++++ b/node_modules/expo-system-ui/harmony/src/main/cpp/CMakeLists.txt
+@@ -0,0 +1,10 @@
++cmake_minimum_required(VERSION 3.16)
++
++if(NOT TARGET rnoh)
++  message(FATAL_ERROR "Add RNOH 0.82.30 before expo-system-ui")
++endif()
++
++add_library(rnoh_expo_system_ui STATIC ExpoSystemUITurboModule.cpp)
++target_compile_features(rnoh_expo_system_ui PUBLIC cxx_std_20)
++target_include_directories(rnoh_expo_system_ui PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
++target_link_libraries(rnoh_expo_system_ui PUBLIC rnoh)
+diff --git a/node_modules/expo-system-ui/harmony/src/main/cpp/ExpoSystemUIPackage.h b/node_modules/expo-system-ui/harmony/src/main/cpp/ExpoSystemUIPackage.h
+new file mode 100644
+index 0000000..f3f962d
+--- /dev/null
++++ b/node_modules/expo-system-ui/harmony/src/main/cpp/ExpoSystemUIPackage.h
+@@ -0,0 +1,25 @@
++#pragma once
++
++#include "ExpoSystemUITurboModule.h"
++#include "RNOH/Package.h"
++
++namespace expo::systemui::harmony {
++
++class ExpoSystemUIFactory final : public rnoh::TurboModuleFactoryDelegate {
++ public:
++  SharedTurboModule createTurboModule(Context context, const std::string& name) const override {
++    if (name != "ExpoSystemUI") return nullptr;
++    return std::make_shared<ExpoSystemUITurboModule>(std::move(context), name);
++  }
++};
++
++class ExpoSystemUIPackage final : public rnoh::Package {
++ public:
++  using Package::Package;
++
++  std::unique_ptr<rnoh::TurboModuleFactoryDelegate> createTurboModuleFactoryDelegate() override {
++    return std::make_unique<ExpoSystemUIFactory>();
++  }
++};
++
++} // namespace expo::systemui::harmony
+diff --git a/node_modules/expo-system-ui/harmony/src/main/cpp/ExpoSystemUITurboModule.cpp b/node_modules/expo-system-ui/harmony/src/main/cpp/ExpoSystemUITurboModule.cpp
+new file mode 100644
+index 0000000..39fc231
+--- /dev/null
++++ b/node_modules/expo-system-ui/harmony/src/main/cpp/ExpoSystemUITurboModule.cpp
+@@ -0,0 +1,13 @@
++#include "ExpoSystemUITurboModule.h"
++
++namespace expo::systemui::harmony {
++
++ExpoSystemUITurboModule::ExpoSystemUITurboModule(Context context, const std::string& name)
++    : ArkTSTurboModule(std::move(context), name) {
++  methodMap_ = {
++      ARK_ASYNC_METHOD_METADATA(setBackgroundColorAsync, 1),
++      ARK_ASYNC_METHOD_METADATA(getBackgroundColorAsync, 0),
++  };
++}
++
++} // namespace expo::systemui::harmony
+diff --git a/node_modules/expo-system-ui/harmony/src/main/cpp/ExpoSystemUITurboModule.h b/node_modules/expo-system-ui/harmony/src/main/cpp/ExpoSystemUITurboModule.h
+new file mode 100644
+index 0000000..c5230fe
+--- /dev/null
++++ b/node_modules/expo-system-ui/harmony/src/main/cpp/ExpoSystemUITurboModule.h
+@@ -0,0 +1,12 @@
++#pragma once
++
++#include "RNOH/ArkTSTurboModule.h"
++
++namespace expo::systemui::harmony {
++
++class ExpoSystemUITurboModule final : public rnoh::ArkTSTurboModule {
++ public:
++  ExpoSystemUITurboModule(Context context, const std::string& name);
++};
++
++} // namespace expo::systemui::harmony
+diff --git a/node_modules/expo-system-ui/harmony/src/main/ets/ExpoSystemUIPackage.ets b/node_modules/expo-system-ui/harmony/src/main/ets/ExpoSystemUIPackage.ets
+new file mode 100644
+index 0000000..b4f34fe
+--- /dev/null
++++ b/node_modules/expo-system-ui/harmony/src/main/ets/ExpoSystemUIPackage.ets
+@@ -0,0 +1,23 @@
++import type {
++  RNPackageContext,
++  UITurboModule,
++  UITurboModuleContext,
++} from '@rnoh/react-native-openharmony';
++import { RNOHPackage } from '@rnoh/react-native-openharmony';
++import { ExpoSystemUITurboModule } from './ExpoSystemUITurboModule';
++
++export class ExpoSystemUIPackage extends RNOHPackage {
++  public override getUITurboModuleFactoryByNameMap(): Map<
++    string,
++    (ctx: UITurboModuleContext) => UITurboModule | null
++  > {
++    return new Map<string, (ctx: UITurboModuleContext) => UITurboModule>().set(
++      ExpoSystemUITurboModule.NAME,
++      (ctx: UITurboModuleContext) => new ExpoSystemUITurboModule(ctx),
++    );
++  }
++
++  public override getDebugName(): string {
++    return 'expo-system-ui';
++  }
++}
+diff --git a/node_modules/expo-system-ui/harmony/src/main/ets/ExpoSystemUITurboModule.ets b/node_modules/expo-system-ui/harmony/src/main/ets/ExpoSystemUITurboModule.ets
+new file mode 100644
+index 0000000..a09104e
+--- /dev/null
++++ b/node_modules/expo-system-ui/harmony/src/main/ets/ExpoSystemUITurboModule.ets
+@@ -0,0 +1,64 @@
++import { preferences } from '@kit.ArkData';
++import type { UITurboModuleContext } from '@rnoh/react-native-openharmony';
++import { UITurboModule } from '@rnoh/react-native-openharmony';
++import {
++  isStoredBackgroundColor,
++  resolveBackgroundColor,
++} from './SystemUIColor';
++
++const PREFERENCES_NAME = 'expo_system_ui';
++const BACKGROUND_COLOR_KEY = 'backgroundColor';
++
++export class ExpoSystemUITurboModule extends UITurboModule {
++  public static readonly NAME = 'ExpoSystemUI';
++
++  private readonly store: preferences.Preferences;
++  private currentColor: string;
++  private destroyed = false;
++
++  public constructor(ctx: UITurboModuleContext) {
++    super(ctx);
++    this.store = preferences.getPreferencesSync(ctx.uiAbilityContext, { name: PREFERENCES_NAME });
++    const stored = this.store.getSync(BACKGROUND_COLOR_KEY, '');
++    this.currentColor = typeof stored === 'string' && isStoredBackgroundColor(stored)
++      ? stored
++      : this.defaultColor();
++    this.applyToWindow(this.currentColor);
++  }
++
++  public async setBackgroundColorAsync(color: number | null): Promise<void> {
++    this.assertActive();
++    const resolved = resolveBackgroundColor(color, this.ctx.uiAbilityContext.config.colorMode);
++    this.applyToWindow(resolved);
++    if (color === null) {
++      this.store.deleteSync(BACKGROUND_COLOR_KEY);
++    } else {
++      this.store.putSync(BACKGROUND_COLOR_KEY, resolved);
++    }
++    await this.store.flush();
++    this.assertActive();
++    this.currentColor = resolved;
++  }
++
++  public async getBackgroundColorAsync(): Promise<string> {
++    this.assertActive();
++    return this.currentColor;
++  }
++
++  public override __onDestroy__(): void {
++    this.destroyed = true;
++    super.__onDestroy__();
++  }
++
++  private defaultColor(): string {
++    return resolveBackgroundColor(null, this.ctx.uiAbilityContext.config.colorMode);
++  }
++
++  private applyToWindow(color: string): void {
++    this.ctx.uiAbilityContext.windowStage.getMainWindowSync().setWindowBackgroundColor(color);
++  }
++
++  private assertActive(): void {
++    if (this.destroyed) throw new Error('ExpoSystemUI module was destroyed');
++  }
++}
+diff --git a/node_modules/expo-system-ui/harmony/src/main/ets/SystemUIColor.ts b/node_modules/expo-system-ui/harmony/src/main/ets/SystemUIColor.ts
+new file mode 100644
+index 0000000..d72cbdb
+--- /dev/null
++++ b/node_modules/expo-system-ui/harmony/src/main/ets/SystemUIColor.ts
+@@ -0,0 +1,21 @@
++const MIN_SIGNED_32 = -0x80000000;
++const MAX_UNSIGNED_32 = 0xffffffff;
++
++export function colorNumberToHex(color: number): string {
++  if (!Number.isFinite(color) || Math.floor(color) !== color) {
++    throw new Error('System UI background color must be a finite integer');
++  }
++  if (color < MIN_SIGNED_32 || color > MAX_UNSIGNED_32) {
++    throw new Error('System UI background color must fit in 32-bit ARGB');
++  }
++  return `#${(color >>> 0 & 0xffffff).toString(16).padStart(6, '0')}`;
++}
++
++export function resolveBackgroundColor(color: number | null, colorMode: number | undefined): string {
++  if (color !== null) return colorNumberToHex(color);
++  return colorMode === 0 ? '#000000' : '#ffffff';
++}
++
++export function isStoredBackgroundColor(value: string): boolean {
++  return /^#[0-9a-f]{6}$/.test(value);
++}

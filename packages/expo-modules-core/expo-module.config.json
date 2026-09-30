@@ -1,0 +1,30 @@
+{
+  "platforms": ["apple", "android", "harmony"],
+  "apple": {
+    "podspecPath": "./ExpoModulesCore.podspec"
+  },
+  "android": {
+    "gradlePlugins": [
+      {
+        "id": "expo-module-gradle-plugin",
+        "group": "expo.modules",
+        "sourceDir": "expo-module-gradle-plugin",
+        "applyToRootProject": false
+      }
+    ]
+  },
+  "harmony": {
+    "kind": "turbo-module",
+    "cpp": {
+      "packageClass": "expo::harmony::ExpoModulesCorePackage",
+      "header": "ExpoModulesCorePackage.h",
+      "cmakeTarget": "rnoh_expo_modules_core",
+      "cmakePath": "harmony/src/main/cpp"
+    },
+    "ets": {
+      "packageClass": "ExpoModulesCorePackage",
+      "importPath": "expo-modules-core/harmony",
+      "entrypoint": "harmony/index.ets"
+    }
+  }
+}

@@ -1,2 +1,11 @@
+packages:
+  - 'apps/*'
+  - 'packages/*'
+  - 'packages/@expo/*'
+
+linkWorkspacePackages: true
+preferWorkspacePackages: true
+autoInstallPeers: false
+
 onlyBuiltDependencies:
   - esbuild

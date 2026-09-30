@@ -1,0 +1,7 @@
+{
+  "name": "entry",
+  "version": "1.0.0",
+  "dependencies": {
+    "@rnoh/react-native-openharmony": "file:../dependencies/react_native_openharmony.har"
+  }
+}

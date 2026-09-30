@@ -1,0 +1,1260 @@
+diff --git a/node_modules/@expo/cli/build/bin/cli b/node_modules/@expo/cli/build/bin/cli
+index 1b07578..1019e10 100755
+--- a/node_modules/@expo/cli/build/bin/cli
++++ b/node_modules/@expo/cli/build/bin/cli
+@@ -45,18 +45,12 @@ function _getRequireWildcardCache(nodeInterop) {
+     })(nodeInterop);
+ }
+ function _interop_require_wildcard(obj, nodeInterop) {
+-    if (!nodeInterop && obj && obj.__esModule) {
+-        return obj;
+-    }
+-    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+-        return {
+-            default: obj
+-        };
+-    }
++    if (!nodeInterop && obj && obj.__esModule) return obj;
++    if (obj === null || typeof obj !== "object" && typeof obj !== "function") return {
++        default: obj
++    };
+     var cache = _getRequireWildcardCache(nodeInterop);
+-    if (cache && cache.has(obj)) {
+-        return cache.get(obj);
+-    }
++    if (cache && cache.has(obj)) return cache.get(obj);
+     var newObj = {
+         __proto__: null
+     };
+@@ -64,17 +58,12 @@ function _interop_require_wildcard(obj, nodeInterop) {
+     for(var key in obj){
+         if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+             var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+-            if (desc && (desc.get || desc.set)) {
+-                Object.defineProperty(newObj, key, desc);
+-            } else {
+-                newObj[key] = obj[key];
+-            }
++            if (desc && (desc.get || desc.set)) Object.defineProperty(newObj, key, desc);
++            else newObj[key] = obj[key];
+         }
+     }
+     newObj.default = obj;
+-    if (cache) {
+-        cache.set(obj, newObj);
+-    }
++    if (cache) cache.set(obj, newObj);
+     return newObj;
+ }
+ // Setup before requiring `debug`.
+@@ -90,6 +79,7 @@ const commands = {
+     run: ()=>Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../src/run/index.js"))).then((i)=>i.expoRun),
+     'run:ios': ()=>Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../src/run/ios/index.js"))).then((i)=>i.expoRunIos),
+     'run:android': ()=>Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../src/run/android/index.js"))).then((i)=>i.expoRunAndroid),
++    'run:harmony': ()=>Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../src/run/harmony/index.js"))).then((i)=>i.expoRunHarmony),
+     start: ()=>Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../src/start/index.js"))).then((i)=>i.expoStart),
+     prebuild: ()=>Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../src/prebuild/index.js"))).then((i)=>i.expoPrebuild),
+     config: ()=>Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../src/config/index.js"))).then((i)=>i.expoConfig),
+diff --git a/node_modules/@expo/cli/build/src/harmony/build.js b/node_modules/@expo/cli/build/src/harmony/build.js
+new file mode 100644
+index 0000000..5226913
+--- /dev/null
++++ b/node_modules/@expo/cli/build/src/harmony/build.js
+@@ -0,0 +1,73 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", {
++    value: true
++});
++Object.defineProperty(exports, "buildHarmonyAsync", {
++    enumerable: true,
++    get: function() {
++        return buildHarmonyAsync;
++    }
++});
++function _spawnasync() {
++    const data = /*#__PURE__*/ _interop_require_default(require("@expo/spawn-async"));
++    _spawnasync = function() {
++        return data;
++    };
++    return data;
++}
++function _fs() {
++    const data = /*#__PURE__*/ _interop_require_default(require("fs"));
++    _fs = function() {
++        return data;
++    };
++    return data;
++}
++function _path() {
++    const data = /*#__PURE__*/ _interop_require_default(require("path"));
++    _path = function() {
++        return data;
++    };
++    return data;
++}
++function _interop_require_default(obj) {
++    return obj && obj.__esModule ? obj : {
++        default: obj
++    };
++}
++async function buildHarmonyAsync(projectRoot, configuration, toolchain) {
++    const harmonyRoot = _path().default.join(projectRoot, 'harmony');
++    const env = {
++        ...process.env,
++        DEVECO_HOME: toolchain.devecoHome,
++        DEVECO_SDK_HOME: process.env.DEVECO_SDK_HOME ?? _path().default.join(toolchain.devecoHome, 'sdk')
++    };
++    await (0, _spawnasync().default)(toolchain.ohpm, [
++        'install'
++    ], {
++        cwd: _path().default.join(harmonyRoot, 'entry'),
++        stdio: 'inherit',
++        env
++    });
++    await (0, _spawnasync().default)(toolchain.hvigor, [
++        '--mode',
++        'module',
++        '-p',
++        'product=default',
++        '-p',
++        'module=entry@default',
++        '-p',
++        `buildMode=${configuration}`,
++        'assembleHap',
++        '--no-daemon',
++        '--stacktrace'
++    ], {
++        cwd: harmonyRoot,
++        stdio: 'inherit',
++        env
++    });
++    const hap = _path().default.join(harmonyRoot, 'entry/build/default/outputs/default/entry-default-unsigned.hap');
++    if (!_fs().default.existsSync(hap)) throw new Error(`Harmony HAP was not produced at ${hap}`);
++    return hap;
++}
++
++//# sourceMappingURL=build.js.map
+\ No newline at end of file
+diff --git a/node_modules/@expo/cli/build/src/harmony/bundle.js b/node_modules/@expo/cli/build/src/harmony/bundle.js
+new file mode 100644
+index 0000000..d3a4228
+--- /dev/null
++++ b/node_modules/@expo/cli/build/src/harmony/bundle.js
+@@ -0,0 +1,129 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", {
++    value: true
++});
++Object.defineProperty(exports, "bundleHarmonyReleaseAsync", {
++    enumerable: true,
++    get: function() {
++        return bundleHarmonyReleaseAsync;
++    }
++});
++function _paths() {
++    const data = require("@expo/config/paths");
++    _paths = function() {
++        return data;
++    };
++    return data;
++}
++function _fs() {
++    const data = /*#__PURE__*/ _interop_require_default(require("fs"));
++    _fs = function() {
++        return data;
++    };
++    return data;
++}
++function _path() {
++    const data = /*#__PURE__*/ _interop_require_default(require("path"));
++    _path = function() {
++        return data;
++    };
++    return data;
++}
++const _exportEmbedAsync = require("../export/embed/exportEmbedAsync");
++function _interop_require_default(obj) {
++    return obj && obj.__esModule ? obj : {
++        default: obj
++    };
++}
++async function bundleHarmonyReleaseAsync(projectRoot) {
++    process.env.EXPO_HARMONY_METRO = '1';
++    const raw = _path().default.join(projectRoot, 'harmony/entry/src/main/resources/rawfile');
++    const assets = _path().default.join(raw, 'assets');
++    const bundleOutput = _path().default.join(raw, 'bundle.harmony.js');
++    await _fs().default.promises.rm(assets, {
++        recursive: true,
++        force: true
++    });
++    await (0, _exportEmbedAsync.exportEmbedInternalAsync)(projectRoot, {
++        entryFile: (0, _paths().resolveEntryPoint)(projectRoot, {
++            platform: 'harmony'
++        }),
++        platform: 'harmony',
++        dev: false,
++        minify: true,
++        bundleOutput,
++        assetsDest: assets,
++        resetCache: false,
++        sourcemapUseAbsolutePath: false,
++        verbose: false,
++        bundleEncoding: 'utf8'
++    });
++    await stageMaterialIconsAsync(bundleOutput, assets);
++    await copyDirectoryContentsAsync(_path().default.join(assets, 'assets'), assets);
++    return bundleOutput;
++}
++async function copyDirectoryContentsAsync(source, destination) {
++    let entries;
++    try {
++        entries = await _fs().default.promises.readdir(source, {
++            withFileTypes: true
++        });
++    } catch (error) {
++        if ((error == null ? void 0 : error.code) === 'ENOENT') return;
++        throw error;
++    }
++    await _fs().default.promises.mkdir(destination, {
++        recursive: true
++    });
++    for (const entry of entries){
++        const sourcePath = _path().default.join(source, entry.name);
++        const destinationPath = _path().default.join(destination, entry.name);
++        if (entry.isDirectory()) {
++            await copyDirectoryContentsAsync(sourcePath, destinationPath);
++        } else {
++            await _fs().default.promises.mkdir(_path().default.dirname(destinationPath), {
++                recursive: true
++            });
++            await _fs().default.promises.copyFile(sourcePath, destinationPath);
++        }
++    }
++}
++async function stageMaterialIconsAsync(bundleOutput, assets) {
++    const source = await findFileNamedAsync(assets, 'MaterialIcons.ttf');
++    if (!source) return;
++    const destination = _path().default.join(assets, 'MaterialIcons.ttf');
++    await _fs().default.promises.copyFile(source, destination);
++    const bundle = await _fs().default.promises.readFile(bundleOutput, 'utf8');
++    const marker = 'name:"MaterialIcons",type:"ttf"';
++    const markerIndex = bundle.indexOf(marker);
++    const assetStart = bundle.lastIndexOf('registerAsset({', markerIndex);
++    const locationPrefix = 'httpServerLocation:"';
++    const locationStart = bundle.indexOf(locationPrefix, assetStart) + locationPrefix.length;
++    const locationEnd = bundle.indexOf('"', locationStart);
++    if (markerIndex < 0 || assetStart < 0 || locationStart < locationPrefix.length || locationEnd < locationStart || locationEnd > markerIndex) {
++        throw new Error('Harmony Release could not rewrite the MaterialIcons asset location.');
++    }
++    await _fs().default.promises.writeFile(bundleOutput, `${bundle.slice(0, locationStart)}/assets${bundle.slice(locationEnd)}`);
++}
++async function findFileNamedAsync(root, name) {
++    let entries;
++    try {
++        entries = await _fs().default.promises.readdir(root, {
++            withFileTypes: true
++        });
++    } catch (error) {
++        if ((error == null ? void 0 : error.code) === 'ENOENT') return null;
++        throw error;
++    }
++    for (const entry of entries){
++        const file = _path().default.join(root, entry.name);
++        if (entry.isFile() && entry.name === name) return file;
++        if (entry.isDirectory()) {
++            const nested = await findFileNamedAsync(file, name);
++            if (nested) return nested;
++        }
++    }
++    return null;
++}
++
++//# sourceMappingURL=bundle.js.map
+\ No newline at end of file
+diff --git a/node_modules/@expo/cli/build/src/harmony/dependencies.js b/node_modules/@expo/cli/build/src/harmony/dependencies.js
+new file mode 100644
+index 0000000..01e820e
+--- /dev/null
++++ b/node_modules/@expo/cli/build/src/harmony/dependencies.js
+@@ -0,0 +1,112 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", {
++    value: true
++});
++function _export(target, all) {
++    for(var name in all)Object.defineProperty(target, name, {
++        enumerable: true,
++        get: Object.getOwnPropertyDescriptor(all, name).get
++    });
++}
++_export(exports, {
++    get HARMONY_RUNTIME_PACKAGES () {
++        return HARMONY_RUNTIME_PACKAGES;
++    },
++    get ensureHarmonyDependenciesAsync () {
++        return ensureHarmonyDependenciesAsync;
++    }
++});
++function _packagemanager() {
++    const data = /*#__PURE__*/ _interop_require_wildcard(require("@expo/package-manager"));
++    _packagemanager = function() {
++        return data;
++    };
++    return data;
++}
++function _fs() {
++    const data = /*#__PURE__*/ _interop_require_default(require("fs"));
++    _fs = function() {
++        return data;
++    };
++    return data;
++}
++function _path() {
++    const data = /*#__PURE__*/ _interop_require_default(require("path"));
++    _path = function() {
++        return data;
++    };
++    return data;
++}
++const _log = /*#__PURE__*/ _interop_require_wildcard(require("../log"));
++const _errors = require("../utils/errors");
++function _interop_require_default(obj) {
++    return obj && obj.__esModule ? obj : {
++        default: obj
++    };
++}
++function _getRequireWildcardCache(nodeInterop) {
++    if (typeof WeakMap !== "function") return null;
++    var cacheBabelInterop = new WeakMap();
++    var cacheNodeInterop = new WeakMap();
++    return (_getRequireWildcardCache = function(nodeInterop) {
++        return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
++    })(nodeInterop);
++}
++function _interop_require_wildcard(obj, nodeInterop) {
++    if (!nodeInterop && obj && obj.__esModule) return obj;
++    if (obj === null || typeof obj !== "object" && typeof obj !== "function") return {
++        default: obj
++    };
++    var cache = _getRequireWildcardCache(nodeInterop);
++    if (cache && cache.has(obj)) return cache.get(obj);
++    var newObj = {
++        __proto__: null
++    };
++    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
++    for(var key in obj){
++        if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
++            var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
++            if (desc && (desc.get || desc.set)) Object.defineProperty(newObj, key, desc);
++            else newObj[key] = obj[key];
++        }
++    }
++    newObj.default = obj;
++    if (cache) cache.set(obj, newObj);
++    return newObj;
++}
++const HARMONY_RUNTIME_PACKAGES = {
++    react: '19.1.1',
++    'react-native': '0.82.1',
++    '@react-native-oh/react-native-harmony': '0.82.30',
++    'expo-splash-screen': '31.0.13'
++};
++async function ensureHarmonyDependenciesAsync(projectRoot, { install, packageManagerOptions = {} }) {
++    const mismatches = Object.entries(HARMONY_RUNTIME_PACKAGES).filter(([name, expected])=>readInstalledVersion(projectRoot, name) !== expected);
++    if (mismatches.length === 0) {
++        return {
++            installed: false
++        };
++    }
++    const specs = Object.entries(HARMONY_RUNTIME_PACKAGES).map(([name, version])=>`${name}@${version}`);
++    if (!install) {
++        throw new _errors.CommandError('HARMONY_DEPENDENCIES', `Harmony requires ${specs.join(', ')}. Install them or rerun without --no-install.`);
++    }
++    const packageManager = _packagemanager().createForProject(projectRoot, {
++        ...packageManagerOptions,
++        log: _log.log
++    });
++    await packageManager.addAsync(specs);
++    return {
++        installed: true
++    };
++}
++function readInstalledVersion(projectRoot, packageName) {
++    try {
++        const packageJson = JSON.parse(_fs().default.readFileSync(_path().default.join(projectRoot, 'node_modules', packageName, 'package.json'), 'utf8'));
++        return typeof packageJson.version === 'string' ? packageJson.version : null;
++    } catch  {
++        return null;
++    }
++}
++
++//# sourceMappingURL=dependencies.js.map
+\ No newline at end of file
+diff --git a/node_modules/@expo/cli/build/src/harmony/device.js b/node_modules/@expo/cli/build/src/harmony/device.js
+new file mode 100644
+index 0000000..98cc0ce
+--- /dev/null
++++ b/node_modules/@expo/cli/build/src/harmony/device.js
+@@ -0,0 +1,150 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", {
++    value: true
++});
++function _export(target, all) {
++    for(var name in all)Object.defineProperty(target, name, {
++        enumerable: true,
++        get: Object.getOwnPropertyDescriptor(all, name).get
++    });
++}
++_export(exports, {
++    get installHarmonyAppAsync () {
++        return installHarmonyAppAsync;
++    },
++    get launchHarmonyAppAsync () {
++        return launchHarmonyAppAsync;
++    },
++    get resolveHarmonyDeviceAsync () {
++        return resolveHarmonyDeviceAsync;
++    },
++    get reverseHarmonyPortAsync () {
++        return reverseHarmonyPortAsync;
++    }
++});
++function _spawnasync() {
++    const data = /*#__PURE__*/ _interop_require_default(require("@expo/spawn-async"));
++    _spawnasync = function() {
++        return data;
++    };
++    return data;
++}
++const _errors = require("../utils/errors");
++function _interop_require_default(obj) {
++    return obj && obj.__esModule ? obj : {
++        default: obj
++    };
++}
++const HDC_DEVICE_DISCOVERY_TIMEOUT = 10000;
++class HdcDeviceDiscoveryTimeoutError extends Error {
++}
++class HdcServerConnectionError extends Error {
++}
++async function hdc(hdcPath, target, args, timeout) {
++    const command = (0, _spawnasync().default)(hdcPath, [
++        ...target ? [
++            '-t',
++            target
++        ] : [],
++        ...args
++    ]);
++    if (timeout == null) return getHdcOutput(await command);
++    let timeoutId;
++    let timedOut = false;
++    const timeoutError = new HdcDeviceDiscoveryTimeoutError('Harmony HDC device discovery timed out.');
++    try {
++        const result = await Promise.race([
++            command,
++            new Promise((_, reject)=>{
++                timeoutId = setTimeout(()=>{
++                    timedOut = true;
++                    command.child.kill('SIGKILL');
++                    reject(timeoutError);
++                }, timeout);
++            })
++        ]);
++        return getHdcOutput(result);
++    } catch (error) {
++        if (timedOut) {
++            await command.catch(()=>undefined);
++            throw timeoutError;
++        }
++        throw error;
++    } finally{
++        if (timeoutId) clearTimeout(timeoutId);
++    }
++}
++function getHdcOutput(result) {
++    if ([
++        result.stdout,
++        result.stderr
++    ].some((text)=>text == null ? void 0 : text.includes('Connect server failed'))) {
++        throw Object.assign(new HdcServerConnectionError('Connect server failed'), result);
++    }
++    return result.stdout.trim();
++}
++async function listHarmonyTargetsAsync(hdcPath) {
++    return await hdc(hdcPath, undefined, [
++        'list',
++        'targets'
++    ], HDC_DEVICE_DISCOVERY_TIMEOUT);
++}
++async function resolveHarmonyDeviceAsync(hdcPath, requested) {
++    if (requested) return requested;
++    let output;
++    try {
++        output = await listHarmonyTargetsAsync(hdcPath);
++    } catch (error) {
++        if (!isHdcServerUnavailable(error)) throw error;
++        try {
++            await hdc(hdcPath, undefined, [
++                'start',
++                '-r'
++            ]);
++            output = await listHarmonyTargetsAsync(hdcPath);
++        } catch (retryError) {
++            if (!isHdcServerUnavailable(retryError)) throw retryError;
++            throw new _errors.CommandError('HARMONY_DEVICE', 'Unable to connect to the Harmony HDC server after restarting it.');
++        }
++    }
++    const targets = output.split(/\r?\n/).map((x)=>x.trim().split(/\s+/)[0]).filter((x)=>x && x !== '[Empty]');
++    if (targets.length !== 1) throw new _errors.CommandError('HARMONY_DEVICE', targets.length ? 'Specify --device when multiple Harmony targets are connected.' : 'No Harmony device is connected.');
++    return targets[0];
++}
++function isHdcServerUnavailable(error) {
++    if (error instanceof HdcDeviceDiscoveryTimeoutError || error instanceof HdcServerConnectionError) return true;
++    if (!(error instanceof Error)) return false;
++    const result = error;
++    return [
++        result.message,
++        result.stdout,
++        result.stderr
++    ].some((text)=>text == null ? void 0 : text.includes('Connect server failed'));
++}
++async function reverseHarmonyPortAsync(hdcPath, target, port) {
++    await hdc(hdcPath, target, [
++        'rport',
++        `tcp:${port}`,
++        `tcp:${port}`
++    ]);
++}
++async function installHarmonyAppAsync(hdcPath, target, hap) {
++    await hdc(hdcPath, target, [
++        'install',
++        '-r',
++        hap
++    ]);
++}
++async function launchHarmonyAppAsync(hdcPath, target, bundleName) {
++    await hdc(hdcPath, target, [
++        'shell',
++        'aa',
++        'start',
++        '-a',
++        'EntryAbility',
++        '-b',
++        bundleName
++    ]);
++}
++
++//# sourceMappingURL=device.js.map
+\ No newline at end of file
+diff --git a/node_modules/@expo/cli/build/src/harmony/paths.js b/node_modules/@expo/cli/build/src/harmony/paths.js
+new file mode 100644
+index 0000000..2e98fb2
+--- /dev/null
++++ b/node_modules/@expo/cli/build/src/harmony/paths.js
+@@ -0,0 +1,67 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", {
++    value: true
++});
++Object.defineProperty(exports, "resolveHarmonyToolchain", {
++    enumerable: true,
++    get: function() {
++        return resolveHarmonyToolchain;
++    }
++});
++function _fs() {
++    const data = /*#__PURE__*/ _interop_require_default(require("fs"));
++    _fs = function() {
++        return data;
++    };
++    return data;
++}
++function _path() {
++    const data = /*#__PURE__*/ _interop_require_default(require("path"));
++    _path = function() {
++        return data;
++    };
++    return data;
++}
++const _errors = require("../utils/errors");
++function _interop_require_default(obj) {
++    return obj && obj.__esModule ? obj : {
++        default: obj
++    };
++}
++function resolveHarmonyToolchain(env = process.env, platform = process.platform) {
++    const standardMacHome = '/Applications/DevEco-Studio.app/Contents';
++    const devecoHome = env.DEVECO_HOME ?? (env.DEVECO_SDK_HOME ? _path().default.dirname(env.DEVECO_SDK_HOME) : undefined) ?? (platform === 'darwin' && _fs().default.existsSync(standardMacHome) ? standardMacHome : undefined);
++    if (!devecoHome) throw new _errors.CommandError('HARMONY_ENV', 'Set DEVECO_HOME or DEVECO_SDK_HOME to DevEco Studio.');
++    const tools = _path().default.join(devecoHome, 'tools');
++    const sdk = env.DEVECO_SDK_HOME ?? _path().default.join(devecoHome, 'sdk');
++    const pathHdc = findExecutableOnPath('hdc', env.PATH);
++    const candidates = [
++        pathHdc,
++        _path().default.join(sdk, 'default/openharmony/toolchains/hdc'),
++        'hdc'
++    ].filter((item)=>item != null);
++    const result = {
++        devecoHome,
++        ohpm: _path().default.join(tools, 'ohpm/bin/ohpm'),
++        hvigor: _path().default.join(tools, 'hvigor/bin/hvigorw'),
++        hdc: candidates.find((item)=>item === 'hdc' || _fs().default.existsSync(item))
++    };
++    for (const [name, file] of Object.entries(result)){
++        if (name !== 'devecoHome' && file !== 'hdc' && !_fs().default.existsSync(file)) {
++            throw new _errors.CommandError('HARMONY_ENV', `Harmony ${name} tool does not exist at ${file}`);
++        }
++    }
++    return result;
++}
++function findExecutableOnPath(executable, searchPath) {
++    for (const directory of (searchPath ?? '').split(_path().default.delimiter).filter(Boolean)){
++        const candidate = _path().default.join(directory, executable);
++        try {
++            _fs().default.accessSync(candidate, _fs().default.constants.X_OK);
++            return candidate;
++        } catch  {}
++    }
++    return undefined;
++}
++
++//# sourceMappingURL=paths.js.map
+\ No newline at end of file
+diff --git a/node_modules/@expo/cli/build/src/prebuild/harmony/prebuildHarmonyAsync.js b/node_modules/@expo/cli/build/src/prebuild/harmony/prebuildHarmonyAsync.js
+new file mode 100644
+index 0000000..fbe290d
+--- /dev/null
++++ b/node_modules/@expo/cli/build/src/prebuild/harmony/prebuildHarmonyAsync.js
+@@ -0,0 +1,141 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", {
++    value: true
++});
++function _export(target, all) {
++    for(var name in all)Object.defineProperty(target, name, {
++        enumerable: true,
++        get: Object.getOwnPropertyDescriptor(all, name).get
++    });
++}
++_export(exports, {
++    get deriveHarmonyBundleName () {
++        return deriveHarmonyBundleName;
++    },
++    get prebuildHarmonyAsync () {
++        return prebuildHarmonyAsync;
++    },
++    get updateHarmonyDebugBundlePathAsync () {
++        return updateHarmonyDebugBundlePathAsync;
++    }
++});
++function _config() {
++    const data = require("@expo/config");
++    _config = function() {
++        return data;
++    };
++    return data;
++}
++function _paths() {
++    const data = require("@expo/config/paths");
++    _paths = function() {
++        return data;
++    };
++    return data;
++}
++function _fs() {
++    const data = /*#__PURE__*/ _interop_require_default(require("fs"));
++    _fs = function() {
++        return data;
++    };
++    return data;
++}
++function _module() {
++    const data = require("module");
++    _module = function() {
++        return data;
++    };
++    return data;
++}
++function _path() {
++    const data = /*#__PURE__*/ _interop_require_default(require("path"));
++    _path = function() {
++        return data;
++    };
++    return data;
++}
++function _resolvefrom() {
++    const data = /*#__PURE__*/ _interop_require_default(require("resolve-from"));
++    _resolvefrom = function() {
++        return data;
++    };
++    return data;
++}
++const _dependencies = require("../../harmony/dependencies");
++const _errors = require("../../utils/errors");
++function _interop_require_default(obj) {
++    return obj && obj.__esModule ? obj : {
++        default: obj
++    };
++}
++const defaultDependencies = {
++    getConfig: _config().getConfig,
++    ensureDependencies: _dependencies.ensureHarmonyDependenciesAsync,
++    loadAutolinking: async (projectRoot)=>{
++        const expoPackageJson = (0, _resolvefrom().default)(projectRoot, 'expo/package.json');
++        return (0, _module().createRequire)(expoPackageJson)('expo-modules-autolinking/exports');
++    },
++    removeHarmonyProject: async (harmonyRoot)=>{
++        await _fs().default.promises.rm(harmonyRoot, {
++            recursive: true,
++            force: true
++        });
++    },
++    updateDebugBundlePath: updateHarmonyDebugBundlePathAsync
++};
++async function prebuildHarmonyAsync(projectRoot, options, dependencies = defaultDependencies) {
++    await dependencies.ensureDependencies(projectRoot, {
++        install: options.install,
++        packageManagerOptions: options.packageManagerOptions
++    });
++    if (options.clean) {
++        await dependencies.removeHarmonyProject(_path().default.join(projectRoot, 'harmony'));
++    }
++    const { exp } = dependencies.getConfig(projectRoot, {
++        skipPlugins: true,
++        skipSDKVersionRequirement: true
++    });
++    const autolinking = await dependencies.loadAutolinking(projectRoot);
++    const modules = await autolinking.queryAutolinkingModulesFromProjectAsync(projectRoot, {
++        platform: 'harmony'
++    });
++    const core = modules.find((module)=>module.packageName === 'expo-modules-core');
++    if (!(core == null ? void 0 : core.packageRoot)) {
++        throw new _errors.CommandError('HARMONY_AUTOLINKING', 'expo-modules-core was not resolved for Harmony');
++    }
++    const rnohRoot = _path().default.join(projectRoot, 'node_modules', '@react-native-oh', 'react-native-harmony');
++    const native = await autolinking.syncHarmonyNativeProjectAsync({
++        projectRoot,
++        appName: exp.name,
++        bundleName: options.bundleName ?? deriveHarmonyBundleName(exp.slug),
++        modules,
++        inputHarPath: _path().default.join(rnohRoot, 'react_native_openharmony.har'),
++        corePackageRoot: core.packageRoot
++    });
++    await dependencies.updateDebugBundlePath(projectRoot, native.harmonyRoot);
++    return native;
++}
++async function updateHarmonyDebugBundlePathAsync(projectRoot, harmonyRoot, resolveEntry = _paths().resolveEntryPoint) {
++    const entryFile = resolveEntry(projectRoot, {
++        platform: 'harmony'
++    });
++    const relativeEntry = _path().default.relative(projectRoot, entryFile).split(_path().default.sep).join('/');
++    const bundlePath = `/${relativeEntry.replace(/\.[^/.]+$/, '')}.bundle`;
++    const indexPath = _path().default.join(harmonyRoot, 'entry/src/main/ets/pages/Index.ets');
++    const contents = await _fs().default.promises.readFile(indexPath, 'utf8');
++    const debugBundleUrlPattern = /http:\/\/127\.0\.0\.1:\d+\/[^'"]*\.bundle\?platform=harmony&dev=true&minify=false/;
++    if (!debugBundleUrlPattern.test(contents)) {
++        throw new _errors.CommandError('HARMONY_METRO_ENTRY', `Harmony Debug bundle URL was not found in ${indexPath}`);
++    }
++    const updated = contents.replace(debugBundleUrlPattern, `http://127.0.0.1:8081${bundlePath}?platform=harmony&dev=true&minify=false`);
++    if (updated !== contents) await _fs().default.promises.writeFile(indexPath, updated);
++}
++function deriveHarmonyBundleName(slug) {
++    let identifier = slug.toLowerCase().replace(/[^a-z0-9]/g, '');
++    if (!identifier || !/^[a-z]/.test(identifier)) {
++        identifier = `app${identifier}`;
++    }
++    return `dev.expo.${identifier}`;
++}
++
++//# sourceMappingURL=prebuildHarmonyAsync.js.map
+\ No newline at end of file
+diff --git a/node_modules/@expo/cli/build/src/prebuild/index.js b/node_modules/@expo/cli/build/src/prebuild/index.js
+index 80d0428..25f7a53 100644
+--- a/node_modules/@expo/cli/build/src/prebuild/index.js
++++ b/node_modules/@expo/cli/build/src/prebuild/index.js
+@@ -31,18 +31,12 @@ function _getRequireWildcardCache(nodeInterop) {
+     })(nodeInterop);
+ }
+ function _interop_require_wildcard(obj, nodeInterop) {
+-    if (!nodeInterop && obj && obj.__esModule) {
+-        return obj;
+-    }
+-    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+-        return {
+-            default: obj
+-        };
+-    }
++    if (!nodeInterop && obj && obj.__esModule) return obj;
++    if (obj === null || typeof obj !== "object" && typeof obj !== "function") return {
++        default: obj
++    };
+     var cache = _getRequireWildcardCache(nodeInterop);
+-    if (cache && cache.has(obj)) {
+-        return cache.get(obj);
+-    }
++    if (cache && cache.has(obj)) return cache.get(obj);
+     var newObj = {
+         __proto__: null
+     };
+@@ -50,17 +44,12 @@ function _interop_require_wildcard(obj, nodeInterop) {
+     for(var key in obj){
+         if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+             var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+-            if (desc && (desc.get || desc.set)) {
+-                Object.defineProperty(newObj, key, desc);
+-            } else {
+-                newObj[key] = obj[key];
+-            }
++            if (desc && (desc.get || desc.set)) Object.defineProperty(newObj, key, desc);
++            else newObj[key] = obj[key];
+         }
+     }
+     newObj.default = obj;
+-    if (cache) {
+-        cache.set(obj, newObj);
+-    }
++    if (cache) cache.set(obj, newObj);
+     return newObj;
+ }
+ const expoPrebuild = async (argv)=>{
+@@ -75,6 +64,7 @@ const expoPrebuild = async (argv)=>{
+         '--no-install': Boolean,
+         '--template': String,
+         '--platform': String,
++        '--bundle-name': String,
+         '--skip-dependency-update': String,
+         // Aliases
+         '-h': '--help',
+@@ -91,7 +81,8 @@ const expoPrebuild = async (argv)=>{
+             (0, _chalk().default)`--bun                                    Use bun to install dependencies. {dim Default when bun.lock or bun.lockb exists}`,
+             (0, _chalk().default)`--pnpm                                   Use pnpm to install dependencies. {dim Default when pnpm-lock.yaml exists}`,
+             `--template <template>                    Project template to clone from. File path pointing to a local tar file, npm package or a github repo`,
+-            (0, _chalk().default)`-p, --platform <all|android|ios>         Platforms to sync: ios, android, all. {dim Default: all}`,
++            (0, _chalk().default)`-p, --platform <all|android|ios|harmony> Platforms to sync. Harmony must be requested explicitly. {dim Default: all}`,
++            `--bundle-name <name>                    Harmony application bundle name`,
+             `--skip-dependency-update <dependencies>  Preserves versions of listed packages in package.json (comma separated list)`,
+             `-h, --help                               Usage info`
+         ].join('\n'));
+@@ -106,6 +97,14 @@ const expoPrebuild = async (argv)=>{
+         Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../utils/errors.js")))
+     ]);
+     return (()=>{
++        if (args['--platform'] === 'harmony') {
++            return Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("./harmony/prebuildHarmonyAsync.js"))).then(({ prebuildHarmonyAsync })=>prebuildHarmonyAsync((0, _args.getProjectRoot)(args), {
++                    clean: args['--clean'],
++                    install: !args['--no-install'],
++                    packageManagerOptions: resolvePackageManagerOptions(args),
++                    bundleName: args['--bundle-name']
++                }));
++        }
+         return prebuildAsync((0, _args.getProjectRoot)(args), {
+             // Parsed options
+             clean: args['--clean'],
+diff --git a/node_modules/@expo/cli/build/src/run/harmony/index.js b/node_modules/@expo/cli/build/src/run/harmony/index.js
+new file mode 100644
+index 0000000..148f77f
+--- /dev/null
++++ b/node_modules/@expo/cli/build/src/run/harmony/index.js
+@@ -0,0 +1,93 @@
++#!/usr/bin/env node
++"use strict";
++Object.defineProperty(exports, "__esModule", {
++    value: true
++});
++Object.defineProperty(exports, "expoRunHarmony", {
++    enumerable: true,
++    get: function() {
++        return expoRunHarmony;
++    }
++});
++function _chalk() {
++    const data = /*#__PURE__*/ _interop_require_default(require("chalk"));
++    _chalk = function() {
++        return data;
++    };
++    return data;
++}
++function _path() {
++    const data = /*#__PURE__*/ _interop_require_default(require("path"));
++    _path = function() {
++        return data;
++    };
++    return data;
++}
++const _log = /*#__PURE__*/ _interop_require_wildcard(require("../../log"));
++const _args = require("../../utils/args");
++const _errors = require("../../utils/errors");
++function _interop_require_default(obj) {
++    return obj && obj.__esModule ? obj : {
++        default: obj
++    };
++}
++function _getRequireWildcardCache(nodeInterop) {
++    if (typeof WeakMap !== "function") return null;
++    var cacheBabelInterop = new WeakMap();
++    var cacheNodeInterop = new WeakMap();
++    return (_getRequireWildcardCache = function(nodeInterop) {
++        return nodeInterop ? cacheNodeInterop : cacheBabelInterop;
++    })(nodeInterop);
++}
++function _interop_require_wildcard(obj, nodeInterop) {
++    if (!nodeInterop && obj && obj.__esModule) return obj;
++    if (obj === null || typeof obj !== "object" && typeof obj !== "function") return {
++        default: obj
++    };
++    var cache = _getRequireWildcardCache(nodeInterop);
++    if (cache && cache.has(obj)) return cache.get(obj);
++    var newObj = {
++        __proto__: null
++    };
++    var hasPropertyDescriptor = Object.defineProperty && Object.getOwnPropertyDescriptor;
++    for(var key in obj){
++        if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
++            var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
++            if (desc && (desc.get || desc.set)) Object.defineProperty(newObj, key, desc);
++            else newObj[key] = obj[key];
++        }
++    }
++    newObj.default = obj;
++    if (cache) cache.set(obj, newObj);
++    return newObj;
++}
++const expoRunHarmony = async (argv)=>{
++    const args = (0, _args.assertWithOptionsArgs)({
++        '--help': Boolean,
++        '--configuration': String,
++        '--device': String,
++        '--port': Number,
++        '--no-install': Boolean,
++        '--no-bundler': Boolean,
++        '--no-build-cache': Boolean,
++        '--bundle-name': String,
++        '-h': '--help',
++        '-p': '--port'
++    }, {
++        argv
++    });
++    if (args['--help']) _log.exit((0, _chalk().default)`{bold Usage}\n  $ npx expo run:harmony <dir>\n\n--configuration <Debug|Release>\n--device <target>\n--port <number>\n--no-install\n--no-bundler\n--no-build-cache\n--bundle-name <name>`, 0);
++    const { getProjectRoot } = await Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../../utils/args.js")));
++    const { runHarmonyAsync } = await Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("./runHarmonyAsync.js")));
++    return runHarmonyAsync(_path().default.resolve(getProjectRoot(args)), {
++        configuration: args['--configuration'],
++        device: args['--device'],
++        port: args['--port'],
++        install: !args['--no-install'],
++        bundler: !args['--no-bundler'],
++        buildCache: !args['--no-build-cache'],
++        bundleName: args['--bundle-name']
++    }).catch(_errors.logCmdError);
++};
++
++//# sourceMappingURL=index.js.map
+\ No newline at end of file
+diff --git a/node_modules/@expo/cli/build/src/run/harmony/runHarmonyAsync.js b/node_modules/@expo/cli/build/src/run/harmony/runHarmonyAsync.js
+new file mode 100644
+index 0000000..351df1e
+--- /dev/null
++++ b/node_modules/@expo/cli/build/src/run/harmony/runHarmonyAsync.js
+@@ -0,0 +1,107 @@
++"use strict";
++Object.defineProperty(exports, "__esModule", {
++    value: true
++});
++Object.defineProperty(exports, "runHarmonyAsync", {
++    enumerable: true,
++    get: function() {
++        return runHarmonyAsync;
++    }
++});
++function _fs() {
++    const data = /*#__PURE__*/ _interop_require_default(require("fs"));
++    _fs = function() {
++        return data;
++    };
++    return data;
++}
++function _path() {
++    const data = /*#__PURE__*/ _interop_require_default(require("path"));
++    _path = function() {
++        return data;
++    };
++    return data;
++}
++const _prebuildHarmonyAsync = require("../../prebuild/harmony/prebuildHarmonyAsync");
++const _startBundler = require("../startBundler");
++const _bundle = require("../../harmony/bundle");
++const _build = require("../../harmony/build");
++const _device = require("../../harmony/device");
++const _paths = require("../../harmony/paths");
++function _interop_require_default(obj) {
++    return obj && obj.__esModule ? obj : {
++        default: obj
++    };
++}
++const defaults = {
++    prebuildHarmonyAsync: _prebuildHarmonyAsync.prebuildHarmonyAsync,
++    startBundlerAsync: _startBundler.startBundlerAsync,
++    bundleHarmonyReleaseAsync: _bundle.bundleHarmonyReleaseAsync,
++    buildHarmonyAsync: _build.buildHarmonyAsync,
++    installHarmonyAppAsync: _device.installHarmonyAppAsync,
++    launchHarmonyAppAsync: _device.launchHarmonyAppAsync,
++    resolveHarmonyDeviceAsync: _device.resolveHarmonyDeviceAsync,
++    reverseHarmonyPortAsync: _device.reverseHarmonyPortAsync,
++    resolveHarmonyToolchain: _paths.resolveHarmonyToolchain
++};
++async function runHarmonyAsync(projectRoot, options, deps = defaults) {
++    const configuration = (options.configuration ?? 'Debug').toLowerCase();
++    if (![
++        'debug',
++        'release'
++    ].includes(configuration)) throw new Error('Expected --configuration Debug or Release');
++    process.env.NODE_ENV = configuration === 'release' ? 'production' : 'development';
++    const native = await deps.prebuildHarmonyAsync(projectRoot, {
++        install: options.install ?? true,
++        clean: false,
++        bundleName: options.bundleName
++    });
++    const toolchain = deps.resolveHarmonyToolchain();
++    const port = options.port ?? 8081;
++    if (options.buildCache === false) await Promise.all([
++        'entry/build',
++        'entry/.cxx',
++        '.hvigor'
++    ].map((p)=>_fs().default.promises.rm(_path().default.join(projectRoot, 'harmony', p), {
++            recursive: true,
++            force: true
++        })));
++    if (configuration === 'release') await deps.bundleHarmonyReleaseAsync(projectRoot);
++    else {
++        await Promise.all([
++            _fs().default.promises.rm(_path().default.join(projectRoot, 'harmony/entry/src/main/resources/rawfile/bundle.harmony.js'), {
++                force: true
++            }),
++            _fs().default.promises.rm(_path().default.join(projectRoot, 'harmony/entry/src/main/resources/rawfile/assets'), {
++                recursive: true,
++                force: true
++            })
++        ]);
++        process.env.EXPO_HARMONY_METRO = '1';
++        await updateMetroPortAsync(projectRoot, port);
++        if (options.bundler !== false) await deps.startBundlerAsync(projectRoot, {
++            port,
++            headless: false,
++            hostType: 'localhost',
++            showInterface: false
++        });
++    }
++    const hap = await deps.buildHarmonyAsync(projectRoot, configuration, toolchain);
++    const target = await deps.resolveHarmonyDeviceAsync(toolchain.hdc, options.device);
++    if (configuration === 'debug') await deps.reverseHarmonyPortAsync(toolchain.hdc, target, port);
++    await deps.installHarmonyAppAsync(toolchain.hdc, target, hap);
++    const app = JSON.parse(_fs().default.readFileSync(_path().default.join(projectRoot, 'harmony/AppScope/app.json5'), 'utf8'));
++    await deps.launchHarmonyAppAsync(toolchain.hdc, target, app.app.bundleName);
++    return {
++        hap,
++        target,
++        harmonyRoot: native.harmonyRoot
++    };
++}
++async function updateMetroPortAsync(projectRoot, port) {
++    const p = _path().default.join(projectRoot, 'harmony/entry/src/main/ets/pages/Index.ets');
++    const s = await _fs().default.promises.readFile(p, 'utf8');
++    await _fs().default.promises.writeFile(p, s.replace(/127\.0\.0\.1:\d+(?=\/[^'\"]*\.bundle)/g, `127.0.0.1:${port}`));
++}
++
++//# sourceMappingURL=runHarmonyAsync.js.map
+\ No newline at end of file
+diff --git a/node_modules/@expo/cli/build/src/run/index.js b/node_modules/@expo/cli/build/src/run/index.js
+index 0118086..c0abc53 100644
+--- a/node_modules/@expo/cli/build/src/run/index.js
++++ b/node_modules/@expo/cli/build/src/run/index.js
+@@ -33,18 +33,12 @@ function _getRequireWildcardCache(nodeInterop) {
+     })(nodeInterop);
+ }
+ function _interop_require_wildcard(obj, nodeInterop) {
+-    if (!nodeInterop && obj && obj.__esModule) {
+-        return obj;
+-    }
+-    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+-        return {
+-            default: obj
+-        };
+-    }
++    if (!nodeInterop && obj && obj.__esModule) return obj;
++    if (obj === null || typeof obj !== "object" && typeof obj !== "function") return {
++        default: obj
++    };
+     var cache = _getRequireWildcardCache(nodeInterop);
+-    if (cache && cache.has(obj)) {
+-        return cache.get(obj);
+-    }
++    if (cache && cache.has(obj)) return cache.get(obj);
+     var newObj = {
+         __proto__: null
+     };
+@@ -52,17 +46,12 @@ function _interop_require_wildcard(obj, nodeInterop) {
+     for(var key in obj){
+         if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+             var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+-            if (desc && (desc.get || desc.set)) {
+-                Object.defineProperty(newObj, key, desc);
+-            } else {
+-                newObj[key] = obj[key];
+-            }
++            if (desc && (desc.get || desc.set)) Object.defineProperty(newObj, key, desc);
++            else newObj[key] = obj[key];
+         }
+     }
+     newObj.default = obj;
+-    if (cache) {
+-        cache.set(obj, newObj);
+-    }
++    if (cache) cache.set(obj, newObj);
+     return newObj;
+ }
+ const expoRun = async (argv)=>{
+@@ -86,7 +75,7 @@ const expoRun = async (argv)=>{
+         const argsWithoutPlatform = !platform ? argv : argv == null ? void 0 : argv.splice(1);
+         // Do not capture `--help` when platform is provided
+         if (!platform && args['--help']) {
+-            (0, _args.printHelp)('Run the native app locally', `npx expo run <android|ios>`, (0, _chalk().default)`{dim $} npx expo run <android|ios> --help  Output usage information`);
++            (0, _args.printHelp)('Run the native app locally', `npx expo run <android|ios|harmony>`, (0, _chalk().default)`{dim $} npx expo run <android|ios|harmony> --help  Output usage information`);
+         }
+         if (!platform) {
+             const { selectAsync } = await Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../utils/prompts.js")));
+@@ -98,6 +87,10 @@ const expoRun = async (argv)=>{
+                 {
+                     title: 'iOS',
+                     value: 'ios'
++                },
++                {
++                    title: 'Harmony',
++                    value: 'harmony'
+                 }
+             ]);
+         }
+@@ -113,6 +106,11 @@ const expoRun = async (argv)=>{
+                     const { expoRunIos } = await Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("./ios/index.js")));
+                     return expoRunIos(argsWithoutPlatform);
+                 }
++            case 'harmony':
++                {
++                    const { expoRunHarmony } = await Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("./harmony/index.js")));
++                    return expoRunHarmony(argsWithoutPlatform);
++                }
+             default:
+                 throw new _errors.CommandError('UNSUPPORTED_PLATFORM', `Unsupported platform: ${platform}`);
+         }
+diff --git a/node_modules/@expo/cli/build/src/start/index.js b/node_modules/@expo/cli/build/src/start/index.js
+index 10a0455..bdba31e 100644
+--- a/node_modules/@expo/cli/build/src/start/index.js
++++ b/node_modules/@expo/cli/build/src/start/index.js
+@@ -3,9 +3,17 @@
+ Object.defineProperty(exports, "__esModule", {
+     value: true
+ });
+-Object.defineProperty(exports, "expoStart", {
+-    enumerable: true,
+-    get: function() {
++function _export(target, all) {
++    for(var name in all)Object.defineProperty(target, name, {
++        enumerable: true,
++        get: Object.getOwnPropertyDescriptor(all, name).get
++    });
++}
++_export(exports, {
++    get enableHarmonyMetroForManagedProject () {
++        return enableHarmonyMetroForManagedProject;
++    },
++    get expoStart () {
+         return expoStart;
+     }
+ });
+@@ -16,6 +24,20 @@ function _chalk() {
+     };
+     return data;
+ }
++function _fs() {
++    const data = /*#__PURE__*/ _interop_require_default(require("fs"));
++    _fs = function() {
++        return data;
++    };
++    return data;
++}
++function _path() {
++    const data = /*#__PURE__*/ _interop_require_default(require("path"));
++    _path = function() {
++        return data;
++    };
++    return data;
++}
+ const _args = require("../utils/args");
+ const _errors = require("../utils/errors");
+ function _interop_require_default(obj) {
+@@ -32,18 +54,12 @@ function _getRequireWildcardCache(nodeInterop) {
+     })(nodeInterop);
+ }
+ function _interop_require_wildcard(obj, nodeInterop) {
+-    if (!nodeInterop && obj && obj.__esModule) {
+-        return obj;
+-    }
+-    if (obj === null || typeof obj !== "object" && typeof obj !== "function") {
+-        return {
+-            default: obj
+-        };
+-    }
++    if (!nodeInterop && obj && obj.__esModule) return obj;
++    if (obj === null || typeof obj !== "object" && typeof obj !== "function") return {
++        default: obj
++    };
+     var cache = _getRequireWildcardCache(nodeInterop);
+-    if (cache && cache.has(obj)) {
+-        return cache.get(obj);
+-    }
++    if (cache && cache.has(obj)) return cache.get(obj);
+     var newObj = {
+         __proto__: null
+     };
+@@ -51,19 +67,25 @@ function _interop_require_wildcard(obj, nodeInterop) {
+     for(var key in obj){
+         if (key !== "default" && Object.prototype.hasOwnProperty.call(obj, key)) {
+             var desc = hasPropertyDescriptor ? Object.getOwnPropertyDescriptor(obj, key) : null;
+-            if (desc && (desc.get || desc.set)) {
+-                Object.defineProperty(newObj, key, desc);
+-            } else {
+-                newObj[key] = obj[key];
+-            }
++            if (desc && (desc.get || desc.set)) Object.defineProperty(newObj, key, desc);
++            else newObj[key] = obj[key];
+         }
+     }
+     newObj.default = obj;
+-    if (cache) {
+-        cache.set(obj, newObj);
+-    }
++    if (cache) cache.set(obj, newObj);
+     return newObj;
+ }
++function enableHarmonyMetroForManagedProject(projectRoot) {
++    try {
++        var _state_sdk54;
++        const state = JSON.parse(_fs().default.readFileSync(_path().default.join(projectRoot, '.expo-harmony/managed-state.json'), 'utf8'));
++        if ((state == null ? void 0 : (_state_sdk54 = state.sdk54) == null ? void 0 : _state_sdk54.mode) !== 'sdk54-package-patch') return false;
++        process.env.EXPO_HARMONY_METRO = '1';
++        return true;
++    } catch  {
++        return false;
++    }
++}
+ const expoStart = async (argv)=>{
+     const args = (0, _args.assertArgs)({
+         // Types
+@@ -132,6 +154,7 @@ const expoStart = async (argv)=>{
+         ].join('\n'));
+     }
+     const projectRoot = (0, _args.getProjectRoot)(args);
++    enableHarmonyMetroForManagedProject(projectRoot);
+     // NOTE(cedric): `./resolveOptions` loads the expo config when using dev clients, this needs to be initialized before that
+     const { setNodeEnv, loadEnvFiles } = await Promise.resolve().then(()=>/*#__PURE__*/ _interop_require_wildcard(require("../utils/nodeEnv.js")));
+     setNodeEnv(!args['--no-dev'] ? 'development' : 'production');

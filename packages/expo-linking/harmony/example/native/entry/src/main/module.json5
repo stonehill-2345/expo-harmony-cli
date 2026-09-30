@@ -1,0 +1,53 @@
+{
+  "module": {
+    "name": "entry",
+    "type": "entry",
+    "mainElement": "EntryAbility",
+    "deviceTypes": [
+      "phone"
+    ],
+    "deliveryWithInstall": true,
+    "installationFree": false,
+    "pages": "$profile:main_pages",
+    "querySchemes": [
+      "laneblinking",
+      "lanebmissing"
+    ],
+    "abilities": [
+      {
+        "name": "EntryAbility",
+        "srcEntry": "./ets/entryability/EntryAbility.ets",
+        "exported": true,
+        "launchType": "singleton",
+        "icon": "$media:icon",
+        "label": "$string:app_name",
+        "startWindowIcon": "$media:icon",
+        "startWindowBackground": "$color:start_window_background",
+        "skills": [
+          {
+            "actions": [
+              "ohos.want.action.home"
+            ],
+            "entities": [
+              "entity.system.home"
+            ]
+          },
+          {
+            "actions": [
+              "ohos.want.action.viewData"
+            ],
+            "entities": [
+              "entity.system.browsable"
+            ],
+            "uris": [
+              {
+                "scheme": "laneblinking",
+                "host": "fixture"
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

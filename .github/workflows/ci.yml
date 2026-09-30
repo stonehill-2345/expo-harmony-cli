@@ -4,8 +4,11 @@ on:
   push:
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -14,9 +17,7 @@ jobs:
           version: 10.19.0
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 20.19.4
           cache: pnpm
-      - run: pnpm install
-      - run: pnpm test
-      - run: pnpm build
-      - run: pnpm pack --pack-destination /tmp/expo-harmony-cli-pack
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm check

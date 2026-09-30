@@ -1,0 +1,515 @@
+diff --git a/node_modules/expo-splash-screen/expo-module.config.json b/node_modules/expo-splash-screen/expo-module.config.json
+index 14eba75..9d36017 100644
+--- a/node_modules/expo-splash-screen/expo-module.config.json
++++ b/node_modules/expo-splash-screen/expo-module.config.json
+@@ -1,16 +1,37 @@
+ {
+-  "platforms": ["apple", "android"],
++  "platforms": ["apple", "android", "harmony"],
+   "apple": {
+     "modules": ["SplashScreenModule"],
+     "appDelegateSubscribers": ["SplashScreenAppDelegateSubscriber"]
+   },
+   "android": {
+-    "modules": ["expo.modules.splashscreen.SplashScreenModule"],
+-    "publication": {
+-      "groupId": "host.exp.exponent",
+-      "artifactId": "expo.modules.splashscreen",
+-      "version": "31.0.13",
+-      "repository": "local-maven-repo"
+-    }
++    "modules": ["expo.modules.splashscreen.SplashScreenModule"]
++  },
++  "harmony": {
++    "kind": "ability-lifecycle",
++    "cpp": {
++      "packageClass": "expo::splashscreen::harmony::ExpoSplashScreenPackage",
++      "header": "ExpoSplashScreenPackage.h",
++      "cmakeTarget": "rnoh_expo_splash_screen",
++      "cmakePath": "harmony/src/main/cpp"
++    },
++    "ets": {
++      "packageClass": "ExpoSplashScreenPackage",
++      "importPath": "expo-splash-screen/harmony",
++      "entrypoint": "harmony/index.ets"
++    },
++    "lifecycleDependencies": [
++      {
++        "localName": "splashScreenController",
++        "className": "ExpoSplashScreenLifecycle",
++        "importPath": "expo-splash-screen/harmony",
++        "appStorageKey": "ExpoSplashScreenController",
++        "arkUIOverlay": {
++          "className": "ExpoSplashScreenView",
++          "importPath": "expo-splash-screen/harmony",
++          "controllerProperty": "controller"
++        }
++      }
++    ]
+   }
+ }
+diff --git a/node_modules/expo-splash-screen/harmony/index.ets b/node_modules/expo-splash-screen/harmony/index.ets
+new file mode 100644
+index 0000000..6d519d8
+--- /dev/null
++++ b/node_modules/expo-splash-screen/harmony/index.ets
+@@ -0,0 +1,9 @@
++export { ExpoSplashScreenController } from './src/main/ets/ExpoSplashScreenController';
++export { ExpoSplashScreenLifecycle } from './src/main/ets/ExpoSplashScreenLifecycle';
++export type {
++  ExpoSplashScreenOptions,
++  ExpoSplashScreenState,
++  ResolvedExpoSplashScreenOptions,
++} from './src/main/ets/ExpoSplashScreenController';
++export { ExpoSplashScreenPackage } from './src/main/ets/ExpoSplashScreenPackage';
++export { ExpoSplashScreenView } from './src/main/ets/ExpoSplashScreenView';
+diff --git a/node_modules/expo-splash-screen/harmony/src/main/cpp/CMakeLists.txt b/node_modules/expo-splash-screen/harmony/src/main/cpp/CMakeLists.txt
+new file mode 100644
+index 0000000..f8e6f5a
+--- /dev/null
++++ b/node_modules/expo-splash-screen/harmony/src/main/cpp/CMakeLists.txt
+@@ -0,0 +1,10 @@
++cmake_minimum_required(VERSION 3.16)
++
++if(NOT TARGET rnoh)
++  message(FATAL_ERROR "Add RNOH 0.82.30 before expo-splash-screen")
++endif()
++
++add_library(rnoh_expo_splash_screen STATIC ExpoSplashScreenTurboModule.cpp)
++target_compile_features(rnoh_expo_splash_screen PUBLIC cxx_std_20)
++target_include_directories(rnoh_expo_splash_screen PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
++target_link_libraries(rnoh_expo_splash_screen PUBLIC rnoh)
+diff --git a/node_modules/expo-splash-screen/harmony/src/main/cpp/ExpoSplashScreenPackage.h b/node_modules/expo-splash-screen/harmony/src/main/cpp/ExpoSplashScreenPackage.h
+new file mode 100644
+index 0000000..6c530ff
+--- /dev/null
++++ b/node_modules/expo-splash-screen/harmony/src/main/cpp/ExpoSplashScreenPackage.h
+@@ -0,0 +1,24 @@
++#pragma once
++
++#include "ExpoSplashScreenTurboModule.h"
++#include "RNOH/Package.h"
++
++namespace expo::splashscreen::harmony {
++
++class ExpoSplashScreenFactory final : public rnoh::TurboModuleFactoryDelegate {
++ public:
++  SharedTurboModule createTurboModule(Context context, const std::string& name) const override {
++    if (name != "ExpoSplashScreen") return nullptr;
++    return std::make_shared<ExpoSplashScreenTurboModule>(std::move(context), name);
++  }
++};
++
++class ExpoSplashScreenPackage final : public rnoh::Package {
++ public:
++  using Package::Package;
++  std::unique_ptr<rnoh::TurboModuleFactoryDelegate> createTurboModuleFactoryDelegate() override {
++    return std::make_unique<ExpoSplashScreenFactory>();
++  }
++};
++
++} // namespace expo::splashscreen::harmony
+diff --git a/node_modules/expo-splash-screen/harmony/src/main/cpp/ExpoSplashScreenTurboModule.cpp b/node_modules/expo-splash-screen/harmony/src/main/cpp/ExpoSplashScreenTurboModule.cpp
+new file mode 100644
+index 0000000..ea062ed
+--- /dev/null
++++ b/node_modules/expo-splash-screen/harmony/src/main/cpp/ExpoSplashScreenTurboModule.cpp
+@@ -0,0 +1,17 @@
++#include "ExpoSplashScreenTurboModule.h"
++
++namespace expo::splashscreen::harmony {
++
++ExpoSplashScreenTurboModule::ExpoSplashScreenTurboModule(Context context, const std::string& name)
++    : ArkTSTurboModule(std::move(context), name) {
++  methodMap_ = {
++      ARK_METHOD_METADATA(setOptions, 1),
++      ARK_METHOD_METADATA(hide, 0),
++      ARK_ASYNC_METHOD_METADATA(hideAsync, 0),
++      ARK_ASYNC_METHOD_METADATA(preventAutoHideAsync, 0),
++      ARK_ASYNC_METHOD_METADATA(internalPreventAutoHideAsync, 0),
++      ARK_ASYNC_METHOD_METADATA(internalMaybeHideAsync, 0),
++  };
++}
++
++} // namespace expo::splashscreen::harmony
+diff --git a/node_modules/expo-splash-screen/harmony/src/main/cpp/ExpoSplashScreenTurboModule.h b/node_modules/expo-splash-screen/harmony/src/main/cpp/ExpoSplashScreenTurboModule.h
+new file mode 100644
+index 0000000..9d2c880
+--- /dev/null
++++ b/node_modules/expo-splash-screen/harmony/src/main/cpp/ExpoSplashScreenTurboModule.h
+@@ -0,0 +1,12 @@
++#pragma once
++
++#include "RNOH/ArkTSTurboModule.h"
++
++namespace expo::splashscreen::harmony {
++
++class ExpoSplashScreenTurboModule final : public rnoh::ArkTSTurboModule {
++ public:
++  ExpoSplashScreenTurboModule(Context context, const std::string& name);
++};
++
++} // namespace expo::splashscreen::harmony
+diff --git a/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenController.ts b/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenController.ts
+new file mode 100644
+index 0000000..4d57879
+--- /dev/null
++++ b/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenController.ts
+@@ -0,0 +1,129 @@
++export interface ExpoSplashScreenOptions {
++  duration?: number;
++  fade?: boolean;
++}
++
++export interface ResolvedExpoSplashScreenOptions {
++  duration: number;
++  fade: boolean;
++}
++
++export interface ExpoSplashScreenState {
++  runtime: number;
++  visible: boolean;
++  options: ResolvedExpoSplashScreenOptions;
++}
++
++type StateListener = (state: ExpoSplashScreenState) => void;
++
++const DEFAULT_OPTIONS: ResolvedExpoSplashScreenOptions = {
++  duration: 400,
++  fade: false,
++};
++
++export class ExpoSplashScreenController {
++  private runtime = 0;
++  private visible = true;
++  private options: ResolvedExpoSplashScreenOptions = { ...DEFAULT_OPTIONS };
++  private preventAutoHideCalled = false;
++  private userControlledAutoHideEnabled = false;
++  private destroyed = false;
++  private readonly listeners = new Set<StateListener>();
++
++  public beginRuntime(): number {
++    this.assertActive();
++    this.runtime += 1;
++    this.visible = true;
++    this.options = { ...DEFAULT_OPTIONS };
++    this.preventAutoHideCalled = false;
++    this.userControlledAutoHideEnabled = false;
++    this.notify();
++    return this.runtime;
++  }
++
++  public getState(): ExpoSplashScreenState {
++    return {
++      runtime: this.runtime,
++      visible: this.visible,
++      options: { ...this.options },
++    };
++  }
++
++  public subscribe(listener: StateListener): () => void {
++    this.assertActive();
++    this.listeners.add(listener);
++    return () => this.listeners.delete(listener);
++  }
++
++  public setOptions(runtime: number, options: ExpoSplashScreenOptions): void {
++    this.assertRuntime(runtime);
++    const duration = options.duration ?? DEFAULT_OPTIONS.duration;
++    const fade = options.fade ?? DEFAULT_OPTIONS.fade;
++    if (typeof duration !== 'number' || !Number.isFinite(duration) || duration < 0) {
++      throw new Error('ExpoSplashScreen duration must be a finite non-negative number');
++    }
++    if (typeof fade !== 'boolean') {
++      throw new Error('ExpoSplashScreen fade must be a boolean');
++    }
++    this.options = { duration, fade };
++    this.notify();
++  }
++
++  public hide(runtime: number): void {
++    this.assertRuntime(runtime);
++    if (!this.visible) return;
++    this.visible = false;
++    this.notify();
++  }
++
++  public async hideAsync(runtime: number): Promise<void> {
++    this.hide(runtime);
++  }
++
++  public async preventAutoHideAsync(runtime: number): Promise<boolean> {
++    this.assertRuntime(runtime);
++    this.userControlledAutoHideEnabled = true;
++    this.preventAutoHideCalled = true;
++    return true;
++  }
++
++  public async internalPreventAutoHideAsync(runtime: number): Promise<boolean> {
++    this.assertRuntime(runtime);
++    this.preventAutoHideCalled = true;
++    return true;
++  }
++
++  public async internalMaybeHideAsync(runtime: number): Promise<void> {
++    this.assertRuntime(runtime);
++    if (!this.userControlledAutoHideEnabled) this.hide(runtime);
++  }
++
++  public onContentAppeared(runtime: number): void {
++    if (this.destroyed || runtime !== this.runtime) return;
++    if (!this.preventAutoHideCalled) this.hide(runtime);
++  }
++
++  public destroy(): void {
++    if (this.destroyed) return;
++    this.visible = false;
++    this.notify();
++    this.listeners.clear();
++    this.destroyed = true;
++  }
++
++  private assertActive(): void {
++    if (this.destroyed) throw new Error('ExpoSplashScreen controller was destroyed');
++  }
++
++  private assertRuntime(runtime: number): void {
++    this.assertActive();
++    if (runtime !== this.runtime || runtime === 0) {
++      throw new Error('ExpoSplashScreen runtime is no longer active');
++    }
++  }
++
++  private notify(): void {
++    const state = this.getState();
++    this.listeners.forEach((listener) => listener(state));
++  }
++}
+diff --git a/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenLifecycle.ets b/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenLifecycle.ets
+new file mode 100644
+index 0000000..1622065
+--- /dev/null
++++ b/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenLifecycle.ets
+@@ -0,0 +1,32 @@
++import { Want } from '@kit.AbilityKit';
++import { RNOHMarker, RNOHMarkerId } from '@rnoh/react-native-openharmony';
++import type { RNOHMarkerListener } from '@rnoh/react-native-openharmony';
++import { ExpoSplashScreenController } from './ExpoSplashScreenController';
++
++export class ExpoSplashScreenLifecycle
++  extends ExpoSplashScreenController
++  implements RNOHMarkerListener {
++  private markerRegistered = false;
++
++  public onCreate(_want: Want): void {
++    if (this.markerRegistered) return;
++    this.markerRegistered = true;
++    RNOHMarker.addListener(this);
++  }
++
++  public onNewWant(_want: Want): void {}
++
++  public logMarker(markerId: RNOHMarkerId, _tag: string, _timestamp: number): void {
++    if (markerId !== RNOHMarkerId.CONTENT_APPEARED) return;
++    const runtime = this.getState().runtime;
++    if (runtime !== 0) this.onContentAppeared(runtime);
++  }
++
++  public onDestroy(): void {
++    if (this.markerRegistered) {
++      this.markerRegistered = false;
++      RNOHMarker.removeListener(this);
++    }
++    this.destroy();
++  }
++}
+diff --git a/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenPackage.ets b/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenPackage.ets
+new file mode 100644
+index 0000000..3547efc
+--- /dev/null
++++ b/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenPackage.ets
+@@ -0,0 +1,30 @@
++import { RNOHPackage } from '@rnoh/react-native-openharmony';
++import type {
++  RNPackageContext,
++  UITurboModule,
++  UITurboModuleContext,
++} from '@rnoh/react-native-openharmony';
++import { ExpoSplashScreenController } from './ExpoSplashScreenController';
++import { ExpoSplashScreenTurboModule } from './ExpoSplashScreenTurboModule';
++
++export class ExpoSplashScreenPackage extends RNOHPackage {
++  private readonly controller: ExpoSplashScreenController;
++  private readonly runtime: number;
++
++  public constructor(ctx: RNPackageContext, controller: ExpoSplashScreenController) {
++    super(ctx);
++    this.controller = controller;
++    this.runtime = controller.beginRuntime();
++  }
++
++  public override getUITurboModuleFactoryByNameMap(): Map<string, (ctx: UITurboModuleContext) => UITurboModule | null> {
++    return new Map<string, (ctx: UITurboModuleContext) => UITurboModule>().set(
++      ExpoSplashScreenTurboModule.NAME,
++      (ctx: UITurboModuleContext) => new ExpoSplashScreenTurboModule(ctx, this.controller, this.runtime),
++    );
++  }
++
++  public override getDebugName(): string {
++    return 'expo-splash-screen';
++  }
++}
+diff --git a/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenTurboModule.ets b/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenTurboModule.ets
+new file mode 100644
+index 0000000..d70a7e2
+--- /dev/null
++++ b/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenTurboModule.ets
+@@ -0,0 +1,69 @@
++import { UITurboModule } from '@rnoh/react-native-openharmony';
++import type { UITurboModuleContext } from '@rnoh/react-native-openharmony';
++import {
++  ExpoSplashScreenController,
++  ExpoSplashScreenOptions,
++} from './ExpoSplashScreenController';
++
++export class ExpoSplashScreenTurboModule extends UITurboModule {
++  public static readonly NAME = 'ExpoSplashScreen';
++
++  private readonly controller: ExpoSplashScreenController;
++  private readonly runtime: number;
++  private readonly unsubscribeReload: () => void;
++  private destroyed = false;
++
++  public constructor(
++    ctx: UITurboModuleContext,
++    controller: ExpoSplashScreenController,
++    runtime: number,
++  ) {
++    super(ctx);
++    this.controller = controller;
++    this.runtime = runtime;
++    this.unsubscribeReload = this.ctx.devToolsController.eventEmitter.subscribe('RELOAD', () => {
++      if (!this.destroyed) this.controller.beginRuntime();
++    });
++  }
++
++  public setOptions(options: ExpoSplashScreenOptions): void {
++    this.assertActive();
++    this.controller.setOptions(this.runtime, options);
++  }
++
++  public hide(): void {
++    this.assertActive();
++    this.controller.hide(this.runtime);
++  }
++
++  public async hideAsync(): Promise<void> {
++    this.assertActive();
++    await this.controller.hideAsync(this.runtime);
++  }
++
++  public async preventAutoHideAsync(): Promise<boolean> {
++    this.assertActive();
++    return this.controller.preventAutoHideAsync(this.runtime);
++  }
++
++  public async internalPreventAutoHideAsync(): Promise<boolean> {
++    this.assertActive();
++    return this.controller.internalPreventAutoHideAsync(this.runtime);
++  }
++
++  public async internalMaybeHideAsync(): Promise<void> {
++    this.assertActive();
++    await this.controller.internalMaybeHideAsync(this.runtime);
++  }
++
++  public override __onDestroy__(): void {
++    if (this.destroyed) return;
++    this.destroyed = true;
++    this.unsubscribeReload();
++    super.__onDestroy__();
++  }
++
++  private assertActive(): void {
++    if (this.destroyed) throw new Error('ExpoSplashScreen module was destroyed');
++  }
++}
+diff --git a/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenView.ets b/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenView.ets
+new file mode 100644
+index 0000000..cec740e
+--- /dev/null
++++ b/node_modules/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenView.ets
+@@ -0,0 +1,73 @@
++import {
++  ExpoSplashScreenController,
++  ExpoSplashScreenState,
++} from './ExpoSplashScreenController';
++
++@Component
++export struct ExpoSplashScreenView {
++  @Require public controller!: ExpoSplashScreenController;
++  @BuilderParam public splashContent: () => void = this.defaultSplashContent;
++
++  @State private rendered: boolean = true;
++  @State private splashOpacity: number = 1;
++  private animationToken = 0;
++  private unsubscribe: (() => void) | undefined = undefined;
++
++  @Builder
++  private defaultSplashContent() {
++    Column() {}
++      .width('100%')
++      .height('100%')
++      .backgroundColor(Color.White)
++  }
++
++  public aboutToAppear(): void {
++    this.applyState(this.controller.getState());
++    this.unsubscribe = this.controller.subscribe((state) => this.applyState(state));
++  }
++
++  public aboutToDisappear(): void {
++    this.unsubscribe?.();
++    this.unsubscribe = undefined;
++  }
++
++  private applyState(state: ExpoSplashScreenState): void {
++    const token = ++this.animationToken;
++    if (state.visible) {
++      this.rendered = true;
++      this.splashOpacity = 1;
++      return;
++    }
++
++    if (!state.options.fade || state.options.duration === 0) {
++      this.splashOpacity = 0;
++      this.rendered = false;
++      return;
++    }
++
++    animateTo({
++      duration: state.options.duration,
++      curve: Curve.EaseIn,
++      onFinish: () => {
++        if (token === this.animationToken && !this.controller.getState().visible) {
++          this.rendered = false;
++        }
++      },
++    }, () => {
++      this.splashOpacity = 0;
++    });
++  }
++
++  build() {
++    if (this.rendered) {
++      Stack() {
++        this.splashContent()
++      }
++      .width('100%')
++      .height('100%')
++      .opacity(this.splashOpacity)
++      .hitTestBehavior(HitTestMode.Block)
++      .zIndex(2147483647)
++    }
++  }
++}

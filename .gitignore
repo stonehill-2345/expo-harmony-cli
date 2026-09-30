@@ -3,6 +3,8 @@ dist/
 coverage/
 .turbo/
 .pnpm-store/
+.tmp/
+outputs/
 .DS_Store
 npm-debug.log*
 pnpm-debug.log*
@@ -13,3 +15,8 @@ docs/superpowers/
 
 # bing local changelog artifacts
 docs/changelog/local/
+
+.tmp/sdk54/
+outputs/sdk54/
+*.hap
+*.har

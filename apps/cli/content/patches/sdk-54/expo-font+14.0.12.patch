@@ -1,0 +1,257 @@
+diff --git a/node_modules/expo-font/expo-module.config.json b/node_modules/expo-font/expo-module.config.json
+index f18cc4a..73e9a5b 100644
+--- a/node_modules/expo-font/expo-module.config.json
++++ b/node_modules/expo-font/expo-module.config.json
+@@ -1,15 +1,23 @@
+ {
+-  "platforms": ["apple", "android", "web"],
++  "platforms": ["apple", "android", "web", "harmony"],
+   "apple": {
+     "modules": ["FontLoaderModule", "FontUtilsModule"]
+   },
+   "android": {
+-    "modules": ["expo.modules.font.FontLoaderModule", "expo.modules.font.FontUtilsModule"],
+-    "publication": {
+-      "groupId": "host.exp.exponent",
+-      "artifactId": "expo.modules.font",
+-      "version": "14.0.12",
+-      "repository": "local-maven-repo"
++    "modules": ["expo.modules.font.FontLoaderModule", "expo.modules.font.FontUtilsModule"]
++  },
++  "harmony": {
++    "kind": "turbo-module",
++    "cpp": {
++      "packageClass": "expo::font::harmony::ExpoFontLoaderPackage",
++      "header": "ExpoFontLoaderPackage.h",
++      "cmakeTarget": "rnoh_expo_font",
++      "cmakePath": "harmony/src/main/cpp"
++    },
++    "ets": {
++      "packageClass": "ExpoFontLoaderPackage",
++      "importPath": "expo-font/harmony",
++      "entrypoint": "harmony/index.ets"
+     }
+   }
+ }
+diff --git a/node_modules/expo-font/harmony/index.ets b/node_modules/expo-font/harmony/index.ets
+new file mode 100644
+index 0000000..c61fd42
+--- /dev/null
++++ b/node_modules/expo-font/harmony/index.ets
+@@ -0,0 +1 @@
++export { ExpoFontLoaderPackage } from './src/main/ets/ExpoFontLoaderPackage';
+diff --git a/node_modules/expo-font/harmony/src/main/cpp/CMakeLists.txt b/node_modules/expo-font/harmony/src/main/cpp/CMakeLists.txt
+new file mode 100644
+index 0000000..3e261ec
+--- /dev/null
++++ b/node_modules/expo-font/harmony/src/main/cpp/CMakeLists.txt
+@@ -0,0 +1,8 @@
++cmake_minimum_required(VERSION 3.16)
++if(NOT TARGET rnoh)
++  message(FATAL_ERROR "Add RNOH 0.82.30 before expo-font")
++endif()
++add_library(rnoh_expo_font STATIC ExpoFontLoaderTurboModule.cpp)
++target_compile_features(rnoh_expo_font PUBLIC cxx_std_20)
++target_include_directories(rnoh_expo_font PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
++target_link_libraries(rnoh_expo_font PUBLIC rnoh)
+diff --git a/node_modules/expo-font/harmony/src/main/cpp/ExpoFontLoaderPackage.h b/node_modules/expo-font/harmony/src/main/cpp/ExpoFontLoaderPackage.h
+new file mode 100644
+index 0000000..5d7750f
+--- /dev/null
++++ b/node_modules/expo-font/harmony/src/main/cpp/ExpoFontLoaderPackage.h
+@@ -0,0 +1,19 @@
++#pragma once
++#include "ExpoFontLoaderTurboModule.h"
++#include "RNOH/Package.h"
++namespace expo::font::harmony {
++class ExpoFontLoaderFactory final : public rnoh::TurboModuleFactoryDelegate {
++ public:
++  SharedTurboModule createTurboModule(Context context, const std::string& name) const override {
++    if (name != "ExpoFontLoader") return nullptr;
++    return std::make_shared<ExpoFontLoaderTurboModule>(std::move(context), name);
++  }
++};
++class ExpoFontLoaderPackage final : public rnoh::Package {
++ public:
++  using Package::Package;
++  std::unique_ptr<rnoh::TurboModuleFactoryDelegate> createTurboModuleFactoryDelegate() override {
++    return std::make_unique<ExpoFontLoaderFactory>();
++  }
++};
++} // namespace expo::font::harmony
+diff --git a/node_modules/expo-font/harmony/src/main/cpp/ExpoFontLoaderTurboModule.cpp b/node_modules/expo-font/harmony/src/main/cpp/ExpoFontLoaderTurboModule.cpp
+new file mode 100644
+index 0000000..d9c26c4
+--- /dev/null
++++ b/node_modules/expo-font/harmony/src/main/cpp/ExpoFontLoaderTurboModule.cpp
+@@ -0,0 +1,10 @@
++#include "ExpoFontLoaderTurboModule.h"
++namespace expo::font::harmony {
++ExpoFontLoaderTurboModule::ExpoFontLoaderTurboModule(Context context, const std::string& name)
++    : ArkTSTurboModule(std::move(context), name) {
++  methodMap_ = {
++      ARK_METHOD_METADATA(getLoadedFonts, 0),
++      ARK_ASYNC_METHOD_METADATA(loadAsync, 2),
++  };
++}
++} // namespace expo::font::harmony
+diff --git a/node_modules/expo-font/harmony/src/main/cpp/ExpoFontLoaderTurboModule.h b/node_modules/expo-font/harmony/src/main/cpp/ExpoFontLoaderTurboModule.h
+new file mode 100644
+index 0000000..e1de1ae
+--- /dev/null
++++ b/node_modules/expo-font/harmony/src/main/cpp/ExpoFontLoaderTurboModule.h
+@@ -0,0 +1,8 @@
++#pragma once
++#include "RNOH/ArkTSTurboModule.h"
++namespace expo::font::harmony {
++class ExpoFontLoaderTurboModule final : public rnoh::ArkTSTurboModule {
++ public:
++  ExpoFontLoaderTurboModule(Context context, const std::string& name);
++};
++} // namespace expo::font::harmony
+diff --git a/node_modules/expo-font/harmony/src/main/ets/ExpoFontLoaderPackage.ets b/node_modules/expo-font/harmony/src/main/ets/ExpoFontLoaderPackage.ets
+new file mode 100644
+index 0000000..2d10339
+--- /dev/null
++++ b/node_modules/expo-font/harmony/src/main/ets/ExpoFontLoaderPackage.ets
+@@ -0,0 +1,12 @@
++import { RNOHPackage } from '@rnoh/react-native-openharmony';
++import type { RNPackageContext, UITurboModule, UITurboModuleContext } from '@rnoh/react-native-openharmony';
++import { ExpoFontLoaderTurboModule } from './ExpoFontLoaderTurboModule';
++export class ExpoFontLoaderPackage extends RNOHPackage {
++  public override getUITurboModuleFactoryByNameMap(): Map<string, (ctx: UITurboModuleContext) => UITurboModule | null> {
++    return new Map<string, (ctx: UITurboModuleContext) => UITurboModule>().set(
++      ExpoFontLoaderTurboModule.NAME,
++      (ctx: UITurboModuleContext) => new ExpoFontLoaderTurboModule(ctx)
++    );
++  }
++  public override getDebugName(): string { return 'expo-font'; }
++}
+diff --git a/node_modules/expo-font/harmony/src/main/ets/ExpoFontLoaderTurboModule.ets b/node_modules/expo-font/harmony/src/main/ets/ExpoFontLoaderTurboModule.ets
+new file mode 100644
+index 0000000..ecaa934
+--- /dev/null
++++ b/node_modules/expo-font/harmony/src/main/ets/ExpoFontLoaderTurboModule.ets
+@@ -0,0 +1,56 @@
++import type { UITurboModuleContext } from '@rnoh/react-native-openharmony';
++import { UITurboModule } from '@rnoh/react-native-openharmony';
++import fs from '@ohos.file.fs';
++import { validateFontRequest, validateSfntFont } from './FontFile';
++
++export class ExpoFontLoaderTurboModule extends UITurboModule {
++  public static readonly NAME = 'ExpoFontLoader';
++
++  private readonly loadedFonts = new Set<string>();
++  private destroyed = false;
++
++  public constructor(ctx: UITurboModuleContext) {
++    super(ctx);
++  }
++
++  public getLoadedFonts(): string[] {
++    return Array.from(this.loadedFonts).sort();
++  }
++
++  public async loadAsync(fontFamilyName: string, localUri: string): Promise<void> {
++    this.assertActive();
++    if (this.loadedFonts.has(fontFamilyName)) return;
++
++    const request = validateFontRequest(fontFamilyName, localUri);
++    if (!fs.accessSync(request.path)) {
++      throw new Error(`Font file '${request.path}' does not exist`);
++    }
++    if (fs.statSync(request.path).size <= 0) {
++      throw new Error(`Font file '${request.path}' is empty`);
++    }
++
++    const file = fs.openSync(request.path, fs.OpenMode.READ_ONLY);
++    try {
++      const size = fs.statSync(file.fd).size;
++      const buffer = new ArrayBuffer(size);
++      const read = fs.readSync(file.fd, buffer);
++      if (read !== size) throw new Error(`Font file '${request.path}' could not be read completely`);
++      validateSfntFont(new Uint8Array(buffer));
++    } finally {
++      fs.closeSync(file);
++    }
++    this.ctx.rnInstance.registerFont(request.family, request.path);
++    this.assertActive();
++    this.loadedFonts.add(request.family);
++  }
++
++  public override __onDestroy__(): void {
++    this.destroyed = true;
++    this.loadedFonts.clear();
++    super.__onDestroy__();
++  }
++
++  private assertActive(): void {
++    if (this.destroyed) throw new Error('ExpoFontLoader module was destroyed');
++  }
++}
+diff --git a/node_modules/expo-font/harmony/src/main/ets/FontFile.ts b/node_modules/expo-font/harmony/src/main/ets/FontFile.ts
+new file mode 100644
+index 0000000..5a8acbb
+--- /dev/null
++++ b/node_modules/expo-font/harmony/src/main/ets/FontFile.ts
+@@ -0,0 +1,60 @@
++export interface FontRequest {
++  family: string;
++  path: string;
++}
++
++export function normalizeFontFileUri(uri: string): string {
++  if (!uri.startsWith('file:///')) {
++    throw new Error('Font source must be an absolute file URI');
++  }
++  try {
++    const path = decodeURIComponent(uri.slice('file://'.length));
++    if (!path.startsWith('/')) {
++      throw new Error('Font source must be an absolute file URI');
++    }
++    return path;
++  } catch (error) {
++    if (error instanceof Error && error.message === 'Font source must be an absolute file URI') {
++      throw error;
++    }
++    throw new Error(`Invalid font file URI: ${String(error)}`);
++  }
++}
++
++export function validateFontRequest(family: string, uri: string): FontRequest {
++  if (typeof family !== 'string' || family.trim().length === 0) {
++    throw new Error('Font family must be a non-empty string');
++  }
++  return { family, path: normalizeFontFileUri(uri) };
++}
++
++function readUint16(bytes: Uint8Array, offset: number): number {
++  return (bytes[offset] << 8) | bytes[offset + 1];
++}
++
++function readUint32(bytes: Uint8Array, offset: number): number {
++  return ((bytes[offset] * 0x1000000) + (bytes[offset + 1] << 16) +
++    (bytes[offset + 2] << 8) + bytes[offset + 3]) >>> 0;
++}
++
++export function validateSfntFont(bytes: Uint8Array): void {
++  if (bytes.byteLength < 12) throw new Error('Font file is not a valid TTF/OTF sfnt');
++  const signature = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]);
++  if (signature === 'ttcf') throw new Error('Font collection files are not supported by Font-v1');
++  const isTrueType = bytes[0] === 0 && bytes[1] === 1 && bytes[2] === 0 && bytes[3] === 0;
++  if (!isTrueType && !['OTTO', 'true', 'typ1'].includes(signature)) {
++    throw new Error('Font file is not a valid TTF/OTF sfnt');
++  }
++  const tableCount = readUint16(bytes, 4);
++  if (tableCount <= 0 || tableCount > 4096 || 12 + tableCount * 16 > bytes.byteLength) {
++    throw new Error('Font file has an invalid sfnt table directory');
++  }
++  for (let index = 0; index < tableCount; index += 1) {
++    const record = 12 + index * 16;
++    const offset = readUint32(bytes, record + 8);
++    const length = readUint32(bytes, record + 12);
++    if (offset > bytes.byteLength || length > bytes.byteLength - offset) {
++      throw new Error('Font table exceeds the font file bounds');
++    }
++  }
++}

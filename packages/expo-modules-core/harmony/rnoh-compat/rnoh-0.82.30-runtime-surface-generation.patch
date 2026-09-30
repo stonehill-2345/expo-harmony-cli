@@ -1,0 +1,71 @@
+--- a/src/main/ets/RNApp.ets
++++ b/src/main/ets/RNApp.ets
+@@ -161,6 +161,9 @@
+   private rnInstance!: RNInstance;
+   /** Whether to show the rendered surface or not. */
+   @State private shouldShow: boolean = false;
++  // RNInstanceRegistry reuses the numeric instance ID during reload. A local
++  // generation forces a fresh Surface even if false/true coalesce in one frame.
++  @State private surfaceGeneration: number = 0;
+   /** Debug log box controller for showing RN warnings and errors. */
+   private logBoxDialogController!: CustomDialogController;
+   /** Controller for debugger pause dialog (only in debug mode). */
+@@ -226,6 +229,8 @@
+       new Map(),
+       this.wrappedCustomRNComponentBuilder // backward compatibility
+     )
++
++    this.surfaceGeneration += 1;
+ 
+     // Initialize log box dialog for RN error/warning messages
+     this.logBoxDialogController = new CustomDialogController({
+@@ -332,28 +337,30 @@
+    */
+   build() {
+     if (this.shouldShow) {
+-      Stack() {
++      ForEach([this.surfaceGeneration], (_generation: number) => {
++        Stack() {
++          if (this.rnohCoreContext!.isDebugModeEnabled) {
++            RNPauseInDebuggerDialog({ ctx: this.ctx })
++          }
++          if (this.rnohCoreContext!.isDebugModeEnabled) {
++            RNPerfMonitorView({ ctx: this.rnohCoreContext, rnInstance: this.rnInstance });
++          }
++          RNSurface({
++            ctx: this.ctx,
++            surfaceConfig: {
++              initialProps: this.initialProps ?? {},
++              appKey: this.appKey,
++            },
++          })
+         if (this.rnohCoreContext!.isDebugModeEnabled) {
+-          RNPauseInDebuggerDialog({ ctx: this.ctx })
++          RNDevLoadingView({ useSafeAreaInsets: true, ctx: this.rnohCoreContext }).position({ x: 0, y: 0 })
+         }
+-        if (this.rnohCoreContext!.isDebugModeEnabled) {
+-          RNPerfMonitorView({ ctx: this.rnohCoreContext, rnInstance: this.rnInstance });
+         }
+-        RNSurface({
+-          ctx: this.ctx,
+-          surfaceConfig: {
+-            initialProps: this.initialProps ?? {},
+-            appKey: this.appKey,
+-          },
+-        })
+-      if (this.rnohCoreContext!.isDebugModeEnabled) {
+-        RNDevLoadingView({ useSafeAreaInsets: true, ctx: this.rnohCoreContext }).position({ x: 0, y: 0 })
+-      }
+-      }
+-      .expandSafeArea([SafeAreaType.KEYBOARD])
+-      .hitTestBehavior(HitTestMode.Transparent)
+-      .width("100%")
+-      .height("100%")
++        .expandSafeArea([SafeAreaType.KEYBOARD])
++        .hitTestBehavior(HitTestMode.Transparent)
++        .width("100%")
++        .height("100%")
++      }, (generation: number) => generation.toString())
+     }
+   }
+ }

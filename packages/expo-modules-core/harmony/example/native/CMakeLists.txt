@@ -1,0 +1,11 @@
+cmake_minimum_required(VERSION 3.16)
+add_library(expo_core_test_module STATIC ExpoCoreTestPackage.cpp ExpoCoreTestView.cpp)
+target_include_directories(expo_core_test_module PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(expo_core_test_module PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/../../../common/cpp")
+target_compile_features(expo_core_test_module PUBLIC cxx_std_20)
+target_link_libraries(expo_core_test_module PUBLIC rnoh_expo_modules_core)
+
+add_library(expo_core_interop_probe STATIC ExpoCoreInteropProbePackage.cpp)
+target_include_directories(expo_core_interop_probe PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_compile_features(expo_core_interop_probe PUBLIC cxx_std_20)
+target_link_libraries(expo_core_interop_probe PUBLIC rnoh)

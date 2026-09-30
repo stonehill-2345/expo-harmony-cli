@@ -1,54 +1,38 @@
 {
-  "name": "expo-harmony-cli",
-  "version": "1.4.0",
-  "description": "CLI for creating Expo projects with HarmonyOS support",
-  "keywords": [
-    "expo",
-    "react-native",
-    "harmonyos",
-    "openharmony",
-    "rnoh",
-    "expo-cli",
-    "react-native-cli",
-    "deveco-studio"
-  ],
+  "name": "expo-harmony-workspace",
+  "private": true,
+  "description": "Expo Harmony monorepo",
   "packageManager": "pnpm@10.19.0",
-  "bin": {
-    "expo-harmony-cli": "dist/index.js"
+  "engines": {
+    "node": ">=20.19.4"
   },
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc -p tsconfig.json",
-    "prepublishOnly": "pnpm run clean && pnpm run build",
-    "clean": "rm -rf dist",
-    "type-check": "tsc --noEmit -p tsconfig.json",
-    "test": "vitest run",
-    "test:watch": "vitest"
-  },
-  "files": ["dist", "content", "templates", "CHANGELOG.md", "NOTICE.md", "docs/guide.md", "assets"],
-  "engines": { "node": ">=20.19.4" },
-  "dependencies": {
-    "@expo/config": "^9.0.0",
-    "@inquirer/prompts": "^7.0.0",
-    "case": "^1.6.3",
-    "chalk": "^4.1.2",
-    "json5": "^2.2.3",
-    "mustache": "^4.2.0"
+    "build": "pnpm --filter expo-harmony-cli build",
+    "type-check": "pnpm --filter expo-harmony-cli type-check",
+    "test": "pnpm --filter expo-harmony-cli test",
+    "test:watch": "pnpm --filter expo-harmony-cli test:watch",
+    "test:pack": "pnpm --filter expo-harmony-cli test:pack",
+    "check": "pnpm type-check && pnpm test && pnpm test:pack && pnpm test:sdk54-tools && pnpm sdk54:validate && pnpm sdk54:pack:check && pnpm sdk54:audit && pnpm sdk54:patch:audit && pnpm sdk54:repo-check",
+    "clean": "pnpm --filter expo-harmony-cli clean",
+    "pack:cli": "pnpm --dir apps/cli pack",
+    "test:sdk54-tools": "node --test scripts/sdk54/__tests__/*.test.mjs",
+    "sdk54:check": "pnpm test:sdk54-tools && pnpm sdk54:validate && pnpm sdk54:pack:check && pnpm sdk54:audit && pnpm sdk54:repo-check",
+    "sdk54:validate": "node scripts/sdk54/validate-catalog.mjs",
+    "sdk54:pack": "node scripts/sdk54/pack-packages.mjs --round A --output outputs/sdk54/pack-a",
+    "sdk54:pack:check": "node scripts/sdk54/pack-packages.mjs --compare-rounds",
+    "sdk54:audit": "node scripts/sdk54/audit-packages.mjs",
+    "sdk54:repo-check": "node scripts/sdk54/check-repository.mjs",
+    "sdk54:e2e:stage": "node scripts/sdk54/stage-e2e-packages.mjs",
+    "sdk54:fixture:prepare": "node scripts/sdk54/prepare-create-expo-fixture.mjs",
+    "sdk54:patch:generate": "node scripts/sdk54/generate-cli-patches.mjs --round RC --output outputs/sdk54/cli-patches",
+    "sdk54:patch:audit": "node scripts/sdk54/audit-cli-patches.mjs apps/cli/content/patches/sdk-54 apps/cli/content/patches/sdk-54/manifest.json",
+    "sdk54:external:compare": "node scripts/sdk54/compare-external-packages.mjs --approved-dir \"$SDK54_APPROVED_EXTERNAL_DIR\" --output docs/releases/2026-09-28-sdk54-external-package-comparison.json",
+    "sdk54:e2e:packed": "node scripts/sdk54/blackbox-packed-cli.mjs --cli-tgz \"$CLI_TGZ\" --work-dir \"$SDK54_BLACKBOX_DIR\" --template all --package-manager all --lifecycle all --no-device",
+    "sdk54:acceptance:verify": "node scripts/sdk54/verify-cli-acceptance.mjs --final docs/releases/2026-09-28-sdk54-cli-1.5.0.json"
   },
   "devDependencies": {
-    "@types/mustache": "^4.2.5",
-    "@types/node": "^22.0.0",
-    "typescript": "^5.3.3",
-    "vitest": "^2.1.0"
-  },
-  "license": "MIT",
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/stonehill-2345/expo-harmony-cli.git"
-  },
-  "bugs": {
-    "url": "https://github.com/stonehill-2345/expo-harmony-cli/issues"
-  },
-  "homepage": "https://github.com/stonehill-2345/expo-harmony-cli#readme"
+    "npm-packlist": "^10.0.4",
+    "patch-package": "8.0.0",
+    "tar": "^7.5.22"
+  }
 }

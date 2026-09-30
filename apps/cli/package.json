@@ -1,0 +1,67 @@
+{
+  "name": "expo-harmony-cli",
+  "version": "1.5.0",
+  "description": "CLI for creating Expo projects with HarmonyOS support",
+  "keywords": [
+    "expo",
+    "react-native",
+    "harmonyos",
+    "openharmony",
+    "rnoh",
+    "expo-cli",
+    "react-native-cli",
+    "deveco-studio"
+  ],
+  "packageManager": "pnpm@10.19.0",
+  "bin": {
+    "expo-harmony-cli": "dist/index.js"
+  },
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "prepack": "pnpm run clean && pnpm run build",
+    "clean": "rm -rf dist",
+    "type-check": "tsc --noEmit -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:pack": "vitest run --config vitest.pack.config.ts",
+    "check": "pnpm run type-check && pnpm run test && pnpm run test:pack"
+  },
+  "files": [
+    "dist",
+    "content",
+    "templates",
+    "CHANGELOG.md",
+    "NOTICE.md",
+    "docs/guide.md",
+    "assets"
+  ],
+  "engines": {
+    "node": ">=20.19.4"
+  },
+  "dependencies": {
+    "@expo/config": "^9.0.0",
+    "@inquirer/prompts": "^7.0.0",
+    "case": "^1.6.3",
+    "chalk": "^4.1.2",
+    "json5": "^2.2.3",
+    "mustache": "^4.2.0"
+  },
+  "devDependencies": {
+    "@types/mustache": "^4.2.5",
+    "@types/node": "^22.0.0",
+    "typescript": "^5.3.3",
+    "vitest": "^2.1.0"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/stonehill-2345/expo-harmony-cli.git",
+    "directory": "apps/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/stonehill-2345/expo-harmony-cli/issues"
+  },
+  "homepage": "https://github.com/stonehill-2345/expo-harmony-cli#readme"
+}

@@ -1,0 +1,107 @@
+{
+  "date": "2026-09-29",
+  "patchSet": "sdk54-mvp-1",
+  "rounds": [
+    "MP9",
+    "MP10"
+  ],
+  "deterministic": true,
+  "packages": 14,
+  "patches": [
+    {
+      "name": "@expo/cli",
+      "version": "54.0.27",
+      "file": "@expo+cli+54.0.27.patch",
+      "sha256": "76ccdfbbdca80b88a6281fc931966039e4d2904c01766732e53668f596a8b8dc"
+    },
+    {
+      "name": "@expo/metro-config",
+      "version": "54.0.17",
+      "file": "@expo+metro-config+54.0.17.patch",
+      "sha256": "674a87f80bd9f0a9c757a25619411ff58c064cb929870ae28f3a973f7f0053f8"
+    },
+    {
+      "name": "expo",
+      "version": "54.0.37",
+      "file": "expo+54.0.37.patch",
+      "sha256": "00584a4fe6115172dd806ff6481a4dfc98c6dda76d3fc4fda9ba9afec8479cce"
+    },
+    {
+      "name": "expo-asset",
+      "version": "12.0.13",
+      "file": "expo-asset+12.0.13.patch",
+      "sha256": "0f8e9a0c804af207b70bc1180911b69a48ff35c5ac493de9cd9f7cb767222ed0"
+    },
+    {
+      "name": "expo-constants",
+      "version": "18.0.14",
+      "file": "expo-constants+18.0.14.patch",
+      "sha256": "b3a465ebd235ed420ef8876f2af637e58ebd884fd72109e1e19b5a3237bed78c"
+    },
+    {
+      "name": "expo-font",
+      "version": "14.0.12",
+      "file": "expo-font+14.0.12.patch",
+      "sha256": "7a48391030b0dc55eaa71eb1b343ab9aff9d6387437ae34eebbb8a8e1c6216f2"
+    },
+    {
+      "name": "expo-linking",
+      "version": "8.0.12",
+      "file": "expo-linking+8.0.12.patch",
+      "sha256": "6ef5ff244c8a29e3b83eb99e8a0842d4ccd69a3aec25742530ac32e91b85b4dd"
+    },
+    {
+      "name": "expo-modules-autolinking",
+      "version": "3.0.27",
+      "file": "expo-modules-autolinking+3.0.27.patch",
+      "sha256": "c179bb7840c12887e8bb4f8eec66e22a0180801d5074de7988fe8d964b0c7d9a"
+    },
+    {
+      "name": "expo-modules-core",
+      "version": "3.0.30",
+      "file": "expo-modules-core+3.0.30.patch",
+      "sha256": "e3fb7531dfd115f6edc811066cb59f0d2471f075b0734a204b7e8cd0d28e2656"
+    },
+    {
+      "name": "expo-router",
+      "version": "6.0.24",
+      "file": "expo-router+6.0.24.patch",
+      "sha256": "e5d2197fa10a1767171c426420bb20ba37a75556b6deb0b3fa70c6df31e37154"
+    },
+    {
+      "name": "expo-splash-screen",
+      "version": "31.0.13",
+      "file": "expo-splash-screen+31.0.13.patch",
+      "sha256": "fff0ec9fe15e070e0364d152c132c9399b7a3636b5f91a87e1497d6d2029acde"
+    },
+    {
+      "name": "expo-status-bar",
+      "version": "3.0.9",
+      "file": "expo-status-bar+3.0.9.patch",
+      "sha256": "e3dcf19a3057ef1e694eb47cd74611d54e28b8dbfa41b7697285d6f0b65b87aa"
+    },
+    {
+      "name": "expo-system-ui",
+      "version": "6.0.9",
+      "file": "expo-system-ui+6.0.9.patch",
+      "sha256": "fd1d6c0613c677f1a4823ea387bdff18ca4c1d24d55625769bcbacce2846902f"
+    },
+    {
+      "name": "expo-web-browser",
+      "version": "15.0.11",
+      "file": "expo-web-browser+15.0.11.patch",
+      "sha256": "4a87e4a45c486c1380822f0a5f03f7edd84c86c7c284cbdbb4745ea8a9793b28"
+    }
+  ],
+  "failures": [],
+  "expoPackages": 14,
+  "externalPatches": 1,
+  "totalPatchFiles": 15,
+  "externalPatch": {
+    "name": "@react-native-ohos/react-native-screens",
+    "version": "4.9.0",
+    "file": "@react-native-ohos+react-native-screens+4.9.0.patch",
+    "sha256": "07b181d0d9720a8531404a7eab628f367a8fcf32c040a5b9a3a10d826d3d1a94"
+  },
+  "sourceCommit": "e26b4dab16ac438da9a39ecf0952e258454035ee"
+}
