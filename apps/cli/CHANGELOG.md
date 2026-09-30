@@ -1,6 +1,6 @@
 # expo-harmony-cli
 
-## 1.5.0 - 2026-09-28
+## 1.5.0 - 2026-09-30
 
 ### Minor Changes
 
@@ -9,7 +9,9 @@
 - SDK54 支持 npm/pnpm，主路径为官方 Expo prebuild/run/start 命令。
 - Default 模板只替换两处 `expo-image` Image；本版本不提供 expo-image Harmony backend。
 - 旧 SDK54 项目只诊断不迁移，SDK55 及更高版本拒绝。
-- 当前为未发布的 1.5.0 release candidate。
+- 修复 RN 0.82 iOS JSI 头文件兼容：`expo-modules-core` patch 显式引入 CallInvoker 与 CallbackWrapper 头文件，iOS 端可正常编译。
+- Metro 初始化模块按平台选择，避免非 Harmony 平台加载鸿蒙专属初始化逻辑。
+- 修复 Harmony Release 构建初始化与应用图标问题。
 
 
 ## 1.4.0
