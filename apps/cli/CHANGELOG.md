@@ -1,5 +1,12 @@
 # expo-harmony-cli
 
+## 1.5.1 - 2026-10-09
+
+### Patch Changes
+
+- 重写仓库根 README：快速开始按 SDK 版本重组（SDK54 优先、编号步骤式），前置环境提示与 npm 包链接；环境与支持范围前移，新增社区与支持（Issues）；移除版本号叙事，聚焦使用者动线。
+- CONTRIBUTING 仓库组织新增目录架构树（`apps/cli` 展开至子目录），修正 `packages/` 为预留空目录的过时描述——现为 14 个 SDK54 源码包基线，禁止独立发布。
+
 ## 1.5.0 - 2026-09-30
 
 ### Minor Changes
@@ -12,7 +19,6 @@
 - 修复 RN 0.82 iOS JSI 头文件兼容：`expo-modules-core` patch 显式引入 CallInvoker 与 CallbackWrapper 头文件，iOS 端可正常编译。
 - Metro 初始化模块按平台选择，避免非 Harmony 平台加载鸿蒙专属初始化逻辑。
 - 修复 Harmony Release 构建初始化与应用图标问题。
-
 
 ## 1.4.0
 
