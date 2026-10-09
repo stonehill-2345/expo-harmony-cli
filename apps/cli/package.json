@@ -20,13 +20,14 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepack": "pnpm run clean && pnpm run build",
+    "prepack": "pnpm run clean && pnpm run build && node scripts/sync-readme.mjs",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:pack": "vitest run --config vitest.pack.config.ts",
-    "check": "pnpm run type-check && pnpm run test && pnpm run test:pack"
+    "check": "pnpm run type-check && pnpm run test && pnpm run test:pack",
+    "postpack": "node -e \"require('node:fs').rmSync('README.md',{force:true})\""
   },
   "files": [
     "dist",

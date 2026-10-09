@@ -129,10 +129,6 @@ pnpm start:harmony
 
 Expo 官方目前不支持 HarmonyOS 平台。`expo-harmony-cli` 在 Expo SDK 基础上，通过 RNOH（React Native OpenHarmony）桥接层，让同一套 React Native 代码能运行在鸿蒙设备上。
 
-### packages/ 下的 Expo 源码包会发布到 npm 吗？
-
-不会。npm 发布物只有 `expo-harmony-cli` 一个。`packages/` 下的 14 个源码包是 SDK54 Harmony 适配的确定性源码基线，用于生成与官方版本精确对应的 package patch，补丁经 `patch-package` 注入用户项目的 `node_modules`，源码包本身不构建、不发布。
-
 ### 支持哪些 React Native 库？
 
 CLI 对依赖分五类自动处理：纯 JS 包、alias-only、native/bump-native、patch-only、unsupported。以 `pnpm dlx expo-harmony-cli list` 输出为准。详见 [使用指南 → 三方依赖](apps/cli/docs/guide.md#三方依赖)。

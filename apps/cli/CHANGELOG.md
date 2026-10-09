@@ -6,6 +6,7 @@
 
 - 重写仓库根 README：快速开始按 SDK 版本重组（SDK54 优先、编号步骤式），前置环境提示与 npm 包链接；环境与支持范围前移，新增社区与支持（Issues）；移除版本号叙事，聚焦使用者动线。
 - CONTRIBUTING 仓库组织新增目录架构树（`apps/cli` 展开至子目录），修正 `packages/` 为预留空目录的过时描述——现为 14 个 SDK54 源码包基线，禁止独立发布。
+- npm 包 README 改为发布时从仓库根 README 自动同步（`prepack` 复制并改写仓库相对路径为包内/GitHub 链接），不再单独维护 `apps/cli/README.md`。
 
 ## 1.5.0 - 2026-09-30
 
