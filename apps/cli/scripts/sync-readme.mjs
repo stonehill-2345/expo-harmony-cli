@@ -3,7 +3,9 @@ import { readFileSync, writeFileSync } from 'node:fs';
 // npm 包页面使用根 README 作为门面：复制到包根并改写仓库相对路径。
 // 包内存在：assets/、docs/guide.md、CHANGELOG.md、NOTICE.md；
 // 仅存在于仓库的文件（docs/、CONTRIBUTING 等）改写为 GitHub 绝对链接。
+// 截图例外：npmjs.com 页面不解析相对路径，统一改写为 GitHub raw 绝对链接。
 const GITHUB = 'https://github.com/stonehill-2345/expo-harmony-cli';
+const RAW = 'https://raw.githubusercontent.com/stonehill-2345/expo-harmony-cli/main';
 
 const source = new URL('../../../README.md', import.meta.url);
 const target = new URL('../README.md', import.meta.url);
@@ -11,6 +13,7 @@ const target = new URL('../README.md', import.meta.url);
 let text = readFileSync(source, 'utf8');
 text = text
   .replace(/apps\/cli\/assets\//g, 'assets/')
+  .replace(/assets\/screenshot\.png/g, `${RAW}/apps/cli/assets/screenshot.png`)
   .replace(/apps\/cli\/docs\//g, 'docs/')
   .replace(/apps\/cli\/CHANGELOG\.md/g, 'CHANGELOG.md')
   .replace(/\(docs\/\)/g, `(${GITHUB}/tree/main/docs)`)

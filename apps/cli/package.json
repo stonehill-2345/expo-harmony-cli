@@ -26,8 +26,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:pack": "vitest run --config vitest.pack.config.ts",
-    "check": "pnpm run type-check && pnpm run test && pnpm run test:pack",
-    "postpack": "node -e \"require('node:fs').rmSync('README.md',{force:true})\""
+    "check": "pnpm run type-check && pnpm run test && pnpm run test:pack"
   },
   "files": [
     "dist",
