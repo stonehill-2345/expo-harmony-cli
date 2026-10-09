@@ -5,7 +5,7 @@
     "runtimePackages": "published",
     "runtimePackageCount": 15,
     "productCli": "out-of-scope-not-published",
-    "productCliPackage": "expo-harmony-cli@1.5.0",
+    "productCliPackage": "expo-harmony-cli@1.5.1",
     "distTag": "harmony",
     "registryReport": "outputs/sdk54/npm-release/public-registry-report.json",
     "publicInstallReport": "outputs/sdk54/npm-release/public-install-report.json"

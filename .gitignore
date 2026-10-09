@@ -20,3 +20,4 @@ docs/changelog/local/
 outputs/sdk54/
 *.hap
 *.har
+apps/cli/README.md

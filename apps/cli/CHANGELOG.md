@@ -12,6 +12,14 @@
 - 14 个 Expo 适配包和 `@expo-oh/react-native-screens` 已使用 `harmony` dist-tag 发布并完成 npm/pnpm 安装、锁文件重装及 HarmonyOS 设备验收。
 - 产品 CLI 继续使用已有无 scope 包名 `expo-harmony-cli`，不属于 `@expo-oh` 运行时包发布集合；本版本 CLI 尚未发布。
 
+## 1.5.1 - 2026-10-09
+
+### Patch Changes
+
+- 重写仓库根 README：快速开始按 SDK 版本重组（SDK54 优先、编号步骤式），前置环境提示与 npm 包链接；环境与支持范围前移，新增社区与支持（Issues）；移除版本号叙事，聚焦使用者动线。
+- CONTRIBUTING 仓库组织新增目录架构树（`apps/cli` 展开至子目录），修正 `packages/` 为预留空目录的过时描述——现为 14 个 SDK54 源码包基线，禁止独立发布。
+- npm 包 README 改为发布时从仓库根 README 自动同步（`prepack` 复制并改写仓库相对路径为包内/GitHub 链接），不再单独维护 `apps/cli/README.md`。
+
 ## 1.5.0 - 2026-09-30
 
 ### Minor Changes
@@ -24,7 +32,6 @@
 - 修复 RN 0.82 iOS JSI 头文件兼容：`expo-modules-core` patch 显式引入 CallInvoker 与 CallbackWrapper 头文件，iOS 端可正常编译。
 - Metro 初始化模块按平台选择，避免非 Harmony 平台加载鸿蒙专属初始化逻辑。
 - 修复 Harmony Release 构建初始化与应用图标问题。
-
 
 ## 1.4.0
 

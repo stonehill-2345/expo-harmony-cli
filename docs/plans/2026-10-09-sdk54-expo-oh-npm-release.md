@@ -8,7 +8,7 @@
 
 - 发布 14 个 Expo 适配包和 1 个 screens 衍生包，共 15 个 `@expo-oh` 运行时包。
 - 发布名使用 `@expo-oh/*`；用户项目保留原依赖键，通过 npm alias 安装。JS import、命令名、OHPM 名称和 C++ 符号不做全局改名。
-- 运行时包采用上游普通数值版本，使用 `harmony` dist-tag 和精确依赖。产品 CLI 保持 `expo-harmony-cli` 包名，当前公开版本为 `1.5.0`，后续版本独立发布。
+- 运行时包采用上游普通数值版本，使用 `harmony` dist-tag 和精确依赖。产品 CLI 保持 `expo-harmony-cli` 包名，当前公开版本为 `1.5.1`，后续版本独立发布。
 - 源码包保留上游 name/version 和 `private: true`。在隔离 staging 中生成发布清单、构建产物和 tgz，避免破坏 workspace、上游对比和历史 patch 生成。
 - 新 SDK54 项目最终不依赖这 15 个运行时包的 patch-package 补丁；SDK52 和已存在 SDK54 patch 项目继续被正确识别，不自动迁移或删除用户文件。
 - npm/pnpm 为首批验收包管理器；不扩大到未经验证的 SDK、模块或包管理器。
@@ -352,7 +352,7 @@ npm view @expo-oh/expo@54.0.37 \
 npm install --save-exact expo@npm:@expo-oh/expo@54.0.37
 
 # 产品 CLI 用户入口；CLI 沿用独立的无 scope 包
-npx expo-harmony-cli@1.5.0 create
+npx expo-harmony-cli@1.5.1 create
 
 # 生成项目中使用原命令名
 npx expo prebuild --platform harmony

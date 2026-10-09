@@ -54,7 +54,7 @@
 - `public-registry-report.json` 已逐包确认公开版本、`harmony` tag 和 `dist.integrity` 与候选清单一致。
 - 从公开 registry 在全新默认模板项目执行 `npm install` 和 `npm ci` 均通过；15 个原依赖键全部解析到预期 `@expo-oh` 名称和精确版本，无对应官方包副本。结果见 `public-install-report.json`。
 - 产品 CLI 保持已有无 scope 包名 `expo-harmony-cli`；错误的 scoped CLI 候选已从最终 release catalog 和发布证据中移除。
-- 已公开的 `@expo-oh/expo@54.0.37` tgz 内嵌候选 metadata 曾记录 CLI 版本 `1.6.0`。该字段不再属于运行时包验收契约；运行时映射仍为已核验的 15 包，仓库当前生成的项目文档使用已发布的无 scope CLI `1.5.0`。
+- 已公开的 `@expo-oh/expo@54.0.37` tgz 内嵌候选 metadata 曾记录 CLI 版本 `1.6.0`。该字段不再属于运行时包验收契约；运行时映射仍为已核验的 15 包，仓库当前生成的项目文档使用已发布的无 scope CLI `1.5.1`。
 
 ## CLI 发布边界
 
