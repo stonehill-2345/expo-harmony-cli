@@ -67,7 +67,7 @@ const METRO_BUILD = buildRecipe(TSC_ARGV, {
   linkProductionDependencies: true,
   toolLinks: [
     ...TYPESCRIPT_TOOLS,
-    { name: '@types/node', source: 'root', path: 'node_modules/.pnpm/node_modules/@types/node' },
+    { name: '@types/node', source: 'root', path: 'packages/@expo/cli/node_modules/@types/node' },
     { name: '@jridgewell/trace-mapping', source: 'package' },
     { name: '@types/babel__core', source: 'package' },
     { name: '@types/picomatch', source: 'package' },
@@ -79,7 +79,7 @@ const METRO_BUILD = buildRecipe(TSC_ARGV, {
     Object.freeze({ from: 'packages/@expo/cli/ts-declarations', to: 'packages/@expo/cli/ts-declarations' }),
   ]),
   supportLinks: Object.freeze([
-    Object.freeze({ from: 'node_modules/.pnpm/node_modules/@types/node', to: 'packages/@expo/cli/ts-declarations/node' }),
+    Object.freeze({ from: 'packages/@expo/cli/node_modules/@types/node', to: 'packages/@expo/cli/ts-declarations/node' }),
   ]),
   tsconfigCompilerOptions: Object.freeze({ noCheck: true, preserveSymlinks: true }),
 });

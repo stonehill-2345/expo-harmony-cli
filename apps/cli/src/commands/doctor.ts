@@ -1,3 +1,5 @@
+import { loadReleaseManifest } from '../sdk54/release-manifest';
+import { runReleaseDoctorChecks } from '../sdk54/release-runtime';
 import * as fs from 'fs';
 import * as path from 'path';
 import { TOOL_CHECKS, PROJECT_CHECKS } from '../env-checks/registry';
@@ -46,7 +48,9 @@ export async function doctor(_args: string[], deps: { probe?: Probe; existsSync?
   // 段二：项目明细
   console.log('项目');
   const kind = classifyHarmonyProject(projectRoot);
-  const projects = kind === 'sdk54-package-patch' || kind === 'sdk54-legacy'
+  const projects = kind === 'sdk54-scoped-packages'
+    ? runReleaseDoctorChecks(projectRoot, loadReleaseManifest())
+    : kind === 'sdk54-package-patch' || kind === 'sdk54-legacy'
     ? runSdk54DoctorChecks(projectRoot, loadSdk54PatchManifest())
     : PROJECT_CHECKS.map(check => check(ctx));
   projects.forEach(r => printResult(r, '  '));

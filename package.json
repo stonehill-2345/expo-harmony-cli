@@ -28,7 +28,11 @@
     "sdk54:patch:audit": "node scripts/sdk54/audit-cli-patches.mjs apps/cli/content/patches/sdk-54 apps/cli/content/patches/sdk-54/manifest.json",
     "sdk54:external:compare": "node scripts/sdk54/compare-external-packages.mjs --approved-dir \"$SDK54_APPROVED_EXTERNAL_DIR\" --output docs/releases/2026-09-28-sdk54-external-package-comparison.json",
     "sdk54:e2e:packed": "node scripts/sdk54/blackbox-packed-cli.mjs --cli-tgz \"$CLI_TGZ\" --work-dir \"$SDK54_BLACKBOX_DIR\" --template all --package-manager all --lifecycle all --no-device",
-    "sdk54:acceptance:verify": "node scripts/sdk54/verify-cli-acceptance.mjs --final docs/releases/2026-09-28-sdk54-cli-1.5.0.json"
+    "sdk54:acceptance:verify": "node scripts/sdk54/verify-cli-acceptance.mjs --final docs/releases/2026-09-28-sdk54-cli-1.5.0.json",
+    "sdk54:release:manifest": "node scripts/sdk54/generate-release-manifest.mjs",
+    "sdk54:release:check": "node scripts/sdk54/generate-release-manifest.mjs --check && node --test scripts/sdk54/__tests__/release-*.test.mjs",
+    "sdk54:release:prepare": "node scripts/sdk54/prepare-npm-release.mjs",
+    "sdk54:release:verify": "node scripts/sdk54/verify-npm-release.mjs"
   },
   "devDependencies": {
     "npm-packlist": "^10.0.4",

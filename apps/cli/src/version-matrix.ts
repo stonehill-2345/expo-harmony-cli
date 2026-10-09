@@ -1,3 +1,4 @@
+import { expoSdkMajor } from './sdk54/npm-spec';
 import * as fs from 'fs';
 import * as path from 'path';
 
@@ -61,13 +62,13 @@ export function detectSdkVersion(projectRoot: string): SdkVersion {
     expoVersion = pkg.dependencies?.expo || pkg.devDependencies?.expo;
   } catch { /* 无法读取版本时保留默认基线 */ }
   if (typeof expoVersion === 'string') {
-    const major = parseInt(expoVersion.replace(/^[~^]/, '').split('.')[0], 10);
+    const major = expoSdkMajor(expoVersion);
     if (major === 53) {
       throw new Error('暂不支持 Expo SDK 53 的 HarmonyOS 适配；请使用 Expo SDK 52 或 54。');
     }
     if (major === 54) return 'sdk-54';
-    if (major >= 55) throw new Error('暂不支持 Expo SDK 55 及更高版本；仅支持 Expo SDK 52 或 54。');
-    if (major <= 52) return 'sdk-52';
+    if (major !== undefined && major >= 55) throw new Error('暂不支持 Expo SDK 55 及更高版本；仅支持 Expo SDK 52 或 54。');
+    if (major !== undefined && major <= 52) return 'sdk-52';
   }
   return 'sdk-54';
 }

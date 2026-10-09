@@ -66,7 +66,7 @@ function countOccurrences(contents: string, value: string): number {
 export function validateSdk54Template(
   projectRoot: string,
   template: Sdk54Template,
-  manifest: Sdk54PatchManifest,
+  manifest: Pick<Sdk54PatchManifest, 'templates' | 'defaultImage'>,
 ): ValidatedSdk54Template {
   for (const relativePath of FORBIDDEN_BYPASSES) {
     if (fs.existsSync(path.join(projectRoot, relativePath))) {

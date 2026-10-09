@@ -25,12 +25,13 @@ export type ManagedPackage = {
 
 export type Sdk54ManagedState = {
   sdk: 'sdk-54';
-  mode: 'sdk54-package-patch';
   template: 'blank-typescript' | 'default';
-  patchSet: string;
   expo: string;
   rnoh: string;
-};
+} & (
+  | { mode: 'sdk54-package-patch'; patchSet: string; release?: never }
+  | { mode: 'sdk54-scoped-packages'; release: string; patchSet?: never }
+);
 
 export type ManagedState = {
   version: 2;
@@ -87,9 +88,9 @@ function validSdk54(value: unknown): value is Sdk54ManagedState {
   if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
   const state = value as Record<string, unknown>;
   return state.sdk === 'sdk-54'
-    && state.mode === 'sdk54-package-patch'
+    && (state.mode === 'sdk54-package-patch' || (state.mode === 'sdk54-scoped-packages' && typeof state.release === 'string' && state.release.length > 0))
     && (state.template === 'blank-typescript' || state.template === 'default')
-    && typeof state.patchSet === 'string' && state.patchSet.length > 0
+    && (state.mode === 'sdk54-scoped-packages' || (typeof state.patchSet === 'string' && state.patchSet.length > 0))
     && typeof state.expo === 'string' && state.expo.length > 0
     && typeof state.rnoh === 'string' && state.rnoh.length > 0;
 }

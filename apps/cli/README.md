@@ -20,6 +20,13 @@
 - 🎯 **问题**：React Native 生态缺乏标准化的鸿蒙开发工具链，手动配置鸿蒙原生工程繁琐且易出错
 - ✅ **解决**：一条 `npx` 命令完成项目创建、鸿蒙工程生成、依赖管理、原生注册，沿用 Expo CNG（Continuous Native Generation）工作流
 
+## SDK54 @expo-oh 运行时包
+
+当前源码的 SDK54 create 使用 15 个 `@expo-oh` 运行时包及 npm alias，这些包已公开发布并完成验收。
+产品 CLI 不属于 `@expo-oh` 发布集合，继续使用已有包名 `expo-harmony-cli`。当前公开版本仍为 `1.5.0`，本轮不发布新的 CLI 版本。
+旧 SDK54 patch 项目仍可诊断和 prebuild；下面的 1.5.0 说明继续适用。
+发布产物及验收记录见仓库根 README 和 `docs/plans/2026-10-09-sdk54-expo-oh-npm-release.md`。
+
 ## 目录
 
 - [1.5.0：SDK54 package-patch](#150sdk54-package-patch)

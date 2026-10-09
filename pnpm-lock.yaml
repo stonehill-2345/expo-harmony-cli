@@ -38,6 +38,12 @@ importers:
       mustache:
         specifier: ^4.2.0
         version: 4.2.0
+      npm-package-arg:
+        specifier: 11.0.3
+        version: 11.0.3
+      semver:
+        specifier: 7.7.2
+        version: 7.7.2
     devDependencies:
       '@types/mustache':
         specifier: ^4.2.5
@@ -7036,6 +7042,11 @@ packages:
 
   semver@7.6.3:
     resolution: {integrity: sha512-oVekP1cKtI+CTDvHWYFUcMtsK/00wmAEfyqKfNdARm8u1wNVhSgaX7A8d4UuIlUI5e84iEwOhs7ZPYRmzU9U6A==}
+    engines: {node: '>=10'}
+    hasBin: true
+
+  semver@7.7.2:
+    resolution: {integrity: sha512-RF0Fw+rO5AMf9MAyaRXI4AV0Ulj5lMHqVxxdSgiVbixSCXoEmmX/jk0CuJw4+3SqroYO9VoUh+HcuJivvtJemA==}
     engines: {node: '>=10'}
     hasBin: true
 
@@ -15764,6 +15775,8 @@ snapshots:
   semver@6.3.1: {}
 
   semver@7.6.3: {}
+
+  semver@7.7.2: {}
 
   semver@7.8.5: {}
 

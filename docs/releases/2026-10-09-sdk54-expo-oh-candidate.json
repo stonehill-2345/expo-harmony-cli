@@ -1,0 +1,564 @@
+{
+  "release": "sdk54-expo-oh-harmony.0",
+  "published": true,
+  "publication": {
+    "runtimePackages": "published",
+    "runtimePackageCount": 15,
+    "productCli": "out-of-scope-not-published",
+    "productCliPackage": "expo-harmony-cli@1.5.0",
+    "distTag": "harmony",
+    "registryReport": "outputs/sdk54/npm-release/public-registry-report.json",
+    "publicInstallReport": "outputs/sdk54/npm-release/public-install-report.json"
+  },
+  "organization": {
+    "scope": "@expo-oh",
+    "owner": "qazwsx111",
+    "verified": true
+  },
+  "artifacts": [
+    {
+      "installName": "@expo/cli",
+      "name": "@expo-oh/expo-cli",
+      "version": "54.0.27",
+      "batch": "B",
+      "file": "expo-oh-expo-cli-54.0.27.tgz",
+      "integrity": "sha512-IVZyJ6LaMJJwFkjjX3IWEI2mN+epRgG5J2Fk8ZlqyGs3Q+Jj9lF+llGDSjkSEq+AzXpcoyMLrVsqur7oFKX49w=="
+    },
+    {
+      "installName": "@expo/metro-config",
+      "name": "@expo-oh/expo-metro-config",
+      "version": "54.0.17",
+      "batch": "A",
+      "file": "expo-oh-expo-metro-config-54.0.17.tgz",
+      "integrity": "sha512-qGWwna85dUnwT0y/duJDmsdDrDXNeA4BS/K6VPF+lk2AV40jy0mEcaGXuWPZvCoVfs7qPVX5tas69wcdOLusUA=="
+    },
+    {
+      "installName": "expo",
+      "name": "@expo-oh/expo",
+      "version": "54.0.37",
+      "batch": "C",
+      "file": "expo-oh-expo-54.0.37.tgz",
+      "integrity": "sha512-fy1UdojzO3j5MwHGOZeuXEFACTxsPqvxnAvGa2VKvq8qETI8udUZ3qBxsQaGSDRPEmGzaQP+29hlXVwi0Cx2Cw=="
+    },
+    {
+      "installName": "expo-asset",
+      "name": "@expo-oh/expo-asset",
+      "version": "12.0.13",
+      "batch": "B",
+      "file": "expo-oh-expo-asset-12.0.13.tgz",
+      "integrity": "sha512-9XygPyczCp0x3ytSLjzJ1oNwnM7xPINRVWXJM9E3gKdE64sBkbHPzJD8jKNCfb5Ij+iGmknJf9Cd3LR5h7pL9w=="
+    },
+    {
+      "installName": "expo-constants",
+      "name": "@expo-oh/expo-constants",
+      "version": "18.0.14",
+      "batch": "A",
+      "file": "expo-oh-expo-constants-18.0.14.tgz",
+      "integrity": "sha512-pm/EgQStgQyNyI/t550ocUNDArPRfmel90xPcgXi1cSZvEjo7l0Gcbo0UEkdQvNBpdg/na24EbJsHJA+XHRMkg=="
+    },
+    {
+      "installName": "expo-font",
+      "name": "@expo-oh/expo-font",
+      "version": "14.0.12",
+      "batch": "A",
+      "file": "expo-oh-expo-font-14.0.12.tgz",
+      "integrity": "sha512-Lq/E+3nkxoNVieviV5R1Jk5Aibpw4igpl8UqXBW7zsc4Ip4Piqe24GarQ5+Jz0yN5ANt6TwJetHIQgz0ak5Cfw=="
+    },
+    {
+      "installName": "expo-linking",
+      "name": "@expo-oh/expo-linking",
+      "version": "8.0.12",
+      "batch": "B",
+      "file": "expo-oh-expo-linking-8.0.12.tgz",
+      "integrity": "sha512-6EUXO+Xt1r0PilXFQFSdFbw+4Ll5ewd06vdloZyyngOrmCM/rxvaNjw+JISyxvZgszrS92u3nZzsQtzG1vw0Uw=="
+    },
+    {
+      "installName": "expo-modules-autolinking",
+      "name": "@expo-oh/expo-modules-autolinking",
+      "version": "3.0.27",
+      "batch": "A",
+      "file": "expo-oh-expo-modules-autolinking-3.0.27.tgz",
+      "integrity": "sha512-UzMrCvlbNrDR2wDSZBkSKd73KFf2nTsr1kpL4NmjibnAX9a66xhUNy4RI16gfTH6Oo3Z6leSYIoj+NBcYEd6Yw=="
+    },
+    {
+      "installName": "expo-modules-core",
+      "name": "@expo-oh/expo-modules-core",
+      "version": "3.0.30",
+      "batch": "A",
+      "file": "expo-oh-expo-modules-core-3.0.30.tgz",
+      "integrity": "sha512-M68o+NX+Q0iaG0F8fNmfH7zAUZ6Kqwvw2aL33ZaL0gX8ldmX9yYHw23oKliK0kjpDbr9JI9LZg1CDlaxG9s5Fw=="
+    },
+    {
+      "installName": "expo-router",
+      "name": "@expo-oh/expo-router",
+      "version": "6.0.24",
+      "batch": "C",
+      "file": "expo-oh-expo-router-6.0.24.tgz",
+      "integrity": "sha512-6gE7oN2eRlLhQKhpO0icGvIlPr5ktRXcKiAhQn+XS4qspNMapn+DacfvqTb4tXAH/k4tHYthFwnRrFF1gAF0pA=="
+    },
+    {
+      "installName": "expo-splash-screen",
+      "name": "@expo-oh/expo-splash-screen",
+      "version": "31.0.13",
+      "batch": "A",
+      "file": "expo-oh-expo-splash-screen-31.0.13.tgz",
+      "integrity": "sha512-8P7h0Csn3AAa/ylrkAR/FRiHcqSuXypIaMjLLhvJOWVqlwUDA52vUKX1hcxOnIx6Bv/7Ze8tTNNJjJ8yho2HsQ=="
+    },
+    {
+      "installName": "expo-status-bar",
+      "name": "@expo-oh/expo-status-bar",
+      "version": "3.0.9",
+      "batch": "A",
+      "file": "expo-oh-expo-status-bar-3.0.9.tgz",
+      "integrity": "sha512-z1/oB7+f1KzqNsjRYqSkUN3hIykl/H6tsLNKyN1AzCjKEp1zlWeS0QXbifClX0GjG5VbMOjIpRYpx53iYGmnww=="
+    },
+    {
+      "installName": "expo-system-ui",
+      "name": "@expo-oh/expo-system-ui",
+      "version": "6.0.9",
+      "batch": "A",
+      "file": "expo-oh-expo-system-ui-6.0.9.tgz",
+      "integrity": "sha512-pMzqDp5u6V0oI5AIwkfKegR69kHOvpYEb4Z1xC9ryP/1BJqPGlWXOn5iekLQGet/vDuj9fLC6faZmcoehh2iBA=="
+    },
+    {
+      "installName": "expo-web-browser",
+      "name": "@expo-oh/expo-web-browser",
+      "version": "15.0.11",
+      "batch": "A",
+      "file": "expo-oh-expo-web-browser-15.0.11.tgz",
+      "integrity": "sha512-u+LVKiyiunwJpgoETxpMGEFMUI9U73KGKmNh2qPNtmFXXuE/K5ysnyayGzjrrDqn+0BJmQri9gcV/yqi8zDaZQ=="
+    },
+    {
+      "installName": "@react-native-ohos/react-native-screens",
+      "name": "@expo-oh/react-native-screens",
+      "version": "4.9.0",
+      "batch": "A",
+      "file": "expo-oh-react-native-screens-4.9.0.tgz",
+      "integrity": "sha512-6nFXikhdW2yGNO21kNNVfw9OKIjBuwm8fKHFUeS2iG2w8TXK+O9B5kewTgGRv0vJFyvOrKcYaN8FHEQOgdJjcg=="
+    }
+  ],
+  "installMatrix": {
+    "release": "sdk54-expo-oh-harmony.0",
+    "mode": "install",
+    "artifacts": [
+      {
+        "name": "@expo-oh/expo-cli",
+        "integrity": "sha512-IVZyJ6LaMJJwFkjjX3IWEI2mN+epRgG5J2Fk8ZlqyGs3Q+Jj9lF+llGDSjkSEq+AzXpcoyMLrVsqur7oFKX49w=="
+      },
+      {
+        "name": "@expo-oh/expo-metro-config",
+        "integrity": "sha512-qGWwna85dUnwT0y/duJDmsdDrDXNeA4BS/K6VPF+lk2AV40jy0mEcaGXuWPZvCoVfs7qPVX5tas69wcdOLusUA=="
+      },
+      {
+        "name": "@expo-oh/expo",
+        "integrity": "sha512-fy1UdojzO3j5MwHGOZeuXEFACTxsPqvxnAvGa2VKvq8qETI8udUZ3qBxsQaGSDRPEmGzaQP+29hlXVwi0Cx2Cw=="
+      },
+      {
+        "name": "@expo-oh/expo-asset",
+        "integrity": "sha512-9XygPyczCp0x3ytSLjzJ1oNwnM7xPINRVWXJM9E3gKdE64sBkbHPzJD8jKNCfb5Ij+iGmknJf9Cd3LR5h7pL9w=="
+      },
+      {
+        "name": "@expo-oh/expo-constants",
+        "integrity": "sha512-pm/EgQStgQyNyI/t550ocUNDArPRfmel90xPcgXi1cSZvEjo7l0Gcbo0UEkdQvNBpdg/na24EbJsHJA+XHRMkg=="
+      },
+      {
+        "name": "@expo-oh/expo-font",
+        "integrity": "sha512-Lq/E+3nkxoNVieviV5R1Jk5Aibpw4igpl8UqXBW7zsc4Ip4Piqe24GarQ5+Jz0yN5ANt6TwJetHIQgz0ak5Cfw=="
+      },
+      {
+        "name": "@expo-oh/expo-linking",
+        "integrity": "sha512-6EUXO+Xt1r0PilXFQFSdFbw+4Ll5ewd06vdloZyyngOrmCM/rxvaNjw+JISyxvZgszrS92u3nZzsQtzG1vw0Uw=="
+      },
+      {
+        "name": "@expo-oh/expo-modules-autolinking",
+        "integrity": "sha512-UzMrCvlbNrDR2wDSZBkSKd73KFf2nTsr1kpL4NmjibnAX9a66xhUNy4RI16gfTH6Oo3Z6leSYIoj+NBcYEd6Yw=="
+      },
+      {
+        "name": "@expo-oh/expo-modules-core",
+        "integrity": "sha512-M68o+NX+Q0iaG0F8fNmfH7zAUZ6Kqwvw2aL33ZaL0gX8ldmX9yYHw23oKliK0kjpDbr9JI9LZg1CDlaxG9s5Fw=="
+      },
+      {
+        "name": "@expo-oh/expo-router",
+        "integrity": "sha512-6gE7oN2eRlLhQKhpO0icGvIlPr5ktRXcKiAhQn+XS4qspNMapn+DacfvqTb4tXAH/k4tHYthFwnRrFF1gAF0pA=="
+      },
+      {
+        "name": "@expo-oh/expo-splash-screen",
+        "integrity": "sha512-8P7h0Csn3AAa/ylrkAR/FRiHcqSuXypIaMjLLhvJOWVqlwUDA52vUKX1hcxOnIx6Bv/7Ze8tTNNJjJ8yho2HsQ=="
+      },
+      {
+        "name": "@expo-oh/expo-status-bar",
+        "integrity": "sha512-z1/oB7+f1KzqNsjRYqSkUN3hIykl/H6tsLNKyN1AzCjKEp1zlWeS0QXbifClX0GjG5VbMOjIpRYpx53iYGmnww=="
+      },
+      {
+        "name": "@expo-oh/expo-system-ui",
+        "integrity": "sha512-pMzqDp5u6V0oI5AIwkfKegR69kHOvpYEb4Z1xC9ryP/1BJqPGlWXOn5iekLQGet/vDuj9fLC6faZmcoehh2iBA=="
+      },
+      {
+        "name": "@expo-oh/expo-web-browser",
+        "integrity": "sha512-u+LVKiyiunwJpgoETxpMGEFMUI9U73KGKmNh2qPNtmFXXuE/K5ysnyayGzjrrDqn+0BJmQri9gcV/yqi8zDaZQ=="
+      },
+      {
+        "name": "@expo-oh/react-native-screens",
+        "integrity": "sha512-6nFXikhdW2yGNO21kNNVfw9OKIjBuwm8fKHFUeS2iG2w8TXK+O9B5kewTgGRv0vJFyvOrKcYaN8FHEQOgdJjcg=="
+      }
+    ],
+    "results": [
+      {
+        "template": "blank-typescript",
+        "pm": "npm",
+        "status": 0,
+        "reinstallStatus": 0,
+        "runtimeFailures": [],
+        "log": "install.log"
+      },
+      {
+        "template": "blank-typescript",
+        "pm": "pnpm",
+        "status": 0,
+        "reinstallStatus": 0,
+        "runtimeFailures": [],
+        "log": "install.log"
+      },
+      {
+        "template": "default",
+        "pm": "npm",
+        "status": 0,
+        "reinstallStatus": 0,
+        "runtimeFailures": [],
+        "log": "install.log"
+      },
+      {
+        "template": "default",
+        "pm": "pnpm",
+        "status": 0,
+        "reinstallStatus": 0,
+        "runtimeFailures": [],
+        "log": "install.log"
+      }
+    ]
+  },
+  "devicePackageFileCheck": [
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-cli",
+      "integrity": "sha512-IVZyJ6LaMJJwFkjjX3IWEI2mN+epRgG5J2Fk8ZlqyGs3Q+Jj9lF+llGDSjkSEq+AzXpcoyMLrVsqur7oFKX49w==",
+      "filesCompared": 864,
+      "failures": []
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-metro-config",
+      "integrity": "sha512-qGWwna85dUnwT0y/duJDmsdDrDXNeA4BS/K6VPF+lk2AV40jy0mEcaGXuWPZvCoVfs7qPVX5tas69wcdOLusUA==",
+      "filesCompared": 169,
+      "failures": []
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo",
+      "integrity": "sha512-fy1UdojzO3j5MwHGOZeuXEFACTxsPqvxnAvGa2VKvq8qETI8udUZ3qBxsQaGSDRPEmGzaQP+29hlXVwi0Cx2Cw==",
+      "filesCompared": 377,
+      "failures": []
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-asset",
+      "integrity": "sha512-9XygPyczCp0x3ytSLjzJ1oNwnM7xPINRVWXJM9E3gKdE64sBkbHPzJD8jKNCfb5Ij+iGmknJf9Cd3LR5h7pL9w==",
+      "filesCompared": 159,
+      "failures": []
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-constants",
+      "integrity": "sha512-pm/EgQStgQyNyI/t550ocUNDArPRfmel90xPcgXi1cSZvEjo7l0Gcbo0UEkdQvNBpdg/na24EbJsHJA+XHRMkg==",
+      "filesCompared": 71,
+      "failures": []
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-font",
+      "integrity": "sha512-Lq/E+3nkxoNVieviV5R1Jk5Aibpw4igpl8UqXBW7zsc4Ip4Piqe24GarQ5+Jz0yN5ANt6TwJetHIQgz0ak5Cfw==",
+      "filesCompared": 127,
+      "failures": []
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-linking",
+      "integrity": "sha512-6EUXO+Xt1r0PilXFQFSdFbw+4Ll5ewd06vdloZyyngOrmCM/rxvaNjw+JISyxvZgszrS92u3nZzsQtzG1vw0Uw==",
+      "filesCompared": 113,
+      "failures": []
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-modules-autolinking",
+      "integrity": "sha512-UzMrCvlbNrDR2wDSZBkSKd73KFf2nTsr1kpL4NmjibnAX9a66xhUNy4RI16gfTH6Oo3Z6leSYIoj+NBcYEd6Yw==",
+      "filesCompared": 254,
+      "failures": []
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-modules-core",
+      "integrity": "sha512-M68o+NX+Q0iaG0F8fNmfH7zAUZ6Kqwvw2aL33ZaL0gX8ldmX9yYHw23oKliK0kjpDbr9JI9LZg1CDlaxG9s5Fw==",
+      "filesCompared": 996,
+      "failures": [],
+      "normalizedFiles": [
+        {
+          "archive": "harmony/example/host/harmony/entry/src/main/ets/codegen/.gitignore",
+          "installed": "harmony/example/host/harmony/entry/src/main/ets/codegen/.npmignore",
+          "reason": "npm extraction renames .gitignore to .npmignore"
+        }
+      ]
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-splash-screen",
+      "integrity": "sha512-8P7h0Csn3AAa/ylrkAR/FRiHcqSuXypIaMjLLhvJOWVqlwUDA52vUKX1hcxOnIx6Bv/7Ze8tTNNJjJ8yho2HsQ==",
+      "filesCompared": 54,
+      "failures": []
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-status-bar",
+      "integrity": "sha512-z1/oB7+f1KzqNsjRYqSkUN3hIykl/H6tsLNKyN1AzCjKEp1zlWeS0QXbifClX0GjG5VbMOjIpRYpx53iYGmnww==",
+      "filesCompared": 24,
+      "failures": []
+    },
+    {
+      "template": "blank-typescript",
+      "name": "@expo-oh/expo-system-ui",
+      "integrity": "sha512-pMzqDp5u6V0oI5AIwkfKegR69kHOvpYEb4Z1xC9ryP/1BJqPGlWXOn5iekLQGet/vDuj9fLC6faZmcoehh2iBA==",
+      "filesCompared": 64,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-cli",
+      "integrity": "sha512-IVZyJ6LaMJJwFkjjX3IWEI2mN+epRgG5J2Fk8ZlqyGs3Q+Jj9lF+llGDSjkSEq+AzXpcoyMLrVsqur7oFKX49w==",
+      "filesCompared": 864,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-metro-config",
+      "integrity": "sha512-qGWwna85dUnwT0y/duJDmsdDrDXNeA4BS/K6VPF+lk2AV40jy0mEcaGXuWPZvCoVfs7qPVX5tas69wcdOLusUA==",
+      "filesCompared": 169,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo",
+      "integrity": "sha512-fy1UdojzO3j5MwHGOZeuXEFACTxsPqvxnAvGa2VKvq8qETI8udUZ3qBxsQaGSDRPEmGzaQP+29hlXVwi0Cx2Cw==",
+      "filesCompared": 377,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-asset",
+      "integrity": "sha512-9XygPyczCp0x3ytSLjzJ1oNwnM7xPINRVWXJM9E3gKdE64sBkbHPzJD8jKNCfb5Ij+iGmknJf9Cd3LR5h7pL9w==",
+      "filesCompared": 159,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-constants",
+      "integrity": "sha512-pm/EgQStgQyNyI/t550ocUNDArPRfmel90xPcgXi1cSZvEjo7l0Gcbo0UEkdQvNBpdg/na24EbJsHJA+XHRMkg==",
+      "filesCompared": 71,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-font",
+      "integrity": "sha512-Lq/E+3nkxoNVieviV5R1Jk5Aibpw4igpl8UqXBW7zsc4Ip4Piqe24GarQ5+Jz0yN5ANt6TwJetHIQgz0ak5Cfw==",
+      "filesCompared": 127,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-linking",
+      "integrity": "sha512-6EUXO+Xt1r0PilXFQFSdFbw+4Ll5ewd06vdloZyyngOrmCM/rxvaNjw+JISyxvZgszrS92u3nZzsQtzG1vw0Uw==",
+      "filesCompared": 113,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-modules-autolinking",
+      "integrity": "sha512-UzMrCvlbNrDR2wDSZBkSKd73KFf2nTsr1kpL4NmjibnAX9a66xhUNy4RI16gfTH6Oo3Z6leSYIoj+NBcYEd6Yw==",
+      "filesCompared": 254,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-modules-core",
+      "integrity": "sha512-M68o+NX+Q0iaG0F8fNmfH7zAUZ6Kqwvw2aL33ZaL0gX8ldmX9yYHw23oKliK0kjpDbr9JI9LZg1CDlaxG9s5Fw==",
+      "filesCompared": 996,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-router",
+      "integrity": "sha512-6gE7oN2eRlLhQKhpO0icGvIlPr5ktRXcKiAhQn+XS4qspNMapn+DacfvqTb4tXAH/k4tHYthFwnRrFF1gAF0pA==",
+      "filesCompared": 817,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-splash-screen",
+      "integrity": "sha512-8P7h0Csn3AAa/ylrkAR/FRiHcqSuXypIaMjLLhvJOWVqlwUDA52vUKX1hcxOnIx6Bv/7Ze8tTNNJjJ8yho2HsQ==",
+      "filesCompared": 54,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-status-bar",
+      "integrity": "sha512-z1/oB7+f1KzqNsjRYqSkUN3hIykl/H6tsLNKyN1AzCjKEp1zlWeS0QXbifClX0GjG5VbMOjIpRYpx53iYGmnww==",
+      "filesCompared": 24,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-system-ui",
+      "integrity": "sha512-pMzqDp5u6V0oI5AIwkfKegR69kHOvpYEb4Z1xC9ryP/1BJqPGlWXOn5iekLQGet/vDuj9fLC6faZmcoehh2iBA==",
+      "filesCompared": 64,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/expo-web-browser",
+      "integrity": "sha512-u+LVKiyiunwJpgoETxpMGEFMUI9U73KGKmNh2qPNtmFXXuE/K5ysnyayGzjrrDqn+0BJmQri9gcV/yqi8zDaZQ==",
+      "filesCompared": 67,
+      "failures": []
+    },
+    {
+      "template": "default",
+      "name": "@expo-oh/react-native-screens",
+      "integrity": "sha512-6nFXikhdW2yGNO21kNNVfw9OKIjBuwm8fKHFUeS2iG2w8TXK+O9B5kewTgGRv0vJFyvOrKcYaN8FHEQOgdJjcg==",
+      "filesCompared": 291,
+      "failures": []
+    }
+  ],
+  "device": {
+    "id": "127.0.0.1:5555",
+    "system": "emulator 6.0.0.130(SP7DEVC00E130R4P11)",
+    "sdk": 20,
+    "builds": [
+      {
+        "template": "blank-typescript",
+        "hapSha256": "7568df7028ffab7580a4c5568dc3b2d712c510384b1a9335c1030d6d0e3718e7",
+        "bundleSha256": "ce154b83178720658549bf465f07ae2f0dfbfee3355069ccd3d86cc4c80b85f4",
+        "embeddedBundleMatches": true
+      },
+      {
+        "template": "default",
+        "hapSha256": "56ee2726df0446dfabc5f43271c1cf3d1f6706651035831ab1e42482b549a23d",
+        "bundleSha256": "307ee1bcb7f463a1cb1c8836dcccf93a86ebcadaa54bb1d0cc76632d5f6699d0",
+        "embeddedBundleMatches": true
+      }
+    ],
+    "screenshots": {
+      "blank-debug": {
+        "file": "evidence/expo-oh-blank-debug.jpeg",
+        "sha256": "1ea787f5ae2116304b7e08638f37ceccb4f15f57ea14a8eb2bc83437afdb940b"
+      },
+      "default-debug": {
+        "file": "evidence/expo-oh-default-debug.jpeg",
+        "sha256": "637cbda899095a64c2a80d1bf9389e1c51b70897f23e1f5f148333dc68e11929"
+      },
+      "default-modal": {
+        "file": "evidence/expo-oh-default-modal.jpeg",
+        "sha256": "805bd23bce9b13e60b9079119717ac5cad7f7febcf44fc019a3735e18fd36631"
+      },
+      "default-explore": {
+        "file": "evidence/expo-oh-default-explore.jpeg",
+        "sha256": "9eb22ae4f18c27e38b480b5dae08f0155c4334e35bc6e8fe59a4bcb922d9ffc3"
+      },
+      "default-routing": {
+        "file": "evidence/expo-oh-default-routing.jpeg",
+        "sha256": "86b5e6481f07d9ed17edd64c1660d6328149af69e9b47d2410e1de67b57eed97"
+      },
+      "default-web": {
+        "file": "evidence/expo-oh-default-web.jpeg",
+        "sha256": "7f93528d650234c9aef171d480d60b6541c926b15a9ad3c511cfabb1d1a548dd"
+      },
+      "default-cold": {
+        "file": "evidence/expo-oh-default-cold.jpeg",
+        "sha256": "f6773154eaed287178ba71fa64de0d2207532162905dd03be7d49a894d1fe92c"
+      },
+      "release-modal": {
+        "file": "evidence/expo-oh-release-modal.jpeg",
+        "sha256": "51dab21d3aad0ceabc066ed565f0ff44e068c373fe44ab48985655b8ff7e5335"
+      },
+      "release-back": {
+        "file": "evidence/expo-oh-release-back.jpeg",
+        "sha256": "2a216bf9965bf319cdb73ca6f1ee27d31963448b5681c7369c336c49685507c1"
+      },
+      "blank-cold-final": {
+        "file": "evidence/expo-oh-blank-cold-final.jpeg",
+        "sha256": "b05ab78df1de3971311b495eeda09ef559522fe42088193c23b6831d14aab0e1"
+      }
+    },
+    "observations": [
+      "blank/default Debug UI rendered",
+      "blank/default clean Release built",
+      "blank/default cold start without Metro rendered",
+      "default Debug Modal/dismissTo, Explore and WebBrowser content rendered",
+      "default Release Modal and system Back returned Home"
+    ],
+    "limitations": [
+      "Device fixtures were updated with final archive files; all 27 selected installations byte-compared. Final lockfile reinstall is separately verified by the fresh four-way matrix.",
+      "Blank Debug preceded final CLI/Metro/autolinking fixes; final blank clean Release and cold-start use final files.",
+      "Doctor reports one hvigor discovery warning; actual DevEco builds succeeded."
+    ]
+  },
+  "verification": {
+    "pnpmCheck": {
+      "status": "passed",
+      "cliTests": 500,
+      "packedCliTests": 4,
+      "sdkToolTests": 237,
+      "log": "evidence/expo-oh-final-check-3.log"
+    },
+    "releaseTools": {
+      "status": "passed",
+      "tests": 6
+    },
+    "create": {
+      "npmBlank": "passed",
+      "pnpmDefault": "passed"
+    },
+    "expoCommands": [
+      "install expo-font --npm",
+      "install --check",
+      "install --fix --npm",
+      "prebuild",
+      "start",
+      "run:harmony"
+    ],
+    "doctor": {
+      "project": "passed",
+      "environmentPass": 5,
+      "environmentWarnings": 1,
+      "environmentFailures": 0
+    }
+  },
+  "dryRun": {
+    "status": "passed",
+    "packages": [
+      "+ @expo-oh/expo-constants@18.0.14",
+      "+ @expo-oh/expo-font@14.0.12",
+      "+ @expo-oh/expo-metro-config@54.0.17",
+      "+ @expo-oh/expo-modules-autolinking@3.0.27",
+      "+ @expo-oh/expo-modules-core@3.0.30",
+      "+ @expo-oh/expo-splash-screen@31.0.13",
+      "+ @expo-oh/expo-status-bar@3.0.9",
+      "+ @expo-oh/expo-system-ui@6.0.9",
+      "+ @expo-oh/expo-web-browser@15.0.11",
+      "+ @expo-oh/react-native-screens@4.9.0",
+      "+ @expo-oh/expo-asset@12.0.13",
+      "+ @expo-oh/expo-cli@54.0.27",
+      "+ @expo-oh/expo-linking@8.0.12",
+      "+ @expo-oh/expo@54.0.37",
+      "+ @expo-oh/expo-router@6.0.24"
+    ],
+    "log": "evidence/expo-oh-publish-dry-run.log"
+  },
+  "correction": "The scoped product CLI candidate was removed from the final release model. expo-harmony-cli remains an independent unscoped package and was not published in this release."
+}

@@ -93,3 +93,23 @@ pnpm pack:cli --pack-destination /tmp/expo-harmony-cli-pack
 - [CLI 更新日志](apps/cli/CHANGELOG.md)
 - [贡献指南](CONTRIBUTING.md)
 - [许可证](LICENSE)
+
+## SDK54 @expo-oh 运行时包
+
+新的 SDK54 创建流程使用 `@expo-oh` scoped 包，通过 npm alias 保留 `expo` 等依赖键。
+14 个 Expo 适配包和 `@expo-oh/react-native-screens` 已公开发布并通过验收。产品 CLI 继续使用无 scope 包名 `expo-harmony-cli`，不属于这 15 个包的发布流程，本轮也不发布新 CLI 版本。
+旧 SDK54 patch 项目继续走原诊断/prebuild 路径，SDK52 保留 legacy 流程。
+
+```bash
+pnpm sdk54:release:manifest
+pnpm sdk54:release:check
+npm pack @react-native-ohos/react-native-screens@4.9.0 --ignore-scripts --pack-destination /tmp
+pnpm sdk54:release:prepare --screens-archive /tmp/react-native-ohos-react-native-screens-4.9.0.tgz
+pnpm sdk54:release:verify
+node scripts/sdk54/test-release-install.mjs
+```
+
+最后一个命令启动只读本地 registry，以真实 scoped 名称执行 npm/pnpm 的严格 peer 锁文件解析；
+它不代替真实安装、构建及设备验收。产物位于 `outputs/sdk54/npm-release/`，不提交到源码仓库。
+
+完整包清单、改造范围和发布要求见 [最新发布计划](docs/plans/2026-10-09-sdk54-expo-oh-npm-release.md)。

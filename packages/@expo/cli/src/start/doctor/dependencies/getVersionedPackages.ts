@@ -1,3 +1,4 @@
+import { getHarmonyRelease, harmonyVersions, versionHarmonyPackage } from '../../../harmony/release';
 import { PackageJSONConfig } from '@expo/config';
 import npmPackageArg from 'npm-package-arg';
 
@@ -49,6 +50,8 @@ export async function getCombinedKnownVersionsAsync({
   sdkVersion?: string;
   skipCache?: boolean;
 }) {
+  const release = getHarmonyRelease(projectRoot);
+  if (release) return harmonyVersions(release);
   const skipRemoteVersions = await hasExpoCanaryAsync(projectRoot);
   if (skipRemoteVersions) {
     Log.warn('Dependency validation might be unreliable when using canary SDK versions');
@@ -144,7 +147,10 @@ export async function getVersionedPackagesAsync(
   let othersCount = 0;
   const excludedNativeModules: ExcludedNativeModules[] = [];
 
+  const release = getHarmonyRelease(projectRoot);
   const versionedPackages = packages.map((arg) => {
+    const harmonySpec = release && versionHarmonyPackage(release, arg);
+    if (harmonySpec) { nativeModulesCount++; return harmonySpec; }
     const { name, type, raw, rawSpec } = npmPackageArg(arg);
 
     if (['tag', 'version', 'range'].includes(type) && name && versionsForSdk[name]) {

@@ -1,3 +1,4 @@
+import { getHarmonyRelease, hasReleaseIdentity } from '../../../harmony/release';
 import { ExpoConfig, PackageJSONConfig } from '@expo/config';
 import assert from 'assert';
 import chalk from 'chalk';
@@ -125,6 +126,13 @@ export async function getVersionedDependenciesAsync(
   debug(`Package versions: %O`, packageVersions);
   // find incorrect dependencies by comparing the actual package versions with the bundled native module version ranges
   let incorrectDeps = findIncorrectDependencies(pkg, packageVersions, combinedKnownPackages);
+  const release = getHarmonyRelease(projectRoot);
+  for (const item of release?.packages ?? []) {
+    if (item.installName in resolvedDependencies && !hasReleaseIdentity(projectRoot, item)
+      && !incorrectDeps.some(dep => dep.packageName === item.installName)) {
+      incorrectDeps.push({ packageName: item.installName, packageType: findDependencyType(pkg, item.installName), actualVersion: packageVersions[item.installName] ?? 'missing', expectedVersionOrRange: item.publishVersion });
+    }
+  }
   debug(`Incorrect dependencies: %O`, incorrectDeps);
 
   if (pkg?.expo?.install?.exclude) {

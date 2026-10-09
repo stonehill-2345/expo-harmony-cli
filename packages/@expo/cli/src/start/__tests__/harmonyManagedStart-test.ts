@@ -12,9 +12,9 @@ describe(enableHarmonyMetroForManagedProject, () => {
   beforeEach(() => { root = fs.mkdtempSync(path.join(os.tmpdir(), 'expo-harmony-start-')); delete process.env.EXPO_HARMONY_METRO; });
   afterEach(() => { fs.rmSync(root, { recursive: true, force: true }); if (previous === undefined) delete process.env.EXPO_HARMONY_METRO; else process.env.EXPO_HARMONY_METRO = previous; });
 
-  it('enables Harmony Metro for sdk54-package-patch managed state', () => {
+  it.each(['sdk54-package-patch', 'sdk54-scoped-packages'])('enables Harmony Metro for %s managed state', (mode) => {
     fs.mkdirSync(path.join(root, '.expo-harmony'), { recursive: true });
-    fs.writeFileSync(path.join(root, '.expo-harmony/managed-state.json'), JSON.stringify({ version: 2, packages: {}, sdk54: { sdk: 'sdk-54', mode: 'sdk54-package-patch' } }));
+    fs.writeFileSync(path.join(root, '.expo-harmony/managed-state.json'), JSON.stringify({ version: 2, packages: {}, sdk54: { sdk: 'sdk-54', mode } }));
     expect(enableHarmonyMetroForManagedProject(root)).toBe(true);
     expect(process.env.EXPO_HARMONY_METRO).toBe('1');
   });

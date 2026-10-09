@@ -13,6 +13,7 @@ export async function scan(_args: string[]): Promise<void> {
     throw new Error('当前目录非项目根（缺 package.json）');
   }
   const kind = classifyHarmonyProject(projectRoot);
+  if (kind === 'sdk54-scoped-packages') throw new Error('SDK54 @expo-oh 项目请使用 npx expo install / expo prebuild；不支持旧 injector 命令');
   if (kind === 'sdk54-package-patch') throw new Error('SDK54 package-patch 1.5.0 仅保证 fresh 基线，不支持旧 scan/injector');
   if (kind === 'sdk54-legacy') throw new Error('legacy SDK54 project：仅诊断，不自动迁移');
   const apply = _args.includes('--apply');

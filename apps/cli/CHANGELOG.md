@@ -1,5 +1,17 @@
 # expo-harmony-cli
 
+## 1.6.0（开发中，尚未发布）
+
+### Minor Changes
+
+- 新建 SDK54 项目改用 15 个已公开发布的 `@expo-oh` 运行时包，通过 npm alias 保留 `expo`、`expo-router`、`@expo/cli` 等原始依赖键和 import。
+- SDK54 新项目不再复制本地 patch，不再安装 `patch-package`，也不再添加 patch postinstall；npm 和 pnpm 均直接从公开 registry 安装固定版本。
+- 增加 release manifest、实际安装包身份校验、alias SDK 解析及 `expo install --check/--fix` 版本保护，避免命令将适配包替换回官方 Expo 包。
+- SDK54 的 create、doctor、prebuild、start 和 run:harmony 已接入 scoped-package 项目模式；scan、sync 及旧 injector 不用于该模式。
+- 保留 SDK52 legacy 流程，以及旧 SDK54 package-patch 项目的识别、诊断和 prebuild 兼容路径；不会自动迁移或删除旧项目 patch。
+- 14 个 Expo 适配包和 `@expo-oh/react-native-screens` 已使用 `harmony` dist-tag 发布并完成 npm/pnpm 安装、锁文件重装及 HarmonyOS 设备验收。
+- 产品 CLI 继续使用已有无 scope 包名 `expo-harmony-cli`，不属于 `@expo-oh` 运行时包发布集合；本版本 CLI 尚未发布。
+
 ## 1.5.0 - 2026-09-30
 
 ### Minor Changes
