@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "release": "sdk54-expo-oh-harmony.0",
-  "cliVersion": "1.5.1",
+  "cliVersion": "1.6.0",
   "createExpoApp": "5.0.0",
   "templates": {
     "blank-typescript": {
