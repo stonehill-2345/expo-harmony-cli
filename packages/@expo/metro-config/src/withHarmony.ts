@@ -1,4 +1,5 @@
 import type { ConfigT as MetroConfig } from '@expo/metro/metro-config';
+import fs from 'fs';
 import path from 'path';
 import resolveFrom from 'resolve-from';
 
@@ -32,6 +33,17 @@ export function withHarmony(
   const harmonyRoot = path.dirname(resolveFrom(projectRoot, `${harmonyPackage}/package.json`));
   const { createHarmonyMetroConfig } = require(path.join(harmonyRoot, 'metro.config'));
   const harmony = createHarmonyMetroConfig({ reactNativeHarmonyPackageName: harmonyPackage });
+  const packageJson = JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8'));
+  const aliasModulePaths: Record<string, string> = {};
+  for (const name of Object.keys({ ...packageJson.dependencies, ...packageJson.devDependencies })) {
+    const file = resolveFrom.silent(projectRoot, `${name}/package.json`);
+    if (!file) continue;
+    const installed = JSON.parse(fs.readFileSync(file, 'utf8'));
+    // RNOH uses pnpm's real package name when redirecting Harmony imports.
+    if (installed.harmony?.alias && installed.name !== name) {
+      aliasModulePaths[installed.name] = path.dirname(file);
+    }
+  }
   const resolveRequest = config.resolver.resolveRequest;
   const beforeMain = config.serializer.getModulesRunBeforeMainModule;
   const getModulesForPlatform = createPlatformModulesRunBeforeMainModule(
@@ -43,6 +55,7 @@ export function withHarmony(
     ...config,
     resolver: {
       ...config.resolver,
+      extraNodeModules: { ...config.resolver.extraNodeModules, ...aliasModulePaths },
       platforms: [...new Set([...config.resolver.platforms, 'harmony'])],
       unstable_conditionsByPlatform: {
         ...config.resolver.unstable_conditionsByPlatform,

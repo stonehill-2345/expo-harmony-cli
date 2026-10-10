@@ -76,8 +76,8 @@ export async function runCreate(args: string[], opts: CreateOptions = {}): Promi
   });
   if (sdk === 'sdk-54') {
     assertCreateSelectionSupported(parsed, sdk);
-    const { runSdk54Create } = await import('./sdk54/create');
-    await runSdk54Create({
+    const { runSdk54ReleaseCreate } = await import('./sdk54/create-release');
+    await runSdk54ReleaseCreate({
       cwd,
       projectName,
       template: parsed.template,

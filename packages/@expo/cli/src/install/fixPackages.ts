@@ -1,3 +1,4 @@
+import { harmonyInstallSpec } from '../harmony/release';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
 
@@ -58,7 +59,7 @@ export async function fixPackagesAsync(
     await installExpoPackageAsync(projectRoot, {
       packageManager,
       packageManagerArguments,
-      expoPackageToInstall: `expo@${expoDep.expectedVersionOrRange}`,
+      expoPackageToInstall: harmonyInstallSpec(projectRoot, 'expo', expoDep.expectedVersionOrRange),
       followUpCommandArgs: ['--fix'],
     });
     // follow-up commands will be spawned in a detached process, so return immediately
@@ -67,7 +68,7 @@ export async function fixPackagesAsync(
 
   if (dependencies.length) {
     const versionedPackages = dependencies.map(
-      (dep) => `${dep.packageName}@${dep.expectedVersionOrRange}`
+      (dep) => harmonyInstallSpec(projectRoot, dep.packageName, dep.expectedVersionOrRange)
     );
 
     await packageManager.addAsync([...packageManagerArguments, ...versionedPackages]);
@@ -81,7 +82,7 @@ export async function fixPackagesAsync(
   if (devDependencies.length) {
     await packageManager.addDevAsync([
       ...packageManagerArguments,
-      ...devDependencies.map((dep) => `${dep.packageName}@${dep.expectedVersionOrRange}`),
+      ...devDependencies.map((dep) => harmonyInstallSpec(projectRoot, dep.packageName, dep.expectedVersionOrRange)),
     ]);
   }
 }

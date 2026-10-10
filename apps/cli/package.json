@@ -1,6 +1,6 @@
 {
   "name": "expo-harmony-cli",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "description": "CLI for creating Expo projects with HarmonyOS support",
   "keywords": [
     "expo",
@@ -46,7 +46,9 @@
     "case": "^1.6.3",
     "chalk": "^4.1.2",
     "json5": "^2.2.3",
-    "mustache": "^4.2.0"
+    "mustache": "^4.2.0",
+    "npm-package-arg": "11.0.3",
+    "semver": "7.7.2"
   },
   "devDependencies": {
     "@types/mustache": "^4.2.5",

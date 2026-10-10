@@ -1,3 +1,4 @@
+import { getHarmonyRelease, harmonyVersions, harmonyInstallSpec, hasReleaseIdentity } from './release';
 import * as PackageManager from '@expo/package-manager';
 import fs from 'fs';
 import path from 'path';
@@ -22,15 +23,19 @@ export async function ensureHarmonyDependenciesAsync(
     packageManagerOptions?: { npm?: boolean; yarn?: boolean; pnpm?: boolean; bun?: boolean };
   }
 ): Promise<{ installed: boolean }> {
-  const mismatches = Object.entries(HARMONY_RUNTIME_PACKAGES).filter(
-    ([name, expected]) => readInstalledVersion(projectRoot, name) !== expected
-  );
+  const release = getHarmonyRelease(projectRoot);
+  const versions = release ? harmonyVersions(release) : HARMONY_RUNTIME_PACKAGES;
+  const required = Object.fromEntries(Object.keys(HARMONY_RUNTIME_PACKAGES).map(name => [name, versions[name as keyof typeof versions]]));
+  const mismatches = Object.entries(required).filter(([name, expected]) => {
+    const item = release?.packages.find(p => p.installName === name);
+    return item ? !hasReleaseIdentity(projectRoot, item) : readInstalledVersion(projectRoot, name) !== expected;
+  });
   if (mismatches.length === 0) {
     return { installed: false };
   }
 
-  const specs = Object.entries(HARMONY_RUNTIME_PACKAGES).map(
-    ([name, version]) => `${name}@${version}`
+  const specs = Object.entries(required).map(
+    ([name, version]) => harmonyInstallSpec(projectRoot, name, version)
   );
   if (!install) {
     throw new CommandError(

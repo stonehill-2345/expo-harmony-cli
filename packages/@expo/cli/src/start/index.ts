@@ -12,7 +12,7 @@ export function enableHarmonyMetroForManagedProject(projectRoot: string): boolea
     const state = JSON.parse(
       fs.readFileSync(path.join(projectRoot, '.expo-harmony/managed-state.json'), 'utf8')
     );
-    if (state?.sdk54?.mode !== 'sdk54-package-patch') return false;
+    if (!['sdk54-package-patch', 'sdk54-scoped-packages'].includes(state?.sdk54?.mode)) return false;
     process.env.EXPO_HARMONY_METRO = '1';
     return true;
   } catch {

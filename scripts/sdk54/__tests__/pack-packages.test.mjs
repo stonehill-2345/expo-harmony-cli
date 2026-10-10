@@ -11,7 +11,7 @@ import zlib from 'node:zlib';
 import { extract as extractTar } from 'tar';
 
 import { SDK54_PACKAGES, getDescriptorByName } from '../catalog.mjs';
-import { packPackages } from '../pack-packages.mjs';
+import { packPackages, compareRounds } from '../pack-packages.mjs';
 
 const ROOT_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../../..');
 const FIXED_ENV = {
@@ -88,7 +88,7 @@ if (fs.existsSync(path.join(stage, 'MUTATE_TOOL'))) { const tool = manifest.name
 function createToolingRoot(root) {
   for (const relativePath of [
     'node_modules/.pnpm/node_modules/@tsconfig/node18',
-    'node_modules/.pnpm/node_modules/@types/node',
+    'packages/@expo/cli/node_modules/@types/node',
     'node_modules/.pnpm/node_modules/typescript',
   ]) {
     fs.mkdirSync(path.join(root, relativePath), { recursive: true });
@@ -131,7 +131,7 @@ function addBuildToolFixtures(root, descriptor, packageDir) {
   for (const [name, bin] of packageTools) createFakePackage(path.join(packageDir, 'node_modules', ...name.split('/')), name, bin);
   createFakePackage(path.join(root, 'node_modules/.pnpm/typescript@5.9.3/node_modules/typescript'), 'typescript', 'bin/tsc');
   createFakePackage(path.join(root, 'node_modules/.pnpm/node_modules/@tsconfig/node18'), '@tsconfig/node18');
-  createFakePackage(path.join(root, 'node_modules/.pnpm/node_modules/@types/node'), '@types/node');
+  createFakePackage(path.join(root, 'packages/@expo/cli/node_modules/@types/node'), '@types/node');
 }
 
 function createCatalogRoot(t) {
@@ -425,4 +425,14 @@ test('CLI prebuild probe rejects broken helper export and broken Harmony dispatc
       assert.ok(packed.failures.some((failure) => failure.includes('@expo/cli') && failure.includes('prebuild')), packed.failures.join('\n'));
     });
   }
+});
+
+
+test('round comparison preserves sibling release artifacts', async t => {
+  createFakePnpm(t);
+  const root = createCatalogRoot(t);
+  const marker = path.join(root, 'outputs/sdk54/npm-release/release.json');
+  writeFile(marker, 'candidate');
+  await compareRounds(root);
+  assert.equal(fs.readFileSync(marker, 'utf8'), 'candidate');
 });

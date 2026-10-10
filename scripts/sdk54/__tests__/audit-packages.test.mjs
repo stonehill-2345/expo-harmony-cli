@@ -74,7 +74,7 @@ function addBuildToolFixtures(root, descriptor, packageDir) {
   for (const [name, bin] of packageTools) createFakePackage(path.join(packageDir, 'node_modules', ...name.split('/')), name, bin);
   createFakePackage(path.join(root, 'node_modules/.pnpm/typescript@5.9.3/node_modules/typescript'), 'typescript', 'bin/tsc');
   createFakePackage(path.join(root, 'node_modules/.pnpm/node_modules/@tsconfig/node18'), '@tsconfig/node18');
-  createFakePackage(path.join(root, 'node_modules/.pnpm/node_modules/@types/node'), '@types/node');
+  createFakePackage(path.join(root, 'packages/@expo/cli/node_modules/@types/node'), '@types/node');
 }
 
 function createGraphRoot(t) {
@@ -83,7 +83,7 @@ function createGraphRoot(t) {
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   for (const relativePath of [
     'node_modules/.pnpm/node_modules/@tsconfig/node18',
-    'node_modules/.pnpm/node_modules/@types/node',
+    'packages/@expo/cli/node_modules/@types/node',
     'node_modules/.pnpm/node_modules/typescript',
   ]) fs.mkdirSync(path.join(root, relativePath), { recursive: true });
 

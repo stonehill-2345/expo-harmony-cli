@@ -36,7 +36,7 @@
 
 ### SDK54（推荐）
 
-使用官方 `create-expo-app` 创建 fresh 项目，并通过精确版本 package patches 提供 Harmony 能力：
+使用官方 `create-expo-app` 创建 fresh 项目，并通过 npm alias 安装 15 个已发布的 `@expo-oh` HarmonyOS 运行时包：
 
 ```bash
 # 1. 创建 SDK54 项目（--template：default 含 Expo Router / blank-typescript；--pnpm 可换 --npm）
@@ -53,7 +53,9 @@ npx expo run:harmony
 npx expo start
 ```
 
-clean Release 构建使用 `npx expo run:harmony --configuration Release --no-build-cache`。SDK54 的公开保证范围是 fresh `default` 和 `blank-typescript`：建议 fresh create 后迁移业务源码和配置，不要复制旧 `harmony/`、shim 或 patch。
+clean Release 构建使用 `npx expo run:harmony --configuration Release --no-build-cache`。SDK54 的公开保证范围是 fresh `default` 和 `blank-typescript`：新项目不安装 `patch-package`，也不复制本地 patch；旧 SDK54 patch 项目不会自动迁移。
+
+14 个 Expo 适配包和 `@expo-oh/react-native-screens` 已使用 `harmony` dist-tag 发布。项目仍保留 `expo`、`expo-router`、`@expo/cli` 等原始依赖键和 import，实际包通过 alias 解析到 `@expo-oh/*`。产品 CLI 继续使用无 scope 包名 `expo-harmony-cli`，不属于这 15 个运行时包的发布集合。
 
 ### SDK52（legacy）
 
@@ -87,11 +89,11 @@ pnpm start:harmony
 | ------------------- | --------------------------------------------------------------------------------------------- |
 | 🚀 **一键创建**     | `npx expo-harmony-cli <目录名> [--sdk=52\|54]` 创建 Expo 项目，自动注入 HarmonyOS 开发基线    |
 | 🧬 **原生工程生成** | 生成 HarmonyOS 原生工程、Metro 配置、RNOH（React Native OpenHarmony）依赖和开发文档           |
-| 📦 **依赖管理**     | 通过 CLI 统一管理三方依赖、patch、Metro alias 与 HarmonyOS 原生注册                           |
+| 📦 **依赖管理**     | SDK54 使用已发布的 `@expo-oh` 包；SDK52 继续由 CLI 管理 patch、alias 与原生注册               |
 | 🔗 **智能原生注册** | 官方优先：优先调用 RNOH 官方 `link-harmony`，未覆盖由内置映射表补充，均未覆盖逐包提示适配指引 |
 | 🩺 **环境诊断**     | 内置 `env` / `doctor` 命令，工具链检查 + 项目健康诊断，退出码分级可接入 CI                    |
 | 🛡️ **文件保护**     | autolinking 托管文件被手动修改时阻断覆盖，事务写入失败自动回滚                                |
-| ✅ **装后验证**     | SDK54 创建后自动运行 runtime probes，校验 patch 生效与版本一致，失败即报错而非静默产出坏项目  |
+| ✅ **装后验证**     | SDK54 创建后校验实际包名、版本、运行入口和原生文件，失败即报错                               |
 | 🔄 **Expo 兼容**    | 保留 Android、iOS 与 Web 的 Expo 标准工作流，不影响现有开发生态                               |
 
 ## 效果预览
@@ -179,6 +181,7 @@ pnpm --dir apps/cli exec node dist/index.js --help
 - [CLI 使用指南](apps/cli/docs/guide.md)（SDK52 legacy 流程）
 - [CLI 更新日志](apps/cli/CHANGELOG.md)
 - [设计文档与验收证据](docs/)
+- [SDK54 @expo-oh 发布计划](docs/plans/2026-10-09-sdk54-expo-oh-npm-release.md)
 - [贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [行为准则](CODE_OF_CONDUCT.md)
 - [第三方声明](NOTICE.md)
 

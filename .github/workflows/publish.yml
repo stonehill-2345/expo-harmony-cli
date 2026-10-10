@@ -1,0 +1,47 @@
+name: Publish accepted Expo OH runtime packages
+
+on:
+  workflow_dispatch:
+    inputs:
+      artifact_run_id:
+        description: Run containing the reviewed 15-package candidate and acceptance.json
+        required: true
+      publish:
+        description: Publish to npm (false performs npm dry-run)
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  actions: read
+  id-token: write
+
+jobs:
+  publish:
+    environment: npm-release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+      - run: pnpm install --filter expo-harmony-workspace --frozen-lockfile --ignore-scripts
+      - uses: actions/download-artifact@v4
+        with:
+          name: expo-oh-sdk54-candidate
+          path: outputs/sdk54/npm-release
+          run-id: ${{ inputs.artifact_run_id }}
+          github-token: ${{ github.token }}
+      - name: Verify acceptance and publish reviewed runtime tarballs
+        env:
+          PUBLISH_RELEASE: ${{ inputs.publish }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        shell: bash
+        run: |
+          args=(outputs/sdk54/npm-release)
+          if [ "$PUBLISH_RELEASE" = true ]; then args+=(--publish); fi
+          node scripts/sdk54/publish-npm-release.mjs "${args[@]}"

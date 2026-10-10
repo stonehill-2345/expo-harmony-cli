@@ -77,7 +77,10 @@ function createNavigationCompatibilityConfig(
   packageRoot: string,
   packageJson: any
 ): ExpoModuleConfig | null {
-  const entry = NAVIGATION_COMPATIBILITY[packageJson.name];
+  const nativePackageName = packageJson.name === '@expo-oh/react-native-screens'
+    ? '@react-native-ohos/react-native-screens'
+    : packageJson.name;
+  const entry = NAVIGATION_COMPATIBILITY[nativePackageName];
   if (!entry || packageJson.version !== entry.version) return null;
   return new ExpoModuleConfig({
     platforms: ['harmony'],
@@ -96,7 +99,7 @@ function createNavigationCompatibilityConfig(
         importKind: entry.importKind,
       },
       har: {
-        packageName: packageJson.name,
+        packageName: nativePackageName,
         packagePath: path.join('harmony', entry.harName),
         primary: true,
         transform: entry.transform,

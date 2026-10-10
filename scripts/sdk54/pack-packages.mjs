@@ -323,7 +323,7 @@ async function packageFiles(packageDir, manifest) {
   return [...await packlist(tree)].sort((left, right) => left.localeCompare(right, 'en'));
 }
 
-async function stageBuildAndPack({ rootDir, outputDir, descriptor }) {
+export async function stageBuildAndPack({ rootDir, outputDir, descriptor, transform, archiveFile }) {
   const sourcePackageDir = path.join(rootDir, descriptor.relativePath);
   const sourceManifest = JSON.parse(fs.readFileSync(path.join(sourcePackageDir, 'package.json'), 'utf8'));
   if (sourceManifest.name !== descriptor.name || sourceManifest.version !== descriptor.version) {
@@ -334,7 +334,7 @@ async function stageBuildAndPack({ rootDir, outputDir, descriptor }) {
   const shouldBuild = Boolean(descriptor.build);
   const stageRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-pack-stage-'));
   const stagePackageDir = path.join(stageRoot, descriptor.relativePath);
-  const file = archiveName(descriptor);
+  const file = archiveFile ?? archiveName(descriptor);
   const archivePath = path.join(outputDir, file);
   try {
     copyPackageToStage({
@@ -361,7 +361,9 @@ async function stageBuildAndPack({ rootDir, outputDir, descriptor }) {
         `expected ${descriptor.name}@${descriptor.version}, found ${String(manifest.name)}@${String(manifest.version)}`,
       );
     }
-    const files = await packageFiles(stagePackageDir, manifest);
+    if (transform) await transform(stagePackageDir, manifest);
+    const finalManifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    const files = await packageFiles(stagePackageDir, finalManifest);
     if (files.length === 0) throw new Error('npm-packlist selected no files');
     fs.rmSync(archivePath, { force: true });
     await createTar(
@@ -426,11 +428,10 @@ function argumentValue(args, name, fallback) {
   return index >= 0 ? args[index + 1] : fallback;
 }
 
-async function compareRounds(rootDir) {
-  const baseDir = path.join(rootDir, 'outputs/sdk54');
+export async function compareRounds(rootDir) {
+  const baseDir = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-compare-'));
   const outputA = path.join(baseDir, 'pack-a');
   const outputB = path.join(baseDir, 'pack-b');
-  fs.rmSync(baseDir, { recursive: true, force: true });
   try {
     const first = await packPackages({ rootDir, outputDir: outputA, round: 'A' });
     const second = await packPackages({ rootDir, outputDir: outputB, round: 'B' });

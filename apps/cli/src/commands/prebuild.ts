@@ -15,7 +15,7 @@ import { classifyHarmonyProject } from '../sdk54/project-state';
 export async function prebuild(args: string[]): Promise<void> {
   const projectRoot = process.cwd();
   const kind = classifyHarmonyProject(projectRoot);
-  if (kind === 'sdk54-package-patch') {
+  if (kind === 'sdk54-package-patch' || kind === 'sdk54-scoped-packages') {
     const forwarded = args.filter(arg => arg !== '--skip-preflight');
     runFile('npx', ['--no-install', 'expo', 'prebuild', ...forwarded], { cwd: projectRoot });
     return;

@@ -101,7 +101,7 @@ describe('expo-harmony-cli 实际打包产物', () => {
   it('ships CLI dist output and Harmony content assets', () => {
     const { root: cwd, files, archiveName } = readPackedCli();
 
-    expect(archiveName).toBe('expo-harmony-cli-1.5.1.tgz');
+    expect(archiveName).toBe('expo-harmony-cli-1.6.0.tgz');
     expect(files).toContain('dist/index.js');
     expect(files).toContain('README.md');
     expect(files).toContain('CHANGELOG.md');
@@ -152,7 +152,7 @@ describe('expo-harmony-cli 实际打包产物', () => {
     expect(files.some(file => file.startsWith('.github/'))).toBe(false);
     expect(files.some(file => !file.startsWith('templates/harmony') && /(^|\/)(?:__tests__|tests?|node_modules)(\/|$)|\.(?:test|spec)\.[^.]+$|\.(?:tgz|hap|har)$|(?:acceptance|evidence|release-report).*\.json$/i.test(file))).toBe(false);
     const packedPackageJson = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
-    expect(packedPackageJson.version).toBe('1.5.1');
+    expect(packedPackageJson.version).toBe('1.6.0');
     const sensitive = [/\/Users\//, /\/private\/tmp\//, /[A-Za-z]:\\Users\\/, /\b10\.(?:\d{1,3}\.){2}\d{1,3}\b/, /\b192\.168\.(?:\d{1,3}\.)\d{1,3}\b/, /\b172\.(?:1[6-9]|2\d|3[01])\.(?:\d{1,3}\.)\d{1,3}\b/];
     const textExtensions = new Set(['.js', '.mjs', '.cjs', '.json', '.md', '.ts', '.patch', '.txt', '.json5', '.ets', '.cpp', '.h', '.cmake', '.yaml', '.yml', '.xml', '.properties', '.gradle', '']);
     for (const file of files) {

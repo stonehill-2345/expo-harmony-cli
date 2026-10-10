@@ -1,0 +1,31 @@
+name: npm runtime package release candidate
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  candidate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.19.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm type-check && pnpm test && pnpm sdk54:release:check
+      - name: Download pinned screens baseline
+        run: npm pack @react-native-ohos/react-native-screens@4.9.0 --ignore-scripts --pack-destination /tmp --registry=https://registry.npmjs.org/
+      - run: pnpm sdk54:release:prepare --screens-archive /tmp/react-native-ohos-react-native-screens-4.9.0.tgz
+      - run: pnpm sdk54:release:verify
+      - run: node scripts/sdk54/test-release-install.mjs --full --scripts
+      - uses: actions/upload-artifact@v4
+        with:
+          name: expo-oh-sdk54-candidate
+          path: outputs/sdk54/npm-release

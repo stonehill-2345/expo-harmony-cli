@@ -69,8 +69,8 @@ vi.mock('../src/utils/log', () => ({
   },
 }));
 
-vi.mock('../src/sdk54/create', () => ({
-  runSdk54Create: vi.fn(async (request: {
+vi.mock('../src/sdk54/create-release', () => ({
+  runSdk54ReleaseCreate: vi.fn(async (request: {
     cwd: string;
     projectName: string;
     template: 'blank-typescript' | 'default';
@@ -237,11 +237,11 @@ describe('runCreate', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk54-'));
     try {
       const { runCreate } = await import('../src/creator');
-      const { runSdk54Create } = await import('../src/sdk54/create');
+      const { runSdk54ReleaseCreate } = await import('../src/sdk54/create-release');
       const { runFileQuiet } = await import('../src/utils/exec');
       await runCreate([...args], { cwd: tmp });
-      expect(runSdk54Create).toHaveBeenCalledOnce();
-      expect(runSdk54Create).toHaveBeenCalledWith({
+      expect(runSdk54ReleaseCreate).toHaveBeenCalledOnce();
+      expect(runSdk54ReleaseCreate).toHaveBeenCalledWith({
         cwd: tmp,
         projectName: 'myapp',
         template,
@@ -259,10 +259,10 @@ describe('runCreate', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk54-pm-'));
     try {
       const { runCreate } = await import('../src/creator');
-      const { runSdk54Create } = await import('../src/sdk54/create');
+      const { runSdk54ReleaseCreate } = await import('../src/sdk54/create-release');
       await expect(runCreate(['myapp', '--sdk=54', packageManagerFlag], { cwd: tmp }))
         .rejects.toThrow(/SDK 54.*npm.*pnpm/);
-      expect(runSdk54Create).not.toHaveBeenCalled();
+      expect(runSdk54ReleaseCreate).not.toHaveBeenCalled();
       expect(fs.readdirSync(tmp)).toEqual([]);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
