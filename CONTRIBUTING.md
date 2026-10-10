@@ -57,7 +57,7 @@ expo-harmony-cli/
 各目录约定：
 
 - `apps/cli/`：CLI 唯一发布物，依赖和发布配置归该包维护。
-- `packages/`：SDK54 Harmony 适配的确定性源码基线，用于生成与上游版本精确对应的 package patch；固定来源信息，不构建、不发布到 npm。
+- `packages/`：SDK54 Harmony 适配的确定性源码基线，用于生成与上游版本精确对应的 package patch 和 `@expo-oh` 运行时包；固定来源信息，不由各包单独构建或发布到 npm。
 - 根目录执行统一命令；单独操作 CLI 可用 `pnpm --dir apps/cli <命令>`。
 - 新增工作区包时添加自己的 `package.json`，并更新根锁文件；不要提交子包锁文件。
 - 发布验证：`pnpm pack:cli --pack-destination /tmp/expo-harmony-cli-pack`。
