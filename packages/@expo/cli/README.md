@@ -1,153 +1,84 @@
-<!-- Title -->
+# @expo-oh/expo-cli
 
-<p align="center">
-  <a href="https://expo.dev/">
-    <img alt="Expo CLI" src="../../../.github/resources/cli-banner.svg">
-  </a>
-</p>
+Expo CLI 的 HarmonyOS 适配版本，提供项目内的 `expo` 命令。它与创建项目用的无 scope `expo-harmony-cli` 是两个不同的工具。
 
-<p align="center">The fastest way to build and run universal React Native apps for Android, iOS, and the web</p>
+上游基线：`@expo/cli@54.0.27`。本包由 [expo-harmony-cli](https://github.com/stonehill-2345/expo-harmony-cli) 项目维护，非 Expo 官方发行版本。
 
-<p align="center">
-  <a aria-label="expo documentation" href="https://docs.expo.dev/more/expo-cli/">📚 Read the Documentation</a>
-  &ensp;•&ensp;
-  <a aria-label="expo documentation" href="https://expo.dev/blog">Learn more on our blog</a>
-  &ensp;•&ensp;
-  <a aria-label="Contribute to Expo CLI" href="#contributing">Contribute to Expo CLI</a>
-</p>
+[鸿蒙快速开始](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony/getting-started.md) · [适配源码](https://github.com/stonehill-2345/expo-harmony-cli/tree/main/packages/@expo/cli) · [验收记录](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/releases/2026-10-09-sdk54-expo-oh-candidate.md) · [问题反馈](https://github.com/stonehill-2345/expo-harmony-cli/issues)
 
-<p align="center">
-  <a aria-label="Join the Expo Discord" href="https://discord.gg/4gtbPAdpaE" target="_blank">
-    <img alt="Discord" src="https://img.shields.io/discord/695411232856997968.svg?style=for-the-badge&color=5865F2&logo=discord&logoColor=FFFFFF" />
-  </a>
-</p>
+## 安装
 
-<p align="center">
-  <a aria-label="Follow @expo on X" href="https://x.com/intent/follow?screen_name=expo" target="_blank">
-    <img alt="Expo on X" src="https://img.shields.io/badge/X-000000?style=for-the-badge&logo=x&logoColor=white" target="_blank" />
-  </a>&nbsp;
-  <a aria-label="Follow @expo on GitHub" href="https://github.com/expo" target="_blank">
-    <img alt="Expo on GitHub" src="https://img.shields.io/badge/GitHub-222222?style=for-the-badge&logo=github&logoColor=white" target="_blank" />
-  </a>&nbsp;
-  <a aria-label="Follow @expo on Reddit" href="https://www.reddit.com/r/expo/" target="_blank">
-    <img alt="Expo on Reddit" src="https://img.shields.io/badge/Reddit-FF4500?style=for-the-badge&logo=reddit&logoColor=white" target="_blank" />
-  </a>&nbsp;
-  <a aria-label="Follow @expo on Bluesky" href="https://bsky.app/profile/expo.dev" target="_blank">
-    <img alt="Expo on LinkedIn" src="https://img.shields.io/badge/Bluesky-1DA1F2?style=for-the-badge&logo=bluesky&logoColor=white" target="_blank" />
-  </a>&nbsp;
-  <a aria-label="Follow @expo on LinkedIn" href="https://www.linkedin.com/company/expo-dev" target="_blank">
-    <img alt="Expo on LinkedIn" src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=LinkedIn&logoColor=white" target="_blank" />
-  </a>
+以下命令适用于已经配置好 `@expo-oh` SDK54 依赖组合的项目。普通 Expo 项目请先阅读[鸿蒙快速开始](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony/getting-started.md)；仅安装此包不会自动完成 RNOH 和原生工程配置。
 
-  <p align="center">⭐️ Be sure to star the Expo GitHub repo if you enjoy using the project! ⭐️</p>
-</p>
+```bash
+# npm
+npm install --save-exact @expo/cli@npm:@expo-oh/expo-cli@54.0.28
 
----
-
-The `@expo/cli` package is a CLI binary that should be used via the `expo` package, like `npx expo start` (or `npx expo` for short).
-
-```
-npx expo
+# pnpm
+pnpm add --save-exact @expo/cli@npm:@expo-oh/expo-cli@54.0.28
 ```
 
-> ⭐️ Be sure to star the Expo GitHub repo if you enjoy using the project!
+保留原依赖键：
 
-## Design
-
-This CLI has the following purposes:
-
-- Be a minimal interface for starting a local development server that emulates a production EAS Updates server. The development server is the proxy between a native runtime (Expo Go, Dev Client) and a JS Bundler (Metro, Webpack).
-  - To accomplish secure manifest signing for the web, like AsyncStorage or Permissions where both require https/SSL, we need an authenticated Expo account. This is the only reason we include the authentication commands `login`, `logout`, `whoami`, `register`. Standard web CLIs don't have authentication commands because they either don't set up https or they use emulation via packages like `devcert`.
-- Orchestrating various native tools like Xcode, `Simulator.app`, Android Studio, ADB, etc. to make native builds as painless as possible. `run:ios`, `run:android` commands.
-- Implementing a versioned `prebuild` command that can reliably work with a project for long periods of time. Prebuild is like a bundler for native code, it generates the **android** and **ios** folders based on the project Expo config (**app.json**).
-  - `npx expo config` is auxiliary to `npx expo prebuild` and used for debugging/introspection.
-- Installing versioned libraries with `npx expo install` this is a minimal utility born out of pure necessity since versioning in React Native is hard to get right.
-
-# Contributing
-
-To develop the CLI run (defaults to watch mode):
-
-```
-yarn build
+```json
+{
+  "dependencies": {
+    "@expo/cli": "npm:@expo-oh/expo-cli@54.0.28"
+  }
+}
 ```
 
-We highly recommend setting up an alias for the Expo CLI so you can try it in projects all around your computer. Open your **.zshrc** or other config file and add:
+本包的鸿蒙适配已包含在 npm 产物中，无需额外应用本包的本地 patch。使用完整依赖组合及 overrides，保留锁文件；不要混装另一组 SDK 版本。
 
+## 使用方式
+
+从已配置的项目根目录执行：
+
+```bash
+npx expo prebuild --platform harmony
+npx expo run:harmony
+npx expo start
+npx expo install expo-font
+npx expo install --check
+npx expo install --fix
 ```
-alias nexpo="/path/to/expo/packages/@expo/cli/build/bin/cli"
+
+通常由 `@expo-oh/expo` 通过原依赖键 `@expo/cli` 引入，无需全局安装。
+
+## 鸿蒙支持范围
+
+| 能力 | HarmonyOS 行为与边界 |
+| --- | --- |
+| prebuild / run:harmony | 生成原生工程并使用本机 HarmonyOS 工具链构建、安装和启动 |
+| start | 识别受管项目并启用 Harmony Metro 配置 |
+| install / --check / --fix | 在受管的 scoped 项目中使用发布映射，保留适配包 alias |
+| Release | 可使用 `run:harmony --configuration Release --no-build-cache`；需要本机签名和工具链 |
+| 项目入口 | 单独安装此 CLI 不会补齐完整 RNOH 依赖组合或创建受管状态 |
+| 云服务 | 本包不意味着 Expo Go、EAS Build 或 EAS Update 已支持鸿蒙 |
+
+## 生成和运行原生工程
+
+从已配置项目根目录执行：
+
+```bash
+npx expo prebuild --platform harmony
+npx expo run:harmony
 ```
 
-Then use it with `nexpo` like `nexpo config`. You can also set up a debug version:
+日常开发启动 Metro：`npx expo start`。安装或更新原生依赖、应用配置后，需要重新生成并构建；重启 Metro 不能替代原生构建。
 
-```
-alias expo-inspect="node --inspect /path/to/expo/packages/@expo/cli/build/bin/cli"
-```
+兼容基线为 Expo SDK54、React 19.1.1、React Native 0.82.1、RNOH 0.82.30。设备、DevEco、签名要求见[快速开始](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony/getting-started.md)。普通 Expo Go 不能作为本组合的鸿蒙运行容器。
 
-Then you can run it and visit `chrome://inspect/#devices` in Chrome, and press **"Open dedicated DevTools for Node"** to get a debugger attached to your process. When debugging the CLI, you'll want to disable workers whenever possible, this will make all code run on the same thread, this is mostly applicable to the `start` command, i.e. `expo-inspect start --max-workers 0`.
+## 排查与反馈
 
-## Format
+- 安装后版本或功能不符：检查 package.json alias、overrides 和锁文件，使用 `npx expo install --check` 核对受管组合。
+- 原生模块缺失或更新无效：确认使用同组合的 Core/Autolinking，重新 prebuild、构建并安装。
+- 旧 patch 项目不会自动迁移；保留原项目，按指南新建项目后迁移业务代码，不叠加旧补丁。
 
-- Be sure to update the [`CHANGELOG.md`](./CHANGELOG.md) with changes for every PR. You only need to add the message, our GitHub bot will automatically suggest adding your name and PR number to the diff.
-- End `async` functions with `Async` like `runAsync`. This is just how we format functions at Expo.
-- When throwing errors, always opt for `CommandError` instead of `Error` -- this helps with debugging and making the experience feel more coherent.
-- Utilize the unified `Log` module instead of `console.log`.
-- When logging with variables, utilize the following format `Something happened (foo: bar, baz: foz)`.
-  - Avoid other formats like `Something happened: bar, foz` or `Something happened: foo=bar, baz=foz`.
-- Main UI components like command names (`expo start`), arguments (`--port`), and `--help` messages should be modified internally, by the Expo team to ensure the developer experience is unified across Expo tooling. External contributions modifying these core aspects may be rejected.
-- Use the `profile` utility method with the `EXPO_PROFILE=1` environment variable to measure execution time.
-- Avoid globals and singletons as these make testing harder and less predictable. The only global we have (at the time of writing this) is the `isOffline` boolean.
+请在[本仓库 Issues](https://github.com/stonehill-2345/expo-harmony-cli/issues) 提供包版本、RNOH/系统版本、设备类型、最小复现及日志。已记录的模板运行结果不代表全部 API 或所有设备均已验证。
 
-## Environment
+## 上游与许可证
 
-- Always be cautious of the transitive size of dependencies. [packagephobia](https://packagephobia.now.sh/) is a great resource for determining if a package is lean. Try to minimize adding dependencies to the CLI.
-- We build the CLI using `taskr` + `swc`, this is partially inspired by Next.js' local CLI.
-- The build pipeline will inline the CLI version as an environment variable that is accessible anywhere in the CLI codebase. You can access it via `process.env.__EXPO_VERSION` instead of reading the local `package.json` at runtime.
-- Unlike the legacy global Expo CLI, this CLI is shipped with `expo` meaning the SDK Version is always present.
-  - Reduce SDK specific tasks since only one SDK should be accounted for in a single version of `@expo/cli`.
-  - The `@expo/config` method `getConfig` does not need the `skipSDKVersionRequirement` in any case since `expo` should always be installed. Ex: `getConfig('...', { skipSDKVersionRequirement: true });` shouldn't be used.
-- Also unlike the global Expo CLI we can assume that node modules are always installed since this CLI should be used via a project's local **node_modules** folder.
-  - This means we can't perform operations that upgrade the `expo` package as these may kill the running process. Features that need this pattern (like `expo upgrade`) should live in standalone global tools.
-
-## Testing
-
-There are two testing scripts:
-
-- `yarn test`: Controlled unit and integration tests.
-- `yarn test:e2e`: End to end testing for CLI commands. This requires the files to be built with `yarn build`.
-
----
-
-- You can target a specific set of tests with the `--watch` flag. Example: `yarn test --watch config`.
-- We use backticks for `it` blocks. Example <code>it(`works`)</code>.
-- If a pull request is fully self-contained to the `packages/@expo/cli/` folder (i.e. no `yarn.lock` modifications, etc.) then most native CI tests will be skipped, making CI pass faster in PRs.
-
-### Unit Testing Guidelines
-
-- Use `nock` for network requests.
-- No top level `describe` blocks that wrap all the tests in a file.
-- When testing a function, pass the function to the `describe` block instead of a stringified function name:
-  - `describe(foobar, () => {})` instead of `describe('foobar', () => {})`
-- Use virtual `fs` via `memfs` whenever possible.
-- We have a lot of global module [**mocks**](./e2e/setup.ts) already in place, consider them when writing tests.
-- GitHub Copilot can make writing tests a little less tedious.
-
-### E2E Testing Guidelines
-
-- E2E tests should be resilient and reliable, be sure to give them plenty of time for network requests.
-- When testing locally you had to have [Bun installed](https://bun.sh/docs/installation).
-- When testing locally you should attempt to reuse node modules for faster results. In the `npx expo prebuild` and `npx expo start` commands for instance, we utilize a helper method that will default to reusing a project + **node_modules** when run locally. This can be [toggled off](https://github.com/expo/expo/blob/11a5a4d27b7e1c8e4d6ddf0401397d789d89f52a/packages/%40expo/cli/e2e/__tests__/utils.ts#L174) to bootstrap a fresh project every time.
-- When bootstrapping test projects, utilize the temporary folder `os.tmpdir()` as this folder is automatically cleaned up when the computer restarts.
-
-## Coming from Expo CLI
-
-> TL;DR: `expo-cli` was 'make it work', whereas `@expo/cli` is 'make it right, make it fast'.
-
-The legacy global `expo-cli` package was deprecated in favor of this versioned `@expo/cli` package for the following reasons:
-
-- `expo-cli` was too big and took way too long to install. This made CI frustrating to set up since you needed to also target global node modules for caching.
-- `expo-cli` worked for almost all versions of the `expo` package, meaning it was getting more complex with every release.
-- `expo-cli` combined service commands (like the legacy `build`, `submit`, `publish`) with project-level commands like `expo start`. We've since divided services into `eas-cli` and project commands into `npx expo` (`@expo/cli`). This structure is more optimal/faster for developers since they can install/update commands when they need them.
-- This CLI utilizes more Node.js standard features like `$EDITOR` instead of the custom `$EXPO_EDITOR` environment variable. Also transitioning away from `$EXPO_DEBUG` and more towards `$DEBUG=expo:*`. These types of changes make Expo CLI play nicer with existing tooling.
-- The DevTools UI has been deprecated to reduce the net installation size, minimize complexity, and make room for future debugging UIs (Hermes/v8 Chrome debugger).
-- The `expo start:web` and `expo web` commands have been rolled into `npx expo start` as we now lazily load platforms until the device requests them.
-- Other missing or beta features from `expo-cli` may still be getting migrated over to this new CLI. For a more comprehensive breakdown see the [start command PR](https://github.com/expo/expo/pull/16160).
+- [上游参考](https://docs.expo.dev/more/expo-cli/)：用于通用 API 或原始包说明；HarmonyOS 支持以本文为准。
+- 原始来源：[Expo 源码](https://github.com/expo/expo/tree/main/packages/%40expo/cli)。
+- 保留上游许可证和来源声明，详见包内 `LICENSE`。遵循 Expo 上游 MIT 许可证。

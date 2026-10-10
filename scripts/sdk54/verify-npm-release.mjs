@@ -5,6 +5,7 @@ import crypto from 'node:crypto';
 import { extract } from 'tar';
 import { pathToFileURL } from 'node:url';
 import { RELEASE_ID, RELEASE_PACKAGES, rewriteReleaseManifest, createReleaseManifest } from './release-catalog.mjs';
+import { readReleaseReadme, releaseReadmePath } from './release-readme.mjs';
 
 export async function verifyRelease(directory, rootDir = process.cwd()) {
   const report = JSON.parse(fs.readFileSync(path.join(directory, 'release.json')));
@@ -23,6 +24,8 @@ export async function verifyRelease(directory, rootDir = process.cwd()) {
       const root = path.join(stage, 'package');
       const manifest = JSON.parse(fs.readFileSync(path.join(root, 'package.json')));
       if (manifest.name !== descriptor.publishName || manifest.version !== descriptor.publishVersion || manifest.private !== false) throw new Error('Incorrect package identity');
+      if (fs.readFileSync(path.join(root, 'README.md'), 'utf8') !== readReleaseReadme(descriptor, rootDir)) throw new Error('Stale Harmony README');
+      if (manifest.homepage !== `https://github.com/stonehill-2345/expo-harmony-cli/blob/main/${releaseReadmePath(descriptor)}`) throw new Error('Incorrect Harmony homepage');
       if (descriptor.relativePath) {
         const expected = rewriteReleaseManifest(JSON.parse(fs.readFileSync(path.join(rootDir, descriptor.relativePath, 'package.json'))));
         for (const key of ['dependencies', 'optionalDependencies', 'peerDependencies', 'peerDependenciesMeta']) {

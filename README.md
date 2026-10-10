@@ -181,6 +181,7 @@ pnpm --dir apps/cli exec node dist/index.js --help
 - [CLI 使用指南](apps/cli/docs/guide.md)（SDK52 legacy 流程）
 - [CLI 更新日志](apps/cli/CHANGELOG.md)
 - [设计文档与验收证据](docs/)
+- [HarmonyOS 快速开始与逐包说明](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony/getting-started.md)
 - [SDK54 @expo-oh 发布计划](docs/plans/2026-10-09-sdk54-expo-oh-npm-release.md)
 - [贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [行为准则](CODE_OF_CONDUCT.md)
 - [第三方声明](NOTICE.md)
