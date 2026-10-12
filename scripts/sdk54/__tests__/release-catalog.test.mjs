@@ -13,7 +13,7 @@ test('release covers all fourteen Expo packages and screens without the product 
   for (const p of SDK54_PACKAGES) {
     const release = RELEASE_PACKAGES.find(r => r.installName === p.name);
     assert.equal(release.upstreamVersion, p.version);
-    assert.equal(release.publishVersion, p.version);
+    assert.equal(release.publishVersion, semver.inc(p.version, 'patch'));
   }
 });
 
@@ -39,7 +39,7 @@ test('runtime manifest maps template packages without patch dependencies', () =>
   assert.equal(manifest.schemaVersion, 1);
   assert.equal(manifest.cliVersion, '1.6.0');
   assert.equal(manifest.packages.length, 15);
-  assert.equal(manifest.packages.find(p => p.installName === 'expo').installSpec, 'npm:@expo-oh/expo@54.0.37');
+  assert.equal(manifest.packages.find(p => p.installName === 'expo').installSpec, 'npm:@expo-oh/expo@54.0.38');
   assert.ok(!manifest.templates.default.devDependencies['patch-package']);
   assert.ok(manifest.templates.default.externalPackages.includes('@react-native-ohos/react-native-screens'));
 });

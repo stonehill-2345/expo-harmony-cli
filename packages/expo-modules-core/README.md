@@ -1,98 +1,80 @@
-<p>
-  <a href="https://docs.expo.dev/modules/">
-    <img
-      src="../../.github/resources/expo-modules-core.svg"
-      alt="expo-modules-core"
-      height="64" />
-  </a>
-</p>
+# @expo-oh/expo-modules-core
 
-The core of Expo Modules architecture.
+Expo Modules 在 HarmonyOS 上的原生基础设施，连接 RNOH、JSI、原生模块与 JavaScript 公共入口。
 
-# Installation in managed Expo projects
+上游基线：`expo-modules-core@3.0.30`。本包由 [expo-harmony-cli](https://github.com/stonehill-2345/expo-harmony-cli) 项目维护，非 Expo 官方发行版本。
 
-For [managed](https://docs.expo.dev/archive/managed-vs-bare/) Expo projects, please follow the installation instructions in the [API documentation for the latest stable release](#api-documentation). If you follow the link and there is no documentation available then this library is not yet usable within managed projects &mdash; it is likely to be included in an upcoming Expo SDK release.
+[鸿蒙快速开始](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony/getting-started.md) · [适配源码](https://github.com/stonehill-2345/expo-harmony-cli/tree/main/packages/expo-modules-core) · [验收记录](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/releases/2026-10-09-sdk54-expo-oh-candidate.md) · [问题反馈](https://github.com/stonehill-2345/expo-harmony-cli/issues)
 
-# Installation in bare React Native projects
+## 安装
 
-For bare React Native projects, you must ensure that you have [installed and configured the `expo` package](https://docs.expo.dev/bare/installing-expo-modules/) before continuing.
+以下命令适用于已经配置好 `@expo-oh` SDK54 依赖组合的项目。普通 Expo 项目请先阅读[鸿蒙快速开始](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony/getting-started.md)；仅安装此包不会自动完成 RNOH 和原生工程配置。
 
-### Add the package to your npm dependencies
+```bash
+# npm
+npm install --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.31
 
-```
-npm install expo-modules-core
+# pnpm
+pnpm add --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.31
 ```
 
-### Configure for iOS
+保留原依赖键：
 
-Run `npx pod-install` after installing the npm package.
-
-### Configure for Android
-
-No additional set up necessary.
-
-# Importing native dependencies - autolinking
-
-Many React Native libraries come with platform-specific (native) code. This native code has to be linked into the project and, in some cases, configured further. These actions require some modifications to the native project files. One of the steps that has to be done with the native configuration is to enable the autolinking mechanism that takes care of including any supported module's native code into the project. The following configuration is required:
-
-### iOS
-
-> Caution! After you have made the following changes you will need to run `pod install` again.
-
-```ruby
-# Podfile
-
-require File.join(File.dirname(`node --print "require.resolve('react-native/package.json')"`), "scripts/react_native_pods")
-require File.join(File.dirname(`node --print "require.resolve('expo-modules-core/package.json')"`), "cocoapods.rb")
-require File.join(File.dirname(`node --print "require.resolve('expo-modules-core/package.json')"`), "scripts/autolinking")
-
-#  ...
-
-target "TargetName" do
-  use_unimodules!
-  config = use_native_modules!
-  use_react_native!(:path => config["reactNativePath"])
-
-  # ...
-end
+```json
+{
+  "dependencies": {
+    "expo-modules-core": "npm:@expo-oh/expo-modules-core@3.0.31"
+  }
+}
 ```
 
-### Android
+本包的鸿蒙适配已包含在 npm 产物中，无需额外应用本包的本地 patch。使用完整依赖组合及 overrides，保留锁文件；不要混装另一组 SDK 版本。
 
-```groovy
-// app/build.gradle
+## 使用方式
 
-apply from: new File(["node", "--print", "require.resolve('expo-modules-core/package.json')"].execute(null, rootDir).text.trim(), "../gradle.groovy")
-apply from: new File(["node", "--print", "require.resolve('react-native/package.json')"].execute(null, rootDir).text.trim(), "../react.gradle")
-apply from: new File(["node", "--print", "require.resolve('expo-updates/package.json')"].execute(null, rootDir).text.trim(), "../scripts/create-manifest-android.gradle")
+应用通过原包名导入；下面示例查找本组合中的 Constants 原生模块：
 
-// ...
-
-apply from: new File(["node", "--print", "require.resolve('@react-native-community/cli-platform-android/package.json')"].execute(null, rootDir).text.trim(), "../native_modules.gradle");
-applyNativeModulesAppBuildGradle(project)
+```ts
+import { requireNativeModule } from "expo-modules-core";
+const constants = requireNativeModule("ExponentConstants");
 ```
 
-```groovy
-// settings.gradle
+业务读取应用信息优先使用 `expo-constants` 的公共 API。原生模块开发者还需要提供 Harmony C++/ArkTS 实现和模块配置，安装 Core 不会自动移植已有 Swift/Kotlin 模块。
 
-apply from: new File(["node", "--print", "require.resolve('expo-modules-core/package.json')"].execute(null, rootDir).text.trim(), "../gradle.groovy");
-includeUnimodulesProjects()
+## 鸿蒙支持范围
 
-apply from: new File(["node", "--print", "require.resolve('@react-native-community/cli-platform-android/package.json')"].execute(null, rootDir).text.trim(), "../native_modules.gradle");
-applyNativeModulesSettingsGradle(settings)
+| 能力 | HarmonyOS 行为与边界 |
+| --- | --- |
+| 原生模块与事件 | 实现运行时级注册、查找、EventEmitter 和订阅 |
+| JSI 基础对象 | 包含 NativeModule、SharedObject、SharedRef 及资源销毁处理 |
+| 异步调用 | 原生任务通过 RNOH CallInvoker 完成 Promise；取消为协作式 |
+| 原生视图 | 存在 Harmony 视图适配及 Fabric 示例，不代表所有视图契约完全对齐 |
+| 模块开发 | 不提供完整 Expo Modules DSL 或 Swift/Kotlin 到 ArkTS 的自动转换 |
+| 支持承诺 | SDK54 模板验收不等同于全部 Core API、原生视图或生产负载验收 |
+
+## 生成和运行原生工程
+
+从已配置项目根目录执行：
+
+```bash
+npx expo prebuild --platform harmony
+npx expo run:harmony
 ```
 
-### Explanation
+日常开发启动 Metro：`npx expo start`。安装或更新原生依赖、应用配置后，需要重新生成并构建；重启 Metro 不能替代原生构建。
 
-The scripts that are referenced in Gradle and Cocoapods are usually found the related package inside the project's `node_modules` directory. In the case of monorepos (such as Yarn workspaces) the project directory may not contain `node_modules` at all; instead, the modules are likely to be located at the root of the repository. In order to ensure that both cases are supported, we take advantage of the Node dependency resolution strategy. We invoke a subprocess that spawns the simple JavaScript snippet that tries to locate the desired npm package containing the script we need.
+兼容基线为 Expo SDK54、React 19.1.1、React Native 0.82.1、RNOH 0.82.30。设备、DevEco、签名要求见[快速开始](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony/getting-started.md)。普通 Expo Go 不能作为本组合的鸿蒙运行容器。
 
-- On iOS, we use [`` ` ` `` (backtick)](https://stackoverflow.com/questions/3159945/running-command-line-commands-within-ruby-script) ([alternative reference](https://ruby-doc.org/core-3.0.2/Kernel.html#method-i-60)).
-- On Android, we use [String[]#execute](<http://docs.groovy-lang.org/latest/html/groovy-jdk/java/lang/String[].html#execute()>) to obtain the results from the subprocess' stdout.
+## 排查与反馈
 
-The Node process that is spawned runs [`require.resolve`](https://nodejs.org/dist/latest-v14.x/docs/api/modules.html#modules_require_resolve_request_options) to obtain the path to a module's `package.json`(if you look for the module location using solely module name, you'll be given the path to the file pointed by the `main` attribute from the `package.json` and we need to know the location of the module's root directory). We then assemble the path to the desired script and execute it.
+- 安装后版本或功能不符：检查 package.json alias、overrides 和锁文件，使用 `npx expo install --check` 核对受管组合。
+- 原生模块缺失或更新无效：确认使用同组合的 Core/Autolinking，重新 prebuild、构建并安装。
+- 旧 patch 项目不会自动迁移；保留原项目，按指南新建项目后迁移业务代码，不叠加旧补丁。
 
-You can read more about the scripts and libraries used in the examples above in their official READMEs.
+请在[本仓库 Issues](https://github.com/stonehill-2345/expo-harmony-cli/issues) 提供包版本、RNOH/系统版本、设备类型、最小复现及日志。已记录的模板运行结果不代表全部 API 或所有设备均已验证。
 
-# Contributing
+## 上游与许可证
 
-Contributions are very welcome! Please refer to guidelines described in the [contributing guide](https://github.com/expo/expo#contributing).
+- [上游参考](https://docs.expo.dev/modules/overview/)：用于通用 API 或原始包说明；HarmonyOS 支持以本文为准。
+- 原始来源：[Expo 源码](https://github.com/expo/expo/tree/main/packages/expo-modules-core)。
+- 保留上游许可证和来源声明，详见包内 `LICENSE`。遵循 Expo 上游 MIT 许可证。

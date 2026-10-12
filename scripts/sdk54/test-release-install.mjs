@@ -13,6 +13,11 @@ import { verifyRelease } from './verify-npm-release.mjs';
 const args = process.argv.slice(2);
 const option = (name, fallback) => args.includes(name) ? args[args.indexOf(name) + 1] : fallback;
 const directory = path.resolve(option('--directory', 'outputs/sdk54/npm-release'));
+// The independently published product CLI is not one of the runtime tarballs.
+const cliPackage = path.resolve(option('--cli-package', 'apps/cli'));
+const require = createRequire(import.meta.url);
+const { buildReleasePackageJson } = require(path.join(cliPackage, 'dist/sdk54/release-manifest.js'));
+const { releaseRuntimeFailures } = require(path.join(cliPackage, 'dist/sdk54/release-runtime.js'));
 const fullInstall = args.includes('--full');
 const lifecycle = args.includes('--scripts');
 const failures = await verifyRelease(directory);
@@ -61,7 +66,6 @@ if (args.includes('--serve')) {
 }
 const manifest = createReleaseManifest();
 const results = [];
-const { buildReleasePackageJson } = createRequire(import.meta.url)(path.join(work, 'expo-harmony-cli/package/dist/sdk54/release-manifest.js'));
 try {
   for (const template of (args.includes('--template') ? [option('--template')] : ['blank-typescript', 'default'])) {
     for (const pm of (args.includes('--pm') ? [option('--pm')] : ['npm', 'pnpm'])) {
@@ -97,7 +101,6 @@ try {
             const expected = manifest.packages.find(p => p.publishName === node.name);
             if (expected && expected.publishVersion !== node.version) runtimeFailures.push(`Wrong scoped version: ${node.name}@${node.version}`);
           }
-          const { releaseRuntimeFailures } = createRequire(import.meta.url)(path.join(work, 'expo-harmony-cli/package/dist/sdk54/release-runtime.js'));
           runtimeFailures.push(...releaseRuntimeFailures(cwd, manifest, template));
         } catch (error) { runtimeFailures.push(error.message); }
       }

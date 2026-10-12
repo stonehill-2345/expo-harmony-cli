@@ -8,6 +8,7 @@ import packlist from 'npm-packlist';
 import { stageBuildAndPack } from './pack-packages.mjs';
 import { RELEASE_ID, SCREENS_UPSTREAM_INTEGRITY, RELEASE_PACKAGES, rewriteReleaseManifest, createReleaseManifest } from './release-catalog.mjs';
 import { applyScreensOverlay } from './generate-external-screens-patch.mjs';
+import { readReleaseReadme } from './release-readme.mjs';
 
 export async function transformPackage(directory, source) {
   const manifest = rewriteReleaseManifest(source);
@@ -21,8 +22,7 @@ export async function transformPackage(directory, source) {
   }
   const descriptor = RELEASE_PACKAGES.find(p => p.installName === source.name);
   const readme = path.join(directory, 'README.md');
-  const originalReadme = fs.existsSync(readme) ? fs.readFileSync(readme, 'utf8') : '';
-  fs.writeFileSync(readme, `# ${descriptor.publishName}\n\nHarmonyOS adaptation of ${descriptor.installName}@${descriptor.upstreamVersion}.\n\nInstall using the original dependency key:\n\n\`npm install --save-exact ${descriptor.installName}@${descriptor.installSpec}\`\n\nRelease: ${RELEASE_ID}. See the repository release plan for supported capabilities. Upstream documentation follows.\n\n${originalReadme}`);
+  fs.writeFileSync(readme, readReleaseReadme(descriptor));
   fs.writeFileSync(path.join(directory, 'package.json'), `${JSON.stringify(manifest, null, 2)}\n`);
 }
 
