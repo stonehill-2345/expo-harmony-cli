@@ -223,6 +223,104 @@
           "sha256": "86745fa48aa35b3feec2dd18d88a948c8408073f2f3324a053625d106f8a89c2"
         }
       ]
+    },
+    {
+      "id": "M1-01",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/review.md",
+          "sha256": "e46ee2422f48bc89a503b424eb30e66f86c2a11a6e8f1214b0cc47f0205ea0a8"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/snapshot-theme-final-green.log",
+          "sha256": "66bcc35fa70b38e4f7efaf511559c65f5be683dd1f1e953b0953739a0a110bfd"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/pipeline-config-sources-green.log",
+          "sha256": "8ff8450534d4bcccd4026416fdde3082d132b6fa40b07f95c871b7527e6f968e"
+        }
+      ]
+    },
+    {
+      "id": "M1-02",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/review.md",
+          "sha256": "e46ee2422f48bc89a503b424eb30e66f86c2a11a6e8f1214b0cc47f0205ea0a8"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/contract-acceptance.md",
+          "sha256": "78458f8c87fee187e6171a596f690c262b2a59d0e49a79f16af354a33b97fb9e"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/contract-green.log",
+          "sha256": "20afed478905740700068d3b4b9f10fea75e06d8da8c3b0874952bf1512aee49"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/contract-pnpm-types-green-final.log",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      ]
+    },
+    {
+      "id": "M1-03",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/review.md",
+          "sha256": "e46ee2422f48bc89a503b424eb30e66f86c2a11a6e8f1214b0cc47f0205ea0a8"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/pipeline-config-sources-green.log",
+          "sha256": "8ff8450534d4bcccd4026416fdde3082d132b6fa40b07f95c871b7527e6f968e"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/runtime-next/release.json",
+          "sha256": "ca8c11ec148418f43c6723835cdfd016a1c0d042a240709ea85be89753d06a6d"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/prepare-candidates-next.log",
+          "sha256": "a2e0807866ee763f6b3acd2f3edf4c8a0cd00c19191d5c6d3f3d2b3b2c7bafb1"
+        }
+      ]
+    },
+    {
+      "id": "M1-04",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/review.md",
+          "sha256": "e46ee2422f48bc89a503b424eb30e66f86c2a11a6e8f1214b0cc47f0205ea0a8"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/pipeline-exports-green.log",
+          "sha256": "e050719732190680bc214545485a402c6890f5641f16db5dd0e6bc77c48ae849"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/pipeline-config-sources-green.log",
+          "sha256": "8ff8450534d4bcccd4026416fdde3082d132b6fa40b07f95c871b7527e6f968e"
+        }
+      ]
+    },
+    {
+      "id": "M1-05",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/review-consumption.md",
+          "sha256": "d0bbe30ba7fdad36c4a9050a4645e80cfe8f8e213ac522a644f62036763bc3d8"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/consumer-acceptance.json",
+          "sha256": "1225e1379d657ba7ea15a32a4d5354baf168a95336ac51a5ab48ab56afd5f3c1"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/native-build-report.json",
+          "sha256": "0d3f72c806186fdaa53de8944a1dea618582d45488e9960f24e0a66558e067d6"
+        }
+      ]
     }
   ],
   "closures": [
@@ -259,6 +357,36 @@
         {
           "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-install-recovery-final.json",
           "sha256": "7189179db44a97934ffdc5a8933635c66fb2a46436d761cdd2d1ff74c35d3cbe"
+        }
+      ]
+    },
+    {
+      "stage": "M1",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "docs/releases/2026-10-27-sdk54-m1-config-acceptance.md",
+          "sha256": "a514385a7ce7c73309cf882924084b9788438c0790c5f06f8fff0320ab94ca0a"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/review-consumption.md",
+          "sha256": "d0bbe30ba7fdad36c4a9050a4645e80cfe8f8e213ac522a644f62036763bc3d8"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/runtime-next/release.json",
+          "sha256": "ca8c11ec148418f43c6723835cdfd016a1c0d042a240709ea85be89753d06a6d"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/consumer-acceptance.json",
+          "sha256": "1225e1379d657ba7ea15a32a4d5354baf168a95336ac51a5ab48ab56afd5f3c1"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/native-build-report.json",
+          "sha256": "0d3f72c806186fdaa53de8944a1dea618582d45488e9960f24e0a66558e067d6"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m1-config/final-source-verification.log",
+          "sha256": "3683c35f9194d8e09c2fbeed4550f9d21f9dc94e739e9f04e2029ecd1a1893f0"
         }
       ]
     }

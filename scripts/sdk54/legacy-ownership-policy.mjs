@@ -129,6 +129,16 @@ export const splitAnchors = [
 ];
 
 export const dynamicReviews = [
+  { source: `${toolTests}harmony-config.test.mjs`, expression: "require(path.join(root, 'packages/expo/package.json'))",
+    conclusion: 'M1类型测试读取Expo直接依赖列表构造隔离消费布局，保证类型出口不借仓库扁平布局；仅测试设施。', task: 'M6-04' },
+  { source: `${toolTests}harmony-config.test.mjs`, expression: "require(path.join(root, 'packages/expo/harmony-config.schema.json'))",
+    conclusion: 'M1契约测试从仓库固定schema校验正负fixture；仅测试读取，不代表发行包已消费。', task: 'M6-04' },
+  { source: 'scripts/sdk54/m1-test-support.mjs', expression: "localRequire(path.resolve('packages/expo/harmony-config.schema.json'))",
+    conclusion: 'M1源码测试加载已知公开schema路径；仅仓库测试适配，不属于消费端运行入口。', task: 'M6-04' },
+  { source: 'scripts/sdk54/m1-test-support.mjs', expression: 'localRequire(id)',
+    conclusion: 'M1源码测试按被测文件加载真实包依赖，显式边界替换另由测试声明；不证明仓库外发行消费。', task: 'M6-04' },
+  { source: `${toolTests}harmony-config-snapshot.test.mjs`, expression: 'localRequire(id)',
+    conclusion: 'M1原生快照测试的真实依赖加载器，仅替换已声明本地源码模块；不属于独立CLI SDK54入口。', task: 'M6-04' },
   { source: `${cli}src/harmony-project/official-autolinking.ts`, expression: 'req.resolve(`${RNOH_CLI_PACKAGE}/package.json`)',
     conclusion: 'SDK52共享路径；从消费项目解析@react-native-oh/react-native-harmony-cli，保留当前解析行为。外部安装目标未纳入仓库图。', task: 'M6-05' },
   { source: `${cli}src/harmony-project/official-autolinking.ts`, expression: "req(path.join(cliRoot, 'dist/commands/link-harmony.js'))",

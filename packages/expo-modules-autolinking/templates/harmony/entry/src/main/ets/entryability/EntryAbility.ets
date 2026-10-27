@@ -1,11 +1,13 @@
 import { AbilityConstant, Want } from '@kit.AbilityKit';
 import { RNAbility } from '@rnoh/react-native-openharmony';
 import { ExpoModulesLifecycle } from '../generated/ExpoModulesLifecycle';
+import { applyExpoAppConfiguration } from '../generated/ExpoAppConfiguration';
 
 export default class EntryAbility extends RNAbility {
   private readonly expoModulesLifecycle = new ExpoModulesLifecycle();
 
   override onCreate(want: Want, launchParam?: AbilityConstant.LaunchParam): void {
+    applyExpoAppConfiguration(this.context);
     this.expoModulesLifecycle.onCreate(want);
     super.onCreate(want, launchParam);
   }

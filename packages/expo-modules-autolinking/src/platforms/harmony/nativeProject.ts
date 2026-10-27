@@ -42,11 +42,18 @@ export interface HarmonyNativeProjectOptions {
   projectRoot: string;
   appName: string;
   bundleName: string;
+  appConfig: Record<string, any>;
+  userInterfaceStyle?: 'light' | 'dark' | 'automatic';
+  nativeConfig?: {
+    app?: Record<string, any>;
+    module?: Record<string, any>;
+  };
   modules: ModuleDescriptorHarmony[];
   inputHarPath: string;
   corePackageRoot: string;
   pythonExecutable?: string;
   runCompatibilityTool?: RunCompatibilityTool;
+  /** @deprecated Ignored. appConfig is the already evaluated public configuration snapshot. */
   runAppConfigGenerator?: RunAppConfigGenerator;
   templateRoot?: string;
 }
@@ -55,12 +62,14 @@ export async function prepareHarmonyNativeProjectAsync({
   projectRoot,
   appName,
   bundleName,
+  appConfig,
+  userInterfaceStyle,
+  nativeConfig,
   modules,
   inputHarPath,
   corePackageRoot,
   pythonExecutable,
   runCompatibilityTool,
-  runAppConfigGenerator = runAppConfigGeneratorAsync,
   templateRoot = path.resolve(__dirname, '../../../templates/harmony'),
 }: HarmonyNativeProjectOptions): Promise<{
   harmonyRoot: string;
@@ -79,21 +88,26 @@ export async function prepareHarmonyNativeProjectAsync({
   }
 
   try {
+    resolveHarmonyUserInterfaceStyle(appConfig, userInterfaceStyle);
+    assertHarmonyThemeManifestPlan(nativeConfig);
+    await validateHarmonyAppAssetsAsync(projectRoot, appConfig);
     await fs.promises.cp(templateRoot, harmonyRoot, { recursive: true });
-    await copyHarmonyTemplateMediaAsync(projectRoot, harmonyRoot);
+    await copyHarmonyTemplateMediaAsync(projectRoot, harmonyRoot, appConfig);
     await replaceTemplatePlaceholdersAsync(harmonyRoot, {
       __EXPO_APP_NAME__: appName,
       __EXPO_BUNDLE_NAME__: bundleName,
     });
+    await writeHarmonyAppIdentityAsync(harmonyRoot, appName, bundleName, nativeConfig);
     const { rnohHarPath, generatedFiles } = await assembleHarmonyGeneratedAreasAsync({
       projectRoot,
+      appConfig,
+      userInterfaceStyle,
       harmonyRoot,
       modules,
       inputHarPath,
       corePackageRoot,
       pythonExecutable,
       runCompatibilityTool,
-      runAppConfigGenerator,
     });
     return { harmonyRoot, rnohHarPath, generatedFiles };
   } catch (error) {
@@ -104,35 +118,123 @@ export async function prepareHarmonyNativeProjectAsync({
 
 export async function copyHarmonyTemplateMediaAsync(
   projectRoot: string,
-  harmonyRoot: string
+  harmonyRoot: string,
+  appConfig: Record<string, any>
 ): Promise<void> {
-  const appJsonPath = path.join(projectRoot, 'app.json');
-  const app = JSON.parse(await fs.promises.readFile(appJsonPath, 'utf8'));
-  const expo = app?.expo ?? {};
-  const icon = expo.icon;
-  if (typeof icon !== 'string' || !icon) {
-    throw new Error('Expo app.json must define expo.icon for Harmony media generation');
+  const { media, background } = resolveHarmonyAppAssets(projectRoot, appConfig);
+  for (const [source, relativeTarget] of media) {
+    const target = path.join(harmonyRoot, relativeTarget);
+    await assertHarmonyTargetPathAsync(harmonyRoot, target);
+    await fs.promises.mkdir(path.dirname(target), { recursive: true });
+    await fs.promises.copyFile(source, target);
   }
-  const foreground = expo.android?.adaptiveIcon?.foregroundImage ?? icon;
-  const splash = expo.splash?.image ?? icon;
+  const colorsPath = path.join(harmonyRoot, 'entry/src/main/resources/base/element/color.json');
+  await assertHarmonyTargetPathAsync(harmonyRoot, colorsPath);
+  const colors = fs.existsSync(colorsPath)
+    ? JSON.parse(await fs.promises.readFile(colorsPath, 'utf8'))
+    : { color: [] };
+  const existing = colors.color.find(
+    (item: { name: string }) => item.name === 'start_window_background'
+  );
+  if (existing) existing.value = background;
+  else colors.color.push({ name: 'start_window_background', value: background });
+  await fs.promises.mkdir(path.dirname(colorsPath), { recursive: true });
+  await fs.promises.writeFile(colorsPath, JSON.stringify(colors, null, 2) + '\n');
+}
+
+export async function validateHarmonyAppAssetsAsync(
+  projectRoot: string,
+  appConfig: Record<string, any>
+): Promise<void> {
+  resolveHarmonyAppAssets(projectRoot, appConfig);
+}
+
+function resolveHarmonyAppAssets(projectRoot: string, appConfig: Record<string, any>) {
+  assertAppConfigSnapshot(appConfig);
+  JSON.stringify(appConfig);
+  const harmony = appConfig.harmony ?? {};
+  const icon = harmony.icon ?? appConfig.icon;
+  if (typeof icon !== 'string' || !icon) {
+    throw new Error(
+      'Harmony configuration snapshot must define harmony.icon or expo.icon for media generation'
+    );
+  }
+  const foreground =
+    harmony.foregroundImage ??
+    harmony.icon ??
+    appConfig.android?.adaptiveIcon?.foregroundImage ??
+    icon;
+  const splash = harmony.splash?.image ?? appConfig.splash?.image ?? icon;
+  const background =
+    harmony.splash?.backgroundColor ?? appConfig.splash?.backgroundColor ?? '#FFFFFF';
+  if (typeof background !== 'string' || !/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(background)) {
+    throw new Error('Harmony splash.backgroundColor must be a six or eight digit hex color');
+  }
+  const realProjectRoot = fs.realpathSync(projectRoot);
   const resolveAsset = (relativePath: unknown, field: string): string => {
-    if (typeof relativePath !== 'string' || !relativePath) throw new Error(`${field} must be a project-relative asset path`);
+    if (typeof relativePath !== 'string' || !relativePath)
+      throw new Error(`${field} must be a project-relative asset path`);
     const absolute = path.resolve(projectRoot, relativePath);
     const relative = path.relative(projectRoot, absolute);
-    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) throw new Error(`${field} must stay inside the project`);
-    if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) throw new Error(`${field} asset is missing: ${relativePath}`);
+    if (
+      !relative ||
+      relative === '..' ||
+      relative.startsWith(`..${path.sep}`) ||
+      path.isAbsolute(relative)
+    )
+      throw new Error(`${field} must stay inside the project`);
+    if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile())
+      throw new Error(`${field} asset is missing: ${relativePath}`);
+    const realRelative = path.relative(realProjectRoot, fs.realpathSync(absolute));
+    if (
+      !realRelative ||
+      realRelative === '..' ||
+      realRelative.startsWith(`..${path.sep}`) ||
+      path.isAbsolute(realRelative)
+    )
+      throw new Error(`${field} must stay inside the project`);
     return absolute;
   };
   const media = [
     [resolveAsset(icon, 'expo.icon'), 'entry/src/main/resources/base/media/background.png'],
-    [resolveAsset(foreground, 'expo.android.adaptiveIcon.foregroundImage'), 'entry/src/main/resources/base/media/foreground.png'],
-    [resolveAsset(splash, 'expo.splash.image'), 'entry/src/main/resources/base/media/startIcon.png'],
+    [
+      resolveAsset(foreground, 'expo.android.adaptiveIcon.foregroundImage'),
+      'entry/src/main/resources/base/media/foreground.png',
+    ],
+    [
+      resolveAsset(splash, 'expo.splash.image'),
+      'entry/src/main/resources/base/media/startIcon.png',
+    ],
     [resolveAsset(icon, 'expo.icon'), 'AppScope/resources/base/media/app_icon.png'],
   ] as const;
-  for (const [source, relativeTarget] of media) {
-    const target = path.join(harmonyRoot, relativeTarget);
-    await fs.promises.mkdir(path.dirname(target), { recursive: true });
-    await fs.promises.copyFile(source, target);
+  return { media, background };
+}
+
+async function assertHarmonyTargetPathAsync(harmonyRoot: string, target: string): Promise<void> {
+  await fs.promises.mkdir(harmonyRoot, { recursive: true });
+  const realRoot = await fs.promises.realpath(harmonyRoot);
+  let ancestor = target;
+  while (true) {
+    try {
+      await fs.promises.lstat(ancestor);
+      break;
+    } catch (error: any) {
+      if (error?.code !== 'ENOENT') throw error;
+      const parent = path.dirname(ancestor);
+      if (ancestor === parent) throw new Error('Resource must stay inside the Harmony project');
+      ancestor = parent;
+    }
+  }
+  let realAncestor: string;
+  try {
+    realAncestor = await fs.promises.realpath(ancestor);
+  } catch (error: any) {
+    if (error?.code === 'ENOENT') throw new Error(`Resource symbolic link is dangling: ${ancestor}`);
+    throw error;
+  }
+  const relative = path.relative(realRoot, realAncestor);
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new Error(`Resource must stay inside the Harmony project: ${target}`);
   }
 }
 
@@ -144,7 +246,16 @@ export async function syncHarmonyNativeProjectAsync(
     return await prepareHarmonyNativeProjectAsync(options);
   }
 
-  await writeHarmonyAppIdentityAsync(harmonyRoot, options.appName, options.bundleName);
+  resolveHarmonyUserInterfaceStyle(options.appConfig, options.userInterfaceStyle);
+  assertHarmonyThemeManifestPlan(options.nativeConfig);
+  await validateHarmonyAppConfigurationAsync(harmonyRoot);
+  await copyHarmonyTemplateMediaAsync(options.projectRoot, harmonyRoot, options.appConfig);
+  await writeHarmonyAppIdentityAsync(
+    harmonyRoot,
+    options.appName,
+    options.bundleName,
+    options.nativeConfig
+  );
   await Promise.all([
     fs.promises.rm(path.join(harmonyRoot, 'expo-modules'), { recursive: true, force: true }),
     fs.promises.rm(path.join(harmonyRoot, 'dependencies/expo-modules'), {
@@ -173,17 +284,18 @@ export async function syncHarmonyNativeProjectAsync(
 
 async function assembleHarmonyGeneratedAreasAsync({
   projectRoot,
+  appConfig,
+  userInterfaceStyle,
   harmonyRoot,
   modules,
   inputHarPath,
   corePackageRoot,
   pythonExecutable,
   runCompatibilityTool,
-  runAppConfigGenerator,
 }: Omit<HarmonyNativeProjectOptions, 'appName' | 'bundleName' | 'templateRoot'> & {
   harmonyRoot: string;
 }) {
-  await generateHarmonyAppConfigAsync({ projectRoot, harmonyRoot, runAppConfigGenerator });
+  await generateHarmonyAppConfigAsync({ projectRoot, harmonyRoot, appConfig });
   const rnohHarPath = await prepareRnohCompatibilityHarAsync({
     harmonyRoot,
     inputHarPath,
@@ -222,63 +334,164 @@ async function assembleHarmonyGeneratedAreasAsync({
       ),
   ]);
   await fs.promises.rm(scratch, { recursive: true, force: true });
+  await writeHarmonyAppConfigurationAsync(harmonyRoot, resolveHarmonyUserInterfaceStyle(appConfig, userInterfaceStyle));
   return { rnohHarPath, generatedFiles };
+}
+
+function assertHarmonyThemeManifestPlan(nativeConfig?: HarmonyNativeProjectOptions['nativeConfig']): void {
+  if (nativeConfig?.app && Object.prototype.hasOwnProperty.call(nativeConfig.app, 'colorMode')) {
+    throw new Error('Harmony app.colorMode is not supported; use userInterfaceStyle');
+  }
+}
+
+function resolveHarmonyUserInterfaceStyle(
+  appConfig: Record<string, any>,
+  explicit?: HarmonyNativeProjectOptions['userInterfaceStyle']
+): NonNullable<HarmonyNativeProjectOptions['userInterfaceStyle']> {
+  const style = explicit ?? appConfig.harmony?.userInterfaceStyle ?? appConfig.userInterfaceStyle ?? 'light';
+  if (!['light', 'dark', 'automatic'].includes(style)) {
+    throw new Error('Harmony userInterfaceStyle must be light, dark or automatic');
+  }
+  return style;
+}
+
+export function renderExpoAppConfiguration(
+  style: NonNullable<HarmonyNativeProjectOptions['userInterfaceStyle']>
+): string {
+  const modes = { light: 'COLOR_MODE_LIGHT', dark: 'COLOR_MODE_DARK', automatic: 'COLOR_MODE_NOT_SET' };
+  return '// @generated by expo-modules-autolinking. Do not edit.\n' +
+    "import { common, ConfigurationConstant } from '@kit.AbilityKit';\n\n" +
+    'export function applyExpoAppConfiguration(context: common.UIAbilityContext): void {\n' +
+    `  context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.${modes[style]});\n` +
+    '}\n';
+}
+
+const APP_CONFIGURATION_IMPORT = "import { applyExpoAppConfiguration } from '../generated/ExpoAppConfiguration';";
+const APP_CONFIGURATION_CALL = 'applyExpoAppConfiguration(this.context);';
+
+async function getHarmonyAppConfigurationEntryAsync(harmonyRoot: string): Promise<{ abilityPath: string; contents: string }> {
+  const abilityPath = path.join(harmonyRoot, 'entry/src/main/ets/entryability/EntryAbility.ets');
+  await assertHarmonyTargetPathAsync(harmonyRoot, abilityPath);
+  let contents = await fs.promises.readFile(abilityPath, 'utf8');
+  const calls = contents.match(/^[ \t]*applyExpoAppConfiguration\(this\.context\);[ \t]*$/gm) ?? [];
+  const imports = contents.split(APP_CONFIGURATION_IMPORT).length - 1;
+  if (calls.length > 1 || imports > 1) {
+    throw new Error('EntryAbility contains duplicate Expo app configuration wiring');
+  }
+  if (calls.length === 0) {
+    const anchor = /^([ \t]*)this\.expoModulesLifecycle\.onCreate\(want\);[ \t]*$/m;
+    if (!anchor.test(contents)) {
+      throw new Error('EntryAbility has no supported app configuration insertion anchor');
+    }
+    contents = contents.replace(anchor, (_line, indent) => `${indent}${APP_CONFIGURATION_CALL}\n${_line}`);
+  }
+  if (imports === 0) contents = `${APP_CONFIGURATION_IMPORT}\n${contents}`;
+  return { abilityPath, contents };
+}
+
+export async function validateHarmonyAppConfigurationAsync(harmonyRoot: string): Promise<void> {
+  if (!fs.existsSync(harmonyRoot)) return;
+  await getHarmonyAppConfigurationEntryAsync(harmonyRoot);
+}
+
+async function writeHarmonyAppConfigurationAsync(
+  harmonyRoot: string,
+  style: NonNullable<HarmonyNativeProjectOptions['userInterfaceStyle']>
+): Promise<void> {
+  const { abilityPath, contents } = await getHarmonyAppConfigurationEntryAsync(harmonyRoot);
+  const configPath = path.join(harmonyRoot, 'entry/src/main/ets/generated/ExpoAppConfiguration.ets');
+  await assertHarmonyTargetPathAsync(harmonyRoot, configPath);
+  await fs.promises.mkdir(path.dirname(configPath), { recursive: true });
+  await fs.promises.writeFile(configPath, renderExpoAppConfiguration(style), 'utf8');
+  await fs.promises.writeFile(abilityPath, contents, 'utf8');
 }
 
 async function writeHarmonyAppIdentityAsync(
   harmonyRoot: string,
   appName: string,
-  bundleName: string
+  bundleName: string,
+  nativeConfig?: HarmonyNativeProjectOptions['nativeConfig']
 ): Promise<void> {
   const appPath = path.join(harmonyRoot, 'AppScope/app.json5');
+  await assertHarmonyTargetPathAsync(harmonyRoot, appPath);
   const app = JSON.parse(await fs.promises.readFile(appPath, 'utf8'));
-  app.app.bundleName = bundleName;
+  app.app = mergeHarmonyManifest(app.app, { bundleName, ...nativeConfig?.app });
+  delete app.app.colorMode;
   await fs.promises.writeFile(appPath, JSON.stringify(app, null, 2) + '\n');
+  const modulePath = path.join(harmonyRoot, 'entry/src/main/module.json5');
+  await assertHarmonyTargetPathAsync(harmonyRoot, modulePath);
+  const module = JSON.parse(await fs.promises.readFile(modulePath, 'utf8'));
+  module.module = mergeHarmonyManifest(module.module, nativeConfig?.module ?? {});
+  await fs.promises.writeFile(modulePath, JSON.stringify(module, null, 2) + '\n');
   for (const relativePath of [
     'AppScope/resources/base/element/string.json',
     'entry/src/main/resources/base/element/string.json',
   ]) {
     const filePath = path.join(harmonyRoot, relativePath);
+    await assertHarmonyTargetPathAsync(harmonyRoot, filePath);
     const resource = JSON.parse(await fs.promises.readFile(filePath, 'utf8'));
     for (const item of resource.string ?? []) {
-      item.value = appName;
+      if (
+        ['app_name', 'module_desc', 'EntryAbility_desc', 'EntryAbility_label'].includes(item.name)
+      ) {
+        item.value = appName;
+      }
     }
     await fs.promises.writeFile(filePath, JSON.stringify(resource, null, 2) + '\n');
   }
 }
 
+function mergeHarmonyManifest(
+  current: Record<string, any>,
+  planned: Record<string, any>
+): Record<string, any> {
+  const merged = { ...current };
+  for (const [key, value] of Object.entries(planned)) {
+    if (key === 'abilities' && Array.isArray(value) && Array.isArray(merged[key])) {
+      const abilities = [...merged[key]];
+      for (const ability of value) {
+        const index = abilities.findIndex((existing) => existing.name === ability.name);
+        if (index < 0) abilities.push(ability);
+        else abilities[index] = mergeHarmonyManifest(abilities[index], ability);
+      }
+      merged[key] = abilities;
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      merged[key] = mergeHarmonyManifest(
+        merged[key] && typeof merged[key] === 'object' && !Array.isArray(merged[key])
+          ? merged[key]
+          : {},
+        value
+      );
+    } else {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
+function assertAppConfigSnapshot(appConfig: unknown): asserts appConfig is Record<string, any> {
+  if (!appConfig || typeof appConfig !== 'object' || Array.isArray(appConfig)) {
+    throw new Error('Harmony appConfig snapshot must be a JSON object');
+  }
+}
+
 export async function generateHarmonyAppConfigAsync({
-  projectRoot,
   harmonyRoot,
-  runAppConfigGenerator = runAppConfigGeneratorAsync,
+  appConfig,
 }: {
   projectRoot: string;
   harmonyRoot: string;
+  appConfig: Record<string, any>;
+  /** @deprecated Ignored. The provided snapshot is written without evaluating configuration again. */
   runAppConfigGenerator?: RunAppConfigGenerator;
 }): Promise<string> {
-  const scriptPath = path.join(
-    projectRoot,
-    'node_modules',
-    'expo-constants',
-    'scripts',
-    'getAppConfig.js'
-  );
-  if (!fs.existsSync(scriptPath)) {
-    throw new Error(`expo-constants app config generator does not exist at "${scriptPath}"`);
-  }
+  assertAppConfigSnapshot(appConfig);
+  const serialized = JSON.stringify(appConfig);
   const destinationDir = path.join(harmonyRoot, 'entry', 'src', 'main', 'resources', 'rawfile');
-  await fs.promises.mkdir(destinationDir, { recursive: true });
-  await runAppConfigGenerator({ scriptPath, projectRoot, destinationDir });
   const outputPath = path.join(destinationDir, 'app.config');
-  let config: unknown;
-  try {
-    config = JSON.parse(await fs.promises.readFile(outputPath, 'utf8'));
-  } catch (error) {
-    throw new Error(`Invalid generated Harmony app.config at "${outputPath}": ${String(error)}`);
-  }
-  if (!config || typeof config !== 'object' || Array.isArray(config)) {
-    throw new Error(`Generated Harmony app.config must contain a JSON object at "${outputPath}"`);
-  }
+  await assertHarmonyTargetPathAsync(harmonyRoot, outputPath);
+  await fs.promises.mkdir(destinationDir, { recursive: true });
+  await fs.promises.writeFile(outputPath, serialized, 'utf8');
   return outputPath;
 }
 
@@ -782,7 +995,13 @@ function deduplicateLifecycleImports(dependencies: OwnedLifecycleDependency[]) {
 }
 
 function escapeEtsString(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
 }
 
 function getOhPackageName(importPath: string): string {
@@ -875,34 +1094,12 @@ async function replaceTemplatePlaceholdersAsync(
     if (!/\.(?:cmake|ets|json|json5|ts|txt)$/.test(entry.name) && entry.name !== 'CMakeLists.txt') {
       continue;
     }
+    // JSON identities and labels are written through their structured documents.
+    if (/\.json5?$/.test(entry.name)) continue;
     let contents = await fs.promises.readFile(entryPath, 'utf8');
     for (const [placeholder, value] of Object.entries(replacements)) {
-      contents = contents.split(placeholder).join(value);
+      contents = contents.split(placeholder).join(/\.(?:ets|ts)$/.test(entry.name) ? escapeEtsString(value) : value);
     }
     await fs.promises.writeFile(entryPath, contents, 'utf8');
   }
-}
-
-function runAppConfigGeneratorAsync(options: RunAppConfigGeneratorOptions): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(
-      process.execPath,
-      [options.scriptPath, options.projectRoot, options.destinationDir],
-      { stdio: 'inherit' }
-    );
-    child.once('error', reject);
-    child.once('exit', (code, signal) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(
-          new Error(
-            `expo-constants app config generator failed with ${
-              signal ? `signal ${signal}` : `exit code ${code}`
-            }`
-          )
-        );
-      }
-    });
-  });
 }

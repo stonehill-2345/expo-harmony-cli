@@ -86,6 +86,8 @@ test('declares package-specific runtime outputs and executable runtime probes', 
       'build/bin/cli',
       'build/src/run/harmony/runHarmonyAsync.js',
       'build/src/prebuild/harmony/prebuildHarmonyAsync.js',
+      'build/src/prebuild/harmony/configPlugins.js',
+      'build/src/harmony/config.js',
       'build/src/harmony/project.js',
     ],
   );

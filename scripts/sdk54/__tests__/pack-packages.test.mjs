@@ -58,6 +58,8 @@ if (manifest.name === '@expo/cli') {
   write('build/src/run/harmony/index.js', "exports.expoRunHarmony = () => {};\\n");
   write('build/src/run/harmony/runHarmonyAsync.js', "exports.runHarmonyAsync = async () => {};\\n");
   write('build/src/harmony/project.js', 'exports.isHarmonyProject = () => false;\\n');
+  write('build/src/harmony/config.js', 'exports.resolveHarmonyConfig = (expoConfig) => ({ expoConfig, harmony: {} });\\nexports.withHarmonyApp = exports.withHarmonyModule = (config) => config;\\nexports.defineHarmonyPlugin = (plugin) => plugin;\\n');
+  write('build/src/prebuild/harmony/configPlugins.js', 'exports.validateHarmonyPlugins = () => [];\\nexports.compileHarmonyConfigAsync = async (_root, config) => ({ ...config, nativeConfig: { app: {}, module: {} } });\\n');
   write('build/src/prebuild/harmony/prebuildHarmonyAsync.js', fs.existsSync(path.join(stage, 'BROKEN_PREBUILD_HELPER')) ? "// prebuildHarmonyAsync harmony callable\\nmodule.exports = {};\\n" : "exports.prebuildHarmonyAsync = async () => ({ harmonyRoot: '/mock' });\\n");
   write('build/src/prebuild/index.js', fs.existsSync(path.join(stage, 'BROKEN_PREBUILD_DISPATCH')) ? "// harmony prebuildHarmonyAsync dispatcher\\nexports.expoPrebuild = async () => {};\\n" : "exports.expoPrebuild = async () => require('./harmony/prebuildHarmonyAsync.js').prebuildHarmonyAsync();\\n");
 } else if (manifest.name === '@expo/metro-config') {

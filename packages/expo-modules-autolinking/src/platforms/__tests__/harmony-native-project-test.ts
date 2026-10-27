@@ -152,6 +152,12 @@ describe(prepareHarmonyNativeProjectAsync, () => {
     async () => {
       const root = fs.mkdtempSync(path.join(os.tmpdir(), 'expo-harmony-project-'));
       try {
+        fs.mkdirSync(path.join(root, 'assets'), { recursive: true });
+        fs.writeFileSync(path.join(root, 'assets/icon.png'), 'icon');
+        const appConfig = {
+          name: 'Blank TypeScript',
+          icon: './assets/icon.png',
+        };
         const packageRoot = path.join(root, 'node_modules', 'expo-asset');
         const corePackageRoot = path.join(root, 'node_modules', 'expo-modules-core');
         fs.mkdirSync(path.join(packageRoot, 'harmony/src/main/ets'), { recursive: true });
@@ -198,6 +204,7 @@ describe(prepareHarmonyNativeProjectAsync, () => {
           projectRoot: root,
           appName: 'Blank TypeScript',
           bundleName: 'dev.expo.blanktypescript',
+          appConfig,
           modules: [module],
           inputHarPath: lockedInputHar!,
           corePackageRoot,
@@ -205,13 +212,8 @@ describe(prepareHarmonyNativeProjectAsync, () => {
             fs.copyFileSync(lockedOutputHar!, outputHarPath);
             fs.copyFileSync(`${lockedOutputHar!}.manifest.json`, `${outputHarPath}.manifest.json`);
           },
-          runAppConfigGenerator: async ({ destinationDir, projectRoot, scriptPath }) => {
-            expect(projectRoot).toBe(root);
-            expect(scriptPath).toBe(appConfigScriptPath);
-            fs.writeFileSync(
-              path.join(destinationDir, 'app.config'),
-              JSON.stringify({ name: 'Blank TypeScript' })
-            );
+          runAppConfigGenerator: async () => {
+            throw new Error('snapshot must not be reevaluated');
           },
         });
 
@@ -241,7 +243,7 @@ describe(prepareHarmonyNativeProjectAsync, () => {
               'utf8'
             )
           )
-        ).toEqual({ name: 'Blank TypeScript' });
+        ).toEqual(appConfig);
 
         const abilityPath = path.join(
           root,
@@ -258,17 +260,15 @@ describe(prepareHarmonyNativeProjectAsync, () => {
           projectRoot: root,
           appName: 'Blank TypeScript',
           bundleName: 'dev.expo.blanktypescript',
+          appConfig: { ...appConfig, name: 'Synced' },
           modules: [module],
           inputHarPath: lockedInputHar!,
           corePackageRoot,
           runCompatibilityTool: async () => {
             throw new Error('existing valid HAR must be reused');
           },
-          runAppConfigGenerator: async ({ destinationDir }) => {
-            fs.writeFileSync(
-              path.join(destinationDir, 'app.config'),
-              JSON.stringify({ name: 'Synced' })
-            );
+          runAppConfigGenerator: async () => {
+            throw new Error('snapshot must not be reevaluated');
           },
         });
 
@@ -284,12 +284,13 @@ describe(prepareHarmonyNativeProjectAsync, () => {
               'utf8'
             )
           )
-        ).toEqual({ name: 'Synced' });
+        ).toEqual({ ...appConfig, name: 'Synced' });
         await expect(
           prepareHarmonyNativeProjectAsync({
             projectRoot: root,
             appName: 'Again',
             bundleName: 'dev.expo.again',
+            appConfig,
             modules: [module],
             inputHarPath: lockedInputHar!,
             corePackageRoot,
@@ -679,21 +680,45 @@ describe('copyHarmonyTemplateMediaAsync', () => {
       fs.writeFileSync(path.join(root, 'assets/icon.png'), 'icon');
       fs.writeFileSync(path.join(root, 'assets/adaptive.png'), 'foreground');
       fs.writeFileSync(path.join(root, 'assets/splash.png'), 'splash');
-      fs.writeFileSync(path.join(root, 'app.json'), JSON.stringify({ expo: {
+      const appConfig = {
         icon: './assets/icon.png',
         android: { adaptiveIcon: { foregroundImage: './assets/adaptive.png' } },
         splash: { image: './assets/splash.png' },
-      } }));
+      };
       const harmonyRoot = path.join(root, 'harmony');
-      fs.mkdirSync(path.join(harmonyRoot, 'entry/src/main/resources/base/media'), { recursive: true });
-      fs.mkdirSync(path.join(harmonyRoot, 'AppScope/resources/base/media'), { recursive: true });
+      fs.mkdirSync(path.join(harmonyRoot, 'entry/src/main/resources/base/media'), {
+        recursive: true,
+      });
+      fs.mkdirSync(path.join(harmonyRoot, 'AppScope/resources/base/media'), {
+        recursive: true,
+      });
 
-      await copyHarmonyTemplateMediaAsync(root, harmonyRoot);
+      await copyHarmonyTemplateMediaAsync(root, harmonyRoot, appConfig);
 
-      expect(fs.readFileSync(path.join(harmonyRoot, 'entry/src/main/resources/base/media/background.png'), 'utf8')).toBe('icon');
-      expect(fs.readFileSync(path.join(harmonyRoot, 'entry/src/main/resources/base/media/foreground.png'), 'utf8')).toBe('foreground');
-      expect(fs.readFileSync(path.join(harmonyRoot, 'entry/src/main/resources/base/media/startIcon.png'), 'utf8')).toBe('splash');
-      expect(fs.readFileSync(path.join(harmonyRoot, 'AppScope/resources/base/media/app_icon.png'), 'utf8')).toBe('icon');
+      expect(
+        fs.readFileSync(
+          path.join(harmonyRoot, 'entry/src/main/resources/base/media/background.png'),
+          'utf8'
+        )
+      ).toBe('icon');
+      expect(
+        fs.readFileSync(
+          path.join(harmonyRoot, 'entry/src/main/resources/base/media/foreground.png'),
+          'utf8'
+        )
+      ).toBe('foreground');
+      expect(
+        fs.readFileSync(
+          path.join(harmonyRoot, 'entry/src/main/resources/base/media/startIcon.png'),
+          'utf8'
+        )
+      ).toBe('splash');
+      expect(
+        fs.readFileSync(
+          path.join(harmonyRoot, 'AppScope/resources/base/media/app_icon.png'),
+          'utf8'
+        )
+      ).toBe('icon');
     } finally {
       fs.rmSync(root, { recursive: true, force: true });
     }

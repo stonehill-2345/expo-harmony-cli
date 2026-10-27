@@ -1,0 +1,15 @@
+{
+  "name": "sdk54-m1-harmony-plugin-fixture",
+  "version": "1.0.0",
+  "main": "app.plugin.js",
+  "files": [
+    "*.js"
+  ],
+  "dependencies": {
+    "@expo/config-plugins": "54.0.5"
+  },
+  "peerDependencies": {
+    "expo": "*"
+  },
+  "license": "MIT"
+}

@@ -2,12 +2,20 @@ import { vol } from 'memfs';
 
 import { prebuildHarmonyAsync, updateHarmonyDebugBundlePathAsync } from '../prebuildHarmonyAsync';
 
+const compileConfig = jest.fn(async (_root, _exp, snapshot) => ({
+  snapshot,
+  nativeConfig: {} as any,
+}));
+
 describe(prebuildHarmonyAsync, () => {
   afterEach(() => vol.reset());
   it('aligns dependencies, resolves Harmony modules, and synchronizes the native project', async () => {
     const ensureDependencies = jest.fn(async () => ({ installed: false }));
     const queryModules = jest.fn(async () => [
-      { packageName: 'expo-modules-core', packageRoot: '/app/node_modules/expo-modules-core' },
+      {
+        packageName: 'expo-modules-core',
+        packageRoot: '/app/node_modules/expo-modules-core',
+      },
     ]);
     const syncProject = jest.fn(async () => ({ harmonyRoot: '/app/harmony' }));
 
@@ -18,9 +26,11 @@ describe(prebuildHarmonyAsync, () => {
         {
           getConfig: () => ({ exp: { name: 'My App', slug: 'My App' } } as any),
           ensureDependencies,
+          compileConfig,
           loadAutolinking: async () => ({
             queryAutolinkingModulesFromProjectAsync: queryModules,
             syncHarmonyNativeProjectAsync: syncProject,
+            validateHarmonyAppAssetsAsync: jest.fn(async () => {}),
           }),
           removeHarmonyProject: jest.fn(),
           updateDebugBundlePath: jest.fn(async () => {}),
@@ -53,11 +63,13 @@ describe(prebuildHarmonyAsync, () => {
       {
         getConfig: () => ({ exp: { name: 'App', slug: 'app' } } as any),
         ensureDependencies: jest.fn(async () => ({ installed: false })),
+        compileConfig,
         loadAutolinking: async () => ({
           queryAutolinkingModulesFromProjectAsync: jest.fn(async () => [
             { packageName: 'expo-modules-core', packageRoot: '/core' },
           ]),
           syncHarmonyNativeProjectAsync: jest.fn(async () => ({})),
+          validateHarmonyAppAssetsAsync: jest.fn(async () => {}),
         }),
         removeHarmonyProject,
         updateDebugBundlePath: jest.fn(async () => {}),
@@ -86,7 +98,9 @@ describe(updateHarmonyDebugBundlePathAsync, () => {
   it('is idempotent when the resolved Debug bundle URL is already current', async () => {
     const current =
       "new MetroJSBundleProvider('http://127.0.0.1:8081/node_modules/expo-router/entry.bundle?platform=harmony&dev=true&minify=false', ['main'])";
-    vol.fromJSON({ '/app/harmony/entry/src/main/ets/pages/Index.ets': current });
+    vol.fromJSON({
+      '/app/harmony/entry/src/main/ets/pages/Index.ets': current,
+    });
     await expect(
       updateHarmonyDebugBundlePathAsync(
         '/app',

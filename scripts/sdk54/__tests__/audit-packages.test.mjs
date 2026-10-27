@@ -38,6 +38,8 @@ if(p.name==='@expo/cli'){
  write('build/src/run/harmony/index.js','exports.expoRunHarmony=()=>{};\\n');
  write('build/src/run/harmony/runHarmonyAsync.js','exports.runHarmonyAsync=async()=>{};\\n');
  write('build/src/harmony/project.js','exports.isHarmonyProject=()=>false;\\n');
+ write('build/src/harmony/config.js','exports.resolveHarmonyConfig=(expoConfig)=>({expoConfig,harmony:{}});\\nexports.withHarmonyApp=exports.withHarmonyModule=(config)=>config;\\nexports.defineHarmonyPlugin=(plugin)=>plugin;\\n');
+ write('build/src/prebuild/harmony/configPlugins.js','exports.validateHarmonyPlugins=()=>[];\\nexports.compileHarmonyConfigAsync=async(_root,config)=>({...config,nativeConfig:{app:{},module:{}}});\\n');
  write('build/src/prebuild/harmony/prebuildHarmonyAsync.js','exports.prebuildHarmonyAsync=async()=>({harmonyRoot:"/mock"});\\n');
  write('build/src/prebuild/index.js','exports.expoPrebuild=async()=>require("./harmony/prebuildHarmonyAsync.js").prebuildHarmonyAsync();\\n');
 }else if(p.name==='@expo/metro-config'){
@@ -223,9 +225,16 @@ test('rejects missing package-specific runtime outputs and stale Harmony dispatc
   await rewriteArchive(outputDir, '@expo/metro-config', async (packageRoot) => {
     writeFile(path.join(packageRoot, 'build/ExpoMetroConfig.js'), 'module.exports = {};\n');
   });
+  const configOutputs = ['build/src/prebuild/harmony/configPlugins.js', 'build/src/harmony/config.js'];
+  await rewriteArchive(outputDir, '@expo/cli', async (packageRoot) => {
+    for (const output of configOutputs) fs.rmSync(path.join(packageRoot, output));
+  });
   const report = auditPackages({ rootDir: root, manifestPath: path.join(outputDir, 'manifest.json') });
   assert.ok(report.failures.some((failure) => failure.includes('expo-modules-autolinking') && failure.includes('nativeProject.js')), JSON.stringify(report, null, 2));
   assert.ok(report.failures.some((failure) => failure.includes('@expo/metro-config') && failure.includes('runtime probe')), JSON.stringify(report, null, 2));
+  for (const output of configOutputs) {
+    assert.ok(report.failures.some((failure) => failure.includes(`@expo/cli: required runtime output is missing: ${output}`)), JSON.stringify(report, null, 2));
+  }
 });
 
 test('rejects absolute paths in archived source maps', async (t) => {
