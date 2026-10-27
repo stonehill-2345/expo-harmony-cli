@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskIds": ["M0-02", "M0-03"],
+  "cases": [
+    { "id": "EXT-01", "expected": "固定Git锁/bundle/manifests身份与blob完整，根目标与上游值分开，解析器版本固定" },
+    { "id": "EXT-02", "expected": "Yarn v1多selector、scoped包、重复/冲突处理准确；不以最高兼容版本伪造精确selector" },
+    { "id": "EXT-03", "expected": "42旧外部种子逐项列出固定bundle、声明、锁身份及范围依据；缺lock/不兼容/候选与未知结论保留" },
+    { "id": "EXT-04", "expected": "Metro54.2.0 tgz的SRI/SHA1与固定lock一致，禁止路径穿越/链接，实际包身份匹配；不使用宿主包冒充归档" },
+    { "id": "EXT-05", "expected": "追溯MetroConfig→ConfigT发布声明及成员/引用；外部类型仍未解析时不能宣称全量属性完成" },
+    { "id": "EXT-06", "expected": "从固定对象重复生成字节一致，正常源重建校验通过" },
+    { "id": "EXT-07", "expected": "真实CLI删除/改造种子/锁版本/hash/声明/成员、伪完成等均非零并指出来源" },
+    { "id": "EXT-08", "expected": "工具/CLI/类型、历史清单/基线/接受hash、仓库/归属及最终证据hash通过，M0完整标记仍false" }
+  ],
+  "stageClosable": false
+}

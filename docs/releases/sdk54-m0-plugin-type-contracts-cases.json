@@ -1,0 +1,137 @@
+{
+  "cases": [
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/type-contracts-final.json"
+      ],
+      "id": "TPC-01",
+      "observed": {
+        "candidates": 202,
+        "compilerLibraries": 100,
+        "graphInputs": 447,
+        "sourceInputs": 4392
+      },
+      "status": "PASS",
+      "step": "固定来源与候选覆盖"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/type-contracts-final.json",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/coverage-green.log"
+      ],
+      "id": "TPC-02",
+      "observed": {
+        "calls": 118,
+        "missingCandidates": 0,
+        "properties": 1676,
+        "types": 933
+      },
+      "status": "PASS",
+      "step": "回调重载及循环关系"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/operations-red.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/operations-green.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/instances-keyof-red.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/instances-keyof-green.log"
+      ],
+      "id": "TPC-03",
+      "observed": {
+        "indexedAccess": "FIXTURE_VERIFIED",
+        "sourceConditionalTypes": 2,
+        "sourceKeyofTypes": 1
+      },
+      "status": "PASS",
+      "step": "条件/索引/keyof/约束关系"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/tuple-alias-red.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/tuple-alias-green.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/instances-keyof-red.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/instances-keyof-green.log"
+      ],
+      "id": "TPC-04",
+      "observed": {
+        "concreteInstanceFixture": 40,
+        "familyBudgetBoundaries": 0
+      },
+      "status": "PASS",
+      "step": "元组别名及实例截断修复"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/remaining-work.json"
+      ],
+      "id": "TPC-05",
+      "observed": {
+        "directBoundaryTypes": 7,
+        "mapped": 173,
+        "mappedWithBoundaries": 29
+      },
+      "status": "PASS",
+      "step": "候选可达图与边界逐项记录"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/tools.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/old-plugin-contracts-check.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/old-six-plugin-check.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/old-full-graph-check.log"
+      ],
+      "id": "TPC-06",
+      "observed": {
+        "compatibilityChecks": 3,
+        "contractCases": 64,
+        "tools": 456
+      },
+      "status": "PASS",
+      "step": "回归及三种历史产物兼容"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/validation-results.json",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/executions.json"
+      ],
+      "id": "TPC-07",
+      "observed": {
+        "canonicalPassed": true,
+        "rejectedVariants": 16
+      },
+      "status": "PASS",
+      "step": "源重建与双向篡改拒绝"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/remaining-work.json"
+      ],
+      "id": "TPC-08",
+      "observed": {
+        "originalExitRules": "UNCHANGED"
+      },
+      "status": "BLOCKED",
+      "step": "完整公开面及来源/类型/消费闭合"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/stage-check.log"
+      ],
+      "id": "TPC-09",
+      "observed": {
+        "acceptedUnits": 4,
+        "closed": false,
+        "percent": 66,
+        "totalUnits": 6
+      },
+      "status": "BLOCKED",
+      "step": "M0阶段关闭"
+    }
+  ],
+  "runId": "20261023-m0-plugin-type-contracts",
+  "schemaVersion": 1,
+  "tasks": [
+    "M0-02",
+    "M0-03"
+  ]
+}

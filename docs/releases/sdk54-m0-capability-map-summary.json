@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "runId": "20261027-m0-capability-map",
+  "source": {
+    "revision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1",
+    "tree": "5457e824b21d968e55c8f533cdf1751860160a92"
+  },
+  "artifact": {
+    "path": "outputs/sdk54/ai-e2e/20261027-m0-capability-map/capability-map.json",
+    "sha256": "69b4d971e35f0551c02f7910f6d33b13c8e6e9bbd138fde634b530dcb1fadd0d"
+  },
+  "counts": {
+    "capabilities": 154,
+    "memberships": 549312,
+    "dependencies": 1462,
+    "seedDecisions": 188,
+    "analysisImpacts": 140220,
+    "sharedUseReviews": 8
+  },
+  "scopeStates": {
+    "DEFERRED": 5,
+    "REQUIRED": 141,
+    "REQUIRES_REVIEW": 8
+  },
+  "classifications": {
+    "CONTEXT_ONLY": 74624,
+    "PUBLIC_ENTRY": 629,
+    "PUBLIC_ENTRY_CONTEXT": 354,
+    "PUBLIC_ENTRY_EXPORT": 2841,
+    "PUBLIC_REACHABLE": 294126,
+    "PUBLIC_REVIEW_PENDING": 176592,
+    "SOURCE_CENSUS_CONTEXT": 146
+  },
+  "tests": {
+    "tests": 705,
+    "independentGraphProbes": {
+      "passed": 22,
+      "failed": 0
+    },
+    "independentSourceProbes": {
+      "passed": 2,
+      "failed": 0
+    },
+    "repeatBytesIdentical": true,
+    "realCliCheck": true,
+    "negativeExitCodes": {
+      "negative-member": 1,
+      "negative-scope": 1,
+      "negative-seed": 1,
+      "negative-dependency": 1
+    },
+    "deepMemberDistance": 9,
+    "publicClassificationComparisons": 530434,
+    "preservedInputTables": 17,
+    "preservedInputShards": 11125,
+    "sourceHashes": "FRESH_VERIFICATION_REQUIRED",
+    "catalog": true,
+    "stage": true
+  },
+  "sharedUseReview": {
+    "path": "outputs/sdk54/ai-e2e/20261027-m0-capability-map/shared-use-review.json",
+    "sha256": "e42c640ae7e1a1ab8ca8903bcada2b90927cf5384d92ad93f015f32f5524058a",
+    "packages": 8,
+    "entries": 12,
+    "unresolvedUses": 9,
+    "fixedBlobsRead": 49
+  },
+  "specialistContracts": {
+    "count": 202,
+    "path": "outputs/sdk54/ai-e2e/20261023-m0-plugin-type-contracts/type-contracts-final.json",
+    "sha256": "257f048d28570c06d47b80214552a8eeecc7337d5e2ab5d2d714a62336a8e97c",
+    "separateTypeNamespace": true
+  },
+  "acceptanceResults": {
+    "path": "outputs/sdk54/ai-e2e/20261027-m0-capability-map/acceptance-results.json",
+    "sha256": "ceb8d4d3310a329a06556a098eee17b58ea253012471d025260b6b877107de36"
+  },
+  "remainingWork": {
+    "path": "outputs/sdk54/ai-e2e/20261027-m0-capability-map/remaining-work.json",
+    "sha256": "d6bbcd31128d1c990d683a47fad958c7ee55ba418b326f3dfe5c2aa2c00f373c"
+  },
+  "progress": {
+    "closed": false,
+    "acceptedUnits": [
+      "M0-01",
+      "M0-04",
+      "M0-05",
+      "M0-06"
+    ],
+    "pendingUnits": [
+      "M0-02",
+      "M0-03"
+    ],
+    "totalUnits": 6,
+    "percent": 66
+  },
+  "repository": {
+    "status": "FAIL",
+    "reason": "PREEXISTING_SEALED_SUMMARY_CONTAINS_LOCAL_ABSOLUTE_PATH",
+    "preservedEvidence": {
+      "path": "docs/releases/sdk54-m0-export-patterns-summary.json",
+      "sha256": "a7020eebdbd9939f10e4adae9a73adb1e4f22d231780eb5b6e7fa1ae58a54b69"
+    }
+  },
+  "sourceCensusComplete": false,
+  "publicSurfaceComplete": false,
+  "stageClosable": false,
+  "harmonySupportAccepted": false,
+  "buildAcceptance": "NOT_VERIFIED",
+  "runtimeAcceptance": "NOT_VERIFIED",
+  "deviceAcceptance": "NOT_RUN"
+}

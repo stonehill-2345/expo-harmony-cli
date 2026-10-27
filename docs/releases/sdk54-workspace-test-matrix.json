@@ -1,0 +1,3427 @@
+{
+  "schemaVersion": 1,
+  "scope": "Current local pnpm workspaces; test source/fixtures and config inputs only, not upstream API coverage or executed-test counts.",
+  "exclusions": [
+    ".cxx",
+    ".git",
+    ".hvigor",
+    "build",
+    "coverage",
+    "dist",
+    "node_modules",
+    "oh_modules"
+  ],
+  "workspace": {
+    "path": "pnpm-workspace.yaml",
+    "sha256": "dad2243a11e9a3d91a596308b363c5b4e354a1b45b254a13895670d10e5ef32c"
+  },
+  "packages": [
+    {
+      "name": "expo-harmony-cli",
+      "directory": "apps/cli",
+      "manifest": {
+        "path": "apps/cli/package.json",
+        "sha256": "8f8805a05f3cf0cb5325d4464fba82cbd0d43eef93be50eb183a3c7c114cac7a"
+      },
+      "scripts": {
+        "type-check": "tsc --noEmit -p tsconfig.json",
+        "test": "vitest run",
+        "test:watch": "vitest",
+        "test:pack": "vitest run --config vitest.pack.config.ts",
+        "check": "pnpm run type-check && pnpm run test && pnpm run test:pack"
+      },
+      "embeddedJest": null,
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "apps/cli/templates/harmony/entry/src/main/cpp/CMakeLists.txt",
+          "sha256": "4a749f83a36107bed5f57340f4d3f3e570d511a0f4a8cd1088809f59055e54f8"
+        },
+        {
+          "path": "apps/cli/templates/harmony-sdk-52/entry/src/main/cpp/CMakeLists.txt",
+          "sha256": "4a749f83a36107bed5f57340f4d3f3e570d511a0f4a8cd1088809f59055e54f8"
+        },
+        {
+          "path": "apps/cli/templates/harmony-sdk-54/entry/src/main/cpp/CMakeLists.txt",
+          "sha256": "4a749f83a36107bed5f57340f4d3f3e570d511a0f4a8cd1088809f59055e54f8"
+        },
+        {
+          "path": "apps/cli/tsconfig.json",
+          "sha256": "0b2e6c36319ec321b41f0c2995b113fe15c31c492898beebd5ecad472848c670"
+        },
+        {
+          "path": "apps/cli/vitest.config.ts",
+          "sha256": "75816bd9344d5587afe1c39885f406e541189afa48ffbfcecccb39ca14f8052c"
+        }
+      ],
+      "tests": [
+        {
+          "path": "apps/cli/__tests__/adapt-package.test.ts",
+          "sha256": "bcce2c263b86660c39170449a10013b05aade52de06804f0b5bd44b365d514e7"
+        },
+        {
+          "path": "apps/cli/__tests__/bundle-name.test.ts",
+          "sha256": "a7157a5f600bf04a353190b5197ef9b7dfb08b7cc5513e5c1c87887dde3342ee"
+        },
+        {
+          "path": "apps/cli/__tests__/compat-table.test.ts",
+          "sha256": "ec72001d9f5f7b037116ade06671614f1feb5786890057866cefeceb357942c7"
+        },
+        {
+          "path": "apps/cli/__tests__/content-injector.test.ts",
+          "sha256": "3a4858eeac34147c661cc493f5565c087a5db656036a764551d3d5992006289f"
+        },
+        {
+          "path": "apps/cli/__tests__/content-library.test.ts",
+          "sha256": "55cdfd61c7f35fe1398fa43f9056f1a2e5c9e98b2885d2345dd416be39428b71"
+        },
+        {
+          "path": "apps/cli/__tests__/creator.test.ts",
+          "sha256": "9668f6bd70c6829d9b134547f6379a7f9ed609ceaf32476afb27af099ad6cfe4"
+        },
+        {
+          "path": "apps/cli/__tests__/dispatch.test.ts",
+          "sha256": "3e23521e6615420ddda3bfbd3bd2e9256ee38e34d4cb2a10053baebd87cf6d7b"
+        },
+        {
+          "path": "apps/cli/__tests__/env-doctor.test.ts",
+          "sha256": "5fe89685881d242eeed83a21953220dba3af27c5a10b46575a5c0be0ee566c22"
+        },
+        {
+          "path": "apps/cli/__tests__/exec.test.ts",
+          "sha256": "9591b9ab8021ed2f17151cdd01e54c2a86a9e116b391dd2e995f2f2a6d8c3ae9"
+        },
+        {
+          "path": "apps/cli/__tests__/h-cleanup.test.ts",
+          "sha256": "8eafe8f3217e5372b828dc0813d96256373065357614710e2206e983422b9d38"
+        },
+        {
+          "path": "apps/cli/__tests__/helpers/packed-cli.ts",
+          "sha256": "47295dfb67030ca179bc801cae33b41c03d7399c8098a19784f1b343f5d466b9"
+        },
+        {
+          "path": "apps/cli/__tests__/helpers/setup-pack.test.ts",
+          "sha256": "0a31b200f5a52af05a3ea9a85618bc36016f983c722f539e2340a40746488767"
+        },
+        {
+          "path": "apps/cli/__tests__/helpers/setup-pack.ts",
+          "sha256": "0882633c87753af13f4ead23e5521ea1b1025ef655d608bb2dfb3d897ca52c7c"
+        },
+        {
+          "path": "apps/cli/__tests__/injector.test.ts",
+          "sha256": "982dbea679edbb199f5ca22f2e0fd7a709eee4650f0f37370c94dbd56833ce00"
+        },
+        {
+          "path": "apps/cli/__tests__/install.test.ts",
+          "sha256": "736ceb8351644f6a37ef51e58aa565079aefbbd71e8eca8b9a0a0c6067efc935"
+        },
+        {
+          "path": "apps/cli/__tests__/log.test.ts",
+          "sha256": "0eee3056fd561f1dd4c13923ed3e84e2fc399ebdcf99580183aad40509323ecc"
+        },
+        {
+          "path": "apps/cli/__tests__/managed-state.test.ts",
+          "sha256": "3e8d6b764b85083deed43ec3b195da7cbf05f6a69f0bffaac15f8a3913ee1007"
+        },
+        {
+          "path": "apps/cli/__tests__/npmrc.test.ts",
+          "sha256": "cb84068229f56a8065eb21ab1296b315aa65ff1bcccb133e1a0c2bfd5c2e9791"
+        },
+        {
+          "path": "apps/cli/__tests__/pack-files.pack.test.ts",
+          "sha256": "f7d016d9dd74b8ace03a28c53016073fc7a9b84b89174f0f31eb241fa66103ed"
+        },
+        {
+          "path": "apps/cli/__tests__/pkg-manager.test.ts",
+          "sha256": "188d6c17c2f47cdc00756797bf03cc50a0682f2731fd014d67bbf4d7179623ae"
+        },
+        {
+          "path": "apps/cli/__tests__/postflight.test.ts",
+          "sha256": "cd5b20f24eea5733725ea473eb7ecab6c0923f7d104957fa147263626720612c"
+        },
+        {
+          "path": "apps/cli/__tests__/prebuild.test.ts",
+          "sha256": "806859879a14a90f3268eb048c6f7cae68b671c3bcdcd78de7e649e2831eb373"
+        },
+        {
+          "path": "apps/cli/__tests__/resolve-tasks.test.ts",
+          "sha256": "7c0afbe937cc676751dde2c176ff7885dd720da2e8eb3ea6daf2e429d5dd0418"
+        },
+        {
+          "path": "apps/cli/__tests__/scan-list.test.ts",
+          "sha256": "f6102c07f4c2e2543d8317ddba9ff17cb63bc8a82e77f211ebbbe972c08499bc"
+        },
+        {
+          "path": "apps/cli/__tests__/scan.test.ts",
+          "sha256": "ee3bb98d3c3db609de194e0c0f3f4d7973940c4c74e8dfcefed02760f3980708"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/autolinking-release.test.ts",
+          "sha256": "250a211a2fb18ccf74d58d814e40781b64f23f34a911a866210e4d31fe33b2ee"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/command-routing.test.ts",
+          "sha256": "aee4eda218ceb8ca3d8cd701e6c4ec42fc3b7dde043ca989c89f457ee77e4a90"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/create-options.test.ts",
+          "sha256": "29672e434209e5ea3b6cd5b2233040f2c1570471bb6b8de58cc2898bdd953176"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/create-release.test.ts",
+          "sha256": "1db4f05194749f0a3a0c5145133767985615d50c99574e43721b1a9db3ecc6a0"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/create.test.ts",
+          "sha256": "8138cbfc76db2f25850a6690245138c41d3ef7868f3a73e85eace6139f3ed468"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/default-image-substitution.test.ts",
+          "sha256": "deaedc7cc4c4023928952d6d0731511ef0563bb5e96e8e0ebc26cd0540736995"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/docs.test.ts",
+          "sha256": "2f55283252536ce7243fe0fed2932cdfccd197c0262913e88a2bc52b558a044f"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/doctor.test.ts",
+          "sha256": "17a22ff39d1c38e32cc699139cd37b875a71d79de6f0523ce556c9e79aa683da"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/expo-release.test.ts",
+          "sha256": "a02e86160e8c7e4db40961a523caa82bf0d787df1f0d1cf183c67b57bd9f9ebb"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/file-transaction.test.ts",
+          "sha256": "17904504b7be81c606a515e81e60738a8883c72a9942812fd788fc8d698b4ce7"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/install-patches.test.ts",
+          "sha256": "856ed15767f3e2942ef6ed8d5bbc0c3b3479434755da2faac445ef2131f6c4f2"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/metro-release.test.ts",
+          "sha256": "73a5e090cef0f89b83b9c13ac4b8f01e1b8615b779527012adfd97f99e61d3f9"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/package-json.test.ts",
+          "sha256": "68e7712302a4ea60cc64ecdf5f3a7c8967eaae4f2d667e1ecc702b6821a6ee7d"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/patch-manifest.test.ts",
+          "sha256": "b047e9f60a8d193ac2232beb02fd33e5b669602108c0c50b8a0f4773aa077a2d"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/project-state.test.ts",
+          "sha256": "d882e11a43e93f404e4b8744a1ccd7ed61e08812a80c91d71e2d2c41e1e2665a"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/release.test.ts",
+          "sha256": "f100fbed2d87b5b8fcaf478650253ea8df193bacf5f1eab917ce7759c23e1272"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/template-contract.test.ts",
+          "sha256": "3781eaca6a7514f1c9c1bfb5bafdbae8b1888a6d091d941f7fd7a2d606651603"
+        },
+        {
+          "path": "apps/cli/__tests__/sdk54/verify-runtime.test.ts",
+          "sha256": "767d03a30857bedaa36439b165aaa0bfc8cc652496d965d1e1f3571a80806034"
+        },
+        {
+          "path": "apps/cli/__tests__/sync.test.ts",
+          "sha256": "d8684f5cdf9364d23a9f18f0f8d50ddcc889f9ab4f43b2cab56362f51dc8323e"
+        },
+        {
+          "path": "apps/cli/__tests__/uninstall.test.ts",
+          "sha256": "fe315c86148d3ca3f8d83a73a5548d181be70419ace887c5236ae21cc34cd668"
+        },
+        {
+          "path": "apps/cli/__tests__/version-matrix.test.ts",
+          "sha256": "4196e305ba8b8506d9e51842ea0c70e51ca2301da50d88029e14ad6d5f8aa91b"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/__tests__/autolinking-patch.test.ts",
+          "sha256": "d326f2a0ba2ecb3e6eb5cd189543a311765071a107bbf040be405e2835e00420"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/__tests__/autolinking.test.ts",
+          "sha256": "38d9174f843ecba72dff11ad6eda7a32262624dd562ef84eb25cd052e3d93386"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/__tests__/config-merger.test.ts",
+          "sha256": "a8f4c28ca6bbbe839c9635c011ba590bd024ec92297cbe6808ce3870fca21c27"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/__tests__/harmony-package-mapping.test.ts",
+          "sha256": "7fad457dec53de7edf27e532ede925ddca8a55c1516d597d386f2888dceadbb3"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/__tests__/helpers/fake-rnoh-cli.ts",
+          "sha256": "3362b407069bce22eaf299aa8f9a28a50b0e206a6e9d861df4beaa378a88e494"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/__tests__/official-autolinking.test.ts",
+          "sha256": "4e3edc723fe56025eab084d8e5fd42def62bca537d5de9530649177be894ab8a"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/__tests__/pack-files.pack.test.ts",
+          "sha256": "87fb28e02951440982bb03774335d93bfb7f45b1c298734d0211e7acd1540775"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/__tests__/standalone.test.ts",
+          "sha256": "e3e4087cfb8f9f0596dc176521f00495d203afa7b116c11bc061b01fe8f133fb"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/__tests__/template-source.test.ts",
+          "sha256": "45a76faa7b1b6735fa581912f24b53b10dd1af54a068fc5f95f3ba635c62768b"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/__tests__/template-validator.test.ts",
+          "sha256": "94a42b7c1b8ba6e5bed1a2ceb5e143095d9609123e2108eb7d4d29764a8390cb"
+        },
+        {
+          "path": "apps/cli/src/harmony-project/templates/__tests__/templates.test.ts",
+          "sha256": "47394a570907a775ff7126b2fdcfecc59489b30f491d14f42ed8b97edec3250e"
+        },
+        {
+          "path": "apps/cli/src/utils/__tests__/atomic-rename.test.ts",
+          "sha256": "ea5726b154ece0f00e375a70305b94db92687b76cde76b6c36be69e92f5416d1"
+        },
+        {
+          "path": "apps/cli/templates/harmony/entry/src/ohosTest/ets/test/Ability.test.ets",
+          "sha256": "8600c6681413e2ee3283671c6a67c2bb1421726559163aca8596ff17d2a389d6"
+        },
+        {
+          "path": "apps/cli/templates/harmony/entry/src/ohosTest/ets/test/List.test.ets",
+          "sha256": "c2300b6cb78c4e2469e72ce7d0d79f5207bc5004f14cdac0bbf859da248dad15"
+        },
+        {
+          "path": "apps/cli/templates/harmony/entry/src/test/List.test.ets",
+          "sha256": "268e4980ef2fdfe0c7ff6a19402bc214ab90f25807998098d2513cc50e9dd86b"
+        },
+        {
+          "path": "apps/cli/templates/harmony/entry/src/test/LocalUnit.test.ets",
+          "sha256": "ab72e1fa03e7c61ec51a52fe56fd366f66aa1a4415e18c7953daf5be14f488b7"
+        },
+        {
+          "path": "apps/cli/templates/harmony-sdk-52/entry/src/ohosTest/ets/test/Ability.test.ets",
+          "sha256": "8600c6681413e2ee3283671c6a67c2bb1421726559163aca8596ff17d2a389d6"
+        },
+        {
+          "path": "apps/cli/templates/harmony-sdk-52/entry/src/ohosTest/ets/test/List.test.ets",
+          "sha256": "c2300b6cb78c4e2469e72ce7d0d79f5207bc5004f14cdac0bbf859da248dad15"
+        },
+        {
+          "path": "apps/cli/templates/harmony-sdk-52/entry/src/test/List.test.ets",
+          "sha256": "268e4980ef2fdfe0c7ff6a19402bc214ab90f25807998098d2513cc50e9dd86b"
+        },
+        {
+          "path": "apps/cli/templates/harmony-sdk-52/entry/src/test/LocalUnit.test.ets",
+          "sha256": "ab72e1fa03e7c61ec51a52fe56fd366f66aa1a4415e18c7953daf5be14f488b7"
+        },
+        {
+          "path": "apps/cli/templates/harmony-sdk-54/entry/src/ohosTest/ets/test/Ability.test.ets",
+          "sha256": "8600c6681413e2ee3283671c6a67c2bb1421726559163aca8596ff17d2a389d6"
+        },
+        {
+          "path": "apps/cli/templates/harmony-sdk-54/entry/src/ohosTest/ets/test/List.test.ets",
+          "sha256": "c2300b6cb78c4e2469e72ce7d0d79f5207bc5004f14cdac0bbf859da248dad15"
+        },
+        {
+          "path": "apps/cli/templates/harmony-sdk-54/entry/src/test/List.test.ets",
+          "sha256": "268e4980ef2fdfe0c7ff6a19402bc214ab90f25807998098d2513cc50e9dd86b"
+        },
+        {
+          "path": "apps/cli/templates/harmony-sdk-54/entry/src/test/LocalUnit.test.ets",
+          "sha256": "ab72e1fa03e7c61ec51a52fe56fd366f66aa1a4415e18c7953daf5be14f488b7"
+        }
+      ],
+      "harmonyTests": []
+    },
+    {
+      "name": "@expo/cli",
+      "directory": "packages/@expo/cli",
+      "manifest": {
+        "path": "packages/@expo/cli/package.json",
+        "sha256": "09ca0e33c151d7a314acd848a01f192a19e33ffdf60caadfb907d71a157866ca"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "typecheck": "expo-module typecheck",
+        "test": "expo-module test",
+        "test:e2e": "jest --config e2e/jest.config.js",
+        "test:playwright": "playwright test --config e2e/playwright.config.ts"
+      },
+      "embeddedJest": null,
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/@expo/cli/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/fixtures/with-assets/babel.config.js",
+          "sha256": "d66ed680f88df7550795448341f0fb3a575f92f45a36fb01c13310311e3f8431"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/fixtures/with-router/babel.config.js",
+          "sha256": "804f3c92ed0fe1d4c3f86a12a515593db42d26e09a5677b56ac76af9aa58741e"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/fixtures/with-router-typed-routes/tsconfig.json",
+          "sha256": "cb62da55c6fac8942e47f18bd22c7944470d28759fb4b125bc9d822ffe471366"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/jest.config.js",
+          "sha256": "4985c8a51364a016ae53601bcb8efc6908436b4f521f445f601c9c01c851737b"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/jest.setup.ts",
+          "sha256": "d04d2b897ed6255b75fe4cbc543a42a589fbab9f362c6d03a5e22b436953958d"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/tsconfig.json",
+          "sha256": "1131736730f22d2eb8bbe4987ce52decc9471dc514ce41773b625a80d6a4c8a4"
+        },
+        {
+          "path": "packages/@expo/cli/jest.config.js",
+          "sha256": "86103756247f7103fd5e6ab5987aaf636dd1cfeafb5a2723eb7d25e412738bbe"
+        },
+        {
+          "path": "packages/@expo/cli/jest.setup.ts",
+          "sha256": "15289e8115c77fe0f4893aa8390747bc29bddcb4865f35f1f4813590bb7b4b7d"
+        },
+        {
+          "path": "packages/@expo/cli/static/template/babel.config.js",
+          "sha256": "c27c3e8f3470c96cfa6f165c5ada8dcd66b1db7556c22c31cb8f0450babdf209"
+        },
+        {
+          "path": "packages/@expo/cli/tsconfig.json",
+          "sha256": "364a20de177e8b8459584c45b9773885818669c52bfd5f985ce420fa2ca71090"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/config-test.ts",
+          "sha256": "2fc2092886184b5d4ca23477baf47f29dd4f5345b8f138e9a4463d845c604c6a"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/customize-test.ts",
+          "sha256": "1686c97d030a52b9aae170e6846c0da8fafa70b498ebd200b643e8f81462d8cf"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/base-path.test.ts",
+          "sha256": "7432a4708cb8640abcc342ef3781e54ba0a9d31740c3e86c8ba2b594e489b04d"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/export-embed-rsc.test.ts",
+          "sha256": "03a0457e2ccdf919054e424344870745adb59ae51414d60bfda79f261a6955a8"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/export-no-ssg.test.ts",
+          "sha256": "fb1de2a98cc2f3d18ff75ab51bec6d358e7d53d28fdc2ce9eadace5588f2de09"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/export-server-magic-import.test.ts",
+          "sha256": "a6c92ec990d5d640fbdc532f57474f141e588f586bba3137deed08021597be0f"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/export-side-effects.ts",
+          "sha256": "4b8f52ee108ffd669f1b96655edd7ab245e10a60da3b911abe43b763eaa82898"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/modal-splitting.test.ts",
+          "sha256": "bf4b35663ed662a2640ce802a8a3953d051b30aba6faabc9542c59bdb90e48f4"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/no-bytecode.test.ts",
+          "sha256": "1b6624dff846a7d9b6354b08d218d57850e0b6b78765aea49f9bf4ba1ed79764"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/no-sitemap.test.ts",
+          "sha256": "bc75530e199d17cc0fdcacdb15a3823f4558fd810cddb5da0241292a5863ce51"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/react-native-canary.test.ts",
+          "sha256": "d5c612881c41276c926608964cea4e96605ce96c0b2cf81df09829b2b2381f7b"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/serializer-plugins.test.ts",
+          "sha256": "d280c6d85de85383768225f2ee5653bcffd3c3b901f951e0acb41e24a8121399"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/server-env.test.ts",
+          "sha256": "bdafb361ff8d1819a87686354bb02a2a49cb16bdbde78d3a4aaaf1abfc3df919"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/server-headers.test.ts",
+          "sha256": "2f41c3ed33a71524e4bce7cd11328dfe9dc23b0d5ccccebeba1c8e02ffedd734"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/server-middleware.test.ts",
+          "sha256": "4834bbe767a73081a2df2545ae5085353618d809db3cfc7bdf31c75391f621ed"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/server-rewrites-api.test.ts",
+          "sha256": "46aece9897a4ed300548f6d7686704a042c1f99777ffe4c1e4b2632e32029f10"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/server-rewrites-screens.test.ts",
+          "sha256": "cd03bc0028ed0926b3b9b1b4e983d4f00a84deee73694f43af1f7e73465fd251"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/server-root-group.test.tsx",
+          "sha256": "3903d0c2011eedf285bb8222a2881159e602e4319aa8e05fe4f1944ad56b314b"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/server.test.ts",
+          "sha256": "eed92d23acfc13b245c63dbe5b2af690b27b64188a5d804bd8950c9046448b97"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/single-page-app.test.ts",
+          "sha256": "13a9ae7285cbaeba5009355b89b0a9740501550865647676b4913cd3cf566e1c"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/static-middleware.test.ts",
+          "sha256": "2795db65adca35483e2923984139fde67aa2da6a68a384d2b3076aefdad49a32"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/static-redirects-api.test.ts",
+          "sha256": "091b97018554c7bf8b17dac5a8c0813ce299c440c203c24f5b7c34ec0973e839"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/static-redirects-screens.test.ts",
+          "sha256": "d286ab4eed77361109b6401819e5393bb95a37a55bc0caa345109001b15194a4"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/static-redirects-ssr.test.ts",
+          "sha256": "97a137df2e6f2a34eb3543be2032b6d30725c3e51447fe40f939d9585947d9ba"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/static-rendering.test.ts",
+          "sha256": "656ee8a2e8ad6e5d48dbabb11484dd345192ef552a8cef9b7307a235c2137674"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/static-rewrites-screens.test.ts",
+          "sha256": "f51d632fa16a32b133ce39a08b23d8553d1b84f6c44bb15f4af884726c8c279e"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/static-splitting.test.ts",
+          "sha256": "3b0191992b8d3afe57f6011554aec8e4081bcd3b16ccef5e6f9c92531cfc6e57"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/tailwind-postcss.test.ts",
+          "sha256": "b57c72d50516e8423ce48dee6112905201d3cd5be468d6fd6662346c156b6761"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/url-polyfill.test.ts",
+          "sha256": "57f1782df14697ee07b9e0e054008e11a78f010b7e868db085db68830258ca26"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/web-modal.test.ts",
+          "sha256": "eb1b3165d8d999074621b328d2964f47d236c58e65daa4a484228795736ded0c"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/with-atlas.test.ts",
+          "sha256": "02438ebad893d0791df13f82ac1fd56d533a4ba87f95a50d507b1fbae0852b0a"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export/without-sourcemaps.test.ts",
+          "sha256": "4ea889683ec94c7dab7a08342a951c1a1934cb10e2bc1e49b3beb741133db8d4"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export-async-imports-test.ts",
+          "sha256": "d7802359b90f4f3817c8e8e4d30609f6197d2c550393319da6dd991dc55685c7"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export-dom-test.ts",
+          "sha256": "ab2dbf0f2bffd40d3d51f09eb43522f8d385995130cbe046a1a57f56d58968a3"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export-embed-eager.test.ts",
+          "sha256": "e596016e011c6d8757ec9bd83f3d98282c9abc78204cc5a8b57516a1c871c795"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export-embed-test.ts",
+          "sha256": "b6ebd2d4892af5d78885863245551708c6a61b4eac96e3156dfa987c0e8bda68"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export-monorepo-test.ts",
+          "sha256": "53abf71415b3d11433cbeb38627203619b68c29070e0be91dc0594e51d2b5366"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export-web-test.ts",
+          "sha256": "4ce2a0cda1e5cc4a48fbf8a102918776c6154d9b7ba6e3700f550cd3926494c5"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/export.test.ts",
+          "sha256": "bccdc812e87acb5841afb0e65dcf923342f6410ecc435046472c58c1c91b8832"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/index-test.ts",
+          "sha256": "f78d4dd13325388544106113d7246df475860dfc9ad3c2a4bd5d2e0d4c643c1b"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/install-test.ts",
+          "sha256": "ccc7dfcf8860d03c7f5537bf833cda21d51e724608e7521eadab23b995568cb8"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/lint.test.ts",
+          "sha256": "722abfce37f4b5a5e10bfd8d82451b94dffd554a8dc9098cb40139812522f977"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/login-test.ts",
+          "sha256": "e624644b55cc420c518b6aa1f72c6a1a7b2e804e1adfb528129b15812690e62c"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/logout-test.ts",
+          "sha256": "2ad872126a27c6afdbca6e4ae80764fd6536be9cc6776bb88dcc92d59292c9de"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/metro-server-test.ts",
+          "sha256": "90a40fa661439e87dedf549f9f419fa65b282d19d044dc944f906341ad990912"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/prebuild-test.ts",
+          "sha256": "085002c4c63a62d3e5156c3dbc322e92740f09a0a9ac9ea21a97d15a48a68ca3"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/register-test.ts",
+          "sha256": "c165caad42b7dc7fb9a099196b178fa7c10c7604adc6cfb4b2ebd608257d105c"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/run-android-test.ts",
+          "sha256": "2c405a0bb305a0ae5c118fb171c851dccbe4b3c9b45d1f271fdf1d5370fa78c9"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/run-ios-test.ts",
+          "sha256": "c151a6416554862e88dddd7298f45a531b91a9b196360d1c20c7896934ffe864"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/run-test.ts",
+          "sha256": "46bb114b3402b5057286c483af24e200591d32861109c5f1d5dee70ece0201fe"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/start-headers.test.ts",
+          "sha256": "97739dab27b6549689446de821657abdbb078a1df448fd4d2df93cc804c0782f"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/start-test.ts",
+          "sha256": "4761824928f13231d0977f1c76b64a04ac4d025c35165ad4f827eda0ac4ac33b"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/utils.ts",
+          "sha256": "f2face5a6248bdce4dd33131e04faef389a76a3b3424e4bb44acf8e2b81bfe65"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/__tests__/whoami-test.ts",
+          "sha256": "8baeb308551a203a8241e4e30baf977eaa5b72ebaed1f136ba1bd640168bae9a"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/01-rsc.test.ts",
+          "sha256": "8fb91617d5b47b74f737d4c692400a8bd36329bf6d6672e15e4819af5079f1a1"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/02-server-actions.test.ts",
+          "sha256": "07d799c0f10233afc18e3fdeb469d6fc3b18fc37eb443638d214c47b08d762b2"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/03-server-actions-only.test.ts",
+          "sha256": "fac63a15a12f7424ab76e76bd2da8a5f1a31c0af3fabdb5b9b7fb154ad004295"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/04-server-error-boundaries.test.ts",
+          "sha256": "106ad9b8898cd0ca5ed1c95540e6ad332de56ef3870e04d2a4c242a637206e86"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/css-global-import.test.ts",
+          "sha256": "dd890c391cce41709b175f57a543c18e59a8f79bdcf6af1fe5b6ec6b18d69e0c"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/fast-refresh.test.ts",
+          "sha256": "0ce2ea1b6217f3fe44ff2cd2d2b3c3803969e1657a04708aef2ab86a8581d163"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/hmr-env-vars.test.ts",
+          "sha256": "56520de3d199fcb6bba8c846153dcec51a9c7c44382f0d99eff256379782ef1b"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/hydration.test.ts",
+          "sha256": "0832052172463a6017f9109f8d44a2304082f9bc724d3a9c7dbbe404a9ac2245"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/metro-resolver.test.ts",
+          "sha256": "4b71c40a0143f3263cc50b4c026b002bb6c9688927a1667088a8b05f9fb73a39"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/navigator-browser-history.test.ts",
+          "sha256": "e7524ad30137bfc3b62e4aa6f7e149936c847e22a85043c38a903d4e4b1b43f2"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/react-compiler.test.ts",
+          "sha256": "aee3a59266285c60b9402bf96bf6d7c7ea2f013890003ba3df59c935c81e8e5a"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/router-misc.test.ts",
+          "sha256": "e7202ccb0ee7be6f623afdb75a158e0295840ec2a4babcd1bb3bdda1d67d3a8f"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/server-middleware-matchers.test.ts",
+          "sha256": "8cdf8973d09cb101aabbd8a0ab7758f9f74bcbd3ec9637fd79c8b288a9ddc706"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/stable-module-ids.test.ts",
+          "sha256": "4101daca021342c183ac4aff0a86c7765710b569c7edba1b347478bd86cdb2d8"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/web-workers.test.ts",
+          "sha256": "7f9cf61b2cb448612cefdcc7a58d2e5a61cec138fddd972807a80b874886193f"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/dev/with-spaces.test.ts",
+          "sha256": "3a99bdebb0c3bcbeab5866abf5d149c4a6593ed25d72bed3defdee1563c33b26"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/prod/01-rsc.test.ts",
+          "sha256": "493f85332e809f9ae41a176243ab16570eafc37ba2638a26f2c538b9bad1a869"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/prod/02-server-actions.test.ts",
+          "sha256": "5b3defe1890c310d606abb01761153be63e4260b3959abeed4a4f53d35e5a862"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/prod/03-server-actions-only.test.ts",
+          "sha256": "5fbc60dd70d7eaddae4799d4da88c6bf3035139ae9000b7e726695b34d5e6fed"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/prod/helmet.test.ts",
+          "sha256": "8959dd54cb42c27475925c2f6e59054bdb927de0c0b35c9194f1970f5037e87d"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/prod/optimize-pass.test.ts",
+          "sha256": "ee8ebe6677c868538cb33c07ae661f702fc6704be6b8028fd2f30468f4fff646"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/prod/server-middleware-matchers.test.ts",
+          "sha256": "942d8726fe2148c757686e02dfe2c332b1c03d3f26db58b3820081b0a58d6b23"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/prod/tree-shaking.test.ts",
+          "sha256": "3a2f35ef23178da1edcc0b798fa1bd6a083201b6de79465064d986d409c85f70"
+        },
+        {
+          "path": "packages/@expo/cli/e2e/playwright/prod/web-workers.test.ts",
+          "sha256": "13dd1efe1057f9a7b04839f5bf9534d5b42de88f8ad0c2769f7f7687f08c70d7"
+        },
+        {
+          "path": "packages/@expo/cli/metro-require/__tests__/fast-refresh-integration.test.tsx",
+          "sha256": "e5105b6b74c005e3f1ea217d29bdd922009c90d7f9901692c3057a514407da22"
+        },
+        {
+          "path": "packages/@expo/cli/metro-require/__tests__/MetroFastRefreshMockRuntime.ts",
+          "sha256": "7516ea38b0833d4cdab712e526aaf2627efa1b420819e2555ad50b496ec8d79f"
+        },
+        {
+          "path": "packages/@expo/cli/metro-require/__tests__/require.test.ts",
+          "sha256": "cdf024505ff67d2a8614c43a79d6f4abf98c2aa6845fe5dee2cbcc10c1922b4b"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/__tests__/getExpoGoIntermediateCertificate-test.ts",
+          "sha256": "5c0895af98477e40678c638618a80a631155ea3ea9bed38326d04b7cb5e0e90b"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/__tests__/getExpoSchema-test.ts",
+          "sha256": "d0b7bfa6bfedd4538444a46b3f53bd5b67619d1d4ba5a1206f051b500faa1563"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/__tests__/getNativeModuleVersions-test.ts",
+          "sha256": "1f662aee88bad48d7130cb4dbcdac3d4d679f99533d0477723e6299b112c3bcf"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/__tests__/getProjectDevelopmentCertificate-test.ts",
+          "sha256": "5a95aa8be249a2b54f3156f776bb7562236d7f971f9bf97bbf584f39eeffc73e"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/__tests__/getVersions-test.ts",
+          "sha256": "91820c85bf24581238f6e3802814ea9b43933bf2afc7cef1beb32e4fde7249f1"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/__tests__/updateDevelopmentSession-test.ts",
+          "sha256": "cf459863c3d4f09b23ded5bcef2c7956f3a9840c4334f53a59cc62a884327698"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/rest/__tests__/client-test.ts",
+          "sha256": "d6987c04e67f394bdd28f30f8b664130c066cb9b5775f2bada240e66326934f9"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/rest/__tests__/wrapFetchWithBaseUrl-test.ts",
+          "sha256": "afb7ba3aae7b7c18b9a2c8101ad4163e59f22f9da7bbee98d93fce299a2c4b5a"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/rest/__tests__/wrapFetchWithOffline-test.ts",
+          "sha256": "1d027ffb7ef76398954157fbccf223042da09b56df5ff148298ec1edaf77bc39"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/rest/__tests__/wrapFetchWithProgress-test.ts",
+          "sha256": "55cbddfd0ac5ae31861e6c5576bfc35d79360905d22316d3777bbe37f211ad63"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/rest/__tests__/wrapFetchWithProxy.test.ts",
+          "sha256": "6efb2805e96b28b313f62225dd603b2c337bfebeb86b4e70577af1192a128022"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/rest/__tests__/wrapFetchWithUserAgent.test.ts",
+          "sha256": "a324f00759a7517af86ec8cde213030e86ebdecf2b53f517b97b07df9107b2da"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/rest/cache/__tests__/FileSystemResponseCache.test.ts",
+          "sha256": "d648c48bf1599bff96cf2eb9129c6dd71787611d1fff10523d112fa2d99b4983"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/rest/cache/__tests__/ResponseCache.test.ts",
+          "sha256": "9323865e0128e85f46f394cbb84b4ca4e85bb13dd7771408a4a7a7a91d7a1be7"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/rest/cache/__tests__/wrapFetchWithCache.test.ts",
+          "sha256": "a20bbe603e910cee1573523b6bc2d957dad13054c7115cf9474821f2a1192d41"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/user/__tests__/actions-test.ts",
+          "sha256": "2304361c8d2dc74e760a872828b4f6d535bc801c9c173295f676a2be6a6ed4ed"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/user/__tests__/otp-test.ts",
+          "sha256": "47c0c0567f25f7a0bbca90fbe74b7c2e3c1a9f47c344d72de601da34e4571a5b"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/user/__tests__/user-test.ts",
+          "sha256": "ca53cf10dd061304d029910e9ea2f9d2e7f792166ffd15cf4fde11195b2aa34e"
+        },
+        {
+          "path": "packages/@expo/cli/src/api/user/__tests__/UserSettings-test.ts",
+          "sha256": "34cc3613895806b7f72ebf7bf769d5e0bd99389c9b4b8a3b80f972e75f25fca1"
+        },
+        {
+          "path": "packages/@expo/cli/src/customize/__tests__/generate-test.ts",
+          "sha256": "ded810ced211705679445a93833b03b39414b32943e6f444afbd620a48eaae27"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/createKeepFileAsync.test.ts",
+          "sha256": "89830c0e4f559a13b6772e2eb407b38833a42cae1c50e0506e0e919a17e1c97d"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/createMetadataJson-test.ts",
+          "sha256": "90ee8d1016d6327fddcdcb9128a0a9bf6e9b496b169344294fee60b9e9b07f79"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/exportAssets-test.ts",
+          "sha256": "52666e83c9f470b0b29cf6e8faa44923a5bf88388d27b086b5696cf29dab6b5b"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/exportDomComponents-test.ts",
+          "sha256": "58ab2aac50d7fd3721de54f6516dfedb4687c18b289b8ebb28031edf2e1098ef"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/exportHermes.test.ts",
+          "sha256": "866f1ce06a5e5d88585df922bdae9e906c62dcc4e0f6e211be8205be29d24219"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/exportStaticAsync.test.ts",
+          "sha256": "a34ca7b87273fa60b7594f0a0bc48faf437599337df980be96a5d0e7659ea0b2"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/fixtures/plain.js",
+          "sha256": "af9e0287eaeba933ed809a69149009aa2a4dce2a6c27dff4c20102ce8f8394e1"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/getPublicExpoManifest-test.ts",
+          "sha256": "447aeb61be764e96a6744f7acfa3cce74825f61b256b8b8a80a8411700c8fe9d"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/getResolvedLocales-test.ts",
+          "sha256": "4fe4fc33f09c3cd5d34539d3b8d7abd30ef469581eb8c59a69cae72fc62cacfd"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/metroAssetLocalPath.test.ts",
+          "sha256": "b1790fc12dd3f6c5aba3009bc60a7adb60732265dc9442d8fecac930203164d4"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/persistMetroAssets.test.ts",
+          "sha256": "c732bda23432f82eb2606416c6bfc6ed453e15e6fdd06f47080267584e73c478"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/publicFolder.test.ts",
+          "sha256": "9df48f6fb5974368f4ce00bdea846a07b760d2ae216197a6cd74dcaad598d9d3"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/resolveOptions-test.ts",
+          "sha256": "1247e659931fc747021a0e4c1904acf953338c0be8ac8ab524eaeebe2ca889a7"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/saveAssets-test.ts",
+          "sha256": "91dfa925d1a4aec6875af1d538380c077e6964aae34a61d35eddb4579e7659db"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/__tests__/writeContents-test.ts",
+          "sha256": "f505d78989c3131e6b2b2ea31f8d8196e5bbbac0eac6bc401c5cf93401208e67"
+        },
+        {
+          "path": "packages/@expo/cli/src/export/embed/__tests__/xcodeCompilerLogger.test.ts",
+          "sha256": "57198e949d2eeacf2ae14994674d26fceb4e7730d6afeaadc8e56dcd1cb5f0e5"
+        },
+        {
+          "path": "packages/@expo/cli/src/harmony/__tests__/bundle-test.ts",
+          "sha256": "e9971c208ef005623d93bc67a1e1c3f3b6fdaf590a3b56e32d3c1c767e0e02cd"
+        },
+        {
+          "path": "packages/@expo/cli/src/harmony/__tests__/dependencies-test.ts",
+          "sha256": "488c354cc32eec34f88f8995c39db3b9519d2c95c5ccbdb2c06d391e0639868e"
+        },
+        {
+          "path": "packages/@expo/cli/src/harmony/__tests__/primitives-test.ts",
+          "sha256": "1f45e24d3b604a8236a5dcace4817fa273b16831a45a76369ea0ac1f89fefeb2"
+        },
+        {
+          "path": "packages/@expo/cli/src/install/__tests__/checkPackages-test.ts",
+          "sha256": "0b94c29408ca89468990ab1e7177e260fd4a257985cf13e3ca3d924b526c540c"
+        },
+        {
+          "path": "packages/@expo/cli/src/install/__tests__/installExpoPackage-test.ts",
+          "sha256": "6c1d2635d8ddfd92e191dfd592ed6c8a2692df58bee47df2a2f58f3b6d4c61d9"
+        },
+        {
+          "path": "packages/@expo/cli/src/install/__tests__/resolveOptions-test.ts",
+          "sha256": "1c3479156b2095a31220771ae3d56e62c2b268e37e82beb19492c33427c7ed46"
+        },
+        {
+          "path": "packages/@expo/cli/src/install/utils/__tests__/autoAddConfigPlugins-test.ts",
+          "sha256": "1b1d7bac0fd3b32a879907327428390185181c65a8660d7b71ca0436d3464008"
+        },
+        {
+          "path": "packages/@expo/cli/src/install/utils/__tests__/checkPackagesCompatibility-test.ts",
+          "sha256": "796abf52a18cf76ca3d230437fa9764ae31d91354f7be26d512149109c7a5745"
+        },
+        {
+          "path": "packages/@expo/cli/src/install/utils/__tests__/parsePackageSpecifier-test.ts",
+          "sha256": "4e2668376085d9dbe0e15fd41c61d18424d46eda8c49869c472782e697a44ebe"
+        },
+        {
+          "path": "packages/@expo/cli/src/prebuild/__tests__/clearNativeFolder-test.ts",
+          "sha256": "202c1da7950c5e3d1daae8af82f09e08116e47a7107062c4ac1cc665af94e907"
+        },
+        {
+          "path": "packages/@expo/cli/src/prebuild/__tests__/fixtures/react-native-project.ts",
+          "sha256": "fe2f92b2afe096b7e59fd614cdb12a79af4062b49ecb6e4a37288f1579d4d616"
+        },
+        {
+          "path": "packages/@expo/cli/src/prebuild/__tests__/renameTemplateAppName-test.ts",
+          "sha256": "e10e158a027acfda95f520cc4c802ef13570f010f4f27833468b14b1a9ac8d70"
+        },
+        {
+          "path": "packages/@expo/cli/src/prebuild/__tests__/resolveOptions-test.ts",
+          "sha256": "7c969183f1f3b31033bdcd587884b5965223624021aaec13305f3d3a2d54e6e3"
+        },
+        {
+          "path": "packages/@expo/cli/src/prebuild/__tests__/updatePackageJson-test.ts",
+          "sha256": "b14d6cff810789b7d3915bfc15179991b59b16892df1eac9a9e719ac240eeb62"
+        },
+        {
+          "path": "packages/@expo/cli/src/prebuild/harmony/__tests__/prebuildHarmonyAsync-test.ts",
+          "sha256": "04d6ebcbc85085d850f533a651ccc727073de947829fb9b92a1c51979a31e4d0"
+        },
+        {
+          "path": "packages/@expo/cli/src/register/__tests__/registerAsync.test.ts",
+          "sha256": "c3035ebc9c2a1febe6291c1a001676b0d38ed2865d31aa84567b99f1f2fe1fb8"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/__tests__/ensureNativeProject-test.ts",
+          "sha256": "ee9f467c08dbeb3bcdfe149e36d330eff1ce0c69b7ad977f02b23c6bc08d8a5f"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/__tests__/resolveBundlerProps-test.ts",
+          "sha256": "9a300415466d92a2245554a4a7309f53318c6dbdeecbc4b36a6edab4a8eda46c"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/__tests__/startBundler-test.ts",
+          "sha256": "36ce9e2805907208d08a68849c608670e62dc00f8656aed097b1cdd43bc72412"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/android/__tests__/resolveDevice-test.ts",
+          "sha256": "5eb0d4dee9e98b91dc45899a7bf8af58f7c9dbefe029b27d59c9962a9110a44a"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/android/__tests__/resolveGradlePropsAsync-test.ts",
+          "sha256": "afa5fb9c0d3f630f45f1808167e4dcc5f373a44dfccf33e9ed1a263ca941bcce"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/android/__tests__/resolveInstallApkName-test.ts",
+          "sha256": "111084702b9ccc30356b184cdd9daa3fd12371b7b2449bdef0dc7c4f282fa56f"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/android/__tests__/resolveLaunchProps-test.ts",
+          "sha256": "aa976acbab040b50f30bd427c48300004e9b9db2b91a84d613d4c9078116b25f"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/android/__tests__/resolveOptions-test.ts",
+          "sha256": "c872a7a90614f49f69e192b1b6598bd66266799a072727d6a8e940695d49fe3b"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/android/__tests__/runAndroidAsync-test.ts",
+          "sha256": "73c9fc68352f70343662e7107b56e352a3760dba3869687329397317bd72bd35"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/harmony/__tests__/runHarmonyAsync-test.ts",
+          "sha256": "3ffeb26794556a0856e2581f57bc90564fb576e93c6331091f85bf00a7efa7d7"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/__tests__/launchApp-test.ts",
+          "sha256": "b0eb0cfca129a8a830a095a9293ce53cfbcbfd3518971a2cae4bf2376d60c45a"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/__tests__/runIosAsync-test.ts",
+          "sha256": "0040aaa476e1f995d4a37a01814e0caba670d0be128e5c105939ac6c4e302f36"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/__tests__/XcodeBuild-test.ts",
+          "sha256": "3a51ae2087d19104825844682a91d99e77685582deea6151b7e1a6e60293f0ef"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/appleDevice/__tests__/AppleDevice-test.ts",
+          "sha256": "0d594ebaf2a23264a327ea5afc478a99862c153313763b443d7ae3a7e8630cff"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/appleDevice/__tests__/installOnDeviceAsync-test.ts",
+          "sha256": "d1dc0b33b519b377f77c0d885b242427b81e46294316737b9e76a2739141411f"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/appleDevice/client/__tests__/AFCClient-test.ts",
+          "sha256": "0f10cbe49e6d3f50494f01b164a89428e820255bad77fd21354ff7f8fcc1c636"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/appleDevice/client/__tests__/DebugserverClient-test.ts",
+          "sha256": "42f89f99df04502eb264d691cbf5a3dd7439116bc172cfdcc50f975f4469dada"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/appleDevice/client/__tests__/UsbmuxdClient-test.ts",
+          "sha256": "5e0cd84dd460dbceae371ea942d37e5f6745f429700096178cb50c5ccd0fa4be"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/appleDevice/protocol/__tests__/GDBProtocol-test.ts",
+          "sha256": "dd1184cb01d51eb2d0e76fe258c884523682c785d8fde8d1b63d80a0b3dd360e"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/codeSigning/__tests__/resolveCertificateSigningIdentity-test.ts",
+          "sha256": "c028234a2b1019339b7140eb7df50fb295fc1302fbd8c23318f75f72c65c2909"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/codeSigning/__tests__/Security-test.ts",
+          "sha256": "0765379437f2b0c3788b417bc493b59b0c8e63a4fd340b0d18f5891857f26c5e"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/codeSigning/__tests__/simulatorCodeSigning.test.ts",
+          "sha256": "7e4943d3434da1e334e4d228a4104dfe43cafea8fbc6935cada82a9982d3cd91"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/codeSigning/__tests__/xcodeCodeSigning-test.ts",
+          "sha256": "8f061a2eaf31976a3c100ecf99a2745196f47d5cceb5a3b009a3b3ff1febcaf1"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/options/__tests__/appleDestinations.test.ts",
+          "sha256": "a1dcae2c16e0bcafdf5ab5acee4d04a666abdb051b3cd0dcd44e86d9d098be94"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/options/__tests__/promptDevice-test.ts",
+          "sha256": "b367aa80e98b82d875958477e6bb72510105416c945dd51f0931d8105b9f4a42"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/options/__tests__/resolveDevice-test.ts",
+          "sha256": "dd9c114f5e802edab088904434afa5ecac14aff684c312f52695c71fcc2c0dd8"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/options/__tests__/resolveNativeScheme-test.ts",
+          "sha256": "b9c9610ee40a9a0ccf971cb5690a8b140ce9ef6675a8fe496811ef5fa46dbc18"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/options/__tests__/resolveOptions-test.ts",
+          "sha256": "c11a3b02795dc45a73433ab55dd3e143ff4782dfbaba9cc4035cabdfaf1ae4b7"
+        },
+        {
+          "path": "packages/@expo/cli/src/run/ios/options/__tests__/resolveXcodeProject-test.ts",
+          "sha256": "c1882d5ca6f4ec2f61080d0d4a29587aa4a85f4ef2f7c1164105c82a1e4a66b4"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/__tests__/harmonyManagedStart-test.ts",
+          "sha256": "7e41fa4edf2748723e74dc89066c5797ff129eea7e2a7b45020b7a4f29dba15b"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/__tests__/resolveOptions-test.ts",
+          "sha256": "1deeb8834ea831ee488025fc94350e712d06ea87c3d2ce03ead26e9d9e7567c1"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/__tests__/Prerequisite-test.ts",
+          "sha256": "38cbf6b37826bf48fbcad4d85531c96341597bca27c858f7fa94da108af623d3"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/apple/__tests__/SimulatorAppPrerequisite-test.ts",
+          "sha256": "7ce1b6c1e5d1edcf1f094d1d1b4498604aed63d86804c72345549ea470a37a39"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/apple/__tests__/XcodePrerequisite-test.ts",
+          "sha256": "bf797d3d3cc09e9017050b6d06a86baab929fad799d266a15c835323b4158e4d"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/apple/__tests__/XcrunPrerequisite-test.ts",
+          "sha256": "47ee0a553f4a9bf8ed15f114bb8777a8f317b4640fc95facead8d03c5e123435"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/dependencies/__tests__/bundledNativeModules-test.ts",
+          "sha256": "088013026ef0e16ef7eef932dd3f8c5a6bcd1df6c95dae91a4e7875739d3faff"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/dependencies/__tests__/ensureDependenciesAsync-test.ts",
+          "sha256": "6c3dd4865c78e297626f450b324038eebaf2356db0cf91cedc0dfa32a04768d2"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/dependencies/__tests__/getMissingPackages-test.ts",
+          "sha256": "02e21100e0a73199cce92f8e7aadb5f851058c5fa54d928e6fcbe17d543f39af"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/dependencies/__tests__/getVersionedPackages-test.ts",
+          "sha256": "33ce9ec6ca2e88f8dc615c2d5b9c1a0d4b533ba352f163714f5182b3281bdbc4"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/dependencies/__tests__/resolvePackages.test.ts",
+          "sha256": "53a12451bb2eb8f7bd2ac3fa2167a8c120353fe448e84cbe13c2815d2545c8aa"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/dependencies/__tests__/validateDependenciesVersions-test.ts",
+          "sha256": "315ca3d6852996b536d4b83f702c83b992ee7e3c3c1649494fbe41edede8239d"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/ngrok/__tests__/ExternalModule-test.ts",
+          "sha256": "169e56d264843d082c2c4c131f18aed1139a741f786d98066f25b4e1f89af0a5"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/typescript/__tests__/TypeScriptProjectPrerequisite-test.ts",
+          "sha256": "5f29776659a14a72c05c4d209fb01ea6732296c41aef93dc2f91ff02cfc55150"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/typescript/__tests__/updateTSConfig-test.ts",
+          "sha256": "e0ad567585bd0f39cd1d87dbe02b7c6bc0ba6a3b51a3ae99057b3fe8e5578da8"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/doctor/web/__tests__/WebSupportProjectPrerequisite-test.ts",
+          "sha256": "f216da7559a41c1a71fb74edb240f3b8e114013c5546405d0f5618672547f86b"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/__tests__/AppIdResolver-test.ts",
+          "sha256": "be1b4761b3e6326a10b9561f9d7af4bb0509299d1681f3efe9f07e90e634ec0f"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/__tests__/ExpoGoInstaller-test.ts",
+          "sha256": "c29ba0af9c9ffc1812a0d6741f5b964fde075683cfc3288e17115c87fb3eb815"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/__tests__/PlatformManager-test.ts",
+          "sha256": "e9effd3bae8ed00d672a2b54b6e26e646a22caf617d042d851ed1cae1d3f7652"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/activateWindow-test.ts",
+          "sha256": "48b147b8bd05b68d7115b15c0ba2cee8f9de24e0bf9eff76353f174beab6cbbe"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/adb-test.ts",
+          "sha256": "2256ab7349d09e9d51fd03a8688bbe89dbf2e7ed3886de8919e4715eb09cb67e"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/adbReverse-test.ts",
+          "sha256": "2046f27d12c8910181932369a34c8a653a3d607abda6de91d44103b9de0ba4ee"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/ADBServer-test.ts",
+          "sha256": "70b8b83a1dda371ae5153dc94587b8be46308da1cbd8cff7ba4a1384148d434d"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/AndroidAppIdResolver-test.ts",
+          "sha256": "617294d328568270ea350c616de42aaa7bdaaa3eab884e38afafb25213a322ba"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/AndroidDeviceManager-test.ts",
+          "sha256": "fa600937fe5f9ca83a9541e7067c43a70ec89cd66da14c9df06f30e6ab407d59"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/AndroidPlatformManager-test.ts",
+          "sha256": "0ee41687c7c298dc16f1733b2bd12dd2d49c1a2b8ba82e3fbdf145a6b2ec7c7e"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/AndroidSdk-test.ts",
+          "sha256": "c3d9dc82c17769db63d5aabac1553aa30f8eacb4897bdb10e9a0be1f66bbc813"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/emulator-test.ts",
+          "sha256": "4096ca082d1b84134263389f8a613c7e326de1fc05347e20a4bc52be3de9b0ad"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/fixtures/adb-output.ts",
+          "sha256": "4d8fd86521c0dec4cfc7b2430a9fd49406f25c3fdfe82c82c9b9526ce84cb038"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/getDevices-test.ts",
+          "sha256": "465ea6d742bcbb844d2c635788fce189295d49875d7226f669dfa1fb080db383"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/gradle-test.ts",
+          "sha256": "ce589ee9373960cac9784ddc0a667756d4464152c9942171a903330c22214d4a"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/android/__tests__/promptAndroidDevice-test.ts",
+          "sha256": "6d4780653bd8f7c82c4da8f3c3d44a06e08d61c2a8007ede8e593c282d49fecb"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/ios/__tests__/AppleAppIdResolver-test.ts",
+          "sha256": "8bb59586d966a45381b5b325cc199813fad802338be67c0f7a4f0625aa352ec9"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/ios/__tests__/AppleDeviceManager-test.ts",
+          "sha256": "34d920978c64a5e94e38c689dac9427dfaf8e44aab9feb0843324351d7a8aafe"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/ios/__tests__/ApplePlatformManager-test.ts",
+          "sha256": "196fb98a4721a9e9dd59ebadf6be63f3f79b33adcbdf201f8f0cc0abe87e5dd2"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/ios/__tests__/devicectl.test.ts",
+          "sha256": "fa6afbc35141debe3d095d8e0cd6ead93479e517dd2357fd5ba822e0e35f5b6d"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/ios/__tests__/ensureSimulatorAppRunning-test.ts",
+          "sha256": "e827ef26cdbb6b069b77d46e06b404e98aabc745e39cbabc1dd9ec884ef071eb"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/ios/__tests__/getBestSimulator-test.ts",
+          "sha256": "e76cd0d610a4addeadef3a6965444308d09e851326462ba46c502a0930854c20"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/ios/__tests__/promptAppleDevice-test.ts",
+          "sha256": "331cb8f0689c7eb8e436ac18f10535d9e5ca896010dcb1eac5a73e1342d49673"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/ios/__tests__/simctl-test.ts",
+          "sha256": "43cc2526a4094239b87247b54c1675015c59bfa4aef2c2462cda8b1112e23363"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/platforms/ios/__tests__/xcrun-test.ts",
+          "sha256": "c1d33b4aa05f4b82f2575cc555d3986f46e8887aac20e29801aa1f07c8db2bf3"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/project/__tests__/devices-test.ts",
+          "sha256": "e7ecdd8c0c5c14440e9011c02cb3efa37e07e8f021dc6ea54757a6bc1cf18d3a"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/project/__tests__/dotExpo-test.ts",
+          "sha256": "3d54db54707a9fe5eb0183bc6a177725e8e831e91789cbed2e46ffb077ed0371"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/__tests__/AsyncNgrok-test.ts",
+          "sha256": "ff13369440fe4da7024adc8a9841ac20578e2b32e4695a6bef9dfba3808d98ec"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/__tests__/BundlerDevServer-test.ts",
+          "sha256": "330c762500415bb58d7f465d0c78ba74803fa387bbff898535ce4779a2072d31"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/__tests__/DevelopmentSession-test.ts",
+          "sha256": "58114e4dbbf04ce25ec325f96580c64affb35156f2cc2f6aebbbd4e4bfed704a"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/__tests__/MCP-test.ts",
+          "sha256": "3bc19de0fd3a650e509a3cebfe3a4c642f49b3aed38af389346a4b860e42843e"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/__tests__/openPlatforms-test.ts",
+          "sha256": "5bf5881abdeba63d2979c8b389166dcf6c8d4b32262fa54a0d395fbed2b567e4"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/__tests__/serverLogLikeMetro.test.ts",
+          "sha256": "68cb8186aec97b324c8b594c893d7aad449f5a81942abe2706baa32cbba3ce71"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/__tests__/UrlCreator-test.ts",
+          "sha256": "67f47390a72ddc3df8d411681ed191b2033ca48a8ade74d1926ad7769ef9b9bc"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/__tests__/webTemplate-test.ts",
+          "sha256": "340b0b850250e1d1b7edc8c0c8a1596267cdd772a451b1d9909c26e906825793"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/createExpoAutolinkingResolver.test.ts",
+          "sha256": "1bb69a9e6087c88c81399cc2ba2b60f595c7315de1d45d55f707a80bfbc8eb72"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/createExpoMetroResolver.test.ts",
+          "sha256": "1e790a13105173777305ee891fb34262b176eb9365ccb7fbd62de9c5f27a92b8"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/createServerRouteMiddleware.test.ts",
+          "sha256": "33f808cd64eaa74e03373b16a5ab4f7fb578f80dc61fd9c9c83b20dde9f56509"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/externals.test.ts",
+          "sha256": "9d9e6055f6b2a8adb0740f39e82c7eec714f01bc6b348098fa718b1d0cba17aa"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/fixtures/terminal-logs.ts",
+          "sha256": "6fe480c70fe41dccc310e8c021401f67ab143d1bb8fe9f3783c04f1e30946551"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/formatFileCandidates.test.ts",
+          "sha256": "c778538f3a79a1527b792c71f8c3966622b5175b6c0a7b92a94945b4b96976f0"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/getCssModulesFromBundler.test.ts",
+          "sha256": "f751b9c3f93852d83e6a19970dfdda7a83fb006f30d6f6e86abfdd60494c0034"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/instantiateMetro.test.ts",
+          "sha256": "995d8324f0083db14d7fc22b18eb3783d2c055c6dd1e43e6815fd765fc727c83"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/MetroBundlerDevServer-test.ts",
+          "sha256": "567520fdca285e8da4742168fac9c5a2f882efcd2ecb355691b81b8bbbc6dea7"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/metroErrorInterface.test.ts",
+          "sha256": "722c2b710689156668099e6fff72d5ed5f1d1c9063ab62ac8d6c15ca16a1a802"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/metroErrors.test.ts",
+          "sha256": "2e175c0894b92a74588c5a6d0abc1503ae1957358b89487b41aa49b9b2c1516c"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/MetroTerminalReporter-test.ts",
+          "sha256": "850eaee587af7691a9546a48a0fe859a9bc12a66311633ff63ad6d4d0dcb6860"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/metroWatchTypeScriptFiles.test.ts",
+          "sha256": "e04937ff513fbf11c12620fede2edc2475a9b36200ba36ee92afe0e37ada4047"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/router-test.ts",
+          "sha256": "b1bdadd1a1a4e3e3c6d964a08e9c021db2a2d6d2b506e085138c105438ef8dc5"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/serializeHtml.test.ts",
+          "sha256": "74bd98f4778f1de79465c57a39468f0fae19a2cdf33eccf81400aede018f315d"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/TerminalReporter-test.ts",
+          "sha256": "b5f5ab618efc7005401dd8d84d4e72f0172aaba13583c5d5f416ad3a322e4586"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/withMetroErrorReportingResolver.test.ts",
+          "sha256": "116ff327cd77a3bae38e74083dd9b873cd4cd413c802ad0f9dac5bc7da71298c"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/withMetroMultiPlatform.test.ts",
+          "sha256": "1557db0eaa20ad522962a2fde63c553d3d9c89a925038f4e9f4774d93b477e3c"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/withMetroResolvers.test.ts",
+          "sha256": "9694a22c4d55a50836a9725f0d915f02b11d090bfce6759471d3449c61f6d2fb"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/__tests__/withMetroSupervisingTransformWorker.test.ts",
+          "sha256": "2b33d43445ea7fdffbeae165c92901ea2a1853fc1f6c9f824ec9b3b07ce737b0"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/debugging/__tests__/createHandlersFactory.test.ts",
+          "sha256": "73a5d8b3f039516249b690f0e7f489afe5ccdad589cba4e19f5cb41e5f732646"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/debugging/__tests__/getDebuggerType.test.ts",
+          "sha256": "718a7c4938744c9ea281cd0ceb8d2f59a86cb8139b97dfc19e1fa2d7d0a19011"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/debugging/__tests__/mockConnection.ts",
+          "sha256": "313ace85d3adfc465b63c9519e9198ac2f51b07498e5086713b7e772e65739a9"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/debugging/__tests__/pageIsSupported.test.ts",
+          "sha256": "6db3dca9ff7041d2e68876de4503c86dd3f8f8bed77bc47aab278b596a851a97"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/debugging/messageHandlers/__tests__/NetworkResponse.test.ts",
+          "sha256": "b42dcd8963bed16be819506f88369e21f9e624c25396af0a49285fc1d88013d3"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/debugging/messageHandlers/__tests__/VscodeDebuggerGetPossibleBreakpoints.test.ts",
+          "sha256": "e11784641b107c540b10e754f07c9f6b7d9e960c856501fc6b122ea6ec3038ed"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/debugging/messageHandlers/__tests__/VscodeDebuggerSetBreakpointByUrl.test.ts",
+          "sha256": "3c8c8f599fc004ec4be5def90112af8911b5e3c488731124c14ce53533f59bbc"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/debugging/messageHandlers/__tests__/VscodeRuntimeCallFunctionOn.test.ts",
+          "sha256": "048785bf5c13b61b64cee36fee16e9a4dea72936f9ac6dc7767cbc0689fb88d6"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/debugging/messageHandlers/__tests__/VscodeRuntimeEvaluate.test.ts",
+          "sha256": "83817dc37d55139d51b7b3ca0297ea3633d3c3b295835791109549ad470a1868"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/debugging/messageHandlers/__tests__/VscodeRuntimeGetProperties.test.ts",
+          "sha256": "557e5c78ebe9b8f565f29795c52551df2d934ab11738e537feddcbb97baba9fc"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/dev-server/__tests__/createMessageSocket.test.ts",
+          "sha256": "43aff47e152d4518c7a9ae812c310a2f2b306591ee6f6feebc7d42f942984289"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/dev-server/__tests__/createMetroMiddleware.test.ts",
+          "sha256": "06172fcaded687d6c44686833e6311c547072417c2263d1723a3a0e8e798b3c4"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/metro/dev-server/__tests__/utils.ts",
+          "sha256": "7671e24f7341ccbec630cd9ba0453f97916eb6741301a9e1a75be3fbbac0fb10"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/ContextModuleSourceMapsMiddleware.test.ts",
+          "sha256": "304482bf2d51c27ce7e5bffa1b6969fc91d5377094d1027ea20602f1bc03fa03"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/CorsMiddleware-test.ts",
+          "sha256": "170728b753a454619292fc21cad414bacbc9df3858cbbe323af26c3daa7f2a3b"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/CreateFileMiddleware-test.ts",
+          "sha256": "8726eaed23d562c581055651cd35abc189350a2e1855996f9e3981845ff5de62"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/DevToolsPluginMiddleware-test.ts",
+          "sha256": "1844fd80580095d8385eab1f329fdb2deccefb14e8f6210a09c23f53066e3d19"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/DomComponentsMiddleware-test.ts",
+          "sha256": "b5b936349626fff0c28a189b3f93840435788fbaa58b030b29e43752a1ce12cd"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/ExpoGoManifestHandlerMiddleware-test.ts",
+          "sha256": "319cd4a9405b852c13cc2d3a7ac88e30ff37f03017ecd57a6369047257f4e8ee"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/ExpoMiddleware-test.ts",
+          "sha256": "114fa3fa4938776eb03670a8b87f68537b80ccba198cfe8299913437bd5a2252"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/FaviconMiddleware.test.ts",
+          "sha256": "c04bdccd2bcdc973674ed980f60845dff982c248a70cd1be5153374070b1e48c"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/HistoryFallbackMiddleware-test.ts",
+          "sha256": "6b0bb128fcf30592b7a989957ceab0a36d5895a753bc59692f05758dd098abc5"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/InterstitialPageMiddleware-test.ts",
+          "sha256": "4430c0fa11bf4b4cd39ec97cbc8916b3c259c72bb43f5039278cbe7d07440810"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/ManifestMiddleware-test.ts",
+          "sha256": "a6f59024ff5a623d10dc11c68975d941804947513624e0355f1619b178975dce"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/metroOptions.test.ts",
+          "sha256": "716a2331329e94a2f5ecf04cf9117b8564bf2ac5403b966ac77a82982bb51287"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/resolveAssets-test.ts",
+          "sha256": "f297c6762043e0a33e7aef5403787b956cac5168f52e78781af7e90b1463ec23"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/resolvePlatform-test.ts",
+          "sha256": "2fa5eb94f9f212598b887e324801a9f27fe21da44f6b54bbdfaaf33a94280c96"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/RuntimeRedirectMiddleware-test.ts",
+          "sha256": "3a186f38e9ed4dee70368b17285fda1072b5463e7856de0eae893e5d854677b6"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/__tests__/ServeStaticMiddleware-test.ts",
+          "sha256": "f760b7a93a1737c58e7c27981d7c8927c03475d2ac4e6172ec8e7207da7fe711"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/inspector/__tests__/CdpClient-test.ts",
+          "sha256": "fbdb85deec0d69a288b443992936c26e63fa917c0a7ac4835778fdfcfba0a81e"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/inspector/__tests__/createJsInspectorMiddleware-test.ts",
+          "sha256": "74cbb717549c6da801d624a2051c2e43b016fcaeda482f47cdc556e32181d34f"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/inspector/__tests__/fixtures/metroInspectorResponse.ts",
+          "sha256": "8fd5edc8b88e7ac0bab501dfccd72593241fedc5dee881ef9ac107e99d266599"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/middleware/inspector/__tests__/JsInspector-test.ts",
+          "sha256": "935f52c2c88e3d17c851df190abc18a1a33409872d01cb1dcbcc543959b834a3"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/type-generation/__tests__/routes.test.ts",
+          "sha256": "d332d8275b65d7d146d06a9bf7b7b6cc562a2d8423585d6b493460d633827746"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/type-generation/__tests__/startTypescriptTypeGeneration.test.ts",
+          "sha256": "550c8bf5da64ba6c197253f79a327fc7b1403af6b9c03be4c83fbcbd3ac74096"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/type-generation/__tests__/tsconfig.test.ts",
+          "sha256": "55240f7a8cf20a54aa300b03a024884e4c3e738681ac9b675f3f42a2059477bc"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/webpack/__tests__/compile-test.ts",
+          "sha256": "6141412da5907a4ce0fa22d17b67c2b5ac67aa335864971ad4d4f003144f87ea"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/webpack/__tests__/tls-test.ts",
+          "sha256": "367fa8a37766c32e25f3985e30fded8574bfa3aac6264de86306f42b2b39a7c1"
+        },
+        {
+          "path": "packages/@expo/cli/src/start/server/webpack/__tests__/WebpackBundlerDevServer-test.ts",
+          "sha256": "7885619154a1be7594b18ddcae0ca2a38a7745a14dd18a7534b0bbc0785af3dc"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/ansi-test.ts",
+          "sha256": "1f942cb7855fff6059d72341cd43a3539a2624f670b8c74366fb3b0194baa9b2"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/arg-test.ts",
+          "sha256": "c31670564747018276b8a5cabef2bd584a877ec4fb8180c84768fe8ba55451ca"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/array-test.ts",
+          "sha256": "7026c7491d919820dfb49a424d0ecaf12c0bd4e80c62d06186dfad16e93a7003"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/codesigning-test.ts",
+          "sha256": "fedacc88e30471274776a149c738baae715611fd8992ab8dfd5a01f16bfe1d2d"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/delay-test.ts",
+          "sha256": "868b0430e8d24237031369a194e25c0ee54666399dd8f20e5c237d29129ea858"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/downloadExpoGoAsync-test.ts",
+          "sha256": "31a66378813f7ca2efbec1bb637c8f1bfb57128d0c8e8f71d163e5dd312bdc3a"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/editor-test.ts",
+          "sha256": "3090112648a282497514f4b629a5b9b162b2c9e250646473c4e9afc6e2c09e83"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/env-test.ts",
+          "sha256": "c74699cd6581075d570ae5e42012e456d5540f91bff658fd6f41f378662f72ab"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/exit-test.ts",
+          "sha256": "a0ee42d5f0e2d9e8f845c19a0835e0080bd8b681eccaf0d749282be2f563756b"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/FileNotifier-test.ts",
+          "sha256": "58d255e1e9fd3d1607b9d18d77c6de7a38c3845a1c720d4344bbabc87ead6598"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/filePath-test.ts",
+          "sha256": "509ba781a01543ad80b9f8b21d7dc1130aa1eea08c4acba518652097fbe48e3b"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/findUp-test.ts",
+          "sha256": "f1a36482fdc6776fbadc46adba1cc8f934632e8f24b799d674f1ef919da36548"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/fixtures/certificates.ts",
+          "sha256": "f3704aa9a9e003853f60f559b0560f744e99d437c90506fc0aa662713cfad5fc"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/fixtures/exit-indefinite-process.js",
+          "sha256": "92329cf3975527011fe796b739ee95f029a6dfe900225553148f05f503a7a28e"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/fn-test.ts",
+          "sha256": "3a5f934ba0db99457f2685540f6bed1bfb08aac5a81c74bcdfcb6410725c6cf1"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/getRunningProcess-test.ts",
+          "sha256": "971d42b3ba1fd92b701dec63338aea07748002e179ffca7a77744e878ffc6be9"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/glob-test.ts",
+          "sha256": "e75a8693ec5c704e83667b07c72505fe2dcfba2bdf6d9a01ade78f3317727eca"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/mergeGitIgnorePaths-test.ts",
+          "sha256": "52f0749f8835e2c626f0261dc664c96b01ee1bdc4f8f1e623f8dbac47c1a4e14"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/multipartMixed-test.ts",
+          "sha256": "8a1af1542a54f11b3bbc7ef3e38e03bc5ed4dbcd2cbc7367c09e179a89120ed8"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/net-test.ts",
+          "sha256": "c5bae8cd85f95b6a518978479a423cbdf0cd2050329a7b8e0c489eb61fb8ecab"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/npm-test.ts",
+          "sha256": "aee5fa6b097f2282a578384ee6c7e3223326647fa5b2f0e8ae04a653a096097f"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/obj-test.ts",
+          "sha256": "084117710265136d06b07d17ed532aad3fc66953830095b04d7788e580adf38e"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/port.test.ts",
+          "sha256": "ba12f130d2ef97b920a097ae54eef24b4694e4cad4806a0b507105260920b594"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/profile-test.ts",
+          "sha256": "b09f5dc9adc46c4ba5d35023768b7cd821f03c2231b4de39230a5e75fde11112"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/prompts-test.ts",
+          "sha256": "3fa328fdeb2f8f26b6a82156e9743e19f572ddbf4f16810a7b2f0ed0022b97fd"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/resolveArgs-test.ts",
+          "sha256": "04d2adc2e3a39a347c2496428b54f7b8f4d6c35f52c732e847c897e3d6adaef4"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/scheme-test.ts",
+          "sha256": "313bfe0d294c4877d8e446f93cab09f85e9f0c4e45f7fb64cb205e68d75be9ab"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/strings-test.ts",
+          "sha256": "6ea05b030ab89c9fb66f98934d2e12029b3309a91a67eee8af2aa680110a3aef"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/tar-test.ts",
+          "sha256": "7edd81cfbc06016d477c9afa56325dff3a0d72172b59c778e15458f37f3ea541"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/template-test.ts",
+          "sha256": "81a958051c63767b35cb1387da4f93e4dacb7c79b5b9c4b3a961c9f24ccf06be"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/terminal-test.ts",
+          "sha256": "69bede64c9ae865d0f0c765b1e9918b3067fad237c9cd80627bc706de7e56f08"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/url-test.ts",
+          "sha256": "072f1ff6d32d49e6fdd38032c4183337a0e1b9327d216564d52b50f19fa97fae"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/validateApplicationId-test.ts",
+          "sha256": "c9473cc3db5cd804fd8f4c48fbde3b1186d362ddd5e6012189ebc3e42a339160"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/__tests__/variadic-test.ts",
+          "sha256": "78e5970bed8f0ce5f6753d464b502356e11957bcad40d6d7fd45658e91f1e0bc"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/telemetry/__tests__/index.test.ts",
+          "sha256": "6cc877cd228a57387f4f366ed0d0483167ba5549c2f4165e6f32e0d1235f6008"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/telemetry/__tests__/Telemetry.test.ts",
+          "sha256": "8c0de9c5d99a547ecf527fb31ce3b8b3d7a4a657fb4bddbbac709c8375b8a414"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/telemetry/clients/__tests__/FetchClient.test.ts",
+          "sha256": "22b280a8ef06cd2e60bde534cbd892f0d9d2f72b08e035137cd1a6753edc6c5b"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/telemetry/clients/__tests__/FetchDetachedClient.test.ts",
+          "sha256": "e4a6b1e497215cfc3b8d0a62aae8c57ded642f5112265d7666f3b8d9c4366d8f"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/telemetry/utils/__tests__/context.test.ts",
+          "sha256": "9e3de57befb92b0462da97d388bfd40572b72e9ed9f88243c4ad654335f6e18b"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/tsconfig/__tests__/loadTsConfigPaths.test.ts",
+          "sha256": "969cb64de47a4ec1071df806537c1ffb5966fba511d1b4b19be66897a77ca011"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/tsconfig/__tests__/matchTsConfigPathAlias.test.ts",
+          "sha256": "fc8503c8a3dd0f740e180a809c265750ee54b67fa5856d642c50242ccd316b83"
+        },
+        {
+          "path": "packages/@expo/cli/src/utils/tsconfig/__tests__/resolveWithTsConfigPaths.test.ts",
+          "sha256": "8a3151b4eed49b3e635b56a1d99080074dd7c524fa42c349f2dea0960570ae2d"
+        }
+      ],
+      "harmonyTests": []
+    },
+    {
+      "name": "@expo/metro-config",
+      "directory": "packages/@expo/metro-config",
+      "manifest": {
+        "path": "packages/@expo/metro-config/package.json",
+        "sha256": "194b7f0c473ae4ba493089841f331913073d536e8f3cf282b7fe38aa48bc453b"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test",
+        "typecheck": "expo-module typecheck"
+      },
+      "embeddedJest": null,
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/@expo/metro-config/babel.config.js",
+          "sha256": "f1d9471ad182b7dd547d82889bb85602983794d78cef97c56e0b8d033ff95ff2"
+        },
+        {
+          "path": "packages/@expo/metro-config/jest.config.js",
+          "sha256": "160ff732424ff65660ebc3877420d31a3db6d5749c94bc5461f56a2cadd6e563"
+        },
+        {
+          "path": "packages/@expo/metro-config/tsconfig.json",
+          "sha256": "d968fc805a51dcfadc236a5dd3e6476ab3212c338b635670999a9e8cd50b18ba"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/@expo/metro-config/src/__tests__/babel-transformer.test.ts",
+          "sha256": "423b27dc47a73c4993c4d8275cbf8744a6b4317958ae36324f9a3aa89f251082"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/__tests__/ExpoMetroConfig-test.ts",
+          "sha256": "0e57e7e31e1dd42a5258b7cde71a05a4f0ccc436f58c2e53bbbdc3a7e889937a"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/__tests__/rewriteRequestUrl.test.ts",
+          "sha256": "ff107e4c44de99188e40904529718dede07ea3da0d0922f232775c50d968589a"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/__tests__/withHarmony-test.ts",
+          "sha256": "32cb019c773ada91718d407b4370bb62c1290f9504f4c7a5102004225310a406"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/bundle-workers.test.ts",
+          "sha256": "c5dadf5266ce0dab21606cf136a1264f41263cc6ade8da06595565d181cff0a4"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/css.test.ts",
+          "sha256": "2deddf25409b1a990dbced401df9bab77ef47b14d24f7f386c54cdcd4da1d930"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/env-var-hmr.test.ts",
+          "sha256": "120f81c11b8bef4bed17ad88ea722834590435978088820e1e2b1ebf02796699"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/environmentVariableSerializerPlugin.test.ts",
+          "sha256": "b57281e18bc4e82e01e601b1600fa8a472d816327774334559d95184b74abec6"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/esm-support.test.ts",
+          "sha256": "6f1d2f77c7d8f697f4bc9464c194990a9ecf11c817e7f430823e4e89f75517bf"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/exportPath.test.ts",
+          "sha256": "2da043f731379dd2933123a85d187c43be82edd4ae2ee9630099445dbc2d9e10"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/getCssDeps.test.ts",
+          "sha256": "24a445d501e57897b66c7635d12c7d1bc67f837562209daf2ccaeba8c96321ac"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/import-tracing.test.ts",
+          "sha256": "ffa72c0eab4bef99d11dcb580286320f04c0811dcac89207b4a9eb69de5e2f7e"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/optimize-graph.test.ts",
+          "sha256": "a461f1307ceed93b453ce8aabc347cba5121184c96e61367fa5601490ac2d0a4"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/sideEffects.test.ts",
+          "sha256": "ef7d517c4b7e7578e6254c01b10a53682828c2d38ae563dc67aefd9effa4a387"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/tree-shaking.test.ts",
+          "sha256": "5d46ef4c9275cfddc4d9300c13f7de3481e19a08b134ce80434bcbec342c4985"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/__tests__/withExpoSerializers.test.ts",
+          "sha256": "85182c525fe1ec13ff00776885edd2ffd7c4819f395d4e9d9f8c9fe7e04146db"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/fork/__tests__/baseJSBundle.test.ts",
+          "sha256": "561e0141416f83b192995d81ab697ebe6af69bc2deb9f756234edfbc5c6f2fdf"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/fork/__tests__/js.test.ts",
+          "sha256": "faeb3c477a800a3e163362483716288a355b2e96a76c429486cfff72dacae2cd"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/fork/__tests__/mini-metro.test.ts",
+          "sha256": "a2ebb1011403b323a46639d169641b0a0bfe61b90f1eb15d3113b2cf8db6657b"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/fork/__tests__/mini-metro.ts",
+          "sha256": "3e859b23050dd7280c4e7e47d0bc1e8649866545954a8748bac72fb2a70ba56b"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/serializer/fork/__tests__/serializer-test-utils.ts",
+          "sha256": "d8a6678e42e450e23474694f907b9b46605e6d9312037bc4f8a6d553bf29a653"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/__mocks__/test-helpers-upstream.ts",
+          "sha256": "c737ee30e2304c84265132622f569b072e11df7295751bccf63c98fa416a8e2a"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/import-export-plugin-babel-loose-snapshots.test.ts",
+          "sha256": "39698abd54f57a8895c6b26d0272d75a57c0865bae2897440f1f408d01c4d9dd"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/import-export-plugin-babel-snapshots.test.ts",
+          "sha256": "5d32f3749d3c934e1fbdba62f5d248986e631a34cf12c01a707d3b4f5b4cc753"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/import-export-plugin-snapshots.test.ts",
+          "sha256": "f78cf8498b56b85953f914d363f15210c5bab53f2c2c3360c224e50f700addcf"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/import-export-plugin-upstream-live-bindings.test.ts",
+          "sha256": "c90a16ca21822121ffdf251b8b6f86e82df021a8ddb86d3b14a9fbc90538cd14"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/import-export-plugin-upstream.test.ts",
+          "sha256": "fbd6e80d56b499448e6965d94c86955f31868bfbe9855fe1b1b68fcdc0cd504c"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/import-export-plugin.test.ts",
+          "sha256": "e112eff69c763f6b938975e072ea264a0941471d86c084de54b690c1c1befad3"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/suite/class-properties.test.ts",
+          "sha256": "c52ab5747f169199d3813cd4da6ee41f9bfd8387ec59d7d91f89f58303b6a95f"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/suite/export-from.test.ts",
+          "sha256": "73a08b082d49c299432fcb0c71a4d0a917dbf0a65654dad73ac6c286ac089c57"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/suite/import-from.test.ts",
+          "sha256": "9254ab72052d156f8314675f67773620f8703bb9aa4ecd8577ee87c37eafb180"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/suite/import-interop-node.test.ts",
+          "sha256": "6b0bdb78e4a7f2d3033ae6b592c2cd25cbfd22182a67b6c07d2669800c52a4de"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/suite/interop.test.ts",
+          "sha256": "a2fa867220b90fc065586f8f4f3774e73d29128620eee6fc7ddcf49f18e63bb2"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/suite/misc.test.ts",
+          "sha256": "8920fd42a07f8625fef61c2518f9b9f5e2b9caba9af7f457d39dfa8c37b89320"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/suite/regressions.test.ts",
+          "sha256": "1a267aaf970eecaa82ec1b69943e699ae40334801fdce0f8dd39cbb67ab423ac"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/suite/update-expression.test.ts",
+          "sha256": "e2b80fcf61188f7026686a5051f4d1c933a7306914700e347614a8ebd592d092"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/suite/utils.ts",
+          "sha256": "4584a23815c8e213b31851c64a670dd7e952c0464dbf97b6f30da6ff5531a355"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-plugins/__tests__/utils.ts",
+          "sha256": "1d3f99beb4bd1571153eefd24f56a13d9d3d15023109a7cafce1112d1bd6887a"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-worker/__tests__/asset-transformer.test.ts",
+          "sha256": "af7cb05c3252eb582c1a38e23bd97abfdc13afa61d65496c7ee13f6b1346b2b0"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-worker/__tests__/collect-dependencies-upstream.test.ts",
+          "sha256": "4c1275341ea1683b33a513d748c8ef6386463ec5060f960c80f3e85f624cd9ed"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-worker/__tests__/css-modules.test.ts",
+          "sha256": "c19a70ffe8e117cefa50cb5bda76bac18b58778c2f66582f16cd7687b7da28fd"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-worker/__tests__/css.test.ts",
+          "sha256": "dd44bfcd3549def766c20ace2d27f7580149b6bdf824790dadaa45f6ecafc4b4"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-worker/__tests__/metro-transform-worker.test.ts",
+          "sha256": "9d54100989c62af98c67dc1d107cba298f28b007d352412ee27b7561db2e8308"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-worker/__tests__/postcss.test.ts",
+          "sha256": "3322067bd4e39da41c53b25d3e1b5da2c3fd30f77b9d66affdfe5c5c4487c2e9"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-worker/__tests__/resolveOptions.test.ts",
+          "sha256": "c2836b1a6f15eaad723cac193281cd7e2c705e79085f2057345cb11b7e2d35f1"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-worker/__tests__/transform-worker.test.ts",
+          "sha256": "1929943ff8c246cbe653dea7ac27bd8373969f0942abc6323d3163c8c056b891"
+        },
+        {
+          "path": "packages/@expo/metro-config/src/transform-worker/utils/__tests__/moduleMapper.test.ts",
+          "sha256": "cd0dc5eae49f36177107e7a60516db1784e00bc44a475fb3bb028bc5132fa1c1"
+        }
+      ],
+      "harmonyTests": []
+    },
+    {
+      "name": "expo",
+      "directory": "packages/expo",
+      "manifest": {
+        "path": "packages/expo/package.json",
+        "sha256": "bf637cf91a45e6daf3275d78ff228d20646f9c6809303b9da8a2fce94dc7c037"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test"
+      },
+      "embeddedJest": {
+        "preset": "expo-module-scripts"
+      },
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo/expo-module.config.json",
+          "sha256": "d7fb50f7b76db7d8c28a305db5a115256d6e6103aa68131e3dd6dfdc1e7ccbd2"
+        },
+        {
+          "path": "packages/expo/tsconfig.base.json",
+          "sha256": "0fc4ac4a9b973dc5d4d3e93e884337e30a2c2ddeece41ff3d81772d4d3af680b"
+        },
+        {
+          "path": "packages/expo/tsconfig.json",
+          "sha256": "9db5b6c2bd9925d8858a9f7c29e1e0937592294086d80677c984b3257cd425c9"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo/src/__tests__/__fbBatchedBridgeConfig-test.ts",
+          "sha256": "c68ed615245f4ec91376e82da173b1582bb307979e9f7a73e0d0e9ab5211d217"
+        },
+        {
+          "path": "packages/expo/src/__tests__/url-builtin.test.native.ts",
+          "sha256": "d433176e1dfc816009fce93188056e537032b2d55ae8a4ba8b454d958d37a709"
+        },
+        {
+          "path": "packages/expo/src/async-require/__tests__/buildAsyncRequire.test.ts",
+          "sha256": "d5acf1775bf88d705e3b740ff281b1aff0ed28d08a07d90368726ad76485440e"
+        },
+        {
+          "path": "packages/expo/src/async-require/__tests__/buildUrlForBundle.test.native.ts",
+          "sha256": "6bab76ec01f1c58d97c4e600570bec25cc9ea19f719caf91392b6f3cd433f9fc"
+        },
+        {
+          "path": "packages/expo/src/async-require/__tests__/buildUrlForBundle.test.web.ts",
+          "sha256": "21999d5ad1428c541ed37e453425fbe4ca2799c919871fec0b2be39aa57fa6c7"
+        },
+        {
+          "path": "packages/expo/src/async-require/__tests__/fetchAsync.test.web.ts",
+          "sha256": "04bda8d26d4f3d7ce78a7c5f752e4067baa520ffbe1e89cc5dab12eb59d2d04a"
+        },
+        {
+          "path": "packages/expo/src/async-require/__tests__/loadBundle.test.ios.ts",
+          "sha256": "dfc6d126a6877be54579fddbf4d86be5ea9bc37b4c7f4910672c374a2ceea692"
+        },
+        {
+          "path": "packages/expo/src/async-require/__tests__/loadBundle.test.web.ts",
+          "sha256": "36ad2b79ed8b2bdbcd40b5318e3439c21bd374aae7e041ae2c8d7396c2bf0bd6"
+        },
+        {
+          "path": "packages/expo/src/dom/__tests__/base-test.ts",
+          "sha256": "05a4404cf4252e4326bd45c4a010a72eee8ec83441674757772cf4653ea68b16"
+        },
+        {
+          "path": "packages/expo/src/dom/__tests__/webview-wrapper-test.ts",
+          "sha256": "223a077d304afb8e41bbb69e8d2c442f6f85931ebe2b1a2e0801f132965ac35b"
+        },
+        {
+          "path": "packages/expo/src/winter/__tests__/FormData.test.ios.ts",
+          "sha256": "b8f9a5ea08ad36d3fa8fa4e0cb892318a68949680d8de77ccd8458192e829a61"
+        },
+        {
+          "path": "packages/expo/src/winter/__tests__/structuredClone.test.ios.ts",
+          "sha256": "a8e4e0be2446efb22fa64757e6163061c3cfaf4d856d4c3f8bef701fb1633ed5"
+        },
+        {
+          "path": "packages/expo/src/winter/__tests__/TextDecoder.test.native.ts",
+          "sha256": "6b5b3cc2481915881884b76c735333e5c2d102252e36f533e9963ccda7a81c07"
+        },
+        {
+          "path": "packages/expo/src/winter/__tests__/TextDecoderStream.test.ios.ts",
+          "sha256": "2d83ad9d84a8f39e30fd3ea848bfe8d3ab17cfec13ff290392a9cb45436e57e0"
+        },
+        {
+          "path": "packages/expo/src/winter/__tests__/TextEncoderStream.test.ios.ts",
+          "sha256": "e4b7e0abbe96e31f4960c2fb0068636afd542b1c619bf7faaecd87de1430dca2"
+        },
+        {
+          "path": "packages/expo/src/winter/fetch/__tests__/convertFormData-test.native.ts",
+          "sha256": "a5bd040a92d91625f1ed7ecdd896ece1be0fee38230070ebde503f32a796416e"
+        },
+        {
+          "path": "packages/expo/src/winter/fetch/__tests__/RequestUtils-test.ts",
+          "sha256": "474db6f763270b91023a968efaad3e77cbe632fc8cdcdb329115cc0617826c9d"
+        }
+      ],
+      "harmonyTests": []
+    },
+    {
+      "name": "expo-asset",
+      "directory": "packages/expo-asset",
+      "manifest": {
+        "path": "packages/expo-asset/package.json",
+        "sha256": "9bae36fa2829a82385091cf5386a685d612641369e4b90f85920a4a911fc2094"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test",
+        "test:rsc": "jest --config jest-rsc.config.js"
+      },
+      "embeddedJest": {
+        "preset": "expo-module-scripts"
+      },
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-asset/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo-asset/expo-module.config.json",
+          "sha256": "74be80806c81c6caf6f21a2abf1634f0f456af782088e5b6926bfb71a43636cc"
+        },
+        {
+          "path": "packages/expo-asset/harmony/example/native/cpp/CMakeLists.txt",
+          "sha256": "fac3060e5b4e2d91a591854c0a4f22a433ebcdc6416e34ba0e67534b7607b974"
+        },
+        {
+          "path": "packages/expo-asset/harmony/src/main/cpp/CMakeLists.txt",
+          "sha256": "07b0812d0bb1ad654ae3387042d1385b461840110e69572389c1bfed0d8676dd"
+        },
+        {
+          "path": "packages/expo-asset/harmony/tests/rnoh/CMakeLists.txt",
+          "sha256": "0d49e6ac3e1acc18d5c10a90f8ef09e96c5b5a7accb8f127e7d5b2eb536579c9"
+        },
+        {
+          "path": "packages/expo-asset/plugin/tsconfig.json",
+          "sha256": "6ba8dc179547322fcfe81d0a5ba9dcd2a13212867cfaf78c694c31a646f52d78"
+        },
+        {
+          "path": "packages/expo-asset/tsconfig.json",
+          "sha256": "1bee0b49bb5ed6e088eedebbb0ad6ea3784bfcba66b674819b718ed726c35322"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-asset/harmony/example/server-smoke.test.mjs",
+          "sha256": "cbfb4cd4ab723fd48642debeab57f3d2478d60d7a8a83be041c8f0177c0cb234"
+        },
+        {
+          "path": "packages/expo-asset/harmony/tests/asset-cache.test.mjs",
+          "sha256": "da6be96cea82173a06e6953a86000543a0f88434650261304605ab04be48fc61"
+        },
+        {
+          "path": "packages/expo-asset/harmony/tests/asset-lifecycle.test.cjs",
+          "sha256": "e5e5190fdec6fd52b7e478be2d4aeb7004b60506c17ddab536614a1cf4df90a6"
+        },
+        {
+          "path": "packages/expo-asset/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "ac32aa80767d14d0c3e2bde7b7c4c86b91cf8fa8ecc94030f6106b37171cc069"
+        },
+        {
+          "path": "packages/expo-asset/src/__rsc_tests__/index.test.ts",
+          "sha256": "1c797b1684eca1d938165dabdf74be2398d14cb4a648d40652f4535443ae3d53"
+        },
+        {
+          "path": "packages/expo-asset/src/__tests__/Asset-test.ts",
+          "sha256": "4b8d76963e617d30f3d93925c1b94eb276838becf2ea66da70dc26fc0dbc54fb"
+        },
+        {
+          "path": "packages/expo-asset/src/__tests__/AssetHooks-test.ts",
+          "sha256": "c675edf34f136c0f9c31e436f02454d5ff74bda6a9e7a8f7aa2d67be1cb76bfa"
+        },
+        {
+          "path": "packages/expo-asset/src/__tests__/AssetSourceResolver-test.web.ts",
+          "sha256": "18c3f7b2c32e55537591bf5a52bb481956aab6c44d3ddf3f0fcb53a6510dc1a7"
+        },
+        {
+          "path": "packages/expo-asset/src/__tests__/AssetSources-test.ts",
+          "sha256": "64f1ae8363f1f86c5c81a3e0c5540410e4d2fd34a4465f12e59b1e4105d326b2"
+        },
+        {
+          "path": "packages/expo-asset/src/__tests__/AssetUris-test.ts",
+          "sha256": "d7630e290968d4667d8da6ff28bb932fabd829dc48dcfee5913cd8ad53795ca1"
+        },
+        {
+          "path": "packages/expo-asset/src/__tests__/ImageAssets-test.ts",
+          "sha256": "524a979cc8c1909344a7e308a2c020b50c81e4bd610ae9a1b5affc672608279f"
+        },
+        {
+          "path": "packages/expo-asset/src/__tests__/LocalAssets-test.native.ts",
+          "sha256": "5e226bf688fc3ba48cfbc732e24756a26f25405ab487a8beb5d5b7ffdd77e5a9"
+        }
+      ],
+      "harmonyTests": [
+        {
+          "path": "packages/expo-asset/harmony/example/server-smoke.test.mjs",
+          "sha256": "cbfb4cd4ab723fd48642debeab57f3d2478d60d7a8a83be041c8f0177c0cb234"
+        },
+        {
+          "path": "packages/expo-asset/harmony/tests/asset-cache.test.mjs",
+          "sha256": "da6be96cea82173a06e6953a86000543a0f88434650261304605ab04be48fc61"
+        },
+        {
+          "path": "packages/expo-asset/harmony/tests/asset-lifecycle.test.cjs",
+          "sha256": "e5e5190fdec6fd52b7e478be2d4aeb7004b60506c17ddab536614a1cf4df90a6"
+        },
+        {
+          "path": "packages/expo-asset/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "ac32aa80767d14d0c3e2bde7b7c4c86b91cf8fa8ecc94030f6106b37171cc069"
+        }
+      ]
+    },
+    {
+      "name": "expo-constants",
+      "directory": "packages/expo-constants",
+      "manifest": {
+        "path": "packages/expo-constants/package.json",
+        "sha256": "2bafc7f66c49b5a77b7f2a8918af1f6f3aa51ac19c457a86e8062eefd6a8aebb"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test",
+        "test:rsc": "jest --config jest-rsc.config.js"
+      },
+      "embeddedJest": {
+        "preset": "expo-module-scripts"
+      },
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-constants/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo-constants/expo-module.config.json",
+          "sha256": "9ab1ab2cfa926026d867bed49d2369927c6a343d5c965c1fed6f983c149d18ad"
+        },
+        {
+          "path": "packages/expo-constants/harmony/src/main/cpp/CMakeLists.txt",
+          "sha256": "736068e0721c75feaafc6fc245717a684316bf73429d9866e5034c4f45bba82f"
+        },
+        {
+          "path": "packages/expo-constants/harmony/tests/rnoh/CMakeLists.txt",
+          "sha256": "6f186bab76c0eb78e9dcb343feefcbec336df1608cd8adf06d1911053582600b"
+        },
+        {
+          "path": "packages/expo-constants/scripts/jest.config.js",
+          "sha256": "433dcedb39151ad017fed28a6537ef9637417cbb0d61ce3332c871fb2531ec02"
+        },
+        {
+          "path": "packages/expo-constants/scripts/tsconfig.json",
+          "sha256": "6ba8dc179547322fcfe81d0a5ba9dcd2a13212867cfaf78c694c31a646f52d78"
+        },
+        {
+          "path": "packages/expo-constants/tsconfig.json",
+          "sha256": "1bee0b49bb5ed6e088eedebbb0ad6ea3784bfcba66b674819b718ed726c35322"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-constants/harmony/tests/constants-data.test.mjs",
+          "sha256": "bf0f851ff3ecd5e2475b2af119123169b4b6e468a256964517695bd788975a8d"
+        },
+        {
+          "path": "packages/expo-constants/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "a5b106337450a39beb46e57d4074feee1e0ee49d3b754e72b335de18957a34bc"
+        },
+        {
+          "path": "packages/expo-constants/scripts/__tests__/getAppConfig-test.ts",
+          "sha256": "802926e6d4905ea32c154551c853c5b9f18ec59d70326b3bfdade0889807a8ab"
+        },
+        {
+          "path": "packages/expo-constants/src/__rsc_tests__/Constants.test.ts",
+          "sha256": "e030c7422c12739fd92b83a1d0e20a5b4d7d71b344d2c6365856d0d80214df87"
+        },
+        {
+          "path": "packages/expo-constants/src/__tests__/Constants-test.ts",
+          "sha256": "655eadb47de0b521624c61c651c83fb7281e7d271d9c633fa2f236c0c75a04e7"
+        }
+      ],
+      "harmonyTests": [
+        {
+          "path": "packages/expo-constants/harmony/tests/constants-data.test.mjs",
+          "sha256": "bf0f851ff3ecd5e2475b2af119123169b4b6e468a256964517695bd788975a8d"
+        },
+        {
+          "path": "packages/expo-constants/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "a5b106337450a39beb46e57d4074feee1e0ee49d3b754e72b335de18957a34bc"
+        }
+      ]
+    },
+    {
+      "name": "expo-font",
+      "directory": "packages/expo-font",
+      "manifest": {
+        "path": "packages/expo-font/package.json",
+        "sha256": "b88b55a4bc1c3b454c2673795572d8e35df42cc3b6610c9d3cbfadf279880e73"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test",
+        "test:plugin": "expo-module test plugin",
+        "test:rsc": "jest --config jest-rsc.config.js"
+      },
+      "embeddedJest": {
+        "preset": "expo-module-scripts"
+      },
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-font/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo-font/expo-module.config.json",
+          "sha256": "5ce328d40b9be6d2592ffe2844b47bead1a6e123f2686ff5c670aad024ae2df7"
+        },
+        {
+          "path": "packages/expo-font/harmony/src/main/cpp/CMakeLists.txt",
+          "sha256": "43521c64073990840d090e23a088b43c536c1334ccf4321b574bb0f11e15b945"
+        },
+        {
+          "path": "packages/expo-font/harmony/tests/rnoh/CMakeLists.txt",
+          "sha256": "ff77aad4b41cbba2bc4c956a738cfca78de8a70dce9a3d154fd95d57be8f292e"
+        },
+        {
+          "path": "packages/expo-font/plugin/tsconfig.json",
+          "sha256": "6ba8dc179547322fcfe81d0a5ba9dcd2a13212867cfaf78c694c31a646f52d78"
+        },
+        {
+          "path": "packages/expo-font/tsconfig.json",
+          "sha256": "1bee0b49bb5ed6e088eedebbb0ad6ea3784bfcba66b674819b718ed726c35322"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-font/harmony/tests/font-file.test.mjs",
+          "sha256": "e8eaa3a4487257a171fe073d56e59c17e73243f590b96738b3d424649fb97b8e"
+        },
+        {
+          "path": "packages/expo-font/harmony/tests/font-lifecycle.test.cjs",
+          "sha256": "298cabce5ee091b0a82f240cc3ad6fc8d10cc184b9bc135913d0db3595707107"
+        },
+        {
+          "path": "packages/expo-font/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "441fc39d7ad0fd4e10d0972f36c9de710d4f254352a72847f1fe907034fb0735"
+        },
+        {
+          "path": "packages/expo-font/plugin/src/__tests__/utils-test.ts",
+          "sha256": "dffdb68ad5a9daf25d59f09079837091593dc25ac3bdc6be7db145e8b391dacd"
+        },
+        {
+          "path": "packages/expo-font/plugin/src/__tests__/withFontsAndroid-test.ts",
+          "sha256": "7554f01a78c6e6f973a9301d91f2bec2e00572e5b11ff387d14a0b08c1a2c605"
+        },
+        {
+          "path": "packages/expo-font/src/__rsc_tests__/index.test.ts",
+          "sha256": "96a8c335bfd3635615f0a26f22e33fb1ba158059f1e39853b77ff589d51108d8"
+        },
+        {
+          "path": "packages/expo-font/src/__tests__/Font-test.native.ts",
+          "sha256": "7df9ffed53ab47aa32672b0607615f95527e4b1ffcf8b1944dac1197d5b3516c"
+        },
+        {
+          "path": "packages/expo-font/src/__tests__/Font-test.node.ts",
+          "sha256": "b16751d8e54755dbafdf21fdd1daeca2f0ed7589b3fa469d2af3f3bab5b5c230"
+        },
+        {
+          "path": "packages/expo-font/src/__tests__/Font-test.web.ts",
+          "sha256": "e8c41598583f2deca6455970c087592a303297b3891cef55cf311bbe272558fe"
+        },
+        {
+          "path": "packages/expo-font/src/__tests__/FontHooks-test.ts",
+          "sha256": "14feadc307a98e602242b98da3046f49accafe9212a180294ac6b82737b3b4e1"
+        },
+        {
+          "path": "packages/expo-font/src/__tests__/FontLoader-test.web.ts",
+          "sha256": "50ef34935e5b92564463162dff15883f754e0016c3a61678f94f2264e4637cc6"
+        }
+      ],
+      "harmonyTests": [
+        {
+          "path": "packages/expo-font/harmony/tests/font-file.test.mjs",
+          "sha256": "e8eaa3a4487257a171fe073d56e59c17e73243f590b96738b3d424649fb97b8e"
+        },
+        {
+          "path": "packages/expo-font/harmony/tests/font-lifecycle.test.cjs",
+          "sha256": "298cabce5ee091b0a82f240cc3ad6fc8d10cc184b9bc135913d0db3595707107"
+        },
+        {
+          "path": "packages/expo-font/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "441fc39d7ad0fd4e10d0972f36c9de710d4f254352a72847f1fe907034fb0735"
+        }
+      ]
+    },
+    {
+      "name": "expo-linking",
+      "directory": "packages/expo-linking",
+      "manifest": {
+        "path": "packages/expo-linking/package.json",
+        "sha256": "b8a26a9f6d831d24d5ce327a86d697d2caa8e17f99c3d3ddd20e2bdd605b3c63"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test",
+        "test:rsc": "jest --config jest-rsc.config.js"
+      },
+      "embeddedJest": {
+        "preset": "expo-module-scripts"
+      },
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-linking/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo-linking/expo-module.config.json",
+          "sha256": "b4031eaf448409ba133fea3769140f651291df958c9939a92c20231f1f0c9099"
+        },
+        {
+          "path": "packages/expo-linking/harmony/example/native/entry/src/main/cpp/CMakeLists.txt",
+          "sha256": "2918621b48725e332958fe923f846776074c5f8d88534ee3f401178a95f1c581"
+        },
+        {
+          "path": "packages/expo-linking/harmony/src/main/cpp/CMakeLists.txt",
+          "sha256": "dde4faac34ee9a179e84f9704ff65fffd05f866f2d1b4144f05c35dc1b45eaa4"
+        },
+        {
+          "path": "packages/expo-linking/tsconfig.json",
+          "sha256": "a364bdfa9528ac931e230c71a21bfb84adb84826978f5d0f113562c9d7b51235"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-linking/harmony/tests/linking-lifecycle.test.mjs",
+          "sha256": "fb5f0f4bf323980464d0429803d57a686a5d3ea5c236792196b376be8b1de1ab"
+        },
+        {
+          "path": "packages/expo-linking/harmony/tests/open-url.test.mjs",
+          "sha256": "da3450f97dc487526a39e018a752655b4e4260e61ccd1580f8466b8afeb695a4"
+        },
+        {
+          "path": "packages/expo-linking/src/__rsc_tests__/Linking.test.ts",
+          "sha256": "4781efa9e5bbe4e9b9da7390267db245784b5ab7921591e258108799bb62f726"
+        },
+        {
+          "path": "packages/expo-linking/src/__tests__/Linking-test.ts",
+          "sha256": "af0ef1cfb45a430bb6e58507652490e315fbef265a89be234a26e73561e8c42e"
+        },
+        {
+          "path": "packages/expo-linking/src/__tests__/Linking-test.web.ts",
+          "sha256": "c912514a17d86b293014adb2a66dff6103b8191ab608526435c548914f60648f"
+        },
+        {
+          "path": "packages/expo-linking/src/__tests__/Schemes-test.native.ts",
+          "sha256": "f1726c06652137970c7d993f8ac5fcb25f10db06daf3701605564915d940b5c3"
+        }
+      ],
+      "harmonyTests": [
+        {
+          "path": "packages/expo-linking/harmony/tests/linking-lifecycle.test.mjs",
+          "sha256": "fb5f0f4bf323980464d0429803d57a686a5d3ea5c236792196b376be8b1de1ab"
+        },
+        {
+          "path": "packages/expo-linking/harmony/tests/open-url.test.mjs",
+          "sha256": "da3450f97dc487526a39e018a752655b4e4260e61ccd1580f8466b8afeb695a4"
+        }
+      ]
+    },
+    {
+      "name": "expo-modules-autolinking",
+      "directory": "packages/expo-modules-autolinking",
+      "manifest": {
+        "path": "packages/expo-modules-autolinking/package.json",
+        "sha256": "f958f2dceca8998560d18b0cee90590834fe92cffc0c2680883719be32bbd169"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test"
+      },
+      "embeddedJest": null,
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-modules-autolinking/babel.config.js",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/jest.config.js",
+          "sha256": "5be2402748decd981dcb880650cd54e457712318aea06f672239566847cf099f"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/jest.setup.ts",
+          "sha256": "7a8839bc6a4c58ebc1fd46c1f05886148a9301389bebbe0546bc6e42a21bb152"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/templates/harmony/entry/src/main/cpp/CMakeLists.txt",
+          "sha256": "6b32492ced2238639e825cd48dd4c183ae5fdb787485fc531e63a8845979d9ae"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/tsconfig.json",
+          "sha256": "893289eda8de1f4d98adbd766d63ecb23b1a8b5f6cc72fd0847a5a3d6a7aba55"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-modules-autolinking/e2e/__tests__/monorepo-test.ts",
+          "sha256": "5d563fa204fbb8caf8de5b7c1a217be17d3b4c01656edbb07b92814938ffd3a6"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/__tests__/utils.test.ts",
+          "sha256": "f142560d2b2b9053760db0b1057a8a95c67f45d237cbabeeb4e96eab1fe26164"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/autolinking/__tests__/findModules-test.ts",
+          "sha256": "1b226ee71a30978571a83a755fe9e69ee1274a0779e24f57611995e98331ec79"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/dependencies/__tests__/CachedDependenciesLinker-test.ts",
+          "sha256": "b56a3f4320d2628292ece51e35cc2a322e8f1bde111710a81c89698eecec94ac"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/dependencies/__tests__/resolution-test.ts",
+          "sha256": "424af72d5857abc13f2be8d175ec8ca2f6577c57a4ac76ebd68e48efebef3285"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/dependencies/__tests__/rncliLocal-test.ts",
+          "sha256": "e4a00997da23bed13ca9415444c9f2ae6e39dda86b753f35e6ca8aef4b3ccaaa"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/dependencies/__tests__/scanning-test.ts",
+          "sha256": "538423f892bd20ed15388ca39a196a6ea243b6c982bce92def48c82b26e78bbf"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/dependencies/__tests__/utils-test.ts",
+          "sha256": "9c7db6b3b0a9f2313ef0e04b638b4cd773ab45c1c7da9b00307c59c3f1550669"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/platforms/__tests__/android-test.ts",
+          "sha256": "2932885bb7dbf27244944f52b4bb7e9e0f4ce8269920e384f64052d94ea3fdde"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/platforms/__tests__/apple-test.ts",
+          "sha256": "93410df25f6d68782f082dc080497a9885fed75b61ce10cc64c159b709079be5"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/platforms/__tests__/devtools-test.ts",
+          "sha256": "9bfa27b388e98b2590fb0fb5a3d974853b70e865d28d5a1e91a8ab462ded0572"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/platforms/__tests__/harmony-cli-test.ts",
+          "sha256": "b812c29f827081b36247749652550b8bca90e13f60c67ec3c69d97b046e9f5f9"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/platforms/__tests__/harmony-first-party-test.ts",
+          "sha256": "0cf0f8f6742ca3425c486294a33ab74dc79fcb912380f303f9e345d23826d07a"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/platforms/__tests__/harmony-native-project-test.ts",
+          "sha256": "55a10225620fb836e8c4b01e58a20dcddf94685f98885bbfde280185a27c00e0"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/platforms/__tests__/harmony-native-template-test.ts",
+          "sha256": "2c2612f98b57f2d763099938cdcd818220ab795f08b248a0ceff598f5393430a"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/platforms/__tests__/harmony-rnoh-compat-test.ts",
+          "sha256": "ea3e3dc0eb2e579ee7fecd0af58098dcac5fb3f3154d6f861fa491eb63578bcc"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/platforms/__tests__/harmony-test.ts",
+          "sha256": "4c37dc6d717ecdac2e0b0c62b0b08a21ca18824d4fa046810fa5e20edd7aeb7f"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/reactNativeConfig/__tests__/androidResolver-test.ts",
+          "sha256": "4ab1601ab2339eb4eaa7c0652967a7fbc596de9745071eb8693aa9b44051e45c"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/reactNativeConfig/__tests__/config-test.ts",
+          "sha256": "a359e8c060e825624a552990695ba79dbfbde2e5cb4bbd467a3d7c7d2a834046"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/reactNativeConfig/__tests__/iosResolver-test.ts",
+          "sha256": "9be0878658d00b7d8bf8a1f581e7591f51a8945e7700e14aefa2340aceba67f4"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/reactNativeConfig/__tests__/reactNativeConfig-test.ts",
+          "sha256": "9d49097014031cf53798e3fb004700363ac6dbd1e94db84aeb533d111721e939"
+        },
+        {
+          "path": "packages/expo-modules-autolinking/src/reactNativeConfig/__tests__/webResolver-test.ts",
+          "sha256": "b876887baa732deac9c6fb538adcbba6c13bcd559c91eb4f799940b19fabed65"
+        }
+      ],
+      "harmonyTests": []
+    },
+    {
+      "name": "expo-modules-core",
+      "directory": "packages/expo-modules-core",
+      "manifest": {
+        "path": "packages/expo-modules-core/package.json",
+        "sha256": "c2a5d13378197839aebe257984df1891daedaac905bf6c8fdd4f7faaec46bc16"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test"
+      },
+      "embeddedJest": {
+        "preset": "expo-module-scripts"
+      },
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-modules-core/android/CMakeLists.txt",
+          "sha256": "dd47e659a17ab2a4f189386ed7fb12a4016a82b13cc7b8392b1ea0bf9070112a"
+        },
+        {
+          "path": "packages/expo-modules-core/android/src/fabric/CMakeLists.txt",
+          "sha256": "33d88cd769ffd5bb848c7bc35a0c3b8bcbc7f8cd3877624efafb12b4f2039080"
+        },
+        {
+          "path": "packages/expo-modules-core/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo-modules-core/expo-module.config.json",
+          "sha256": "d7c83cd20f3c587158ac6bc93f1aea2116cb30c032f7c9d0db1b105ae8da5720"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/host/harmony/entry/src/main/cpp/CMakeLists.txt",
+          "sha256": "c6aeeb541bcd3325ceda59d64fe8d25f90924cbc5100151afab3037186fd9f89"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/i0/CMakeLists.txt",
+          "sha256": "c32cabf28847f945361c002018f7dea0a252c95b855605d2797d98f7f18b12c3"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/native/CMakeLists.txt",
+          "sha256": "4afee786ae6ddcdac9d665f7c047d2a58999a2d200254ea50cf9ab470ba6d7bc"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/src/main/cpp/CMakeLists.txt",
+          "sha256": "ecd947065e8a6ca9ffd0f988578c348212f19481e051942bccb53d1dad004ae1"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/tests/CMakeLists.txt",
+          "sha256": "7c9a97395314f912ad472dc6a9b78356011b6e80b69a6fcb42f0ceea11191e8e"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/tests/rnoh/CMakeLists.txt",
+          "sha256": "61557bf06db73b9aff9a4a55053d0b0738c3c38808193d4e844599055d9fbcaa"
+        },
+        {
+          "path": "packages/expo-modules-core/tsconfig.json",
+          "sha256": "10c9bb7d8264375081cae903640869c57287259b0ee05a054424e656f1f2a7ec"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-modules-core/harmony/example/font/server-smoke.test.mjs",
+          "sha256": "b832b27bce3fecaf04bb9d4a2f1f6df7957180dc199be7e4e29fa54b321e13e1"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/host/harmony/entry/src/ohosTest/ets/test/List.test.ets",
+          "sha256": "fe9fc94cba936a49dfbe4ddaa8c10f0d0d95a77ae1d87fb71a58642a680ff3eb"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/device-log.test.cjs",
+          "sha256": "b257029b5a8ff95f2c469f1b04e2826b99de1cc8c423df0fac6bada128266946"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/fixture-tools.test.cjs",
+          "sha256": "26a4be09eb584c1a46d6b39f8faeebdd29c2aee8c5313cc1a1a29e4bc691d14a"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/font-device-log.test.cjs",
+          "sha256": "ad9a844188eeda6da25c77875dfb507ac1798f31e0db5da29e128ea355d13ee8"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/font-fixture.test.cjs",
+          "sha256": "8125477f13fe0bafa6b28f07e8c30990170f54ba60be4ab823518c485f1579b8"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/i0-assets.test.cjs",
+          "sha256": "3890ac6ea09fc60a7bc78fee9ec2e9666831a1a3231bbbf56ffa4eb144c5721b"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/i0-device-log.test.cjs",
+          "sha256": "964cb8b88968a0b2210821e0cd875f84679c4828af44f36e1bde09304131eba7"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/i0-fixture.test.cjs",
+          "sha256": "5c4bd627566f88cfe1d7eb29aeb62e1a624e642484b044569e8a2df40c98bba2"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/linking-device-log.test.cjs",
+          "sha256": "542b868a5f688454ddef6139da9da08509f704fa7e705a256cc72f838a18e4ab"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/linking-fixture.test.cjs",
+          "sha256": "6861c0a7d8cb8fb0b3dfb793ad75c14b30abc0646d7514c76c6840006712c715"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/metro-config.test.cjs",
+          "sha256": "65ced13a0b3899398c362f7ebcf1dce082c201b4b54ffebafb3490ca27e4fa4e"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/rnoh-compat.test.py",
+          "sha256": "1110007c7f5c6fe0057d7eb8a4f6ad1ec6bf3ba493483dbca7cf29577ece0d38"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/router-fixture.test.cjs",
+          "sha256": "dfb865087e058ca2a19ff073456a55982adc24c33627c2659e2616fe1b22e37c"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/screens-artifact.test.py",
+          "sha256": "cad2ddef1272c806dc43f759c179f7e2c99138342684e4eeb642676a3b7f17a3"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/startup-entry.test.cjs",
+          "sha256": "88731b79bc4cd30b4d060ef0c5c1c62f5f45eb2374c9e40188c923bf5ceedf85"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/status-bar-device-log.test.cjs",
+          "sha256": "b087a56a118db1c9b5a8b996ed4bc056d917eb1ee6ecb9251b6801164b427337"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/status-bar-fixture.test.cjs",
+          "sha256": "5dd321bd96fe1f93e94620df050e7815fa93f8d0a67fffec9dd601d02efc6339"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/verify-install.test.cjs",
+          "sha256": "9d9cd1be6d9cc2119cb818418672c281cfe3a95c0919b60b8fb1657ca54c222d"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/version-generation.test.cjs",
+          "sha256": "383c729d2aef3af953480f8a6ff251e5c349d3b61979e719665b76df89ca4d14"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/view-lifecycle.test.cjs",
+          "sha256": "1c1e054695093202152da92d5114b6784f3ea858496f1c9d7d13fc67c9287cfc"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/worklets-artifact.test.py",
+          "sha256": "0dc1c55c48164a18cec2721771db1d135ae3e401be19ca845bf619fed630aa64"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/tests/AsyncTest.cpp",
+          "sha256": "958774dcf5348d1a6b8ec3a79814533991810d76ae4ea8e1891f7a895e873897"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "fbeabb53171d60af1004df318357f67ef763b3dfa20cc22a779b99c9b5746656"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/tests/RuntimeTest.cpp",
+          "sha256": "d397295f646079e6844a26d19b3be1567c9fc7a3849766c2338d596bee49bc5b"
+        },
+        {
+          "path": "packages/expo-modules-core/src/__rsc_tests__/index.test.ts",
+          "sha256": "4bbb8bdaa6c0215dd579359963a102cd3ec4de25cfba7e2ff08ead42511f7224"
+        },
+        {
+          "path": "packages/expo-modules-core/src/__tests__/core-module/EventEmitter-test.ts",
+          "sha256": "928a4bede4c0d2a76c8843846a56e876cb51320798ec4099e8c119ba277b89c5"
+        },
+        {
+          "path": "packages/expo-modules-core/src/__tests__/Errors-test.ts",
+          "sha256": "85e2fc4d95fbda1b72a5b79bb190e667658bea0ba0426b8f0f8138ab7089271f"
+        },
+        {
+          "path": "packages/expo-modules-core/src/__tests__/NativeModulesProxy-test.native.ts",
+          "sha256": "845b91ba3a8905c663ba6674fed03978541e50846da36b694866a16532cce789"
+        },
+        {
+          "path": "packages/expo-modules-core/src/__tests__/NativeViewManagerAdapter-test.native.tsx",
+          "sha256": "f5f6320d103b7f90c30c28e0d4eb99e6211a8d56e74538e7535e5cfa44a66fd3"
+        },
+        {
+          "path": "packages/expo-modules-core/src/__tests__/PermissionsHook-test.ts",
+          "sha256": "e8872137ae46c0de447cafaa3c5a783e00b1bb6423f42b42729951d4b2035b72"
+        },
+        {
+          "path": "packages/expo-modules-core/src/__tests__/Platform-test.ts",
+          "sha256": "ef5ed69ec29d03bb012126d29797bb1f781c2dbf62a098db9fb91414ba931bed"
+        },
+        {
+          "path": "packages/expo-modules-core/src/__tests__/Refs-test.ts",
+          "sha256": "16e5fcb1b477eed8988ecfae74eb5a5b7c59ff5e90281baa51c42f04a17b36b9"
+        }
+      ],
+      "harmonyTests": [
+        {
+          "path": "packages/expo-modules-core/harmony/example/font/server-smoke.test.mjs",
+          "sha256": "b832b27bce3fecaf04bb9d4a2f1f6df7957180dc199be7e4e29fa54b321e13e1"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/host/harmony/entry/src/ohosTest/ets/test/List.test.ets",
+          "sha256": "fe9fc94cba936a49dfbe4ddaa8c10f0d0d95a77ae1d87fb71a58642a680ff3eb"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/device-log.test.cjs",
+          "sha256": "b257029b5a8ff95f2c469f1b04e2826b99de1cc8c423df0fac6bada128266946"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/fixture-tools.test.cjs",
+          "sha256": "26a4be09eb584c1a46d6b39f8faeebdd29c2aee8c5313cc1a1a29e4bc691d14a"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/font-device-log.test.cjs",
+          "sha256": "ad9a844188eeda6da25c77875dfb507ac1798f31e0db5da29e128ea355d13ee8"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/font-fixture.test.cjs",
+          "sha256": "8125477f13fe0bafa6b28f07e8c30990170f54ba60be4ab823518c485f1579b8"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/i0-assets.test.cjs",
+          "sha256": "3890ac6ea09fc60a7bc78fee9ec2e9666831a1a3231bbbf56ffa4eb144c5721b"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/i0-device-log.test.cjs",
+          "sha256": "964cb8b88968a0b2210821e0cd875f84679c4828af44f36e1bde09304131eba7"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/i0-fixture.test.cjs",
+          "sha256": "5c4bd627566f88cfe1d7eb29aeb62e1a624e642484b044569e8a2df40c98bba2"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/linking-device-log.test.cjs",
+          "sha256": "542b868a5f688454ddef6139da9da08509f704fa7e705a256cc72f838a18e4ab"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/linking-fixture.test.cjs",
+          "sha256": "6861c0a7d8cb8fb0b3dfb793ad75c14b30abc0646d7514c76c6840006712c715"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/metro-config.test.cjs",
+          "sha256": "65ced13a0b3899398c362f7ebcf1dce082c201b4b54ffebafb3490ca27e4fa4e"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/rnoh-compat.test.py",
+          "sha256": "1110007c7f5c6fe0057d7eb8a4f6ad1ec6bf3ba493483dbca7cf29577ece0d38"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/router-fixture.test.cjs",
+          "sha256": "dfb865087e058ca2a19ff073456a55982adc24c33627c2659e2616fe1b22e37c"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/screens-artifact.test.py",
+          "sha256": "cad2ddef1272c806dc43f759c179f7e2c99138342684e4eeb642676a3b7f17a3"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/startup-entry.test.cjs",
+          "sha256": "88731b79bc4cd30b4d060ef0c5c1c62f5f45eb2374c9e40188c923bf5ceedf85"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/status-bar-device-log.test.cjs",
+          "sha256": "b087a56a118db1c9b5a8b996ed4bc056d917eb1ee6ecb9251b6801164b427337"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/status-bar-fixture.test.cjs",
+          "sha256": "5dd321bd96fe1f93e94620df050e7815fa93f8d0a67fffec9dd601d02efc6339"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/verify-install.test.cjs",
+          "sha256": "9d9cd1be6d9cc2119cb818418672c281cfe3a95c0919b60b8fb1657ca54c222d"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/version-generation.test.cjs",
+          "sha256": "383c729d2aef3af953480f8a6ff251e5c349d3b61979e719665b76df89ca4d14"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/view-lifecycle.test.cjs",
+          "sha256": "1c1e054695093202152da92d5114b6784f3ea858496f1c9d7d13fc67c9287cfc"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/example/tests/worklets-artifact.test.py",
+          "sha256": "0dc1c55c48164a18cec2721771db1d135ae3e401be19ca845bf619fed630aa64"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/tests/AsyncTest.cpp",
+          "sha256": "958774dcf5348d1a6b8ec3a79814533991810d76ae4ea8e1891f7a895e873897"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "fbeabb53171d60af1004df318357f67ef763b3dfa20cc22a779b99c9b5746656"
+        },
+        {
+          "path": "packages/expo-modules-core/harmony/tests/RuntimeTest.cpp",
+          "sha256": "d397295f646079e6844a26d19b3be1567c9fc7a3849766c2338d596bee49bc5b"
+        }
+      ]
+    },
+    {
+      "name": "expo-router",
+      "directory": "packages/expo-router",
+      "manifest": {
+        "path": "packages/expo-router/package.json",
+        "sha256": "1c737f6c62386a3a4691ed48cd9b32d0309997ba0093d34ee5011ab99367e329"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test",
+        "test:rsc": "jest --config jest-rsc.config.js",
+        "test:tsd": "EXPORT_ROUTER_JEST_TSD=true expo-module test"
+      },
+      "embeddedJest": null,
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-router/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo-router/expo-module.config.json",
+          "sha256": "fe22ce1ab8d15dd0876734bef1f19f0b4a77fbc4fe56e1833d4572d8db9c7ec1"
+        },
+        {
+          "path": "packages/expo-router/jest.config.js",
+          "sha256": "6f3dc0ce74bd4fa90d4a950127cdf7fe5e648700420b912cfb9c249bd010baa2"
+        },
+        {
+          "path": "packages/expo-router/plugin/jest.config.js",
+          "sha256": "8624c03b70e20a400a6b23335e45d21db7a5be71948f9071a292b4daa82b507a"
+        },
+        {
+          "path": "packages/expo-router/plugin/tsconfig.json",
+          "sha256": "6ba8dc179547322fcfe81d0a5ba9dcd2a13212867cfaf78c694c31a646f52d78"
+        },
+        {
+          "path": "packages/expo-router/tsconfig.json",
+          "sha256": "96d7f9b29f9ac721f2fc77eb7ed0fea580630661ad4c74d3410cd9bce487f99e"
+        },
+        {
+          "path": "packages/expo-router/tsconfig.test.json",
+          "sha256": "d563a3b30632027b4717e7e4cf8a2a7de6414056096c221fa4dbdf4d5456bbf0"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-router/harmony/tests/context.test.mjs",
+          "sha256": "181934a7525103b3d5d9be5d1275009ce6a8f97c102cb41e71c37573701204a9"
+        },
+        {
+          "path": "packages/expo-router/harmony/tests/native-dismiss.test.cjs",
+          "sha256": "981d860b2979a5903460e946d4ef0785863058f7ed25e9d6f1af868c2a887fc3"
+        },
+        {
+          "path": "packages/expo-router/harmony/tests/platform-routes.test.cjs",
+          "sha256": "bd3b146a54ffd4fd9a58f5274e6a01df5a29e73c95d5bb0b7542e264080af9cd"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/+native-intent.test.ios.tsx",
+          "sha256": "8463336e9be1e98a0fa2a30d389768ae287dba980690ce7ee34d4b2e88b9505a"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/custom-navigators.test.ios.tsx",
+          "sha256": "922f7f24fb16756dbd396e1698dabeb680085922d280c068141f70ae7df78054"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/dismissTo.test.ios.tsx",
+          "sha256": "b1a9bb73a1bd5cee4840f80953350b8b1aaec21341571fac89d38c764a89f669"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/getId.test.ios.tsx",
+          "sha256": "52396ebe021597baf68684c689164f401e2f4ccbdbcef4c15a4fde0f4ef3c06d"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/getReactNavigationConfig.test.ios.ts",
+          "sha256": "637103e7efc569431e1038ec7f46daf831cfc17f508184464c4b737d01554bb0"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/getRoutes.test.ios.ts",
+          "sha256": "122896ad0d43b1c1af834ec7acec4cd0011d9f912763c3a4099eddd2dcec18a4"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/getRoutes.test.web.ts",
+          "sha256": "3a486dd601d6218f45a611a8ddb10cd84e6dff87693b54f086c6a53e8160411b"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/getServerManifest.test.ios.ts",
+          "sha256": "434e848831ef10d3d190efa1be0fa1f8b65fc6582fd1841303a034e70bf839a7"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/hashs.test.ios.tsx",
+          "sha256": "433f086f4a388c026aa6cc4044c42f7781b9cc9ad5ab258c781957aaebbec9a0"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/headless-tabs.test.ios.tsx",
+          "sha256": "048dd0d7fad9343c1a10332cb45e73549af30271002ac9a43faa91b67d0ddd92"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/hooks.test.ios.tsx",
+          "sha256": "9c983df4e6a9644deb8b49c305fa73b3f4da1bbbfb67de084d287f491ec79b8f"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/initialRouteName.test.ios.tsx",
+          "sha256": "9f246749af95c132b990e948b394526c227c937a95077faed95155f1e7faa630"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/loadStaticParamsAsync.test.ios.ts",
+          "sha256": "0c29b81796e3f1c70d2f875c708095b00fbbfde13a7ccdd018011de459240f16"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/LocationProvider.test.ios.ts",
+          "sha256": "a6d501e6e6345ab683da58c80a0ca54d7a76a5693465dc28aa23833bdae834dd"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/matchers.test.ios.ts",
+          "sha256": "723b0be6c95cd905771739b1993c09a9a623105920dd106d4503765e7ed681e2"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/modal-filter.test.web.ts",
+          "sha256": "04168048c6444a2d1e61b68b88128ff77b8fd32ab52b218dac6b30dfec63207b"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/modal-stack.test.ios.tsx",
+          "sha256": "28da9f294d1e2e996cb99c1341f2331b5804c8a13ab983ae52c467cd1cbd76ba"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/navigation.test.ios.tsx",
+          "sha256": "63318fa8eb34e71bdf4902a7d11c960c3f58664edce1de6df180f49bce07522f"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/navigationParams.test.ios.tsx",
+          "sha256": "8b82033f81325f43a3c78f2c4164c29918f8566e0fe95acad5eaac545f95db9d"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/platform-routes.test.android.tsx",
+          "sha256": "c8f187deaaf9aa71b93f079db70bd5cc5c1377492c41576edd32f1010f18842a"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/platform-routes.test.ios.tsx",
+          "sha256": "f24213ede820be011d1dadccd7b56afd8d03999d9dd1b0c1607be4b25c98c81d"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/platform-routes.test.node.ts",
+          "sha256": "f0a2a517e603dec8fb86570cf7cc566a46dada57a088a3d9fecc784228037ad6"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/platform-routes.test.web.ts",
+          "sha256": "997f69f56c6148d28e30990dcaccf63aeb2288a911b2170c14819a34520beabc"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/prefetch.test.ios.tsx",
+          "sha256": "9039a58b960bed903f5c439a59da157e1d9e9111ce030d800c3baaaec30f66ae"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/protected.test.ios.tsx",
+          "sha256": "f0e6418ce59df0afcd844be7fc829913c3e62b2f4a14c7d44eebe2f82a71498a"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/push.test.ios.tsx",
+          "sha256": "a5e16d9664ea8511b7b50f36fffaa9429db56f7d301db33122264c2440208837"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/redirects.test.ios.tsx",
+          "sha256": "b0979f9afbd94a3f64a1a736b2cbf8d1850c2d2b65160a9672330c8e815bd18f"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/require-context-ponyfill.test.node.ts",
+          "sha256": "0fb1079c0fdbb5ccd15e6002ada6d56f4ac9d729ed7d5585641a7d72097b82d7"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/Route.test.ios.ts",
+          "sha256": "dd5e07c5e3a3405fb65d425ad9768f9fa096b0d98fd153520c7568cb584eb5ed"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/search-params.test.ios.tsx",
+          "sha256": "cc8f7bcf0617821c6688184d6c7ee280e7b2b736ea3c88eb9128821f2f7bf78e"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/sitemap.test.ios.tsx",
+          "sha256": "ad11217f506bb1304a5ebdefd6479f60d5bf269e1d18cd58a517a8371611a926"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/smoke.test.android.tsx",
+          "sha256": "944de793cad8045453d6ef49d9d48289b80bd16a00dd5d1c7dbdc69bc1140a53"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/smoke.test.ios.tsx",
+          "sha256": "3bf6ac5c9ea3c4e25c4ccb312498f4010070c64ea2b4b0219b2a38710586ad4b"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/stacks.test.ios.tsx",
+          "sha256": "5bc3564c801acb9d036a4cfe68c1284b838e453c44f2e3d93004c0dadc2e52ed"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/tabs.test.ios.tsx",
+          "sha256": "d15cc7167d6c586d9beb7f772026ce1153c957b27cb352c0f845e02f6001b470"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/testing-library.test.ios.tsx",
+          "sha256": "5f28ab369a3564871f9d31212cf8934cf5f479d1cfd187a2310926fd2190a108"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/useFocusEffect.test.ios.tsx",
+          "sha256": "66c9151a51148c330f660e24fc18f2746219d910ac9d9c85f7d277577f3b9ce9"
+        },
+        {
+          "path": "packages/expo-router/src/__tests__/useNavigation.test.ios.tsx",
+          "sha256": "4b95b441ee4b1df2046f4ed59dcaaff894120f4b42d8f365e00c17ec2f02f5bd"
+        },
+        {
+          "path": "packages/expo-router/src/fork/__tests__/extractPathFromURL.test.ios.ts",
+          "sha256": "55c813d8d61832a79ba64ddcaeaf70b83f607cca0a41af48bcf10719ac738f5b"
+        },
+        {
+          "path": "packages/expo-router/src/fork/__tests__/getPathFromState-upstream.test.web.ts",
+          "sha256": "42aef2f86989003b7164de255d85faf2fefcb9399df50c332670936bb31b5301"
+        },
+        {
+          "path": "packages/expo-router/src/fork/__tests__/getPathFromState.test.web.ts",
+          "sha256": "e8c4589cc46afe96c39857d58e39a3d8a844005a9e90e1f37191c6d151111a13"
+        },
+        {
+          "path": "packages/expo-router/src/fork/__tests__/getStateFromPath-upstream.test.web.ts",
+          "sha256": "fec86e664710d0aa03f1a6536861c39e1e99fdd89b1c9211e16fea6a2d6d677e"
+        },
+        {
+          "path": "packages/expo-router/src/fork/__tests__/getStateFromPath.test.web.ts",
+          "sha256": "8176c267255c908948fd869e64bde974756c2643e65d5019200fc3ea08b004ea"
+        },
+        {
+          "path": "packages/expo-router/src/layouts/__rsc_tests__/Stack.test.tsx",
+          "sha256": "0f6df086a5124961dd9c40a0e971c4ec1ac9b1e6135f1485011f4ed03abd6fe4"
+        },
+        {
+          "path": "packages/expo-router/src/link/__rsc_tests__/Link.test.tsx",
+          "sha256": "d3717d2a0cc32ba85d2a9cc3ebf26b389787d0c113eb46b7c62307d13377bbf9"
+        },
+        {
+          "path": "packages/expo-router/src/link/__tests__/href.test.web.ts",
+          "sha256": "610fc6016e717d59776717a85aad8c9d87a236b2d09f1f5fd17e6b2908c26aaf"
+        },
+        {
+          "path": "packages/expo-router/src/link/__tests__/Link.test.ios.tsx",
+          "sha256": "aa8a865ebaf4469691940a0650087b3ed83c7385b66b721b662eec1a9e404a77"
+        },
+        {
+          "path": "packages/expo-router/src/link/__tests__/Link.test.web.tsx",
+          "sha256": "469c2bd5efc4204fd57eb2c8c31317c6c0abc5bcb76ef71c8658929f33b27402"
+        },
+        {
+          "path": "packages/expo-router/src/link/preview/__tests__/HrefPreview.test.ios.tsx",
+          "sha256": "7350849a2f8ae64163d7859a4d6bf877b3344c47e2775a33a6833f36bb44c09f"
+        },
+        {
+          "path": "packages/expo-router/src/link/preview/__tests__/utils.test.ios.tsx",
+          "sha256": "bba1d4e04e0a553d2a5007b0bffdf6d0f92dd2e6c6b081b0d81ed348111ae078"
+        },
+        {
+          "path": "packages/expo-router/src/native-tabs/__rsc_tests__/tabs.test.tsx",
+          "sha256": "92dbe87b67fbad53e7ebf9963f178c8e9f1eef6438ad460a1aeebaa1f508dda5"
+        },
+        {
+          "path": "packages/expo-router/src/native-tabs/NativeBottomTabs/__tests__/appearance.test.ios.tsx",
+          "sha256": "8fa44d10286a8baf418650e8fab1661df3f80e3aab6629e2c75dd8ab30807cbc"
+        },
+        {
+          "path": "packages/expo-router/src/native-tabs/NativeBottomTabs/__tests__/NativeTabsView.test.web.tsx",
+          "sha256": "c11c502ff40bfdb607fec15101e9be0dd9c8476490cfbd2ec668fad4bd63b94a"
+        },
+        {
+          "path": "packages/expo-router/src/native-tabs/NativeBottomTabs/__tests__/navigation.test.ios.tsx",
+          "sha256": "d017e3a3224968492c26a8df7cec25b40967d8bf606c31382f1fccdde5c24933"
+        },
+        {
+          "path": "packages/expo-router/src/native-tabs/NativeBottomTabs/__tests__/options.test.android.tsx",
+          "sha256": "14007be29c56ab309361969ab58bcd3bc8c69c894be348cebb96914a9802be88"
+        },
+        {
+          "path": "packages/expo-router/src/native-tabs/NativeBottomTabs/__tests__/options.test.ios.tsx",
+          "sha256": "66cf2a1873efa5f6a455605b0ee34e78869e38f414109914b9a3e8a06ce26c99"
+        },
+        {
+          "path": "packages/expo-router/src/native-tabs/NativeBottomTabs/__tests__/render.test.ios.tsx",
+          "sha256": "1c0024db4ce42a8c852d55ee17123b20b6bbbe75ce79a89707a7f1859a0bbb9f"
+        },
+        {
+          "path": "packages/expo-router/src/native-tabs/NativeBottomTabs/__tests__/utils.test.ios.ts",
+          "sha256": "b92992872d7da0045328da3bdbc40c9f61c62ecb4c74ac3f490a2ae8085c3b9c"
+        },
+        {
+          "path": "packages/expo-router/src/typed-routes/__tests__/default-types.tsd.ts",
+          "sha256": "3be67df79552023b859ba50f1f662008d2f887e7e56c70ab72b7d91c8a73afc6"
+        },
+        {
+          "path": "packages/expo-router/src/typed-routes/__tests__/fixtures/default.d.ts",
+          "sha256": "9f1a54b275876af1ec26d1b59041f02c3b9da6f778b1ba6b7c87e68712a9d052"
+        },
+        {
+          "path": "packages/expo-router/src/typed-routes/__tests__/fixtures/partialGroups.d.ts",
+          "sha256": "313b8fef12c593d8d026770e1265a6e01462ab57270a6bce69cdb6afe89e686c"
+        },
+        {
+          "path": "packages/expo-router/src/typed-routes/__tests__/partial-groups.tsd.ts",
+          "sha256": "05a53a1e957ef7a6a105359ca76e04b468cfeda7c404a4351c59de7e6be2b051"
+        },
+        {
+          "path": "packages/expo-router/src/typed-routes/__tests__/type-generation.node.ts",
+          "sha256": "983732756871221dfb53508f2fe2ae7050ce470a99c96e9620d127b53d13f5a9"
+        },
+        {
+          "path": "packages/expo-router/src/utils/__tests__/url.test.web.ts",
+          "sha256": "1a3c039dc65acead8016cc64a1d8840575fd192d2bb8ef20f35af59e86373918"
+        },
+        {
+          "path": "packages/expo-router/src/views/__rsc_tests__/views.test.tsx",
+          "sha256": "24dcc65446e422e365611d2f19755a4783df75031444c66390d17399cb3155c8"
+        },
+        {
+          "path": "packages/expo-router/src/views/__tests__/Screen.test.ios.tsx",
+          "sha256": "d1b6f7fede87ca4f99d8578c53105c91e5225278ab6af1465c8194de110aaf1a"
+        },
+        {
+          "path": "packages/expo-router/src/views/__tests__/Unmatched.test.ios.tsx",
+          "sha256": "581be203124ba6bd3e3725a85ca57455f52611c8c88ccc6587b71acad1c0d06f"
+        },
+        {
+          "path": "packages/expo-router/tsconfig.test.json",
+          "sha256": "d563a3b30632027b4717e7e4cf8a2a7de6414056096c221fa4dbdf4d5456bbf0"
+        }
+      ],
+      "harmonyTests": [
+        {
+          "path": "packages/expo-router/harmony/tests/context.test.mjs",
+          "sha256": "181934a7525103b3d5d9be5d1275009ce6a8f97c102cb41e71c37573701204a9"
+        },
+        {
+          "path": "packages/expo-router/harmony/tests/native-dismiss.test.cjs",
+          "sha256": "981d860b2979a5903460e946d4ef0785863058f7ed25e9d6f1af868c2a887fc3"
+        },
+        {
+          "path": "packages/expo-router/harmony/tests/platform-routes.test.cjs",
+          "sha256": "bd3b146a54ffd4fd9a58f5274e6a01df5a29e73c95d5bb0b7542e264080af9cd"
+        }
+      ]
+    },
+    {
+      "name": "expo-splash-screen",
+      "directory": "packages/expo-splash-screen",
+      "manifest": {
+        "path": "packages/expo-splash-screen/package.json",
+        "sha256": "3e259b6503d8c15853c6fd0671d7fd370515384eb5b9dd2ae5f3e12df0fad88a"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test"
+      },
+      "embeddedJest": null,
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-splash-screen/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo-splash-screen/expo-module.config.json",
+          "sha256": "e6b789feecee381d5bf8dfebd0b558b2b2d4917febba0d34a14cc192f357430d"
+        },
+        {
+          "path": "packages/expo-splash-screen/harmony/src/main/cpp/CMakeLists.txt",
+          "sha256": "1689f38b2bff2de74f981988c295869c2ff0ff7882feecb91cca9885c4e3988b"
+        },
+        {
+          "path": "packages/expo-splash-screen/harmony/tests/rnoh/CMakeLists.txt",
+          "sha256": "644cb463a0a0211388642cde2d19414c7c0a9802270c8c241bc71b1008e7892b"
+        },
+        {
+          "path": "packages/expo-splash-screen/plugin/tsconfig.json",
+          "sha256": "6ba8dc179547322fcfe81d0a5ba9dcd2a13212867cfaf78c694c31a646f52d78"
+        },
+        {
+          "path": "packages/expo-splash-screen/tsconfig.json",
+          "sha256": "1bee0b49bb5ed6e088eedebbb0ad6ea3784bfcba66b674819b718ed726c35322"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-splash-screen/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "659a0d5bd15de8b4aca32ba2b9299dacd67031df03a175393e93c6f8974abef3"
+        },
+        {
+          "path": "packages/expo-splash-screen/harmony/tests/splash-screen-controller.test.mjs",
+          "sha256": "14ee93a30964e0be7a4ef47f119c3c0669057dd8a500949c9a795ffa2e677eb4"
+        },
+        {
+          "path": "packages/expo-splash-screen/harmony/tests/splash-screen-module.test.cjs",
+          "sha256": "ad7bbe50afacdeef1a714e55dda14530398f5e1c9db65498275b799d30c83394"
+        }
+      ],
+      "harmonyTests": [
+        {
+          "path": "packages/expo-splash-screen/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "659a0d5bd15de8b4aca32ba2b9299dacd67031df03a175393e93c6f8974abef3"
+        },
+        {
+          "path": "packages/expo-splash-screen/harmony/tests/splash-screen-controller.test.mjs",
+          "sha256": "14ee93a30964e0be7a4ef47f119c3c0669057dd8a500949c9a795ffa2e677eb4"
+        },
+        {
+          "path": "packages/expo-splash-screen/harmony/tests/splash-screen-module.test.cjs",
+          "sha256": "ad7bbe50afacdeef1a714e55dda14530398f5e1c9db65498275b799d30c83394"
+        }
+      ]
+    },
+    {
+      "name": "expo-status-bar",
+      "directory": "packages/expo-status-bar",
+      "manifest": {
+        "path": "packages/expo-status-bar/package.json",
+        "sha256": "c6635175870d3263c7f09c23b816f151cb747d50f2b99c5c9fdbab7dca939400"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test"
+      },
+      "embeddedJest": {
+        "projects": [
+          {
+            "preset": "jest-expo/ios"
+          },
+          {
+            "preset": "jest-expo/android"
+          }
+        ]
+      },
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-status-bar/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo-status-bar/expo-module.config.json",
+          "sha256": "a0d8cc208bceb577fbb593e6ee2667e8e40b8e75e62749f8853f9b662c74d999"
+        },
+        {
+          "path": "packages/expo-status-bar/tsconfig.json",
+          "sha256": "10c9bb7d8264375081cae903640869c57287259b0ee05a054424e656f1f2a7ec"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-status-bar/src/__tests__/Helpers.tsx",
+          "sha256": "11fab1b63ceeab204807e1653e0e6dd86291f64ad352bf1b64578ba93e0b1fbd"
+        },
+        {
+          "path": "packages/expo-status-bar/src/__tests__/NativeStatusBarWrapper-test.tsx",
+          "sha256": "fbe569ca8b9c7d1fffb18d24b3489d053b3f8e880fbf560d174a63ff9a9a7359"
+        },
+        {
+          "path": "packages/expo-status-bar/src/__tests__/StatusBar-test.android.tsx",
+          "sha256": "8f2e1f861648cab47e1c322d9052177a7b4705ee12b70e46211a32773d4d8a07"
+        },
+        {
+          "path": "packages/expo-status-bar/src/__tests__/StatusBar-test.ios.tsx",
+          "sha256": "6280edd59ec6766c1ee8ee1f081dbf685c13d327f7a5f4cac5890a6b0897009c"
+        },
+        {
+          "path": "packages/expo-status-bar/src/__tests__/StatusBar-test.web.tsx",
+          "sha256": "bb435f61b027608df0ac9eeb08f55edf4870734ec9fd683c948df69a2a00f859"
+        }
+      ],
+      "harmonyTests": []
+    },
+    {
+      "name": "expo-system-ui",
+      "directory": "packages/expo-system-ui",
+      "manifest": {
+        "path": "packages/expo-system-ui/package.json",
+        "sha256": "750e70165633a11b99710420584540109d954e287582d6ba731353c7b813f673"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test"
+      },
+      "embeddedJest": {
+        "preset": "expo-module-scripts"
+      },
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-system-ui/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo-system-ui/expo-module.config.json",
+          "sha256": "f548af409b13fc52beee71a6c8d3fb44a1791e65313e8c06d414357497c31f35"
+        },
+        {
+          "path": "packages/expo-system-ui/harmony/src/main/cpp/CMakeLists.txt",
+          "sha256": "c27514051f184e997a6235ba59549fe82dee78eb606ad528495ce0ed880bcd5b"
+        },
+        {
+          "path": "packages/expo-system-ui/harmony/tests/rnoh/CMakeLists.txt",
+          "sha256": "2359176fd7f4eac148df5e2a7e916c30c3d5bcf923754f2053ab2eb8dbb8ca89"
+        },
+        {
+          "path": "packages/expo-system-ui/plugin/babel.config.js",
+          "sha256": "5320da0292856d0b485fdb2d4f891b4cfd256f1733bf76f10955000ddc035386"
+        },
+        {
+          "path": "packages/expo-system-ui/plugin/tsconfig.json",
+          "sha256": "6ba8dc179547322fcfe81d0a5ba9dcd2a13212867cfaf78c694c31a646f52d78"
+        },
+        {
+          "path": "packages/expo-system-ui/tsconfig.json",
+          "sha256": "1bee0b49bb5ed6e088eedebbb0ad6ea3784bfcba66b674819b718ed726c35322"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-system-ui/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "204c6aaa8e8b7f30b162f3782ef8e77c2d609cca9c5d7775308196161d47bac0"
+        },
+        {
+          "path": "packages/expo-system-ui/harmony/tests/system-ui-color.test.mjs",
+          "sha256": "18705bcdb2ae68e9ad2de3f855ad637890548dc80aa2d69380cc12c752f20734"
+        },
+        {
+          "path": "packages/expo-system-ui/harmony/tests/system-ui-module.test.cjs",
+          "sha256": "4372e5ba06240a769dedbfdc32164f3addf8b5c6845ae0ce5c86a00342f968b5"
+        },
+        {
+          "path": "packages/expo-system-ui/plugin/src/__tests__/mockMods.ts",
+          "sha256": "6a2cc2fa4e4cd21d3f5aac3060ddca4f310391d832c91e1d23971266e110812e"
+        },
+        {
+          "path": "packages/expo-system-ui/plugin/src/__tests__/withAndroidRootViewBackgroundColor-test.ts",
+          "sha256": "cdf232e2b76aa17bc49a8c13403b71b0255d6de2372c52ca3e344e2c8968a636"
+        },
+        {
+          "path": "packages/expo-system-ui/plugin/src/__tests__/withAndroidUserInterfaceStyle-test.ts",
+          "sha256": "17082d34ffd1d29ed425f4b0b7dbc1bbe9140076ab41191c8c3232de4732f503"
+        },
+        {
+          "path": "packages/expo-system-ui/plugin/src/__tests__/withIosRootViewBackgroundColor-test.ts",
+          "sha256": "88950b862b280c20f9acf2a483daf2ae6bb62f5a15fcdd7a60b3599f994beff1"
+        },
+        {
+          "path": "packages/expo-system-ui/plugin/src/__tests__/withIosUserInterfaceStyle-test.ts",
+          "sha256": "cf7283588c632353fb36c24729d514cba93c2b45c823ea32516c232b7687f8b8"
+        }
+      ],
+      "harmonyTests": [
+        {
+          "path": "packages/expo-system-ui/harmony/tests/rnoh/PackageCompileTest.cpp",
+          "sha256": "204c6aaa8e8b7f30b162f3782ef8e77c2d609cca9c5d7775308196161d47bac0"
+        },
+        {
+          "path": "packages/expo-system-ui/harmony/tests/system-ui-color.test.mjs",
+          "sha256": "18705bcdb2ae68e9ad2de3f855ad637890548dc80aa2d69380cc12c752f20734"
+        },
+        {
+          "path": "packages/expo-system-ui/harmony/tests/system-ui-module.test.cjs",
+          "sha256": "4372e5ba06240a769dedbfdc32164f3addf8b5c6845ae0ce5c86a00342f968b5"
+        }
+      ]
+    },
+    {
+      "name": "expo-web-browser",
+      "directory": "packages/expo-web-browser",
+      "manifest": {
+        "path": "packages/expo-web-browser/package.json",
+        "sha256": "f4b4baf2a5c0c912dc7bf0195ea116b30622bf10b9d29a26f74789f8cd36c272"
+      },
+      "scripts": {
+        "lint": "expo-module lint",
+        "test": "expo-module test"
+      },
+      "embeddedJest": {
+        "preset": "expo-module-scripts"
+      },
+      "testAvailability": "PRESENT",
+      "configurations": [
+        {
+          "path": "packages/expo-web-browser/babel.config.js",
+          "sha256": "022af1098683e0b8810c545145397fd9b83673497165d31f466673a0dd6abada"
+        },
+        {
+          "path": "packages/expo-web-browser/expo-module.config.json",
+          "sha256": "c2b451853b8d448af6d30998e2a501cde99d953dd9f58982ea4acbceadd48836"
+        },
+        {
+          "path": "packages/expo-web-browser/harmony/src/main/cpp/CMakeLists.txt",
+          "sha256": "e256c4879007e95b343de24690c359cf7f5fcf461d05e65e47ed8bbc860d0d7d"
+        },
+        {
+          "path": "packages/expo-web-browser/plugin/tsconfig.json",
+          "sha256": "6ba8dc179547322fcfe81d0a5ba9dcd2a13212867cfaf78c694c31a646f52d78"
+        },
+        {
+          "path": "packages/expo-web-browser/tsconfig.json",
+          "sha256": "1bee0b49bb5ed6e088eedebbb0ad6ea3784bfcba66b674819b718ed726c35322"
+        }
+      ],
+      "tests": [
+        {
+          "path": "packages/expo-web-browser/harmony/tests/prepare-native-check.test.cjs",
+          "sha256": "f96a89cc55541cb61efeb8f05b424e80305ea86f1811e9f6b76039091b50300a"
+        },
+        {
+          "path": "packages/expo-web-browser/harmony/tests/web-browser.test.cjs",
+          "sha256": "cc8e202e3a8a293ac4cf66664720ffb5cb759016b3faf5df5fb93f9f5121f4d6"
+        },
+        {
+          "path": "packages/expo-web-browser/src/__tests__/ExpoWebBrowser-test.web.ts",
+          "sha256": "37263462545afe4d4459f04e6ca8d2b6c912bf601b07e9d09459153dbcfcd948"
+        },
+        {
+          "path": "packages/expo-web-browser/src/__tests__/WebBrowser-test.native.ts",
+          "sha256": "affcf5afba41f091634a145e9fb924eb01b41ef1e7f882d63d62bb8c966d876d"
+        }
+      ],
+      "harmonyTests": [
+        {
+          "path": "packages/expo-web-browser/harmony/tests/prepare-native-check.test.cjs",
+          "sha256": "f96a89cc55541cb61efeb8f05b424e80305ea86f1811e9f6b76039091b50300a"
+        },
+        {
+          "path": "packages/expo-web-browser/harmony/tests/web-browser.test.cjs",
+          "sha256": "cc8e202e3a8a293ac4cf66664720ffb5cb759016b3faf5df5fb93f9f5121f4d6"
+        }
+      ]
+    }
+  ],
+  "totals": {
+    "packages": 15,
+    "missingTests": 0,
+    "testInputs": 628,
+    "harmonyTestInputs": 47
+  }
+}

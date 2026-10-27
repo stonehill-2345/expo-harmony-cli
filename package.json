@@ -18,6 +18,9 @@
     "test:sdk54-tools": "node --test scripts/sdk54/__tests__/*.test.mjs",
     "sdk54:check": "pnpm test:sdk54-tools && pnpm sdk54:validate && pnpm sdk54:pack:check && pnpm sdk54:audit && pnpm sdk54:repo-check",
     "sdk54:validate": "node scripts/sdk54/validate-catalog.mjs",
+    "sdk54:source:inventory": "node scripts/sdk54/source-inventory.mjs",
+    "sdk54:source:plugins": "node scripts/sdk54/plugin-surface.mjs",
+    "sdk54:source:plugin-index": "node scripts/sdk54/plugin-source-index.mjs",
     "sdk54:pack": "node scripts/sdk54/pack-packages.mjs --round A --output outputs/sdk54/pack-a",
     "sdk54:pack:check": "node scripts/sdk54/pack-packages.mjs --compare-rounds",
     "sdk54:audit": "node scripts/sdk54/audit-packages.mjs",
@@ -35,8 +38,30 @@
     "sdk54:release:verify": "node scripts/sdk54/verify-npm-release.mjs"
   },
   "devDependencies": {
+    "@ast-grep/lang-c": "0.0.6",
+    "@ast-grep/lang-cpp": "0.0.6",
+    "@ast-grep/lang-java": "0.0.7",
+    "@ast-grep/lang-kotlin": "0.0.7",
+    "@ast-grep/lang-ruby": "0.0.7",
+    "@ast-grep/lang-swift": "0.0.8",
+    "@ast-grep/napi": "0.51.0",
+    "@babel/parser": "7.29.9",
+    "@xmldom/xmldom": "0.9.12",
+    "@yarnpkg/lockfile": "1.1.0",
+    "bplist-parser": "0.3.1",
     "npm-packlist": "^10.0.4",
     "patch-package": "8.0.0",
-    "tar": "^7.5.22"
+    "plist": "3.1.1",
+    "tar": "^7.5.22",
+    "tree-sitter-c": "0.24.1",
+    "tree-sitter-cpp": "0.23.4",
+    "tree-sitter-groovy": "0.1.2",
+    "tree-sitter-kotlin": "0.3.8",
+    "tree-sitter-objc": "3.0.2",
+    "tree-sitter-swift": "0.7.1",
+    "typescript": "5.9.3",
+    "web-tree-sitter": "0.25.10",
+    "xcode": "3.0.1",
+    "yaml": "2.9.1"
   }
 }

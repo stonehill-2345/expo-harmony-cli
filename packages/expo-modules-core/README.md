@@ -4,6 +4,8 @@ Expo Modules 在 HarmonyOS 上的原生基础设施，连接 RNOH、JSI、原生
 
 上游基线：`expo-modules-core@3.0.30`。本包由 [expo-harmony-cli](https://github.com/stonehill-2345/expo-harmony-cli) 项目维护，非 Expo 官方发行版本。
 
+以下安装与支持说明对应历史 `@expo-oh` 发行组合，不代表当前 SDK54 新架构已经验收。当前 M0 仍未关闭，见[本轮验收记录](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/releases/2026-10-22-sdk54-m0-validation-baseline-acceptance.md)和[测试入口矩阵](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/releases/sdk54-workspace-test-matrix.json)；本轮未重跑原生编译或设备测试。
+
 [鸿蒙快速开始](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony/getting-started.md) · [适配源码](https://github.com/stonehill-2345/expo-harmony-cli/tree/main/packages/expo-modules-core) · [验收记录](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/releases/2026-10-09-sdk54-expo-oh-candidate.md) · [问题反馈](https://github.com/stonehill-2345/expo-harmony-cli/issues)
 
 ## 安装

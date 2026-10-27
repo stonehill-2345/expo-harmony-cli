@@ -1,0 +1,101 @@
+{
+  "blocked": 29,
+  "candidateInterpretation": "202个声明候选含内部工厂和SDK52，173成功包含84显式选项与89无显式参数，不是202个公共插件或173项Harmony支持",
+  "candidates": 202,
+  "categories": {
+    "config-plugins": {
+      "blocked": 27,
+      "candidates": 70,
+      "expanded": 43
+    },
+    "package-plugin-or-relative-source": {
+      "blocked": 0,
+      "candidates": 80,
+      "expanded": 80
+    },
+    "prebuild-config": {
+      "blocked": 1,
+      "candidates": 8,
+      "expanded": 7
+    },
+    "prebuild-sdk52": {
+      "blocked": 0,
+      "candidates": 4,
+      "expanded": 4
+    },
+    "prebuild-unversioned": {
+      "blocked": 1,
+      "candidates": 40,
+      "expanded": 39
+    }
+  },
+  "contractFailed": 0,
+  "contractPassed": 64,
+  "deviceAcceptance": "NOT_RUN",
+  "evidence": [
+    {
+      "path": "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/contracts-final.json",
+      "sha256": "e9abe077428e6c498410fbd97633a534ff5a04d43403829deb92730c7a979f72"
+    },
+    {
+      "path": "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/remaining-work.json",
+      "sha256": "b119ea204ff116cbc30ce4bb76749e98267b61633d7a0d7224b0934c3f1e9f58"
+    },
+    {
+      "path": "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/validation-results.json",
+      "sha256": "a3516645db3304d57b35678576dfd09e05c61fc0f7abe932b9ddd87495fd8c92"
+    },
+    {
+      "path": "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/executions.json",
+      "sha256": "af4953a5791b5b3fd72bc5e99e4799342ff3cc03554d2c30f553c961958d4825"
+    },
+    {
+      "path": "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/tools.log",
+      "sha256": "f4299e9ba67e64393343cb191270df296c15f69629146a63c6da77dfa90b428e"
+    }
+  ],
+  "expanded": 173,
+  "expandedExplicitOptions": 84,
+  "nativeModsAcceptance": "NOT_RUN",
+  "noExplicitOptions": 89,
+  "optionPaths": 1091,
+  "progress": {
+    "acceptedUnits": [
+      "M0-01",
+      "M0-04",
+      "M0-05",
+      "M0-06"
+    ],
+    "closed": false,
+    "pendingUnits": [
+      "M0-02",
+      "M0-03"
+    ],
+    "percent": 66,
+    "totalUnits": 6
+  },
+  "router": {
+    "accesses": 35,
+    "aliasBoundaries": 15,
+    "differences": 26,
+    "schemaPaths": 31,
+    "typePaths": 14
+  },
+  "routerDifferences": 26,
+  "runId": "20261023-m0-plugin-contracts",
+  "schemaVersion": 1,
+  "source": {
+    "revision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1",
+    "tree": "5457e824b21d968e55c8f533cdf1751860160a92"
+  },
+  "sourceInputs": 4392,
+  "sourceResolutions": 1098,
+  "stageClosable": false,
+  "tests": {
+    "contractCases": 64,
+    "mutationRejections": 16,
+    "negativeContractCases": 11,
+    "tools": 450
+  },
+  "typeProgramInputs": 301
+}

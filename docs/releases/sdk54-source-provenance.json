@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "expo": {
+    "repository": "https://github.com/expo/expo.git",
+    "revision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1",
+    "tree": "5457e824b21d968e55c8f533cdf1751860160a92",
+    "inventory": "sdk54-source-package-inventory.json",
+    "inventorySha256": "fc95e76892e2c8c1a11664955de9e38825ba7c87d2d4ceb21ba4a0330056c6cc",
+    "availability": "完整 Git tree 与 package manifests；其余源码 blob 后续按固定 ID 获取"
+  },
+  "creationSource": {
+    "name": "create-expo",
+    "version": "3.5.11",
+    "sourcePath": "packages/create-expo",
+    "sourceRevision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1",
+    "registryGitHead": "dd4e87727c4ef32ac5d8a7b5a42fd80da254140f",
+    "registryIntegrity": "sha512-FbcgDyDrQNyMACO3lHyixBW5hv+v9MnbBqk0YXB6rlsXXkZjLbVh+XT8NsmbV5n/fMP7ogF4HY94JxnQED0CRQ==",
+    "registryTgzSha256": "03712c980faa334e6afaebbbf9580526ce3123ad86e9aec32486a090d8e3564f",
+    "decision": "SDK54 同源适配基线；不表示 Harmony create 已实现",
+    "limitation": "源码 commit 与 registry gitHead 分别记录；没有宣称两者构建产物等价"
+  },
+  "templates": [
+    { "name": "expo-template-default", "version": "54.0.63", "sourcePath": "templates/expo-template-default", "sourceRevision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1" },
+    { "name": "expo-template-blank-typescript", "version": "54.0.47", "sourcePath": "templates/expo-template-blank-typescript", "sourceRevision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1" }
+  ],
+  "historicalCreateInvestigation": {
+    "wrapper": {
+      "name": "create-expo-app", "version": "5.0.0",
+      "repository": "https://github.com/expo/create-expo-app-legacy.git",
+      "registryGitHead": "6a8ba7f2ea0643b8e33e1e0e16c83a4ef2852869",
+      "integrity": "sha512-hXTDzZcSqt8lywdJMCuaBpWu8Be9Fv54EW7+2k+WokZsp0dlqi03dRIDpxWKLD0mlFnucitoatH4ne+LVdbIrg==",
+      "sha256": "d7363438270fd26c992367b21ecb4f1870f29fe32f30cfa5d01122a0794f7a99",
+      "entry": "module.exports = require('create-expo');",
+      "dependencies": { "create-expo": ">=5.0.1" }
+    },
+    "minimumExecutor": {
+      "name": "create-expo", "version": "5.0.1",
+      "registryGitHead": "125b8d4472432db3dc4ae047730432d7bd5bd30c",
+      "integrity": "sha512-M7ct3Lskssia/UTcMl+oyMzqLGY0QLjbhtU7trCByT8QWhz1T9o4OZVHiazcPs7/ALbJ+ilu2ZfKcFfONbAaZw==",
+      "sha256": "a43c8751a7fdb8554cc54b2c79d16c3e93f52ac4cd4bed28bb8cd64be7f8c6b7"
+    },
+    "conclusion": "wrapper 单独固定版本不能固定执行包；本轮不用 5.x 作为 SDK54 来源，不复用历史创建结论"
+  },
+  "versions": {
+    "upstreamRoot": { "react": "19.1.0", "react-native": "0.81.5" },
+    "harmonyTarget": { "react": "19.1.1", "react-native": "0.82.1", "rnoh": "0.82.30" },
+    "conclusion": "上游原始值与 Harmony 目标组合不同，尚未实施模板依赖适配"
+  },
+  "stageClosable": false
+}

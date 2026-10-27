@@ -1,0 +1,117 @@
+{
+  "acceptance": {
+    "blocked": 1,
+    "passed": 5,
+    "results": {
+      "path": "outputs/sdk54/ai-e2e/20261023-m0-workspace-type-operations/acceptance-results.json",
+      "sha256": "7af164e7517c265737411643448cb105cb8e6dead50cfae4c5664b1cb5513a7f"
+    }
+  },
+  "artifact": {
+    "path": "outputs/sdk54/ai-e2e/20261023-m0-workspace-type-operations/semantic-final.json.gz",
+    "sha256": "944cbcec0daf82aa7437c3593f04716d7c4c018f2036cf2b9608b1b20d84e94c"
+  },
+  "boundaryCounts": {
+    "compiler-error-type": 263,
+    "declaration-instantiation-detail-budget": 6365,
+    "generic-operation-not-expanded": 40,
+    "generic-operation-not-instantiated": 441,
+    "mapped-modifiers-not-verified": 167,
+    "symbolic-generic-members-not-instantiated": 2392,
+    "unconstrained-any": 2,
+    "unconstrained-unknown": 1
+  },
+  "candidates": {
+    "exports": {
+      "added": 0,
+      "after": 13942,
+      "before": 13942,
+      "missing": 0,
+      "statusChanges": []
+    },
+    "inferences": {
+      "added": 0,
+      "after": 9312,
+      "before": 9312,
+      "missing": 0,
+      "statusChanges": []
+    },
+    "plugins": {
+      "added": 0,
+      "after": 202,
+      "before": 202,
+      "missing": 0,
+      "statusChanges": []
+    }
+  },
+  "counts": {
+    "inputs": 4390,
+    "modules": 3959,
+    "previousTypes": 86024,
+    "types": 88375
+  },
+  "deviceAcceptance": "NOT_RUN",
+  "mode": "structural",
+  "nativeModsAcceptance": "NOT_RUN",
+  "pluginStatuses": {
+    "EVALUATED": 140,
+    "EVALUATED_WITH_BOUNDARY": 62
+  },
+  "progress": {
+    "acceptedUnits": [
+      "M0-01",
+      "M0-04",
+      "M0-05",
+      "M0-06"
+    ],
+    "closed": false,
+    "pendingUnits": [
+      "M0-02",
+      "M0-03"
+    ],
+    "percent": 66,
+    "totalUnits": 6
+  },
+  "publicSurfaceComplete": false,
+  "relationCounts": {
+    "baseConstraintTypeId": 1039,
+    "checkTypeId": 197,
+    "constraintTypeId": 1057,
+    "defaultTypeId": 564,
+    "extendsTypeId": 197,
+    "falseTypeId": 197,
+    "indexTypeId": 180,
+    "objectTypeId": 244,
+    "trueTypeId": 197
+  },
+  "runId": "20261023-m0-workspace-type-operations",
+  "schemaVersion": 1,
+  "source": {
+    "revision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1",
+    "tree": "5457e824b21d968e55c8f533cdf1751860160a92"
+  },
+  "stageClosable": false,
+  "tests": {
+    "canonicalPassed": true,
+    "legacyCompatible": true,
+    "rejectedVariants": 16,
+    "tools": 458
+  },
+  "typeKinds": {
+    "any": 265,
+    "array": 33,
+    "compiler-library-reference": 4065,
+    "conditional": 197,
+    "declaration-instantiation-boundary": 6365,
+    "generic-application": 2392,
+    "indexed-access": 180,
+    "intersection": 1342,
+    "keyof": 64,
+    "language-type": 28285,
+    "object": 33969,
+    "tuple": 220,
+    "type-parameter": 2598,
+    "union": 8399,
+    "unknown": 1
+  }
+}

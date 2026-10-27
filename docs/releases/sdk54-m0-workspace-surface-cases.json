@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "taskIds": ["M0-02", "M0-03", "M0-04"],
+  "cases": [
+    { "id": "WS-01", "expected": "固定 tree 全文件最长根归属、manifest 与 blob 完整；不硬编码首批包名" },
+    { "id": "WS-02", "expected": "根入口、src、plugin、平台模块均纳入；排除文件仍有显式角色与来源" },
+    { "id": "WS-03", "expected": "导出、声明和嵌套属性/参数/索引/枚举/对象成员逐项 ID 与源码位置可追溯" },
+    { "id": "WS-04", "expected": "条件与 wildcard 入口、build 投影、workspace/外部/动态依赖分别登记；不唯一或缺来源不能判完整" },
+    { "id": "WS-05", "expected": "语法不支持、外部 star、动态导出、推断语义边界明确记录，不能静默漏掉后判公开面完整" },
+    { "id": "WS-06", "expected": "固定来源重复输出稳定；校验由源码重建，不相信自身记录重算 hash" },
+    { "id": "WS-07", "expected": "缺包/模块/导出/成员/依赖、重复 ID、伪完整和额外记录均失败且指向来源" },
+    { "id": "WS-08", "expected": "前轮六场景的命令、安装候选、执行器、日志及项目记录完整；失败和 NOT_RUN 如实保留" },
+    { "id": "WS-09", "expected": "SDK52 补验及独立 Release 失败、peer/Router 最小失败和设备空列表均核实；仅调查接受不改产品结论" },
+    { "id": "WS-10", "expected": "相关工具、CLI、类型、历史接受、仓库检查及证据 hash 通过，进度只计完整接受任务" }
+  ],
+  "stageClosable": false
+}

@@ -1,0 +1,239 @@
+{
+  "schemaVersion": 1,
+  "runId": "20261022-m0-current-baseline",
+  "task": "M0-04",
+  "status": "FAIL",
+  "candidate": {
+    "name": "expo-harmony-cli",
+    "version": "1.6.0",
+    "sha256": "d43940a9335f2052e52f929a396aa1e294e75e6ec53a2401ae6c2ebb2c230e15"
+  },
+  "scenarios": [
+    {
+      "id": "sdk54-blank-typescript-npm",
+      "sdk": "54",
+      "template": "blank-typescript",
+      "packageManager": "npm",
+      "steps": [
+        {
+          "id": "sdk54-blank-typescript-npm-create",
+          "status": "FAIL",
+          "exitCode": null,
+          "timedOut": true
+        },
+        {
+          "id": "sdk54-blank-typescript-npm-identify",
+          "status": "PASS",
+          "exitCode": 0,
+          "timedOut": false
+        },
+        {
+          "id": "sdk54-blank-typescript-npm-doctor",
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false
+        },
+        {
+          "id": "sdk54-blank-typescript-npm-prebuild",
+          "status": "NOT_RUN",
+          "reason": "create失败，不以半成品执行prebuild冒充完整项目"
+        },
+        {
+          "id": "sdk54-blank-typescript-npm-native-device",
+          "status": "NOT_RUN",
+          "reason": "本轮未建立原生发行候选、签名和明确设备目标；创建/host命令不能证明原生运行"
+        }
+      ]
+    },
+    {
+      "id": "sdk54-blank-typescript-pnpm",
+      "sdk": "54",
+      "template": "blank-typescript",
+      "packageManager": "pnpm",
+      "steps": [
+        {
+          "id": "sdk54-blank-typescript-pnpm-create",
+          "status": "FAIL",
+          "exitCode": null,
+          "timedOut": true
+        },
+        {
+          "id": "sdk54-blank-typescript-pnpm-identify",
+          "status": "PASS",
+          "exitCode": 0,
+          "timedOut": false
+        },
+        {
+          "id": "sdk54-blank-typescript-pnpm-doctor",
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false
+        },
+        {
+          "id": "sdk54-blank-typescript-pnpm-prebuild",
+          "status": "NOT_RUN",
+          "reason": "create失败，不以半成品执行prebuild冒充完整项目"
+        },
+        {
+          "id": "sdk54-blank-typescript-pnpm-native-device",
+          "status": "NOT_RUN",
+          "reason": "本轮未建立原生发行候选、签名和明确设备目标；创建/host命令不能证明原生运行"
+        }
+      ]
+    },
+    {
+      "id": "sdk54-default-npm",
+      "sdk": "54",
+      "template": "default",
+      "packageManager": "npm",
+      "steps": [
+        {
+          "id": "sdk54-default-npm-create",
+          "status": "FAIL",
+          "exitCode": null,
+          "timedOut": true
+        },
+        {
+          "id": "sdk54-default-npm-identify",
+          "status": "PASS",
+          "exitCode": 0,
+          "timedOut": false
+        },
+        {
+          "id": "sdk54-default-npm-doctor",
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false
+        },
+        {
+          "id": "sdk54-default-npm-prebuild",
+          "status": "NOT_RUN",
+          "reason": "create失败，不以半成品执行prebuild冒充完整项目"
+        },
+        {
+          "id": "sdk54-default-npm-native-device",
+          "status": "NOT_RUN",
+          "reason": "本轮未建立原生发行候选、签名和明确设备目标；创建/host命令不能证明原生运行"
+        }
+      ]
+    },
+    {
+      "id": "sdk54-default-pnpm",
+      "sdk": "54",
+      "template": "default",
+      "packageManager": "pnpm",
+      "steps": [
+        {
+          "id": "sdk54-default-pnpm-create",
+          "status": "FAIL",
+          "exitCode": null,
+          "timedOut": true
+        },
+        {
+          "id": "sdk54-default-pnpm-identify",
+          "status": "PASS",
+          "exitCode": 0,
+          "timedOut": false
+        },
+        {
+          "id": "sdk54-default-pnpm-doctor",
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false
+        },
+        {
+          "id": "sdk54-default-pnpm-prebuild",
+          "status": "NOT_RUN",
+          "reason": "create失败，不以半成品执行prebuild冒充完整项目"
+        },
+        {
+          "id": "sdk54-default-pnpm-native-device",
+          "status": "NOT_RUN",
+          "reason": "本轮未建立原生发行候选、签名和明确设备目标；创建/host命令不能证明原生运行"
+        }
+      ]
+    },
+    {
+      "id": "sdk52-default-npm",
+      "sdk": "52",
+      "template": "default",
+      "packageManager": "npm",
+      "steps": [
+        {
+          "id": "sdk52-default-npm-create",
+          "status": "PASS",
+          "exitCode": 0,
+          "timedOut": false
+        },
+        {
+          "id": "sdk52-default-npm-identify",
+          "status": "PASS",
+          "exitCode": 0,
+          "timedOut": false
+        },
+        {
+          "id": "sdk52-default-npm-scan",
+          "status": "PASS",
+          "exitCode": 0,
+          "timedOut": false
+        },
+        {
+          "id": "sdk52-default-npm-prebuild",
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false
+        },
+        {
+          "id": "sdk52-default-npm-native-device",
+          "status": "NOT_RUN",
+          "reason": "本轮未建立原生发行候选、签名和明确设备目标；创建/host命令不能证明原生运行"
+        }
+      ]
+    },
+    {
+      "id": "sdk52-default-pnpm",
+      "sdk": "52",
+      "template": "default",
+      "packageManager": "pnpm",
+      "steps": [
+        {
+          "id": "sdk52-default-pnpm-create",
+          "status": "PASS",
+          "exitCode": 0,
+          "timedOut": false
+        },
+        {
+          "id": "sdk52-default-pnpm-identify",
+          "status": "PASS",
+          "exitCode": 0,
+          "timedOut": false
+        },
+        {
+          "id": "sdk52-default-pnpm-scan",
+          "status": "PASS",
+          "exitCode": 0,
+          "timedOut": false
+        },
+        {
+          "id": "sdk52-default-pnpm-prebuild",
+          "status": "FAIL",
+          "exitCode": 1,
+          "timedOut": false
+        },
+        {
+          "id": "sdk52-default-pnpm-native-device",
+          "status": "NOT_RUN",
+          "reason": "本轮未建立原生发行候选、签名和明确设备目标；创建/host命令不能证明原生运行"
+        }
+      ]
+    }
+  ],
+  "counts": {
+    "PASS": 10,
+    "FAIL": 10,
+    "NOT_RUN": 10
+  },
+  "evidence": "outputs/sdk54/ai-e2e/20261022-m0-current-baseline/attempt-a/results.json",
+  "productAllPassed": false,
+  "stageClosable": false
+}

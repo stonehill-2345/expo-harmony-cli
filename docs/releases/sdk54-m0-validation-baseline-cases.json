@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "stage": "M0",
+  "taskIds": ["M0-06"],
+  "acceptanceIds": ["M0-A04", "M0-A05/test-entry-matrix"],
+  "cases": [
+    { "id": "BASE-01", "expected": "直接调用当前Router doctor源码复现三项合法精确版本误报，保留期望失败断言和真实诊断" },
+    { "id": "BASE-02", "expected": "兼容子区间、非法组合、alias及仅传递依赖分别记录；产品失败与复现验收分开" },
+    { "id": "BASE-03", "expected": "源码级checkPackages集成重现合法三依赖导致json upToDate:false及退出1；不冒充发行物消费" },
+    { "id": "BASE-04", "expected": "当前workspace每包测试脚本、配置、测试源码和Harmony独立入口有hash与范围；缺入口显式记录" },
+    { "id": "BASE-05", "expected": "CLI/Autolinking/Core/Metro/模块有可执行命令、前提及本次实际状态；工具/原生/设备分开" },
+    { "id": "BASE-06", "expected": "Core旧仓库名称/失效进度链接/过时的接入缺失声明对齐当前源码，不提升历史验收承诺" },
+    { "id": "BASE-07", "expected": "进度按冻结单元计算；未知/重复/缺证据及伪造关闭状态拒绝；M0-06整体通过后才计入" },
+    { "id": "BASE-08", "expected": "工具回归、CLI类型检查、前轮清单复核与证据hash通过；所有失败尝试保留" }
+  ],
+  "stageClosable": false
+}

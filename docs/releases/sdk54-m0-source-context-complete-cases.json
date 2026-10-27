@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "runId": "20261022-m0-source-context-complete",
+  "tasks": ["M0-02", "M0-03"],
+  "evidenceDirectory": "outputs/sdk54/ai-e2e/20261022-m0-source-context-complete",
+  "cases": [
+    {"id":"CTX2-01","step":"S1","implementation":"补齐此前缺失的RN、Node、csstype、列表固定归档，重新核验7份核心来源","expected":"原锁SHA512/SHA1及manifest身份一致，不替代版本","actual":"7/7身份及双hash通过，核心图重建成功","status":"PASS","evidence":["archive-plan.json","acquisition-results.json","summary-core-final.json","core-final-result.json"]},
+    {"id":"CTX2-02","step":"S2","implementation":"原封存265组队列与固定锁匹配，按name/version/双hash合并selector别名，取得233份原始归档","expected":"队列及基线hash锁定，不任挑兼容版本，大包流式核验","actual":"233/233双hash通过，Skia169752095字节已取得；39组缺锁和7个仅SHA1身份留在计划阻塞中","status":"PASS","evidence":["archive-plan.json","acquisition-results-initial.json","acquisition-results.json","acquisition-streaming.log"]},
+    {"id":"CTX2-03","step":"S3","implementation":"版本化EJS根、包自引用、Node明确ambient来源、消费方精确类型引用；结构拒绝写明确阻塞","expected":"所有来源身份及结构可接受，缺失或重复来源不得关闭","actual":"232/233结构可读取，日期选择器8.4.4因重复package/src/index.js拒绝；46个身份阻塞未关闭","status":"BLOCKED","evidence":["archive-scan-final.log","semantic-exact.json.gz","archive-contract-red.log","contracts-final.log"]},
+    {"id":"CTX2-04","step":"S4","implementation":"泛型定义与实参图、每声明族16实例细节边界及反向传播，全源同批重建","expected":"原候选齐全，有限分析保留来源和未展开边界，不冒充完整清单","actual":"4088输入/146根、13806导出含20新增；86005类型/96024属性、9312推断/202插件齐全；5396实例细节边界及2201泛型应用边界保留","status":"PASS","evidence":["semantic-exact.json.gz","summary-exact.json","budget-diagnostic.log","generic-source-red.log","instance-budget-red.log","remaining-work.json"]},
+    {"id":"CTX2-05","step":"S5","implementation":"单入口重复、逐份大快照校验、坏归档拒绝及历史/工具/CLI/类型回归","expected":"字节一致、正常通过、篡改拒绝、旧默认模式兼容","actual":"425工具/500 CLI/类型通过；17历史exit0；正常快照valid=true、15变异valid=false，check-set整体exit1；另坏归档exit1","status":"PASS","evidence":["acceptance-result.json","repeat-verification.json","negative-results.json","validation-set-result.json","bad-archive-result.json","regression-checks.json","tools-result.json","cli-result.json","types-result.json","closure-checks.json"]},
+    {"id":"CTX2-06","step":"S6","implementation":"按原任务分母复核阶段，保留来源、类型、插件及入口条件未完成项","expected":"原M0完整清单及双向完整性退出条件满足才关闭","actual":"M0-02/03仍未接受；M0为66%（4/6），未关闭；未增加接受单元或缩小分母","status":"BLOCKED","evidence":["remaining-work.json","stage-check.log","input-snapshot.json","evidence-verification.json"]}
+  ],
+  "stageClosable": false
+}

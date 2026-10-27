@@ -1,0 +1,4768 @@
+{
+  "externalSourcesComplete": false,
+  "fullPublicSurfaceComplete": false,
+  "inputs": [
+    {
+      "blob": "ff4163e3b120410b8c7012d9f2630b5d38293db8",
+      "path": "apps\/bare-expo\/package.json",
+      "sha256": "8a3000259aaa52c2a6cd1ac5f91e541a2ea60ead17bf192c36638a09893e06b5"
+    },
+    {
+      "blob": "75c9f30f4b9f5f985b238035f98389df14c5d5ea",
+      "path": "apps\/eas-expo-go\/package.json",
+      "sha256": "f0382c0c72a7eedfc7db29a5f263afc58b6dc7e5017ba7cd8a47b93738a356cd"
+    },
+    {
+      "blob": "fef1db8f98a378e6e14c7003bb8c3fe0a4051d52",
+      "path": "apps\/expo-go\/package.json",
+      "sha256": "b4a137bad459a92ca07d8c66b1708e3a9a07fa17b3df5feaf25235a665977826"
+    },
+    {
+      "blob": "0cd6a985e23baa4b13463c3a758428cb7d99cb17",
+      "path": "apps\/expo-workflow-testing\/package.json",
+      "sha256": "dcb765a49d2537153f490e27287f4447047c3347af0ecc88d979d3f187eb8ffc"
+    },
+    {
+      "blob": "222a55170b86a6a6456b7ac4bce056f8f5a80192",
+      "path": "apps\/jest-expo-mock-generator\/package.json",
+      "sha256": "6fc5625718ea5bf6d7f380630c3d0390bcff1a9ad97ddb6754b653dfcd91c446"
+    },
+    {
+      "blob": "35ca214580ec671a4883d8dd253bd19c2a1339f6",
+      "path": "apps\/native-component-list\/package.json",
+      "sha256": "8f2991424bf9d60996d0052355286e4a2330ccb84dbeda26bfb054cc6fb7db75"
+    },
+    {
+      "blob": "dad38d68b593ec712dd7de17f7440b23776ac1a7",
+      "path": "apps\/native-tests\/package.json",
+      "sha256": "d9a4a84b1e6c8f6556861221aadb2f42d800c72868a7c385ae72937b262adaf8"
+    },
+    {
+      "blob": "c5dfa5777e13fe1191f30e14aebb35d2ebe5de71",
+      "path": "apps\/notification-tester\/package.json",
+      "sha256": "f367355be2f4435eef1b6ccb4603dc5f4a39e6c8546c5a8388b4ddf1bf10823b"
+    },
+    {
+      "blob": "4832508b59bc70f8ebeaaa26348e0b5301149542",
+      "path": "apps\/paper-tester\/package.json",
+      "sha256": "6b44b19a680615b8e521e45242b5284d26e062fda8bcf6eb02be864e5795a46a"
+    },
+    {
+      "blob": "6e152bcfa8ed9c5bc2577a9ab6b6845809b9f34d",
+      "path": "apps\/router-e2e\/package.json",
+      "sha256": "18518982871b337d29d5acc890bbfb456d4e4fd8c322db2df18316160394d094"
+    },
+    {
+      "blob": "bbca06c8748053737371839a5b061fd959673a2d",
+      "path": "apps\/sandbox\/package.json",
+      "sha256": "52b6849e59254d9a12a3aea67d9fbc9d7cc118cfaac64717f2c305c08424b255"
+    },
+    {
+      "blob": "16988e01d04b7327748b4bf24e83fa378795585a",
+      "path": "apps\/test-suite\/package.json",
+      "sha256": "d03bead9779b0eb95069b121dd3a3133c43064e17230d7d397b3562cc3b7bc77"
+    },
+    {
+      "blob": "bd65cb7f072c199616e6fc22c462cfda92359bc8",
+      "path": "package.json",
+      "sha256": "995e9512a05dfef384656bbb2ab242a7ff039aaf2969573ae6f6543252c18cbe"
+    },
+    {
+      "blob": "9609833692c95863a907cb8b92913229f533a4c1",
+      "path": "packages\/@expo\/cli\/package.json",
+      "sha256": "8c2dc589c742cedef070556df08330a8be2f20c667043ff0405748562acf2da3"
+    },
+    {
+      "blob": "c073481c73f64579e2dfd444fbd639d2a1c9631e",
+      "path": "packages\/@expo\/config-plugins\/package.json",
+      "sha256": "3c37dcccdcf9aa8f2aac5819f029b7af9a3346f6cbe147b5cf4c2d6eade7c1ee"
+    },
+    {
+      "blob": "6cc520129941c346d8d2e6322229bc2eb076e371",
+      "path": "packages\/@expo\/config-types\/package.json",
+      "sha256": "b05e070cf9069b8f8c270ba465b93ffc74f9654a087e54a1c97863392e9b7990"
+    },
+    {
+      "blob": "228818a9db15c781b86ae74e07c2e02befc00bf0",
+      "path": "packages\/@expo\/config\/package.json",
+      "sha256": "c3d2e529e07e1847eef38f39abb4b3917c6be53c8a977970a16505c6e638bae4"
+    },
+    {
+      "blob": "76b3817f8d65cb8630539a14c9bebef893a15766",
+      "path": "packages\/@expo\/devtools\/package.json",
+      "sha256": "fe181f4c6205e9385f5e52b906cb07ac52b79f02b78b283e0b5d6c0b77aea96c"
+    },
+    {
+      "blob": "bf3a34d6205ae94ca06918c727b361fe641f42c0",
+      "path": "packages\/@expo\/dom-webview\/package.json",
+      "sha256": "1d0b18179e3f18afd185d4f0f7d95c7e074203c66af6da0aa55230c8c6624989"
+    },
+    {
+      "blob": "f48f35a27974bf2f1c0ac67792fbd80e7132a567",
+      "path": "packages\/@expo\/env\/package.json",
+      "sha256": "e38ca7bad16342819eee6009cba5ad956f176ed8220d1eb1a52d5b98c524693a"
+    },
+    {
+      "blob": "84d11261198f8da41929071b9e747c3908f513c8",
+      "path": "packages\/@expo\/fingerprint\/package.json",
+      "sha256": "27d06692b3adb99b8a29c3cbdacad9c271b233e0306449372d87f4e3158594eb"
+    },
+    {
+      "blob": "f00bb7329cf981a4ba87c1027cd70da29a01ae41",
+      "path": "packages\/@expo\/image-utils\/package.json",
+      "sha256": "2284a6c074e126298fc8fd49cd99d6b1790f19d2f4318b98ff3109ab74c65b32"
+    },
+    {
+      "blob": "ef8a718b19e71ae04661f3e1683de252c6124d66",
+      "path": "packages\/@expo\/json-file\/package.json",
+      "sha256": "8533190e8b1641409d19183c833ee84cd75e91c743ffe0b196279819f7f891ed"
+    },
+    {
+      "blob": "d4f6fe5ea76181e589b294e5d36c102e90231482",
+      "path": "packages\/@expo\/metro-config\/package.json",
+      "sha256": "e721406cc2c7d10b891b2cf25d08ec6886041e3217c6cdca14719047d11ab0f2"
+    },
+    {
+      "blob": "5b186ceaadab1115b8ffd322ad17855091ee8dc6",
+      "path": "packages\/@expo\/metro-runtime\/package.json",
+      "sha256": "18e4bd35a12793966ed9a03f7a61e47d8254832128e1e519a36b477d6fb77575"
+    },
+    {
+      "blob": "78d6e5ac99b01777a3248b1a442a279a4739f310",
+      "path": "packages\/@expo\/osascript\/package.json",
+      "sha256": "e261500e322604eb3d376809dc56cd88ed822e408e4d59db7df49eb1f6be8e83"
+    },
+    {
+      "blob": "e82155e0e1ca73df352f789e754ffbe71308c6ec",
+      "path": "packages\/@expo\/package-manager\/package.json",
+      "sha256": "a797fb2da4f62e9176a0109e55ac55d26d43f633104cdcce4c8dd2b222be1425"
+    },
+    {
+      "blob": "58948d6c0b9cd35fd295a865343eed6c17baf8f1",
+      "path": "packages\/@expo\/pkcs12\/package.json",
+      "sha256": "2a7d547d3b7ef87f80ff072d1a8c7380a648f4098c933d9cabfdf1641fa42725"
+    },
+    {
+      "blob": "357a13974af0edf6146b0a90b707b73ead9f59c6",
+      "path": "packages\/@expo\/plist\/package.json",
+      "sha256": "72b9225d5717b7d1708c689a96cdbdf77df5c11527d154263832a5936e819f45"
+    },
+    {
+      "blob": "fa583d2948213d18fe1eb5181d9339b3813c8dd5",
+      "path": "packages\/@expo\/prebuild-config\/package.json",
+      "sha256": "2a1c84723e34885bd6bcf32521c2117661ee5a0188867a862068bab2a3316b13"
+    },
+    {
+      "blob": "47ffb314f9f74399ae2287adceb873f5b9b711cb",
+      "path": "packages\/@expo\/schema-utils\/package.json",
+      "sha256": "2bc4d96a54ad4274db1ab3dc5dc5fccf182cb2594ff1e75a979ae20977b072cd"
+    },
+    {
+      "blob": "340981ab3ba93d7ec69c41b18b6f0aa75c334566",
+      "path": "packages\/@expo\/schemer\/package.json",
+      "sha256": "7e6d226b1278b6243bcbcf845c82b60eb239ba9219d857431373e497633bb859"
+    },
+    {
+      "blob": "f29c56a253b53e1fa97a33f132e54ef6902bb9f6",
+      "path": "packages\/babel-preset-expo\/package.json",
+      "sha256": "3aa9c32d2c0c97bbadf28fc19d4c9f7a2e79c31acffc7b5a9219a7db47f2a1d8"
+    },
+    {
+      "blob": "c638ffbad569d0c0287e37fab1f73bfb4233aaed",
+      "path": "packages\/create-expo-module\/package.json",
+      "sha256": "757e4ecbcd3f4f5a2fba77fe63b1bf0ca3d9c2c504c4a076b02c62ef1eb67590"
+    },
+    {
+      "blob": "617729b4ffb49da48016115f190e5ba4fdc2b93d",
+      "path": "packages\/create-expo-nightly\/package.json",
+      "sha256": "456699dfe9f4b163d0792f890fab0bb60a58ff797c05d2e72c457b8b6cabc30c"
+    },
+    {
+      "blob": "3212e78db9b88abacd9ffab34b55530e0b4b01db",
+      "path": "packages\/create-expo\/package.json",
+      "sha256": "913f3afe6002cbdea28246ee44b27e0957775457ad910720d4330cf30c5fc9b2"
+    },
+    {
+      "blob": "9c6ae2b53b1e3dbbb56e2e0d5a91b57108265725",
+      "path": "packages\/eslint-config-expo\/package.json",
+      "sha256": "4d0cc4e439ea6b5d6fbd0388c58df7343c4c35829347994c6cd1c50904d6b962"
+    },
+    {
+      "blob": "57a66db1469a7dc4d3bd015f58ce5bf4bec5f7e0",
+      "path": "packages\/eslint-config-universe\/package.json",
+      "sha256": "3a49f001a5cbe643d31345d45fac662559f9932dac73ef44a7f814d6e3130eef"
+    },
+    {
+      "blob": "35932dd9e0f244015a05acc833325a79113f6a40",
+      "path": "packages\/eslint-plugin-expo\/package.json",
+      "sha256": "cf680d79424e9f248521978d4903a62e235cdf61882fe9d4ba63308063fdfac5"
+    },
+    {
+      "blob": "22e36c6495418bfe8c7edd463b65257fc941cc78",
+      "path": "packages\/expo-age-range\/package.json",
+      "sha256": "7930ee9e9457e9de8eef8d5cf348936300cbc3a4c677e3716da8ccb3d38ff96a"
+    },
+    {
+      "blob": "f714d8983e844dc1025066120b4251993d71a754",
+      "path": "packages\/expo-app-integrity\/package.json",
+      "sha256": "9fe58498f0f8769e7fd12a01ccc2b3d0f2ebeb5bc0a9d10fb1412f479f0dca59"
+    },
+    {
+      "blob": "0af20332ade061fcf2c8e2710a82fce8ebe3d049",
+      "path": "packages\/expo-apple-authentication\/package.json",
+      "sha256": "c208f47fa2018d4960b3e8ee44bf0a29c63fa8d4cc7a6b6a08eab1a8685ca690"
+    },
+    {
+      "blob": "4c39b09d95e9202a7de8a523a16fd72dc2f7f94e",
+      "path": "packages\/expo-application\/package.json",
+      "sha256": "16fe745118bde53c4bbcf302fe5e72ae4e1d7d15cf56af29a02105dde6d0dba3"
+    },
+    {
+      "blob": "8d48efcab7355b32d511485b56d8e3aa513f9010",
+      "path": "packages\/expo-asset\/package.json",
+      "sha256": "6aa5296a7fd4028e9e6939ba9f6d40a967b04237360bd767c09f7bd1d28ecf24"
+    },
+    {
+      "blob": "d381bc0b18f70c462a78e15541622a0ba88b95fe",
+      "path": "packages\/expo-audio\/package.json",
+      "sha256": "96e912b8c1a222aafe09c1a9498e5749ac90524b37dcde144bef8173d2ebc4ce"
+    },
+    {
+      "blob": "aceeddd8d9ae93316e4a704bc7e0b6a35e506393",
+      "path": "packages\/expo-auth-session\/package.json",
+      "sha256": "994df1f688a059c342eea5ac094b3ca49159c5fef10f41b72d3dcea0c632a36d"
+    },
+    {
+      "blob": "bc8a6369f1e3a216b8f258243fb12ca5af134976",
+      "path": "packages\/expo-av\/package.json",
+      "sha256": "b2521a768406428c417b468a9f5ba7efcdba42e55fb5aae36eef5773c5d8908f"
+    },
+    {
+      "blob": "eab97462cb88ae82d706bf9a81f789a3757f8b77",
+      "path": "packages\/expo-background-fetch\/package.json",
+      "sha256": "e8b7f5a382ba211eb627dfdb0624c812435b7004a12a89a1822942e0587c10b5"
+    },
+    {
+      "blob": "37c31cb4c7fd3c890572023440966e0083644309",
+      "path": "packages\/expo-background-task\/package.json",
+      "sha256": "10381c81230d6bee74b0496d7245dd7152444e1f345753ddd4a8c0069f886288"
+    },
+    {
+      "blob": "16631c25d8334960d20175c172af40fdabe20713",
+      "path": "packages\/expo-battery\/package.json",
+      "sha256": "7401155c27b3894d38fe46b6f575539908d4e5ba604b00e45b0ed46930805fe9"
+    },
+    {
+      "blob": "0e666cd5ca37905f696b03f1bffd43c378fb3141",
+      "path": "packages\/expo-blob\/package.json",
+      "sha256": "c33bd9883cc70f6cc7549fc2a540f9281b48bffeac22d6222e44733d4ed1471a"
+    },
+    {
+      "blob": "8b1f3e9c50c18cefa955cd7f7b5e34389cb890c4",
+      "path": "packages\/expo-blur\/package.json",
+      "sha256": "66cac09734e0e2cf812cb74bb7f4a14d6e34da42619a6df7034ea4fc7dae000f"
+    },
+    {
+      "blob": "fcd7e8633f0d52243167d243062d6079adafcda9",
+      "path": "packages\/expo-brightness\/package.json",
+      "sha256": "d51784d67defbd14ec6a5f069649ab8c3a88b4a1d470f1785ac43973588e4675"
+    },
+    {
+      "blob": "95df666ab474446203a3d877e5a57c45c9bca2f7",
+      "path": "packages\/expo-build-properties\/package.json",
+      "sha256": "f54d6413b9ce98338bac7e2d084c19b54bcecdf721750a519804918599b10fac"
+    },
+    {
+      "blob": "708d15a781b49ae85ff061f1cd87ff20fe63f3bd",
+      "path": "packages\/expo-calendar\/package.json",
+      "sha256": "61065045a1621b0e1f68e6d9ab19d8faa6960b902690c3786915699b7dadfe13"
+    },
+    {
+      "blob": "f89efa44753a3ecbfe519a4242f6d8b9469c6d3f",
+      "path": "packages\/expo-camera\/package.json",
+      "sha256": "5466e300aa9f02adb3c63ef968fe6169d28b82d16e6e9fef5d715c16aa6b56a0"
+    },
+    {
+      "blob": "1e1f88a42ea9665605c8b4816ffbe810d7e82e0b",
+      "path": "packages\/expo-cellular\/package.json",
+      "sha256": "cc4615fb9d3353b4b424de2ffb0bdf3c5c0fdee0e3a348b7bf24cf7bd6397483"
+    },
+    {
+      "blob": "63d1d27e57fb1118ee71b15df27fa20adca3e370",
+      "path": "packages\/expo-checkbox\/package.json",
+      "sha256": "a66b7f8af16f93721511d6ca0b3c5829c76c0f54f37b278a1743f3dc7758236b"
+    },
+    {
+      "blob": "d5b08977ba3c7c7b07e2b5384b64db849e3c85ee",
+      "path": "packages\/expo-clipboard\/package.json",
+      "sha256": "0d8254e20e9807bba8e5af3453c47c78377e89f63880994ff6056bd96fe4ae1d"
+    },
+    {
+      "blob": "72df93a368ecee0c8f6fa9a5190fe0e35827cf10",
+      "path": "packages\/expo-constants\/package.json",
+      "sha256": "cdd41ca5ec43e1345ea18be3c4148ae96ce0be6701af75b45998e5b9746f2666"
+    },
+    {
+      "blob": "6f6c399e329d6c08bc0f5e934e303b2a095cb9df",
+      "path": "packages\/expo-contacts\/package.json",
+      "sha256": "2bfc86433409ce5707af80c86c551a47c79dcfc065401a53a1dde56a2c4de9c0"
+    },
+    {
+      "blob": "a8c024c08e604733c315242767093e1053877586",
+      "path": "packages\/expo-crypto\/package.json",
+      "sha256": "76f570ce05086d79a562bc76c53564b8da53306c7b0545c8791b44aac721fcd5"
+    },
+    {
+      "blob": "d51bcc285d25ea1a2ff7c3c6d0ebf823f9d7aa4c",
+      "path": "packages\/expo-dev-client-components\/package.json",
+      "sha256": "ea1e6c4648898aea29f39e1222ad9f6a1153941860c03f3ca3c48db5d53e3ca5"
+    },
+    {
+      "blob": "38b75bbc1ccc958b754f1c9a39df71fda7603209",
+      "path": "packages\/expo-dev-client\/package.json",
+      "sha256": "06c9783cb4d39743c200567516a260d25c9a64960d0f8a145b1bd39b4e7095c0"
+    },
+    {
+      "blob": "8febd026151f6e8b10dc53d945017babb7cbbb78",
+      "path": "packages\/expo-dev-launcher\/package.json",
+      "sha256": "b44a19b15fe79c23a39ad8e5ac4b88d0415b0e18bce73427a0258e1929bac6a6"
+    },
+    {
+      "blob": "b3c2b2f55418fdfcbacbc266fbe0c9cccd7e713e",
+      "path": "packages\/expo-dev-menu-interface\/package.json",
+      "sha256": "3cc08f574ead1637f0a76c9634b43f9d729ab1d7f61e29500cb7b135e6eb40f7"
+    },
+    {
+      "blob": "12cfd6e6427333c8bbf6c7af7f1e2e124b9cf6e7",
+      "path": "packages\/expo-dev-menu\/package.json",
+      "sha256": "c05bfb44c8ad669a5b918a037f900fad47a7470c23b380c58a07d455d23d70f1"
+    },
+    {
+      "blob": "ba445292443d749ec1337b14c2c670cbf34c6eef",
+      "path": "packages\/expo-device\/package.json",
+      "sha256": "94e4ae3e0cfc6bf1e0cf261b7f09efa25032d1ddc1827264273d6d750497c267"
+    },
+    {
+      "blob": "fbcfecf4910149c0c977e386cd91146fe4b60d92",
+      "path": "packages\/expo-doctor\/package.json",
+      "sha256": "df10b15be6489b08d65da9bcfb19299b5c16ac841659ff8b2ff3d200cb6af72d"
+    },
+    {
+      "blob": "76a3cb7d7783f34341dbb3541d412788b99997a3",
+      "path": "packages\/expo-document-picker\/package.json",
+      "sha256": "eeff4154af53c3cf8f31f8c4e335e3a86da0364af1ba5631dc942081943c4dd7"
+    },
+    {
+      "blob": "a1372640c34694a8c7cb07f91ed9958ad043f586",
+      "path": "packages\/expo-eas-client\/package.json",
+      "sha256": "222e2223e3513727229e0dd2a51d7597dac9675d0266a3c9aec645c8ff0699b5"
+    },
+    {
+      "blob": "90bc5ce2b0c0de0f730f0d668bb1e04c05a23528",
+      "path": "packages\/expo-env-info\/package.json",
+      "sha256": "f45e61fad98ae73f78b624c8e98b4e958d1c554b29825864edd5088cffdb4933"
+    },
+    {
+      "blob": "3b3986035c25a405122b321804276b92f61601d6",
+      "path": "packages\/expo-file-system\/package.json",
+      "sha256": "8606f8c30954c6435c4a1a94396233bcd1474b3f04f36d202d1eabebe5919fe1"
+    },
+    {
+      "blob": "a844632ac57dcd8fe256a6455157a76a21175220",
+      "path": "packages\/expo-font\/package.json",
+      "sha256": "49e7c701223e1d92f7825e0f697359926e9ec762acabca740aaf6836905e10a3"
+    },
+    {
+      "blob": "3afe57a861fb75dd28e575ae8ceafd9ed369eea8",
+      "path": "packages\/expo-gl\/package.json",
+      "sha256": "84fc49401ba971aa391360587f691d82fab4763e0f70caff16bf9bf3d03d7bee"
+    },
+    {
+      "blob": "2cf8bbc62827aacddccc5d770232cd9967a5ad1c",
+      "path": "packages\/expo-glass-effect\/package.json",
+      "sha256": "348c68ed3b6bded40bde4b545c66ecee0ee36ad2932ef8486cdf9e9c4211a251"
+    },
+    {
+      "blob": "2ab318767e1d3ae0d49dcf7061068a0ddba165da",
+      "path": "packages\/expo-haptics\/package.json",
+      "sha256": "96e85b08289e1c9d964f8c9850f1366ae536722f30859f383990b9974ffefcb7"
+    },
+    {
+      "blob": "445380c53fdcc3e1d49fa87016cdc2b9d0c4553c",
+      "path": "packages\/expo-image-loader\/package.json",
+      "sha256": "bbc189426ec1ae6d4fbd1940c01d7d368e93fc9aefa35d171baffcfe16e8fa20"
+    },
+    {
+      "blob": "b72cda20643ebf6720bec609bdbe4f9155239fb6",
+      "path": "packages\/expo-image-manipulator\/package.json",
+      "sha256": "8a15dcf6e16e18117a1d3dd0df1f7b303548994badc35628161af4983ffe14e8"
+    },
+    {
+      "blob": "517ffd790f4cde8e57f2a8d28dec9a330b475043",
+      "path": "packages\/expo-image-picker\/package.json",
+      "sha256": "6837297af6520de8c4a21d6634947aa8b6fa0ec06405dd4d01fd16a9a17187fb"
+    },
+    {
+      "blob": "9e7f0f3dcf4a3eb6716cacff12924c0beaac186b",
+      "path": "packages\/expo-image\/package.json",
+      "sha256": "68864b318b4b597e2a43d43ff67f44d54f50ccf8588dc4d2d2a7d18fd8dad2dd"
+    },
+    {
+      "blob": "b7254225553f20ea1e8eb47964defbd1418d274d",
+      "path": "packages\/expo-insights\/package.json",
+      "sha256": "2bbc5454c910608b7013a5fefeb468c54b4fee13bb7bce99b8ebe6167c1b7192"
+    },
+    {
+      "blob": "659f062c572561e031b9ecb2cf8fbf26bf6d2f48",
+      "path": "packages\/expo-intent-launcher\/package.json",
+      "sha256": "ed674b717b77b53586652d2cf7100445e6e483c268dbc5cf5cd1341824a3e8fc"
+    },
+    {
+      "blob": "23ea89a9be4ed1a57e65f696e3776e8c1768b3a6",
+      "path": "packages\/expo-json-utils\/package.json",
+      "sha256": "0162580727ba3acfa4ce4c901f64f2ee3a7a1abf40a9f10e97f78129af3b8e37"
+    },
+    {
+      "blob": "ca229fbb35e514ed2d329d83a887110ffb390408",
+      "path": "packages\/expo-keep-awake\/package.json",
+      "sha256": "41bfbca8d3240d31bb9b819cf79f78a9a322b4b38def332067f5f85d3071ac5f"
+    },
+    {
+      "blob": "441191315577a66a7249708d2d48a89e1cbbd201",
+      "path": "packages\/expo-linear-gradient\/package.json",
+      "sha256": "05d3c6263450e95d5b7ece3bef0884ea3751f0f85af6b503b3a60d8039a01406"
+    },
+    {
+      "blob": "368201d5783cecdd6f44c9b25a25f41f86683b49",
+      "path": "packages\/expo-linking\/package.json",
+      "sha256": "78b585539b7bf22f5b3ddcd759c5e93c9742eb50a94b9ef84fcf68bc5028b64a"
+    },
+    {
+      "blob": "72582034f810aadd0379834074ed704e8f8cf2e8",
+      "path": "packages\/expo-live-photo\/package.json",
+      "sha256": "513184d85d3281d868a38da8e7f339ac47a44fa31d9be485cee884eb34bd0e5b"
+    },
+    {
+      "blob": "f2137e4a6814b613690237cbd90dc15a20905a04",
+      "path": "packages\/expo-local-authentication\/package.json",
+      "sha256": "eee8d6daf414f266f7e517ac55644f4683a7ebaea0a2d4df6f097b63b42c82c2"
+    },
+    {
+      "blob": "4cedbc7717fcb085dc5874d3d3fb6c776c2b29a6",
+      "path": "packages\/expo-localization\/package.json",
+      "sha256": "7f4de5a153a6d2c5908da910b53b7221c3db2bc4f1e1d05275075a6cb188f2e8"
+    },
+    {
+      "blob": "81ab34255acdd9d4c23dd4e4907b79e64d370d8f",
+      "path": "packages\/expo-location\/package.json",
+      "sha256": "21be2d999859c428342e6b22fffcebc38b6add0bbe626cd2e5144261bb8365c2"
+    },
+    {
+      "blob": "ef5a6d8f74766be851fe8dd2fc8f57af05bfd93a",
+      "path": "packages\/expo-mail-composer\/package.json",
+      "sha256": "b766701826eb2fda370d333aa5cd6837d493d24976d7f638ec5847e56444bee0"
+    },
+    {
+      "blob": "e0eecba43758b626de47abd78cc7d872ebf3834b",
+      "path": "packages\/expo-manifests\/package.json",
+      "sha256": "82b9711fe5b47f08e108d4a7581871edfa91c9438e755330ff3619518291e863"
+    },
+    {
+      "blob": "7523409cec6005c8c86bfa4de731b3219332508b",
+      "path": "packages\/expo-maps\/package.json",
+      "sha256": "f15b9e9912c58a9c73d975ff8d091b06409ce9e849b094975b89fc5cc125b428"
+    },
+    {
+      "blob": "b229bb485f7aa0642454b4b8cdceff3b9dd75715",
+      "path": "packages\/expo-media-library\/package.json",
+      "sha256": "2def20225e731782e1b573067419e2513df2f058358dbaeb13d483426b027554"
+    },
+    {
+      "blob": "4c4aa05a96dbb1465235810a092bd2bce1b5e538",
+      "path": "packages\/expo-mesh-gradient\/package.json",
+      "sha256": "9ae5119ef0b5249aa6bf8430ae01295c51de659a2b6381304f8d664b43ca16bf"
+    },
+    {
+      "blob": "ce0261624fa4725e91a62a54140c070677ab3004",
+      "path": "packages\/expo-module-scripts\/package.json",
+      "sha256": "00120935c255bd7b610257ac17ca9a1402a784330b90d682a9202771844275eb"
+    },
+    {
+      "blob": "9f831c8b0c11d27f5a28a316fe5c24ab39c220be",
+      "path": "packages\/expo-module-template-local\/package.json",
+      "sha256": "b70a66afe9e5b19767a344921ce261d7624369e8dc7c5ca6ae3845c6f76918af"
+    },
+    {
+      "blob": "ae07e852a8a14d478f9fcc8c2f1bd9edb7720ddf",
+      "path": "packages\/expo-module-template\/package.json",
+      "sha256": "e8d8b3832d3e9b097e620da24187e1f57697f5e5a7ac9c66c784508cf2525998"
+    },
+    {
+      "blob": "998cb1fea1e1af7a53ca48e1a419bb6f466ea79b",
+      "path": "packages\/expo-modules-autolinking\/package.json",
+      "sha256": "92ad417efa345d9dd7c056d6d062330673b9f46f7ddca9d406fc87ab97c22537"
+    },
+    {
+      "blob": "ee7186150363f6af0f61630556a9be3261e95dfa",
+      "path": "packages\/expo-modules-core\/package.json",
+      "sha256": "402fa8f6c7096cc20d8155323147cd16308d5f59d820ff034220d4049e97af7b"
+    },
+    {
+      "blob": "91068cbc18a6631f79a63f84cec9cae8784bfe72",
+      "path": "packages\/expo-modules-test-core\/package.json",
+      "sha256": "4d84c5159b139da858152c92339c956ab7a5a8411d9d34fff8149ca5a8917849"
+    },
+    {
+      "blob": "8283481a42eb2ae7df5607a806f972d249f341b6",
+      "path": "packages\/expo-navigation-bar\/package.json",
+      "sha256": "74594bcc417e46af81bb5b088c000f175c9eed3d09ca914cbac24815dd3678f6"
+    },
+    {
+      "blob": "f58b1793c6b09d3245e59803b1edfbf6801e5262",
+      "path": "packages\/expo-network-addons\/package.json",
+      "sha256": "1f9095a59805bceea50301721fd2a44267af93b2e91018c713ae00fcfe5c1e81"
+    },
+    {
+      "blob": "2706ae4ff6b288ff42f9e1017ab2de5a16bd5666",
+      "path": "packages\/expo-network\/package.json",
+      "sha256": "70ba428c8ba9f9532331f78ae947981daf1d6d5740f30faa2c6692ac0f667785"
+    },
+    {
+      "blob": "b13401fd4047107a6eb6fe074c38d6a6b4eb0bfb",
+      "path": "packages\/expo-notifications\/package.json",
+      "sha256": "c6f2caf44212f4b5f1509d83c4dd702267f6fde859c14aecd79ad1f81a1df711"
+    },
+    {
+      "blob": "0bb6121a1f2443397f4a7662f1e88a29e01a8f68",
+      "path": "packages\/expo-print\/package.json",
+      "sha256": "f8fc9cbdd631a3c52fcad1f2a177ec632ae2d8dc045f26957c497c783ac2c875"
+    },
+    {
+      "blob": "046b3ca1053547e78caab48649952ad565cc4056",
+      "path": "packages\/expo-processing\/package.json",
+      "sha256": "f9c89455237fbc7de7bdec12dc22261ec2a7acfcd6217381db2eebb4ab62e5bb"
+    },
+    {
+      "blob": "672b980aa319ff5b234cc93634bf8e0f49303149",
+      "path": "packages\/expo-router\/package.json",
+      "sha256": "ebbaab4a257c90054c63a06b07330b67977889a2b3df50330f34fce6fcd58e11"
+    },
+    {
+      "blob": "9d96617a39239e284e9ac89c76da247180168df0",
+      "path": "packages\/expo-screen-capture\/package.json",
+      "sha256": "2bd30b3f5e8bb8f7d7d2bfe512c8e19402dcce4d7ecb100cc6ad9125efa21b3d"
+    },
+    {
+      "blob": "ce2acf785489baba3ec142365047f97de39f3895",
+      "path": "packages\/expo-screen-orientation\/package.json",
+      "sha256": "f807114c7a1d01c9e2ea4229fb29c7d921474f00c185c6a24486c6943355e581"
+    },
+    {
+      "blob": "9e7a1841801f9fa66fb49cd59e77af98c286ece0",
+      "path": "packages\/expo-secure-store\/package.json",
+      "sha256": "ed86de76bfa0252b4737925eb70892b63c66194fa7ce780086d5c89671709bd6"
+    },
+    {
+      "blob": "489c02bc2e1d423db9e0abecb3325dc1cb56f71c",
+      "path": "packages\/expo-sensors\/package.json",
+      "sha256": "c12beefa893b88a88e87f4e1b94fe8adb95367aca1adc536003cc0364886ebaf"
+    },
+    {
+      "blob": "9728d7b9cf81a4741c64cae36473961cb13a8a97",
+      "path": "packages\/expo-server\/package.json",
+      "sha256": "1f7933aa0ae36f007e17580657f79cceaa9bf97f615e68ee146d1c932857cb5f"
+    },
+    {
+      "blob": "48edc350599234c2571ff6c24270d2f0645e0492",
+      "path": "packages\/expo-sharing\/package.json",
+      "sha256": "12187c91f6b9e31be2aaa479889a822cc109f2c759dc1274e80dbe13e73e5d92"
+    },
+    {
+      "blob": "84ec9620c6528d8c92dc729ff39d93e483bae7a2",
+      "path": "packages\/expo-sms\/package.json",
+      "sha256": "4ee122c4d63e3ec62c63afed0f90e46bce01f972aed8ab2bc91264a429db8aa8"
+    },
+    {
+      "blob": "3e4ff775c907e3dd45a83ed236c3877117622fc6",
+      "path": "packages\/expo-speech\/package.json",
+      "sha256": "5c0dee8b9cf6085cc56a4431b64699c4c24627380a909948d7827861890ec6ff"
+    },
+    {
+      "blob": "9834c0fd290fb48e3fa73046bc65fc8dce7e3b25",
+      "path": "packages\/expo-splash-screen\/package.json",
+      "sha256": "bef06a832eb9aec26e2fe40a966fe8ac86a8bf225d52f78c58ca651489d4fd6c"
+    },
+    {
+      "blob": "299cc14cd3960972680b11eaa6881440979a0e99",
+      "path": "packages\/expo-sqlite\/package.json",
+      "sha256": "c488da0a7dc9fb7e4fedf73005f7f8c8ad3aee4c21193d363cae77e46e4c24f6"
+    },
+    {
+      "blob": "67e4582ed566aa7ba8aadd1b3682d9bb3a6323b9",
+      "path": "packages\/expo-standard-web-crypto\/package.json",
+      "sha256": "53a6b5a139c4f5abef484d9cf99be75caa28c14475fc5d5a3f89ae5e4a465768"
+    },
+    {
+      "blob": "52ea33412a93af76d11dc004882201fcad8f5fe4",
+      "path": "packages\/expo-status-bar\/package.json",
+      "sha256": "a28060f010bdb3913bc40bd799b630c41801b2a32b191f213028afab2b862dca"
+    },
+    {
+      "blob": "8cac566ac98c4e382f46ef06eb09d02dba14d891",
+      "path": "packages\/expo-store-review\/package.json",
+      "sha256": "0ca70e533ad99467435a3f3f206976214b7f8413cb10a08c378aa03e65c79008"
+    },
+    {
+      "blob": "71f36817a4e32ab71ba5054d0526189d18c01996",
+      "path": "packages\/expo-structured-headers\/package.json",
+      "sha256": "fec2576ab0308f21c5ada9ecdca9ea100a6da49fd654951232c05cad97813b57"
+    },
+    {
+      "blob": "9207ba340781b82d9f9805f6bb3e4e04af675082",
+      "path": "packages\/expo-symbols\/package.json",
+      "sha256": "98b69045672c71229577c23fbb01c498bdafeee609bf541d5310a8772913e865"
+    },
+    {
+      "blob": "b1de1da81598c40a3e74901a7d8a4b3ead3ad079",
+      "path": "packages\/expo-system-ui\/package.json",
+      "sha256": "cf245b02ec0ab3c29bc466e334e3fb6b78b2c2e7f3d96f67e606f9334dfe797c"
+    },
+    {
+      "blob": "fff9cbf2fa349f22d70f23c7622503b7c37f37af",
+      "path": "packages\/expo-task-manager\/package.json",
+      "sha256": "a1a58c474ab7788581df08e40737f12e44635e98a626160bda1a8c14541bf196"
+    },
+    {
+      "blob": "f3c8dce6aac7ea1ecb5f174318ec8ebd4630c2cf",
+      "path": "packages\/expo-test-runner\/package.json",
+      "sha256": "8bb3d54de6210f6fbd85f639cfb34c74818178801588cb4a404b63a91a2993e6"
+    },
+    {
+      "blob": "d316004430ae6b98b85456c4807469d3676045e7",
+      "path": "packages\/expo-tracking-transparency\/package.json",
+      "sha256": "0ceda09b9b3921dbf6bc32c5ee959e0aba5537a790850de27e4b006b950184cb"
+    },
+    {
+      "blob": "765be9f9ea02c35d22f67637d557a60c31f5d4fe",
+      "path": "packages\/expo-ui\/package.json",
+      "sha256": "902c8a1d832077f1abb95df781e94132331e6923cb819a110fa67c2508091ae0"
+    },
+    {
+      "blob": "3bc69af51279c61b3107ecd9472d36c13a25d260",
+      "path": "packages\/expo-updates-interface\/package.json",
+      "sha256": "70c8377bd9fb0b7aed7d41bb70ed06e573517f91c8658ade8ed90fbbdcbf4a38"
+    },
+    {
+      "blob": "3d224ca640de19da830203ee6c6555eef56d8a9e",
+      "path": "packages\/expo-updates\/package.json",
+      "sha256": "b74c932b1f7563665ee4c87e0f4f133995c23f73d4829649a4a78b892072beff"
+    },
+    {
+      "blob": "482226b0707d3b728246e8b6a260021dc3a314ef",
+      "path": "packages\/expo-video-thumbnails\/package.json",
+      "sha256": "797ba7cb9cfec7242bc9884c5b7b092e2c71354b6bbc2b1d3e9375ecb5f2b40b"
+    },
+    {
+      "blob": "ccfa9f679f71ede27c1f438fbed013bf7720c25e",
+      "path": "packages\/expo-video\/package.json",
+      "sha256": "4ad807bea269989573c10912a4aee2cdbc9f4feb160c84dd25adfa19679cbb31"
+    },
+    {
+      "blob": "0f10ecdc3deb8fc43765ab01ce869d4fd1507d7b",
+      "path": "packages\/expo-web-browser\/package.json",
+      "sha256": "e7b434c1f575ef074d023ee189a3c5fab7a80f240ecfe9b22c135c99351216e1"
+    },
+    {
+      "blob": "823eabe7eafb2bb497682e04bf946275c9edd70f",
+      "path": "packages\/expo\/bundledNativeModules.json",
+      "sha256": "53ebe8a67cfcee17b52e7cf44886ab3fe79022145c19ad7aaffcd8a584a06d7a"
+    },
+    {
+      "blob": "26f7de9fde32b1079ce1de1ff75f2c70bfba3c14",
+      "path": "packages\/expo\/package.json",
+      "sha256": "0f9ca437241842614eaa13af62e89d3251b6fc1b6c811a6ebc9b538fdc280fdd"
+    },
+    {
+      "blob": "d73b283e3bff751d700c8f1118577d3c07ae9517",
+      "path": "packages\/html-elements\/package.json",
+      "sha256": "e9c1a2a72b5de2bd0ecee7d4e9a72d106a09c55d04d7890cf63089417ee0b456"
+    },
+    {
+      "blob": "1727aaa29d3c0904de1392b534648f0d5b7335dc",
+      "path": "packages\/install-expo-modules\/package.json",
+      "sha256": "c62727a96ba3bb3b51d186fbd058e72c10c9f877d44892aba712431a654ffb56"
+    },
+    {
+      "blob": "7694feaf54775f0644afababb686d09c230766a1",
+      "path": "packages\/jest-expo\/package.json",
+      "sha256": "18d6a53ebbe86cfc65ae619671cbd6a2edd9a085ffbf1f34d528a9b57f21508f"
+    },
+    {
+      "blob": "d7ed4b8a6446ebb31c543954b922f13911a3462d",
+      "path": "packages\/patch-project\/package.json",
+      "sha256": "923f038c0bc2866be99e9245121f6fad62820da8683280dea80e718d7431e346"
+    },
+    {
+      "blob": "1cf17541824cd4bb217e9aeaac81a009df6bf337",
+      "path": "packages\/pod-install\/package.json",
+      "sha256": "151ea7df810a752f6f5ed21e503c6a8c2dd5050e01d29c9e640bdbef2d1890ba"
+    },
+    {
+      "blob": "4fe35afbb970eb7d85d4f75130424ddf7a817ba7",
+      "path": "packages\/unimodules-app-loader\/package.json",
+      "sha256": "18e109beaa79b9c0e2271f3d4d9a3cbb17c39a69c8f854346ac7b2311225dfa5"
+    },
+    {
+      "blob": "f136eee4d5f0fefd93e59919642f5e4415d75d7c",
+      "path": "packages\/uri-scheme\/package.json",
+      "sha256": "dc56b93b9a7e52fcccd1f70b59a2232a957d55ad5f24fbe32ba3e66d3a967ee9"
+    },
+    {
+      "blob": "31deb3c4283389ddeb860b3c04dccdebdeb5991e",
+      "path": "templates\/expo-template-bare-minimum\/package.json",
+      "sha256": "3138c57b5093682a7950ae973a02568ab6f69d8b5d5cc014bec63b62bad257c6"
+    },
+    {
+      "blob": "00d93bca7a67b8b5e3dcfb9e39c5d6ab9248e67c",
+      "path": "templates\/expo-template-blank-typescript\/package.json",
+      "sha256": "13b60431574c33e12fc32c50f7e6473f77073993efd11345495feb88388482e9"
+    },
+    {
+      "blob": "ec28441d59fca6bf7c658c80af1ee59d04633f94",
+      "path": "templates\/expo-template-blank\/package.json",
+      "sha256": "8b139b4014aff94d7c41ff9bb48617ad8c0377c81076bdb131b946d15a798c2f"
+    },
+    {
+      "blob": "ee142de9221009eeb1be24473bf9e74d46c91397",
+      "path": "templates\/expo-template-default\/package.json",
+      "sha256": "e89a794862e724eb2e6f01de5c2d3ca7361abfb5601a4a9ed3644245cb608723"
+    },
+    {
+      "blob": "2724ac4db0787a85ab11421145127f838368b739",
+      "path": "templates\/expo-template-tabs\/package.json",
+      "sha256": "0329f0028c0ef98f25112ad50c0854c2d3fd6a1af642abe7e6a2acf7685fac65"
+    },
+    {
+      "blob": "c56601d22fdc3860d92f63614bcc17aab46659fc",
+      "path": "yarn.lock",
+      "sha256": "89ac403be25005f862b0d3d5e58fce49cfb20299f70f38fc27927a16299d2170"
+    }
+  ],
+  "locks": [
+    {
+      "dependencies": {
+        "metro": "0.83.3",
+        "metro-babel-transformer": "0.83.3",
+        "metro-cache": "0.83.3",
+        "metro-cache-key": "0.83.3",
+        "metro-config": "0.83.3",
+        "metro-core": "0.83.3",
+        "metro-file-map": "0.83.3",
+        "metro-minify-terser": "0.83.3",
+        "metro-resolver": "0.83.3",
+        "metro-runtime": "0.83.3",
+        "metro-source-map": "0.83.3",
+        "metro-symbolicate": "0.83.3",
+        "metro-transform-plugins": "0.83.3",
+        "metro-transform-worker": "0.83.3"
+      },
+      "id": "LOCK:@expo\/metro@~54.2.0",
+      "integrity": "sha512-h68TNZPGsk6swMmLm9nRSnE2UXm48rWwgcbtAHVMikXvbxdS41NDHHeqg1rcQ9AbznDRp6SQVC2MVpDnsRKU1w==",
+      "name": "@expo\/metro",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@expo\/metro\/-\/metro-54.2.0.tgz#6ecf4a77ae7553b73daca4206854728de76c854d",
+      "selector": "@expo\/metro@~54.2.0",
+      "source": {
+        "line": 1577,
+        "path": "yarn.lock"
+      },
+      "spec": "~54.2.0",
+      "version": "54.2.0"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:@expo\/vector-icons@^15.0.2",
+      "integrity": "sha512-SBUyYKphmlfUBqxSfDdJ3jAdEVSALS2VUPOUyqn48oZmb2TL\/O7t7\/PQm5v4NQujYEPLPMTLn9KVw6H7twwbTA==",
+      "name": "@expo\/vector-icons",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@expo\/vector-icons\/-\/vector-icons-15.0.3.tgz#12c38d4e6cc927dd0500e4591ac00672a8909748",
+      "selector": "@expo\/vector-icons@^15.0.2",
+      "source": {
+        "line": 1771,
+        "path": "yarn.lock"
+      },
+      "spec": "^15.0.2",
+      "version": "15.0.3"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:@expo\/vector-icons@^15.0.3",
+      "integrity": "sha512-SBUyYKphmlfUBqxSfDdJ3jAdEVSALS2VUPOUyqn48oZmb2TL\/O7t7\/PQm5v4NQujYEPLPMTLn9KVw6H7twwbTA==",
+      "name": "@expo\/vector-icons",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@expo\/vector-icons\/-\/vector-icons-15.0.3.tgz#12c38d4e6cc927dd0500e4591ac00672a8909748",
+      "selector": "@expo\/vector-icons@^15.0.3",
+      "source": {
+        "line": 1771,
+        "path": "yarn.lock"
+      },
+      "spec": "^15.0.3",
+      "version": "15.0.3"
+    },
+    {
+      "dependencies": {
+        "merge-options": "^3.0.4"
+      },
+      "id": "LOCK:@react-native-async-storage\/async-storage@2.2.0",
+      "integrity": "sha512-gvRvjR5JAaUZF8tv2Kcq\/Gbt3JHwbKFYfmb445rhOj6NUMx3qPLixmDx5pZAyb9at1bYvJ4\/eTUipU5aki45xw==",
+      "name": "@react-native-async-storage\/async-storage",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@react-native-async-storage\/async-storage\/-\/async-storage-2.2.0.tgz#a3aa565253e46286655560172f4e366e8969f5ad",
+      "selector": "@react-native-async-storage\/async-storage@2.2.0",
+      "source": {
+        "line": 3440,
+        "path": "yarn.lock"
+      },
+      "spec": "2.2.0",
+      "version": "2.2.0"
+    },
+    {
+      "dependencies": {
+        "invariant": "^2.2.4"
+      },
+      "id": "LOCK:@react-native-community\/datetimepicker@^8.4.4",
+      "integrity": "sha512-bc4ZixEHxZC9\/qf5gbdYvIJiLZ5CLmEsC3j+Yhe1D1KC\/3QhaIfGDVdUcid0PdlSoGOSEq4VlB93AWyetEyBSQ==",
+      "name": "@react-native-community\/datetimepicker",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@react-native-community\/datetimepicker\/-\/datetimepicker-8.4.4.tgz#2160a808b596e85240cee2415be2eb2bd80d2e92",
+      "selector": "@react-native-community\/datetimepicker@^8.4.4",
+      "source": {
+        "line": 3447,
+        "path": "yarn.lock"
+      },
+      "spec": "^8.4.4",
+      "version": "8.4.4"
+    },
+    {
+      "dependencies": {
+        "invariant": "^2.2.4"
+      },
+      "id": "LOCK:@react-native-community\/datetimepicker@8.4.4",
+      "integrity": "sha512-bc4ZixEHxZC9\/qf5gbdYvIJiLZ5CLmEsC3j+Yhe1D1KC\/3QhaIfGDVdUcid0PdlSoGOSEq4VlB93AWyetEyBSQ==",
+      "name": "@react-native-community\/datetimepicker",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@react-native-community\/datetimepicker\/-\/datetimepicker-8.4.4.tgz#2160a808b596e85240cee2415be2eb2bd80d2e92",
+      "selector": "@react-native-community\/datetimepicker@8.4.4",
+      "source": {
+        "line": 3447,
+        "path": "yarn.lock"
+      },
+      "spec": "8.4.4",
+      "version": "8.4.4"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:@react-native-community\/netinfo@11.4.1",
+      "integrity": "sha512-B0BYAkghz3Q2V09BF88RA601XursIEA111tnc2JOaN7axJWmNefmfjZqw\/KdSxKZp7CZUuPpjBmz\/WCR9uaHYg==",
+      "name": "@react-native-community\/netinfo",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@react-native-community\/netinfo\/-\/netinfo-11.4.1.tgz#a3c247aceab35f75dd0aa4bfa85d2be5a4508688",
+      "selector": "@react-native-community\/netinfo@11.4.1",
+      "source": {
+        "line": 3454,
+        "path": "yarn.lock"
+      },
+      "spec": "11.4.1",
+      "version": "11.4.1"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:@react-native-community\/slider@5.0.1",
+      "integrity": "sha512-K3JRWkIW4wQ79YJ6+BPZzp1SamoikxfPRw7Yw4B4PElEQmqZFrmH9M5LxvIo460\/3QSrZF\/wCgi3qizJt7g\/iw==",
+      "name": "@react-native-community\/slider",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@react-native-community\/slider\/-\/slider-5.0.1.tgz#478789e526af31e0660c6f49fa5c5429d8d4287b",
+      "selector": "@react-native-community\/slider@5.0.1",
+      "source": {
+        "line": 3459,
+        "path": "yarn.lock"
+      },
+      "spec": "5.0.1",
+      "version": "5.0.1"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:@react-native-masked-view\/masked-view@0.3.2",
+      "integrity": "sha512-XwuQoW7\/GEgWRMovOQtX3A4PrXhyaZm0lVUiY8qJDvdngjLms9Cpdck6SmGAUNqQwcj2EadHC1HwL0bEyoa\/SQ==",
+      "name": "@react-native-masked-view\/masked-view",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@react-native-masked-view\/masked-view\/-\/masked-view-0.3.2.tgz#7064533a573e3539ec912f59c1f457371bf49dd9",
+      "selector": "@react-native-masked-view\/masked-view@0.3.2",
+      "source": {
+        "line": 3464,
+        "path": "yarn.lock"
+      },
+      "spec": "0.3.2",
+      "version": "0.3.2"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:@react-native-picker\/picker@2.11.1",
+      "integrity": "sha512-ThklnkK4fV3yynnIIRBkxxjxR4IFbdMNJVF6tlLdOJ\/zEFUEFUEdXY0KmH0iYzMwY8W4\/InWsLiA7AkpAbnexA==",
+      "name": "@react-native-picker\/picker",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@react-native-picker\/picker\/-\/picker-2.11.1.tgz#d8884440abc5f75579d82f9888e50ca047c9ec14",
+      "selector": "@react-native-picker\/picker@2.11.1",
+      "source": {
+        "line": 3469,
+        "path": "yarn.lock"
+      },
+      "spec": "2.11.1",
+      "version": "2.11.1"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:@react-native-segmented-control\/segmented-control@2.5.7",
+      "integrity": "sha512-l84YeVX8xAU3lvOJSvV4nK\/NbGhIm2gBfveYolwaoCbRp+\/SLXtc6mYrQmM9ScXNwU14mnzjQTpTHWl5YPnkzQ==",
+      "name": "@react-native-segmented-control\/segmented-control",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@react-native-segmented-control\/segmented-control\/-\/segmented-control-2.5.7.tgz#7c91ef7dede8752796a234321fafa2c604fc82af",
+      "selector": "@react-native-segmented-control\/segmented-control@2.5.7",
+      "source": {
+        "line": 3474,
+        "path": "yarn.lock"
+      },
+      "spec": "2.5.7",
+      "version": "2.5.7"
+    },
+    {
+      "dependencies": {
+        "tslib": "2.8.1"
+      },
+      "id": "LOCK:@shopify\/flash-list@2.0.2",
+      "integrity": "sha512-zhlrhA9eiuEzja4wxVvotgXHtqd3qsYbXkQ3rsBfOgbFA9BVeErpDE\/yEwtlIviRGEqpuFj\/oU5owD6ByaNX+w==",
+      "name": "@shopify\/flash-list",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@shopify\/flash-list\/-\/flash-list-2.0.2.tgz#644748f883fccf8cf2e0ca251e0ef88673b89120",
+      "selector": "@shopify\/flash-list@2.0.2",
+      "source": {
+        "line": 3711,
+        "path": "yarn.lock"
+      },
+      "spec": "2.0.2",
+      "version": "2.0.2"
+    },
+    {
+      "dependencies": {
+        "canvaskit-wasm": "0.40.0",
+        "react-reconciler": "0.31.0"
+      },
+      "id": "LOCK:@shopify\/react-native-skia@2.2.12",
+      "integrity": "sha512-P5wZSMPTp00hM0do+awNFtb5aPh5hSpodMGwy7NaxK90AV+SmUu7wZe6NGevzQIwgFa89Epn6xK3j4jKWdQi+A==",
+      "name": "@shopify\/react-native-skia",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@shopify\/react-native-skia\/-\/react-native-skia-2.2.12.tgz#1c27613035952772ce07418ace866b56df403546",
+      "selector": "@shopify\/react-native-skia@2.2.12",
+      "source": {
+        "line": 3718,
+        "path": "yarn.lock"
+      },
+      "spec": "2.2.12",
+      "version": "2.2.12"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:@stripe\/stripe-react-native@0.50.3",
+      "integrity": "sha512-nzOjqZXQKdM7y33Em2JZxCTAgf\/q\/J51IJQ50XtwIL0QT6Jt5WSmfKm9rGmBhoXxxG4DcXu\/qxJeAHlhcPDGQg==",
+      "name": "@stripe\/stripe-react-native",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/@stripe\/stripe-react-native\/-\/stripe-react-native-0.50.3.tgz#4b80e55807a297127d8bd109c304309bbf179cf1",
+      "selector": "@stripe\/stripe-react-native@0.50.3",
+      "source": {
+        "line": 3784,
+        "path": "yarn.lock"
+      },
+      "spec": "0.50.3",
+      "version": "0.50.3"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:lottie-react-native@^7.3.1",
+      "integrity": "sha512-VW0gtiP1i3Jv6+PaVaNg6QDIqAXwAqmxVp1UOJFqsB6FeBN0zc8M\/XR8DE8YiayZzd149nlqGOgmwoV7FbRGDw==",
+      "name": "lottie-react-native",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/lottie-react-native\/-\/lottie-react-native-7.3.1.tgz#f365f6505dc9dd148edbff052909c09204998701",
+      "selector": "lottie-react-native@^7.3.1",
+      "source": {
+        "line": 11164,
+        "path": "yarn.lock"
+      },
+      "spec": "^7.3.1",
+      "version": "7.3.1"
+    },
+    {
+      "dependencies": {
+        "scheduler": "^0.26.0"
+      },
+      "id": "LOCK:react-dom@19.1.0",
+      "integrity": "sha512-Xs1hdnE+DyKgeHJeJznQmYMIBG3TKIHJJT95Q58nHLSrElKlGQqDTR2HQ9fx5CN\/Gk6Vh\/kupBTDLU11\/nDk\/g==",
+      "name": "react-dom",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-dom\/-\/react-dom-19.1.0.tgz#133558deca37fa1d682708df8904b25186793623",
+      "selector": "react-dom@19.1.0",
+      "source": {
+        "line": 13186,
+        "path": "yarn.lock"
+      },
+      "spec": "19.1.0",
+      "version": "19.1.0"
+    },
+    {
+      "dependencies": {
+        "@egjs\/hammerjs": "^2.0.17",
+        "hoist-non-react-statics": "^3.3.0",
+        "invariant": "^2.2.4"
+      },
+      "id": "LOCK:react-native-gesture-handler@~2.28.0",
+      "integrity": "sha512-0msfJ1vRxXKVgTgvL+1ZOoYw3\/0z1R+Ked0+udoJhyplC2jbVKIJ8Z1bzWdpQRCV3QcQ87Op0zJVE5DhKK2A0A==",
+      "name": "react-native-gesture-handler",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-gesture-handler\/-\/react-native-gesture-handler-2.28.0.tgz#07fb4f5eae72f810aac3019b060d26c1835bfd0c",
+      "selector": "react-native-gesture-handler@~2.28.0",
+      "source": {
+        "line": 13269,
+        "path": "yarn.lock"
+      },
+      "spec": "~2.28.0",
+      "version": "2.28.0"
+    },
+    {
+      "dependencies": {
+        "react-native-is-edge-to-edge": "^1.2.1"
+      },
+      "id": "LOCK:react-native-keyboard-controller@^1.18.5",
+      "integrity": "sha512-wbYN6Tcu3G5a05dhRYBgjgd74KqoYWuUmroLpigRg9cXy5uYo7prTMIvMgvLtARQtUF7BOtFggUnzgoBOgk0TQ==",
+      "name": "react-native-keyboard-controller",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-keyboard-controller\/-\/react-native-keyboard-controller-1.18.5.tgz#ae12131f2019c574178479d2c55784f55e08bb68",
+      "selector": "react-native-keyboard-controller@^1.18.5",
+      "source": {
+        "line": 13305,
+        "path": "yarn.lock"
+      },
+      "spec": "^1.18.5",
+      "version": "1.18.5"
+    },
+    {
+      "dependencies": {
+        "@types\/geojson": "^7946.0.13"
+      },
+      "id": "LOCK:react-native-maps@1.20.1",
+      "integrity": "sha512-NZI3B5Z6kxAb8gzb2Wxzu\/+P2SlFIg1waHGIpQmazDSCRkNoHNY4g96g+xS0QPSaG\/9xRBbDNnd2f2\/OW6t6LQ==",
+      "name": "react-native-maps",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-maps\/-\/react-native-maps-1.20.1.tgz#f613364886b2f72db56cafcd2bd7d3a35f470dfb",
+      "selector": "react-native-maps@1.20.1",
+      "source": {
+        "line": 13312,
+        "path": "yarn.lock"
+      },
+      "spec": "1.20.1",
+      "version": "1.20.1"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:react-native-pager-view@6.9.1",
+      "integrity": "sha512-uUT0MMMbNtoSbxe9pRvdJJKEi9snjuJ3fXlZhG8F2vVMOBJVt\/AFtqMPUHu9yMflmqOr08PewKzj9EPl\/Yj+Gw==",
+      "name": "react-native-pager-view",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-pager-view\/-\/react-native-pager-view-6.9.1.tgz#a9e6d9323935cc2ae1d46d7816b66f76dc3eff8e",
+      "selector": "react-native-pager-view@6.9.1",
+      "source": {
+        "line": 13319,
+        "path": "yarn.lock"
+      },
+      "spec": "6.9.1",
+      "version": "6.9.1"
+    },
+    {
+      "dependencies": {
+        "react-native-is-edge-to-edge": "^1.2.1",
+        "semver": "7.7.2"
+      },
+      "id": "LOCK:react-native-reanimated@4.1.1",
+      "integrity": "sha512-QWe8EJJFOQW92b\/sl551u3uPeLT5TUx2eAXkga8Kcj2w+Qs\/Yh6fsz5sN8iyNO6zcoSNFqYQLICD6dvBIFGzbg==",
+      "name": "react-native-reanimated",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-reanimated\/-\/react-native-reanimated-4.1.1.tgz#01f16d3184570be4bf8d5db14edfe494d3694d1e",
+      "selector": "react-native-reanimated@4.1.1",
+      "source": {
+        "line": 13333,
+        "path": "yarn.lock"
+      },
+      "spec": "4.1.1",
+      "version": "4.1.1"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:react-native-safe-area-context@5.6.0",
+      "integrity": "sha512-tJas3YOdsuCg3kepCTGF3LWZp9onMbb9Agju2xfs2kRX8d\/5TMUPmupBpjerk\/B7Tv\/zeJnk+qp5neA96Y0otQ==",
+      "name": "react-native-safe-area-context",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-safe-area-context\/-\/react-native-safe-area-context-5.6.0.tgz#0ab284c291bb57d59330abf7dfe65156d6340e78",
+      "selector": "react-native-safe-area-context@5.6.0",
+      "source": {
+        "line": 13341,
+        "path": "yarn.lock"
+      },
+      "spec": "5.6.0",
+      "version": "5.6.0"
+    },
+    {
+      "dependencies": {
+        "react-freeze": "^1.0.0",
+        "react-native-is-edge-to-edge": "^1.1.7",
+        "warn-once": "^0.1.0"
+      },
+      "id": "LOCK:react-native-screens@4.11.1-nightly-20250611-8b82e081e",
+      "integrity": "sha512-6hF155fY5z3uuBHG6qYNpu0XuqAKn5omNATzVCAwMPlpiIJ2j+iHOWbYVyqBT8bDnVvcczZT\/eloGvt6A2OtEQ==",
+      "name": "react-native-screens",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-screens\/-\/react-native-screens-4.11.1-nightly-20250611-8b82e081e.tgz#fa41372cc3a31b217513758597b6a9f6a95cd43c",
+      "selector": "react-native-screens@4.11.1-nightly-20250611-8b82e081e",
+      "source": {
+        "line": 13346,
+        "path": "yarn.lock"
+      },
+      "spec": "4.11.1-nightly-20250611-8b82e081e",
+      "version": "4.11.1-nightly-20250611-8b82e081e"
+    },
+    {
+      "dependencies": {
+        "react-freeze": "^1.0.0",
+        "react-native-is-edge-to-edge": "^1.2.1",
+        "warn-once": "^0.1.0"
+      },
+      "id": "LOCK:react-native-screens@4.16.0",
+      "integrity": "sha512-yIAyh7F\/9uWkOzCi1\/2FqvNvK6Wb9Y1+Kzn16SuGfN9YFJDTbwlzGRvePCNTOX0recpLQF3kc2FmvMUhyTCH1Q==",
+      "name": "react-native-screens",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-screens\/-\/react-native-screens-4.16.0.tgz#efa42e77a092aa0b5277c9ae41391ea0240e0870",
+      "selector": "react-native-screens@4.16.0",
+      "source": {
+        "line": 13355,
+        "path": "yarn.lock"
+      },
+      "spec": "4.16.0",
+      "version": "4.16.0"
+    },
+    {
+      "dependencies": {
+        "css-select": "^5.1.0",
+        "css-tree": "^1.1.3",
+        "warn-once": "0.1.1"
+      },
+      "id": "LOCK:react-native-svg@15.12.1",
+      "integrity": "sha512-vCuZJDf8a5aNC2dlMovEv4Z0jjEUET53lm\/iILFnFewa15b4atjVxU6Wirm6O9y6dEsdjDZVD7Q3QM4T1wlI8g==",
+      "name": "react-native-svg",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-svg\/-\/react-native-svg-15.12.1.tgz#7ba756dd6a235f86a2c312a1e7911f9b0d18ad3a",
+      "selector": "react-native-svg@15.12.1",
+      "source": {
+        "line": 13369,
+        "path": "yarn.lock"
+      },
+      "spec": "15.12.1",
+      "version": "15.12.1"
+    },
+    {
+      "dependencies": {
+        "html2canvas": "^1.4.1"
+      },
+      "id": "LOCK:react-native-view-shot@4.0.3",
+      "integrity": "sha512-USNjYmED7C0me02c1DxKA0074Hw+y\/nxo+xJKlffMvfUWWzL5ELh\/TJA\/pTnVqFurIrzthZDPtDM7aBFJuhrHQ==",
+      "name": "react-native-view-shot",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-view-shot\/-\/react-native-view-shot-4.0.3.tgz#9b98388fcc5228073cb66ac98ca339eda35767ac",
+      "selector": "react-native-view-shot@4.0.3",
+      "source": {
+        "line": 13378,
+        "path": "yarn.lock"
+      },
+      "spec": "4.0.3",
+      "version": "4.0.3"
+    },
+    {
+      "dependencies": {
+        "@babel\/runtime": "^7.18.6",
+        "@react-native\/normalize-colors": "^0.74.1",
+        "fbjs": "^3.0.4",
+        "inline-style-prefixer": "^7.0.1",
+        "memoize-one": "^6.0.0",
+        "nullthrows": "^1.1.1",
+        "postcss-value-parser": "^4.2.0",
+        "styleq": "^0.1.3"
+      },
+      "id": "LOCK:react-native-web@~0.21.0",
+      "integrity": "sha512-S0mtV7wMPeet1kCRnrEmo1bTUJeFsKebleCbRwbBRBUg\/BWS64bfsnnm+ArC+QtjlbZFSZmtvv8imzOIuOOa3Q==",
+      "name": "react-native-web",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-web\/-\/react-native-web-0.21.0.tgz#90c122f94f9c907235235a1f18c0e541a4c30c67",
+      "selector": "react-native-web@~0.21.0",
+      "source": {
+        "line": 13385,
+        "path": "yarn.lock"
+      },
+      "spec": "~0.21.0",
+      "version": "0.21.0"
+    },
+    {
+      "dependencies": {
+        "escape-string-regexp": "^4.0.0",
+        "invariant": "2.2.4"
+      },
+      "id": "LOCK:react-native-webview@13.13.5",
+      "integrity": "sha512-MfC2B+woL4Hlj2WCzcb1USySKk+SteXnUKmKktOk\/H\/AQy5+LuVdkPKm8SknJ0\/RxaxhZ48WBoTRGaqgR137hw==",
+      "name": "react-native-webview",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-webview\/-\/react-native-webview-13.13.5.tgz#4ef5f9310ddff5747f884a6655228ec9c7d52c73",
+      "selector": "react-native-webview@13.13.5",
+      "source": {
+        "line": 13399,
+        "path": "yarn.lock"
+      },
+      "spec": "13.13.5",
+      "version": "13.13.5"
+    },
+    {
+      "dependencies": {
+        "escape-string-regexp": "^4.0.0",
+        "invariant": "2.2.4"
+      },
+      "id": "LOCK:react-native-webview@13.15.0",
+      "integrity": "sha512-Vzjgy8mmxa\/JO6l5KZrsTC7YemSdq+qB01diA0FqjUTaWGAGwuykpJ73MDj3+mzBSlaDxAEugHzTtkUQkQEQeQ==",
+      "name": "react-native-webview",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-webview\/-\/react-native-webview-13.15.0.tgz#b6d2f8d8dd65897db76659ddd8198d2c74ec5a79",
+      "selector": "react-native-webview@13.15.0",
+      "source": {
+        "line": 13407,
+        "path": "yarn.lock"
+      },
+      "spec": "13.15.0",
+      "version": "13.15.0"
+    },
+    {
+      "dependencies": {
+        "@babel\/plugin-transform-arrow-functions": "^7.0.0-0",
+        "@babel\/plugin-transform-class-properties": "^7.0.0-0",
+        "@babel\/plugin-transform-classes": "^7.0.0-0",
+        "@babel\/plugin-transform-nullish-coalescing-operator": "^7.0.0-0",
+        "@babel\/plugin-transform-optional-chaining": "^7.0.0-0",
+        "@babel\/plugin-transform-shorthand-properties": "^7.0.0-0",
+        "@babel\/plugin-transform-template-literals": "^7.0.0-0",
+        "@babel\/plugin-transform-unicode-regex": "^7.0.0-0",
+        "@babel\/preset-typescript": "^7.16.7",
+        "convert-source-map": "^2.0.0",
+        "semver": "7.7.2"
+      },
+      "id": "LOCK:react-native-worklets@0.5.1",
+      "integrity": "sha512-lJG6Uk9YuojjEX\/tQrCbcbmpdLCSFxDK1rJlkDhgqkVi1KZzG7cdcBFQRqyNOOzR9Y0CXNuldmtWTGOyM0k0+w==",
+      "name": "react-native-worklets",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native-worklets\/-\/react-native-worklets-0.5.1.tgz#d153242655e3757b6c62a474768831157316ad33",
+      "selector": "react-native-worklets@0.5.1",
+      "source": {
+        "line": 13415,
+        "path": "yarn.lock"
+      },
+      "spec": "0.5.1",
+      "version": "0.5.1"
+    },
+    {
+      "dependencies": {
+        "@jest\/create-cache-key-function": "^29.7.0",
+        "@react-native\/assets-registry": "0.81.5",
+        "@react-native\/codegen": "0.81.5",
+        "@react-native\/community-cli-plugin": "0.81.5",
+        "@react-native\/gradle-plugin": "0.81.5",
+        "@react-native\/js-polyfills": "0.81.5",
+        "@react-native\/normalize-colors": "0.81.5",
+        "@react-native\/virtualized-lists": "0.81.5",
+        "abort-controller": "^3.0.0",
+        "anser": "^1.4.9",
+        "ansi-regex": "^5.0.0",
+        "babel-jest": "^29.7.0",
+        "babel-plugin-syntax-hermes-parser": "0.29.1",
+        "base64-js": "^1.5.1",
+        "commander": "^12.0.0",
+        "flow-enums-runtime": "^0.0.6",
+        "glob": "^7.1.1",
+        "invariant": "^2.2.4",
+        "jest-environment-node": "^29.7.0",
+        "memoize-one": "^5.0.0",
+        "metro-runtime": "^0.83.1",
+        "metro-source-map": "^0.83.1",
+        "nullthrows": "^1.1.1",
+        "pretty-format": "^29.7.0",
+        "promise": "^8.3.0",
+        "react-devtools-core": "^6.1.5",
+        "react-refresh": "^0.14.0",
+        "regenerator-runtime": "^0.13.2",
+        "scheduler": "0.26.0",
+        "semver": "^7.1.3",
+        "stacktrace-parser": "^0.1.10",
+        "whatwg-fetch": "^3.0.0",
+        "ws": "^6.2.3",
+        "yargs": "^17.6.2"
+      },
+      "id": "LOCK:react-native@0.81.5",
+      "integrity": "sha512-1w+\/oSjEXZjMqsIvmkCRsOc8UBYv163bTWKTI8+1mxztvQPhCRYGTvZ\/PL1w16xXHneIj\/SLGfxWg2GWN2uexw==",
+      "name": "react-native",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-native\/-\/react-native-0.81.5.tgz#6c963f137d3979b22aef2d8482067775c8fe2fed",
+      "selector": "react-native@0.81.5",
+      "source": {
+        "line": 13432,
+        "path": "yarn.lock"
+      },
+      "spec": "0.81.5",
+      "version": "0.81.5"
+    },
+    {
+      "dependencies": {
+        "acorn-loose": "^8.3.0",
+        "neo-async": "^2.6.1",
+        "webpack-sources": "^3.2.0"
+      },
+      "id": "LOCK:react-server-dom-webpack@~19.0.4",
+      "integrity": "sha512-z49wXjknNnbgLgTAuTKLsbDQmkcQT4MXizLCVH2odd7BRVssJuWiydY3Todq\/m3HSjoJRnutPE2SpyzksTaXow==",
+      "name": "react-server-dom-webpack",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react-server-dom-webpack\/-\/react-server-dom-webpack-19.0.4.tgz#0ca4d0389d0a09c31d2b5aabf3d11a5bc65f3c42",
+      "selector": "react-server-dom-webpack@~19.0.4",
+      "source": {
+        "line": 13515,
+        "path": "yarn.lock"
+      },
+      "spec": "~19.0.4",
+      "version": "19.0.4"
+    },
+    {
+      "dependencies": {},
+      "id": "LOCK:react@19.1.0",
+      "integrity": "sha512-FS+XFBNvn3GTAWq26joslQgWNoFu08F4kl0J4CgdNKADkdSGXQyTCnKteIAJy96Br6YbpEU1LSzV5dYtjMkMDg==",
+      "name": "react",
+      "optionalDependencies": {},
+      "resolved": "https:\/\/registry.yarnpkg.com\/react\/-\/react-19.1.0.tgz#926864b6c48da7627f004795d6cce50e90793b75",
+      "selector": "react@19.1.0",
+      "source": {
+        "line": 13552,
+        "path": "yarn.lock"
+      },
+      "spec": "19.1.0",
+      "version": "19.1.0"
+    }
+  ],
+  "parsedLockSelectors": 3001,
+  "parser": {
+    "name": "@yarnpkg\/lockfile",
+    "semverActualVersion": "7.8.5",
+    "version": "1.1.0"
+  },
+  "previous": {
+    "path": "docs\/releases\/sdk54-source-seed-diff.json",
+    "sha256": "166016aa5d489ca2a4d6fafad4090756a2ddf9dde6082a08c4cde80569ed5f3f"
+  },
+  "schemaVersion": 1,
+  "seeds": [
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@expo\/metro@~54.2.0"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/cli",
+          "section": "dependencies",
+          "source": {
+            "path": "packages\/@expo\/cli\/package.json",
+            "pointer": "\/dependencies\/@expo~1metro"
+          },
+          "spec": "~54.2.0"
+        },
+        {
+          "consumer": "@expo\/metro-config",
+          "section": "dependencies",
+          "source": {
+            "path": "packages\/@expo\/metro-config\/package.json",
+            "pointer": "\/dependencies\/@expo~1metro"
+          },
+          "spec": "~54.2.0"
+        },
+        {
+          "consumer": "babel-preset-expo",
+          "section": "devDependencies",
+          "source": {
+            "path": "packages\/babel-preset-expo\/package.json",
+            "pointer": "\/devDependencies\/@expo~1metro"
+          },
+          "spec": "~54.2.0"
+        },
+        {
+          "consumer": "expo",
+          "section": "dependencies",
+          "source": {
+            "path": "packages\/expo\/package.json",
+            "pointer": "\/dependencies\/@expo~1metro"
+          },
+          "spec": "~54.2.0"
+        },
+        {
+          "consumer": "expo-doctor",
+          "section": "devDependencies",
+          "source": {
+            "path": "packages\/expo-doctor\/package.json",
+            "pointer": "\/devDependencies\/@expo~1metro"
+          },
+          "spec": "~54.2.0"
+        }
+      ],
+      "exactLockId": "LOCK:@expo\/metro@~54.2.0",
+      "fixedBundleSpec": null,
+      "id": "SEED:@expo\/metro",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@expo\/metro",
+      "observedLockIds": [
+        "LOCK:@expo\/metro@~54.2.0"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~54.2.0"
+      ],
+      "scope": {
+        "batch": "M7.1",
+        "finalApiScope": "NOT_RUN",
+        "reason": "构建\/React\/Metro\/平台底座；上游与Harmony目标版本分别验证",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": null,
+      "sourceConclusion": "固定源码声明的外部依赖；不属于workspace自身包"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@expo\/vector-icons@^15.0.2",
+        "LOCK:@expo\/vector-icons@^15.0.3"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/@expo~1vector-icons"
+          },
+          "spec": "^15.0.3"
+        },
+        {
+          "consumer": "@expo\/router-e2e",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/router-e2e\/package.json",
+            "pointer": "\/dependencies\/@expo~1vector-icons"
+          },
+          "spec": "^15.0.2"
+        },
+        {
+          "consumer": "expo",
+          "section": "dependencies",
+          "source": {
+            "path": "packages\/expo\/package.json",
+            "pointer": "\/dependencies\/@expo~1vector-icons"
+          },
+          "spec": "^15.0.3"
+        },
+        {
+          "consumer": "expo-template-default",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-default\/package.json",
+            "pointer": "\/dependencies\/@expo~1vector-icons"
+          },
+          "spec": "^15.0.3"
+        },
+        {
+          "consumer": "expo-template-tabs",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-tabs\/package.json",
+            "pointer": "\/dependencies\/@expo~1vector-icons"
+          },
+          "spec": "^15.0.3"
+        }
+      ],
+      "exactLockId": "LOCK:@expo\/vector-icons@^15.0.3",
+      "fixedBundleSpec": "^15.0.3",
+      "id": "SEED:@expo\/vector-icons",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@expo\/vector-icons",
+      "observedLockIds": [
+        "LOCK:@expo\/vector-icons@^15.0.2",
+        "LOCK:@expo\/vector-icons@^15.0.3"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "^15.0.3"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "^15.0.3",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@react-native-async-storage\/async-storage@2.2.0"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/@react-native-async-storage~1async-storage"
+          },
+          "spec": "2.2.0"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/@react-native-async-storage~1async-storage"
+          },
+          "spec": "2.2.0"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/@react-native-async-storage~1async-storage"
+          },
+          "spec": "2.2.0"
+        }
+      ],
+      "exactLockId": "LOCK:@react-native-async-storage\/async-storage@2.2.0",
+      "fixedBundleSpec": "2.2.0",
+      "id": "SEED:@react-native-async-storage\/async-storage",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@react-native-async-storage\/async-storage",
+      "observedLockIds": [
+        "LOCK:@react-native-async-storage\/async-storage@2.2.0"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "2.2.0"
+      ],
+      "scope": {
+        "batch": "M7.2",
+        "finalApiScope": "NOT_RUN",
+        "reason": "存储或随机数能力；需来源\/API与实际消费审阅",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "2.2.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@react-native-community\/datetimepicker@^8.4.4",
+        "LOCK:@react-native-community\/datetimepicker@8.4.4"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/@react-native-community~1datetimepicker"
+          },
+          "spec": "^8.4.4"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/@react-native-community~1datetimepicker"
+          },
+          "spec": "8.4.4"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/@react-native-community~1datetimepicker"
+          },
+          "spec": "8.4.4"
+        }
+      ],
+      "exactLockId": "LOCK:@react-native-community\/datetimepicker@8.4.4",
+      "fixedBundleSpec": "8.4.4",
+      "id": "SEED:@react-native-community\/datetimepicker",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@react-native-community\/datetimepicker",
+      "observedLockIds": [
+        "LOCK:@react-native-community\/datetimepicker@^8.4.4",
+        "LOCK:@react-native-community\/datetimepicker@8.4.4"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "8.4.4"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "8.4.4",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@react-native-community\/netinfo@11.4.1"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/@react-native-community~1netinfo"
+          },
+          "spec": "11.4.1"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/@react-native-community~1netinfo"
+          },
+          "spec": "11.4.1"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/@react-native-community~1netinfo"
+          },
+          "spec": "11.4.1"
+        }
+      ],
+      "exactLockId": "LOCK:@react-native-community\/netinfo@11.4.1",
+      "fixedBundleSpec": "11.4.1",
+      "id": "SEED:@react-native-community\/netinfo",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@react-native-community\/netinfo",
+      "observedLockIds": [
+        "LOCK:@react-native-community\/netinfo@11.4.1"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "11.4.1"
+      ],
+      "scope": {
+        "batch": "M7.3",
+        "finalApiScope": "NOT_RUN",
+        "reason": "网络、认证或分析能力；普通认证不按Go\/EAS\/Dev Client暂缓",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "11.4.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@react-native-community\/slider@5.0.1"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/@react-native-community~1slider"
+          },
+          "spec": "5.0.1"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/@react-native-community~1slider"
+          },
+          "spec": "5.0.1"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/@react-native-community~1slider"
+          },
+          "spec": "5.0.1"
+        }
+      ],
+      "exactLockId": "LOCK:@react-native-community\/slider@5.0.1",
+      "fixedBundleSpec": "5.0.1",
+      "id": "SEED:@react-native-community\/slider",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@react-native-community\/slider",
+      "observedLockIds": [
+        "LOCK:@react-native-community\/slider@5.0.1"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "5.0.1"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "5.0.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "5.0.11",
+      "id": "SEED:@react-native-community\/viewpager",
+      "identityStatus": "NO_LOCK",
+      "name": "@react-native-community\/viewpager",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "5.0.11"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "5.0.11",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@react-native-masked-view\/masked-view@0.3.2"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/@react-native-masked-view~1masked-view"
+          },
+          "spec": "0.3.2"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/@react-native-masked-view~1masked-view"
+          },
+          "spec": "0.3.2"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/@react-native-masked-view~1masked-view"
+          },
+          "spec": "0.3.2"
+        }
+      ],
+      "exactLockId": "LOCK:@react-native-masked-view\/masked-view@0.3.2",
+      "fixedBundleSpec": "0.3.2",
+      "id": "SEED:@react-native-masked-view\/masked-view",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@react-native-masked-view\/masked-view",
+      "observedLockIds": [
+        "LOCK:@react-native-masked-view\/masked-view@0.3.2"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "0.3.2"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "0.3.2",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": null,
+      "id": "SEED:@react-native-oh\/react-native-harmony",
+      "identityStatus": "NO_UPSTREAM_IDENTITY",
+      "name": "@react-native-oh\/react-native-harmony",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [],
+      "scope": {
+        "batch": "M7.1",
+        "finalApiScope": "NOT_RUN",
+        "reason": "构建\/React\/Metro\/平台底座；上游与Harmony目标版本分别验证",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": true,
+      "seedSpec": "0.82.30",
+      "sourceConclusion": "固定bundle及选中manifests无此身份；旧入口\/目标专属身份独立记录，不猜废弃"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@react-native-picker\/picker@2.11.1"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/@react-native-picker~1picker"
+          },
+          "spec": "2.11.1"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/@react-native-picker~1picker"
+          },
+          "spec": "2.11.1"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/@react-native-picker~1picker"
+          },
+          "spec": "2.11.1"
+        }
+      ],
+      "exactLockId": "LOCK:@react-native-picker\/picker@2.11.1",
+      "fixedBundleSpec": "2.11.1",
+      "id": "SEED:@react-native-picker\/picker",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@react-native-picker\/picker",
+      "observedLockIds": [
+        "LOCK:@react-native-picker\/picker@2.11.1"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "2.11.1"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "2.11.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@react-native-segmented-control\/segmented-control@2.5.7"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/@react-native-segmented-control~1segmented-control"
+          },
+          "spec": "2.5.7"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/@react-native-segmented-control~1segmented-control"
+          },
+          "spec": "2.5.7"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/@react-native-segmented-control~1segmented-control"
+          },
+          "spec": "2.5.7"
+        }
+      ],
+      "exactLockId": "LOCK:@react-native-segmented-control\/segmented-control@2.5.7",
+      "fixedBundleSpec": "2.5.7",
+      "id": "SEED:@react-native-segmented-control\/segmented-control",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@react-native-segmented-control\/segmented-control",
+      "observedLockIds": [
+        "LOCK:@react-native-segmented-control\/segmented-control@2.5.7"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "2.5.7"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "2.5.7",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "~7.2.0",
+      "id": "SEED:@sentry\/react-native",
+      "identityStatus": "NO_LOCK",
+      "name": "@sentry\/react-native",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~7.2.0"
+      ],
+      "scope": {
+        "batch": "M7.5",
+        "finalApiScope": "NOT_RUN",
+        "reason": "开发\/观测或加载相关来源待核；共享用途不能整包暂缓",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~7.2.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@shopify\/flash-list@2.0.2"
+      ],
+      "declarations": [
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/@shopify~1flash-list"
+          },
+          "spec": "2.0.2"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/@shopify~1flash-list"
+          },
+          "spec": "2.0.2"
+        }
+      ],
+      "exactLockId": "LOCK:@shopify\/flash-list@2.0.2",
+      "fixedBundleSpec": "2.0.2",
+      "id": "SEED:@shopify\/flash-list",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@shopify\/flash-list",
+      "observedLockIds": [
+        "LOCK:@shopify\/flash-list@2.0.2"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "2.0.2"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "2.0.2",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@shopify\/react-native-skia@2.2.12"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/@shopify~1react-native-skia"
+          },
+          "spec": "2.2.12"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/@shopify~1react-native-skia"
+          },
+          "spec": "2.2.12"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/@shopify~1react-native-skia"
+          },
+          "spec": "2.2.12"
+        }
+      ],
+      "exactLockId": "LOCK:@shopify\/react-native-skia@2.2.12",
+      "fixedBundleSpec": "2.2.12",
+      "id": "SEED:@shopify\/react-native-skia",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@shopify\/react-native-skia",
+      "observedLockIds": [
+        "LOCK:@shopify\/react-native-skia@2.2.12"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "2.2.12"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "2.2.12",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:@stripe\/stripe-react-native@0.50.3"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/@stripe~1stripe-react-native"
+          },
+          "spec": "0.50.3"
+        }
+      ],
+      "exactLockId": "LOCK:@stripe\/stripe-react-native@0.50.3",
+      "fixedBundleSpec": "0.50.3",
+      "id": "SEED:@stripe\/stripe-react-native",
+      "identityStatus": "EXACT_LOCK",
+      "name": "@stripe\/stripe-react-native",
+      "observedLockIds": [
+        "LOCK:@stripe\/stripe-react-native@0.50.3"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "0.50.3"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "0.50.3",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": null,
+      "id": "SEED:create-expo-app",
+      "identityStatus": "NO_UPSTREAM_IDENTITY",
+      "name": "create-expo-app",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [],
+      "scope": {
+        "batch": "M7.1",
+        "finalApiScope": "NOT_RUN",
+        "reason": "旧create-expo-app wrapper与固定create-expo来源分开；入口移交属于M0A",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": null,
+      "sourceConclusion": "固定bundle及选中manifests无此身份；旧入口\/目标专属身份独立记录，不猜废弃"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "~11.3.0",
+      "id": "SEED:expo-analytics-amplitude",
+      "identityStatus": "NO_LOCK",
+      "name": "expo-analytics-amplitude",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~11.3.0"
+      ],
+      "scope": {
+        "batch": "M7.3",
+        "finalApiScope": "NOT_RUN",
+        "reason": "网络、认证或分析能力；普通认证不按Go\/EAS\/Dev Client暂缓",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~11.3.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "~11.1.0",
+      "id": "SEED:expo-app-auth",
+      "identityStatus": "NO_LOCK",
+      "name": "expo-app-auth",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~11.1.0"
+      ],
+      "scope": {
+        "batch": "M7.3",
+        "finalApiScope": "NOT_RUN",
+        "reason": "网络、认证或分析能力；普通认证不按Go\/EAS\/Dev Client暂缓",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~11.1.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "~8.0.0",
+      "id": "SEED:expo-app-loader-provider",
+      "identityStatus": "NO_LOCK",
+      "name": "expo-app-loader-provider",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~8.0.0"
+      ],
+      "scope": {
+        "batch": "M7.5",
+        "finalApiScope": "NOT_RUN",
+        "reason": "开发\/观测或加载相关来源待核；共享用途不能整包暂缓",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~8.0.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "~8.3.0",
+      "id": "SEED:expo-google-app-auth",
+      "identityStatus": "NO_LOCK",
+      "name": "expo-google-app-auth",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~8.3.0"
+      ],
+      "scope": {
+        "batch": "M7.3",
+        "finalApiScope": "NOT_RUN",
+        "reason": "网络、认证或分析能力；普通认证不按Go\/EAS\/Dev Client暂缓",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~8.3.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "~0.2.1",
+      "id": "SEED:expo-mcp",
+      "identityStatus": "NO_LOCK",
+      "name": "expo-mcp",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~0.2.1"
+      ],
+      "scope": {
+        "batch": "M7.5",
+        "finalApiScope": "NOT_RUN",
+        "reason": "开发\/观测或加载相关来源待核；共享用途不能整包暂缓",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~0.2.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:lottie-react-native@^7.3.1"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/lottie-react-native"
+          },
+          "spec": "^7.3.1"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/lottie-react-native"
+          },
+          "spec": "^7.3.1"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/lottie-react-native"
+          },
+          "spec": "^7.3.1"
+        }
+      ],
+      "exactLockId": null,
+      "fixedBundleSpec": "~7.3.1",
+      "id": "SEED:lottie-react-native",
+      "identityStatus": "COMPATIBLE_LOCK_CANDIDATES",
+      "name": "lottie-react-native",
+      "observedLockIds": [
+        "LOCK:lottie-react-native@^7.3.1"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~7.3.1"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~7.3.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react@19.1.0"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/devtools",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/@expo\/devtools\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "@expo\/dom-webview",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/@expo\/dom-webview\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "@expo\/html-elements",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/html-elements\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "@expo\/metro-runtime",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/@expo\/metro-runtime\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "@expo\/router-e2e",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/router-e2e\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "@expo\/sandbox",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/sandbox\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "@expo\/ui",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-ui\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo",
+          "section": "devDependencies",
+          "source": {
+            "path": "packages\/expo\/package.json",
+            "pointer": "\/devDependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-asset",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-asset\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-audio",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-audio\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-auth-session",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-auth-session\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-av",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-av\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-battery",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-battery\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-blur",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-blur\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-camera",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-camera\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-checkbox",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-checkbox\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-clipboard",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-clipboard\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-contacts",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-contacts\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-dev-client-components",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-dev-client-components\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-dev-menu",
+          "section": "devDependencies",
+          "source": {
+            "path": "packages\/expo-dev-menu\/package.json",
+            "pointer": "\/devDependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo-font",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-font\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-gl",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-gl\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-glass-effect",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-glass-effect\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-image",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-image\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-keep-awake",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-keep-awake\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-linear-gradient",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-linear-gradient\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-linking",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-linking\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-live-photo",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-live-photo\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-localization",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-localization\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-maps",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-maps\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-mesh-gradient",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-mesh-gradient\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-modules-core",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-modules-core\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-navigation-bar",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-navigation-bar\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-network",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-network\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-notifications",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-notifications\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-router",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-router\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-screen-capture",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-screen-capture\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-sqlite",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-sqlite\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-status-bar",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-status-bar\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-updates",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-updates\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-video",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-video\/package.json",
+            "pointer": "\/peerDependencies\/react"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "jest-expo-mock-generator",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/jest-expo-mock-generator\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "native-tests",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-tests\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "notification-tester",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/notification-tester\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "paper-tester",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/paper-tester\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "test-suite",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/test-suite\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo-template-bare-minimum",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-bare-minimum\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo-template-blank",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-blank\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo-template-blank-typescript",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-blank-typescript\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo-template-default",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-default\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo-template-tabs",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-tabs\/package.json",
+            "pointer": "\/dependencies\/react"
+          },
+          "spec": "19.1.0"
+        }
+      ],
+      "exactLockId": "LOCK:react@19.1.0",
+      "fixedBundleSpec": "19.1.0",
+      "id": "SEED:react",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react",
+      "observedLockIds": [
+        "LOCK:react@19.1.0"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "19.1.0"
+      ],
+      "scope": {
+        "batch": "M7.1",
+        "finalApiScope": "NOT_RUN",
+        "reason": "构建\/React\/Metro\/平台底座；上游与Harmony目标版本分别验证",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": true,
+      "seedSpec": "19.1.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-dom@19.1.0"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/metro-runtime",
+          "section": "devDependencies",
+          "source": {
+            "path": "packages\/@expo\/metro-runtime\/package.json",
+            "pointer": "\/devDependencies\/react-dom"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "@expo\/metro-runtime",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/@expo\/metro-runtime\/package.json",
+            "pointer": "\/peerDependencies\/react-dom"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-dom"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo",
+          "section": "devDependencies",
+          "source": {
+            "path": "packages\/expo\/package.json",
+            "pointer": "\/devDependencies\/react-dom"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo-gl",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-gl\/package.json",
+            "pointer": "\/peerDependencies\/react-dom"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-router",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-router\/package.json",
+            "pointer": "\/peerDependencies\/react-dom"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-dom"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "native-tests",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-tests\/package.json",
+            "pointer": "\/dependencies\/react-dom"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "paper-tester",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/paper-tester\/package.json",
+            "pointer": "\/dependencies\/react-dom"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo-template-default",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-default\/package.json",
+            "pointer": "\/dependencies\/react-dom"
+          },
+          "spec": "19.1.0"
+        },
+        {
+          "consumer": "expo-template-tabs",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-tabs\/package.json",
+            "pointer": "\/dependencies\/react-dom"
+          },
+          "spec": "19.1.0"
+        }
+      ],
+      "exactLockId": "LOCK:react-dom@19.1.0",
+      "fixedBundleSpec": "19.1.0",
+      "id": "SEED:react-dom",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react-dom",
+      "observedLockIds": [
+        "LOCK:react-dom@19.1.0"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "19.1.0"
+      ],
+      "scope": {
+        "batch": "M7.1",
+        "finalApiScope": "NOT_RUN",
+        "reason": "构建\/React\/Metro\/平台底座；上游与Harmony目标版本分别验证",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "19.1.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native@0.81.5"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/app-integrity",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-app-integrity\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "@expo\/cli",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/@expo\/cli\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "@expo\/devtools",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/@expo\/devtools\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "@expo\/dom-webview",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/@expo\/dom-webview\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "@expo\/html-elements",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/html-elements\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "@expo\/metro-runtime",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/@expo\/metro-runtime\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "@expo\/router-e2e",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/router-e2e\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "@expo\/sandbox",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/sandbox\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "@expo\/ui",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-ui\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "expo",
+          "section": "devDependencies",
+          "source": {
+            "path": "packages\/expo\/package.json",
+            "pointer": "\/devDependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "expo",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-age-range",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-age-range\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-apple-authentication",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-apple-authentication\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-asset",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-asset\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-audio",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-audio\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-auth-session",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-auth-session\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-av",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-av\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-blur",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-blur\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-brightness",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-brightness\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-calendar",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-calendar\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-camera",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-camera\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-checkbox",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-checkbox\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-clipboard",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-clipboard\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-constants",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-constants\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-contacts",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-contacts\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-dev-client-components",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-dev-client-components\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-dev-menu",
+          "section": "devDependencies",
+          "source": {
+            "path": "packages\/expo-dev-menu\/package.json",
+            "pointer": "\/devDependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "expo-file-system",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-file-system\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-font",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-font\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-gl",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-gl\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-glass-effect",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-glass-effect\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-image",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-image\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-linear-gradient",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-linear-gradient\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-linking",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-linking\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-live-photo",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-live-photo\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-maps",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-maps\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-media-library",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-media-library\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-mesh-gradient",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-mesh-gradient\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-modules-core",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-modules-core\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-navigation-bar",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-navigation-bar\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-notifications",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-notifications\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-print",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-print\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-router",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-router\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-screen-orientation",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-screen-orientation\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-sensors",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-sensors\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-sqlite",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-sqlite\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-status-bar",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-status-bar\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-store-review",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-store-review\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-symbols",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-symbols\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-system-ui",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-system-ui\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-task-manager",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-task-manager\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-tracking-transparency",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-tracking-transparency\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-updates",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-updates\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-video",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-video\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-web-browser",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-web-browser\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "jest-expo",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/jest-expo\/package.json",
+            "pointer": "\/peerDependencies\/react-native"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "jest-expo-mock-generator",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/jest-expo-mock-generator\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "native-tests",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-tests\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "notification-tester",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/notification-tester\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "paper-tester",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/paper-tester\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "test-suite",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/test-suite\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "expo-template-bare-minimum",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-bare-minimum\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "expo-template-blank",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-blank\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "expo-template-blank-typescript",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-blank-typescript\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "expo-template-default",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-default\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        },
+        {
+          "consumer": "expo-template-tabs",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-tabs\/package.json",
+            "pointer": "\/dependencies\/react-native"
+          },
+          "spec": "0.81.5"
+        }
+      ],
+      "exactLockId": "LOCK:react-native@0.81.5",
+      "fixedBundleSpec": "0.81.5",
+      "id": "SEED:react-native",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react-native",
+      "observedLockIds": [
+        "LOCK:react-native@0.81.5"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "0.81.5"
+      ],
+      "scope": {
+        "batch": "M7.1",
+        "finalApiScope": "NOT_RUN",
+        "reason": "构建\/React\/Metro\/平台底座；上游与Harmony目标版本分别验证",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": true,
+      "seedSpec": "0.82.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "^6.3.10",
+      "id": "SEED:react-native-bootsplash",
+      "identityStatus": "NO_LOCK",
+      "name": "react-native-bootsplash",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "^6.3.10"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "^6.3.10",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-gesture-handler@~2.28.0"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-gesture-handler"
+          },
+          "spec": "~2.28.0"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native-gesture-handler"
+          },
+          "spec": "~2.28.0"
+        },
+        {
+          "consumer": "expo-router",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-router\/package.json",
+            "pointer": "\/peerDependencies\/react-native-gesture-handler"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-gesture-handler"
+          },
+          "spec": "~2.28.0"
+        },
+        {
+          "consumer": "notification-tester",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/notification-tester\/package.json",
+            "pointer": "\/dependencies\/react-native-gesture-handler"
+          },
+          "spec": "~2.28.0"
+        },
+        {
+          "consumer": "test-suite",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/test-suite\/package.json",
+            "pointer": "\/dependencies\/react-native-gesture-handler"
+          },
+          "spec": "~2.28.0"
+        },
+        {
+          "consumer": "expo-template-default",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-default\/package.json",
+            "pointer": "\/dependencies\/react-native-gesture-handler"
+          },
+          "spec": "~2.28.0"
+        }
+      ],
+      "exactLockId": "LOCK:react-native-gesture-handler@~2.28.0",
+      "fixedBundleSpec": "~2.28.0",
+      "id": "SEED:react-native-gesture-handler",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react-native-gesture-handler",
+      "observedLockIds": [
+        "LOCK:react-native-gesture-handler@~2.28.0"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~2.28.0"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~2.28.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "~1.11.0",
+      "id": "SEED:react-native-get-random-values",
+      "identityStatus": "NO_LOCK",
+      "name": "react-native-get-random-values",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~1.11.0"
+      ],
+      "scope": {
+        "batch": "M7.2",
+        "finalApiScope": "NOT_RUN",
+        "reason": "存储或随机数能力；需来源\/API与实际消费审阅",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~1.11.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-keyboard-controller@^1.18.5"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-keyboard-controller"
+          },
+          "spec": "^1.18.5"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native-keyboard-controller"
+          },
+          "spec": "^1.18.5"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-keyboard-controller"
+          },
+          "spec": "^1.18.5"
+        }
+      ],
+      "exactLockId": null,
+      "fixedBundleSpec": "1.18.5",
+      "id": "SEED:react-native-keyboard-controller",
+      "identityStatus": "COMPATIBLE_LOCK_CANDIDATES",
+      "name": "react-native-keyboard-controller",
+      "observedLockIds": [
+        "LOCK:react-native-keyboard-controller@^1.18.5"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "1.18.5"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "1.18.5",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-maps@1.20.1"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-maps"
+          },
+          "spec": "1.20.1"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-maps"
+          },
+          "spec": "1.20.1"
+        }
+      ],
+      "exactLockId": "LOCK:react-native-maps@1.20.1",
+      "fixedBundleSpec": "1.20.1",
+      "id": "SEED:react-native-maps",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react-native-maps",
+      "observedLockIds": [
+        "LOCK:react-native-maps@1.20.1"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "1.20.1"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "1.20.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-pager-view@6.9.1"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-pager-view"
+          },
+          "spec": "6.9.1"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native-pager-view"
+          },
+          "spec": "6.9.1"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-pager-view"
+          },
+          "spec": "6.9.1"
+        }
+      ],
+      "exactLockId": "LOCK:react-native-pager-view@6.9.1",
+      "fixedBundleSpec": "6.9.1",
+      "id": "SEED:react-native-pager-view",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react-native-pager-view",
+      "observedLockIds": [
+        "LOCK:react-native-pager-view@6.9.1"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "6.9.1"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "6.9.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-reanimated@4.1.1"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-reanimated"
+          },
+          "spec": "4.1.1"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native-reanimated"
+          },
+          "spec": "4.1.1"
+        },
+        {
+          "consumer": "expo-gl",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-gl\/package.json",
+            "pointer": "\/peerDependencies\/react-native-reanimated"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-router",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-router\/package.json",
+            "pointer": "\/peerDependencies\/react-native-reanimated"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-reanimated"
+          },
+          "spec": "4.1.1"
+        },
+        {
+          "consumer": "expo-template-default",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-default\/package.json",
+            "pointer": "\/dependencies\/react-native-reanimated"
+          },
+          "spec": "~4.1.1"
+        },
+        {
+          "consumer": "expo-template-tabs",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-tabs\/package.json",
+            "pointer": "\/dependencies\/react-native-reanimated"
+          },
+          "spec": "~4.1.1"
+        }
+      ],
+      "exactLockId": null,
+      "fixedBundleSpec": "~4.1.1",
+      "id": "SEED:react-native-reanimated",
+      "identityStatus": "COMPATIBLE_LOCK_CANDIDATES",
+      "name": "react-native-reanimated",
+      "observedLockIds": [
+        "LOCK:react-native-reanimated@4.1.1"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~4.1.1"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~4.1.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-safe-area-context@5.6.0"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-safe-area-context"
+          },
+          "spec": "5.6.0"
+        },
+        {
+          "consumer": "@expo\/router-e2e",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/router-e2e\/package.json",
+            "pointer": "\/dependencies\/react-native-safe-area-context"
+          },
+          "spec": "5.6.0"
+        },
+        {
+          "consumer": "@expo\/sandbox",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/sandbox\/package.json",
+            "pointer": "\/dependencies\/react-native-safe-area-context"
+          },
+          "spec": "5.6.0"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native-safe-area-context"
+          },
+          "spec": "5.6.0"
+        },
+        {
+          "consumer": "expo-router",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-router\/package.json",
+            "pointer": "\/peerDependencies\/react-native-safe-area-context"
+          },
+          "spec": ">= 5.4.0"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-safe-area-context"
+          },
+          "spec": "5.6.0"
+        },
+        {
+          "consumer": "notification-tester",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/notification-tester\/package.json",
+            "pointer": "\/dependencies\/react-native-safe-area-context"
+          },
+          "spec": "5.6.0"
+        },
+        {
+          "consumer": "expo-template-default",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-default\/package.json",
+            "pointer": "\/dependencies\/react-native-safe-area-context"
+          },
+          "spec": "~5.6.0"
+        },
+        {
+          "consumer": "expo-template-tabs",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-tabs\/package.json",
+            "pointer": "\/dependencies\/react-native-safe-area-context"
+          },
+          "spec": "~5.6.0"
+        }
+      ],
+      "exactLockId": null,
+      "fixedBundleSpec": "~5.6.0",
+      "id": "SEED:react-native-safe-area-context",
+      "identityStatus": "COMPATIBLE_LOCK_CANDIDATES",
+      "name": "react-native-safe-area-context",
+      "observedLockIds": [
+        "LOCK:react-native-safe-area-context@5.6.0"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~5.6.0"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~5.6.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-screens@4.16.0"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-screens"
+          },
+          "spec": "4.16.0"
+        },
+        {
+          "consumer": "@expo\/router-e2e",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/router-e2e\/package.json",
+            "pointer": "\/dependencies\/react-native-screens"
+          },
+          "spec": "4.16.0"
+        },
+        {
+          "consumer": "@expo\/sandbox",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/sandbox\/package.json",
+            "pointer": "\/dependencies\/react-native-screens"
+          },
+          "spec": "4.11.1-nightly-20250611-8b82e081e"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native-screens"
+          },
+          "spec": "4.16.0"
+        },
+        {
+          "consumer": "expo-router",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-router\/package.json",
+            "pointer": "\/peerDependencies\/react-native-screens"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-screens"
+          },
+          "spec": "4.16.0"
+        },
+        {
+          "consumer": "notification-tester",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/notification-tester\/package.json",
+            "pointer": "\/dependencies\/react-native-screens"
+          },
+          "spec": "4.16.0"
+        },
+        {
+          "consumer": "expo-template-default",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-default\/package.json",
+            "pointer": "\/dependencies\/react-native-screens"
+          },
+          "spec": "~4.16.0"
+        },
+        {
+          "consumer": "expo-template-tabs",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-tabs\/package.json",
+            "pointer": "\/dependencies\/react-native-screens"
+          },
+          "spec": "~4.16.0"
+        }
+      ],
+      "exactLockId": null,
+      "fixedBundleSpec": "~4.16.0",
+      "id": "SEED:react-native-screens",
+      "identityStatus": "COMPATIBLE_LOCK_CANDIDATES",
+      "name": "react-native-screens",
+      "observedLockIds": [
+        "LOCK:react-native-screens@4.11.1-nightly-20250611-8b82e081e",
+        "LOCK:react-native-screens@4.16.0"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~4.16.0"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~4.16.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-svg@15.12.1"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-svg"
+          },
+          "spec": "15.12.1"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native-svg"
+          },
+          "spec": "15.12.1"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-svg"
+          },
+          "spec": "15.12.1"
+        }
+      ],
+      "exactLockId": "LOCK:react-native-svg@15.12.1",
+      "fixedBundleSpec": "15.12.1",
+      "id": "SEED:react-native-svg",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react-native-svg",
+      "observedLockIds": [
+        "LOCK:react-native-svg@15.12.1"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "15.12.1"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "15.12.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-view-shot@4.0.3"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-view-shot"
+          },
+          "spec": "4.0.3"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native-view-shot"
+          },
+          "spec": "4.0.3"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-view-shot"
+          },
+          "spec": "4.0.3"
+        }
+      ],
+      "exactLockId": "LOCK:react-native-view-shot@4.0.3",
+      "fixedBundleSpec": "4.0.3",
+      "id": "SEED:react-native-view-shot",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react-native-view-shot",
+      "observedLockIds": [
+        "LOCK:react-native-view-shot@4.0.3"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "4.0.3"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "4.0.3",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-web@~0.21.0"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/html-elements",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/html-elements\/package.json",
+            "pointer": "\/peerDependencies\/react-native-web"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-av",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-av\/package.json",
+            "pointer": "\/peerDependencies\/react-native-web"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-camera",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-camera\/package.json",
+            "pointer": "\/peerDependencies\/react-native-web"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-checkbox",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-checkbox\/package.json",
+            "pointer": "\/peerDependencies\/react-native-web"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-gl",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-gl\/package.json",
+            "pointer": "\/peerDependencies\/react-native-web"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-image",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-image\/package.json",
+            "pointer": "\/peerDependencies\/react-native-web"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-router",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-router\/package.json",
+            "pointer": "\/peerDependencies\/react-native-web"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "expo-system-ui",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-system-ui\/package.json",
+            "pointer": "\/peerDependencies\/react-native-web"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-web"
+          },
+          "spec": "~0.21.0"
+        },
+        {
+          "consumer": "paper-tester",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/paper-tester\/package.json",
+            "pointer": "\/dependencies\/react-native-web"
+          },
+          "spec": "~0.21.0"
+        },
+        {
+          "consumer": "expo-template-default",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-default\/package.json",
+            "pointer": "\/dependencies\/react-native-web"
+          },
+          "spec": "~0.21.0"
+        },
+        {
+          "consumer": "expo-template-tabs",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-tabs\/package.json",
+            "pointer": "\/dependencies\/react-native-web"
+          },
+          "spec": "~0.21.0"
+        }
+      ],
+      "exactLockId": "LOCK:react-native-web@~0.21.0",
+      "fixedBundleSpec": "~0.21.0",
+      "id": "SEED:react-native-web",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react-native-web",
+      "observedLockIds": [
+        "LOCK:react-native-web@~0.21.0"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~0.21.0"
+      ],
+      "scope": {
+        "batch": "M7.1",
+        "finalApiScope": "NOT_RUN",
+        "reason": "构建\/React\/Metro\/平台底座；上游与Harmony目标版本分别验证",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~0.21.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-webview@13.15.0"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-webview"
+          },
+          "spec": "13.15.0"
+        },
+        {
+          "consumer": "@expo\/router-e2e",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/router-e2e\/package.json",
+            "pointer": "\/dependencies\/react-native-webview"
+          },
+          "spec": "13.13.5"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native-webview"
+          },
+          "spec": "13.15.0"
+        },
+        {
+          "consumer": "expo",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo\/package.json",
+            "pointer": "\/peerDependencies\/react-native-webview"
+          },
+          "spec": "*"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-webview"
+          },
+          "spec": "13.15.0"
+        }
+      ],
+      "exactLockId": "LOCK:react-native-webview@13.15.0",
+      "fixedBundleSpec": "13.15.0",
+      "id": "SEED:react-native-webview",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react-native-webview",
+      "observedLockIds": [
+        "LOCK:react-native-webview@13.13.5",
+        "LOCK:react-native-webview@13.15.0"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "13.15.0"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "13.15.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [
+        "LOCK:react-native-worklets@0.5.1"
+      ],
+      "declarations": [
+        {
+          "consumer": "@expo\/home",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/expo-go\/package.json",
+            "pointer": "\/dependencies\/react-native-worklets"
+          },
+          "spec": "0.5.1"
+        },
+        {
+          "consumer": "bare-expo",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/bare-expo\/package.json",
+            "pointer": "\/dependencies\/react-native-worklets"
+          },
+          "spec": "0.5.1"
+        },
+        {
+          "consumer": "native-component-list",
+          "section": "dependencies",
+          "source": {
+            "path": "apps\/native-component-list\/package.json",
+            "pointer": "\/dependencies\/react-native-worklets"
+          },
+          "spec": "0.5.1"
+        },
+        {
+          "consumer": "expo-template-default",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-default\/package.json",
+            "pointer": "\/dependencies\/react-native-worklets"
+          },
+          "spec": "0.5.1"
+        },
+        {
+          "consumer": "expo-template-tabs",
+          "section": "dependencies",
+          "source": {
+            "path": "templates\/expo-template-tabs\/package.json",
+            "pointer": "\/dependencies\/react-native-worklets"
+          },
+          "spec": "0.5.1"
+        }
+      ],
+      "exactLockId": "LOCK:react-native-worklets@0.5.1",
+      "fixedBundleSpec": "0.5.1",
+      "id": "SEED:react-native-worklets",
+      "identityStatus": "EXACT_LOCK",
+      "name": "react-native-worklets",
+      "observedLockIds": [
+        "LOCK:react-native-worklets@0.5.1"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "0.5.1"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "0.5.1",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [
+        {
+          "consumer": "expo-router",
+          "section": "devDependencies",
+          "source": {
+            "path": "packages\/expo-router\/package.json",
+            "pointer": "\/devDependencies\/react-server-dom-webpack"
+          },
+          "spec": "~19.0.4"
+        },
+        {
+          "consumer": "expo-router",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/expo-router\/package.json",
+            "pointer": "\/peerDependencies\/react-server-dom-webpack"
+          },
+          "spec": "~19.0.4 || ~19.1.5 || ~19.2.4"
+        },
+        {
+          "consumer": "jest-expo",
+          "section": "devDependencies",
+          "source": {
+            "path": "packages\/jest-expo\/package.json",
+            "pointer": "\/devDependencies\/react-server-dom-webpack"
+          },
+          "spec": "~19.0.4"
+        },
+        {
+          "consumer": "jest-expo",
+          "section": "peerDependencies",
+          "source": {
+            "path": "packages\/jest-expo\/package.json",
+            "pointer": "\/peerDependencies\/react-server-dom-webpack"
+          },
+          "spec": "~19.0.4 || ~19.1.5 || ~19.2.4"
+        }
+      ],
+      "exactLockId": null,
+      "fixedBundleSpec": "~19.1.4",
+      "id": "SEED:react-server-dom-webpack",
+      "identityStatus": "LOCK_RANGE_MISMATCH",
+      "name": "react-server-dom-webpack",
+      "observedLockIds": [
+        "LOCK:react-server-dom-webpack@~19.0.4"
+      ],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~19.1.4"
+      ],
+      "scope": {
+        "batch": "M7.1",
+        "finalApiScope": "NOT_RUN",
+        "reason": "构建\/React\/Metro\/平台底座；上游与Harmony目标版本分别验证",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~19.1.4",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "~7.0.0",
+      "id": "SEED:sentry-expo",
+      "identityStatus": "NO_LOCK",
+      "name": "sentry-expo",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~7.0.0"
+      ],
+      "scope": {
+        "batch": "M7.5",
+        "finalApiScope": "NOT_RUN",
+        "reason": "开发\/观测或加载相关来源待核；共享用途不能整包暂缓",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~7.0.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    },
+    {
+      "artifactVerification": "NOT_RUN",
+      "compatibleLockIds": [],
+      "declarations": [],
+      "exactLockId": null,
+      "fixedBundleSpec": "~6.1.0",
+      "id": "SEED:unimodules-image-loader-interface",
+      "identityStatus": "NO_LOCK",
+      "name": "unimodules-image-loader-interface",
+      "observedLockIds": [],
+      "publicApiAcceptance": "NOT_RUN",
+      "requestedSpecs": [
+        "~6.1.0"
+      ],
+      "scope": {
+        "batch": "M7.4",
+        "finalApiScope": "NOT_RUN",
+        "reason": "视图\/媒体\/导航\/交互依赖；包名在bundle不等于Harmony支持",
+        "state": "本轮必评"
+      },
+      "seedDiffersFromUpstream": false,
+      "seedSpec": "~6.1.0",
+      "sourceConclusion": "固定上游bundle仍列出；锁缺失不能证明废弃\/重命名或不适用"
+    }
+  ],
+  "source": {
+    "revision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1",
+    "tree": "5457e824b21d968e55c8f533cdf1751860160a92"
+  },
+  "stageClosable": false,
+  "summary": {
+    "COMPATIBLE_LOCK_CANDIDATES": 5,
+    "EXACT_LOCK": 23,
+    "LOCK_RANGE_MISMATCH": 1,
+    "NO_LOCK": 11,
+    "NO_UPSTREAM_IDENTITY": 2
+  }
+}

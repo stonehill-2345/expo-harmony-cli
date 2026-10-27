@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "taskIds": ["M0-02", "M0-03"],
+  "cases": [
+    {"id":"AMB-01","expected":"固定workspace输入、包归属与原7处external-star来源全部可追溯"},
+    {"id":"AMB-02","expected":"按包隔离ambient声明，合并显式同包声明；模块增强/通配/无body不冒充完整模块"},
+    {"id":"AMB-03","expected":"声明的named/star/type-only/default/overload及循环来源准确，冲突与未解依赖传播边界"},
+    {"id":"AMB-04","expected":"逐项复核原external-star，声明可展开与运行外部包身份分开；不改历史图"},
+    {"id":"AMB-05","expected":"重复生成字节一致，正常源重建check通过"},
+    {"id":"AMB-06","expected":"真实CLI漏模块/导出/符号/边/来源/审阅、重复及伪闭合均拒绝并定位"},
+    {"id":"AMB-07","expected":"工具/CLI/类型、历史清单/基线、当前归属/仓库/阶段及证据hash通过，M0仍未关闭"}
+  ],
+  "stageClosable": false
+}

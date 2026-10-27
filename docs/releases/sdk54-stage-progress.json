@@ -1,0 +1,158 @@
+{
+  "schemaVersion": 1,
+  "definitionSha256": "335c81b19f77a76817ff191db4f5cf9df35d7f7ef40a59393d119979c5d7049d",
+  "stages": {
+    "M0": {
+      "closed": true,
+      "acceptedUnits": [
+        "M0-01",
+        "M0-02",
+        "M0-03",
+        "M0-04",
+        "M0-05",
+        "M0-06"
+      ],
+      "pendingUnits": [],
+      "totalUnits": 6,
+      "percent": 100
+    },
+    "M0A": {
+      "closed": false,
+      "acceptedUnits": [],
+      "pendingUnits": [
+        "M0A-01",
+        "M0A-02",
+        "M0A-03",
+        "M0A-04",
+        "M0A-05"
+      ],
+      "totalUnits": 5,
+      "percent": 0
+    },
+    "M1": {
+      "closed": false,
+      "acceptedUnits": [],
+      "pendingUnits": [
+        "M1-01",
+        "M1-02",
+        "M1-03",
+        "M1-04",
+        "M1-05"
+      ],
+      "totalUnits": 5,
+      "percent": 0
+    },
+    "M2": {
+      "closed": false,
+      "acceptedUnits": [],
+      "pendingUnits": [
+        "M2-01",
+        "M2-02",
+        "M2-03",
+        "M2-04",
+        "M2-05",
+        "M2-06"
+      ],
+      "totalUnits": 6,
+      "percent": 0
+    },
+    "M3": {
+      "closed": false,
+      "acceptedUnits": [],
+      "pendingUnits": [
+        "M3-01",
+        "M3-02",
+        "M3-03",
+        "M3-04",
+        "M3-05"
+      ],
+      "totalUnits": 5,
+      "percent": 0
+    },
+    "M4": {
+      "closed": false,
+      "acceptedUnits": [],
+      "pendingUnits": [
+        "M4-A01",
+        "M4-A02",
+        "M4-A03",
+        "M4-A04",
+        "M4-A05",
+        "M4-A06",
+        "M4-A07"
+      ],
+      "totalUnits": 7,
+      "percent": 0
+    },
+    "M5": {
+      "closed": false,
+      "acceptedUnits": [],
+      "pendingUnits": [
+        "M5-01",
+        "M5-02",
+        "M5-03",
+        "M5-04",
+        "M5-05"
+      ],
+      "totalUnits": 5,
+      "percent": 0
+    },
+    "V": {
+      "closed": false,
+      "acceptedUnits": [],
+      "pendingUnits": [
+        "V-01",
+        "V-02",
+        "V-03",
+        "V-04",
+        "V-05"
+      ],
+      "totalUnits": 5,
+      "percent": 0
+    },
+    "M6": {
+      "closed": false,
+      "acceptedUnits": [],
+      "pendingUnits": [
+        "M6-01",
+        "M6-02",
+        "M6-03",
+        "M6-04",
+        "M6-05"
+      ],
+      "totalUnits": 5,
+      "percent": 0
+    },
+    "M7": {
+      "closed": false,
+      "acceptedUnits": [],
+      "pendingUnits": [
+        "M7.1",
+        "M7.2",
+        "M7.3",
+        "M7.4",
+        "M7.5",
+        "M7.6"
+      ],
+      "totalUnits": 6,
+      "percent": 0
+    },
+    "M8": {
+      "closed": false,
+      "acceptedUnits": [],
+      "pendingUnits": [
+        "M8-A01",
+        "M8-A02",
+        "M8-A03",
+        "M8-A04",
+        "M8-A05",
+        "M8-A06",
+        "M8-A07",
+        "M8-A08",
+        "M8-A09"
+      ],
+      "totalUnits": 9,
+      "percent": 0
+    }
+  }
+}

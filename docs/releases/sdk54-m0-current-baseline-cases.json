@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "taskIds": ["M0-04/current-cli-replay"],
+  "cases": [
+    { "id": "CUR-01", "expected": "本轮构建并打包当前CLI，独立目录从tgz安装；保存包hash、实际版本、执行器身份和环境，禁止源码链接冒充发行物" },
+    { "id": "CUR-02", "expected": "blank-typescript/default分别用npm/pnpm真实调用当前create，保存原始命令/退出/日志/项目快照；失败不得伪造创建完成" },
+    { "id": "CUR-03", "expected": "SDK52 default分别用npm/pnpm回放原create、真实识别、scan与Harmony prebuild；后续缺前置明确NOT_RUN，原生/设备运行单列" },
+    { "id": "CUR-04", "expected": "runner超时保存部分日志并只终止本次子进程组；缺命令、非零、缺前置和中断不得算PASS；现有目录拒绝覆盖" },
+    { "id": "CUR-05", "expected": "结果集合/日志hash/候选hash/项目及执行器身份可复核，删场景或换hash拒绝；历史产品失败保留，不自动关闭M0-04" },
+    { "id": "CUR-06", "expected": "工具/CLI/类型、既有清单/基线/进度及仓库检查回归；报告区分runner通过与真实产品场景结果" }
+  ],
+  "stageClosable": false
+}

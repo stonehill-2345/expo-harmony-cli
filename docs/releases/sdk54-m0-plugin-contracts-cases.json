@@ -1,0 +1,139 @@
+{
+  "cases": [
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/contracts-final.json"
+      ],
+      "id": "PCT-01",
+      "observed": {
+        "candidates": 202,
+        "inputs": 4392
+      },
+      "status": "PASS",
+      "step": "固定来源及候选覆盖"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/contracts-final.json",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/remaining-work.json"
+      ],
+      "id": "PCT-02",
+      "observed": {
+        "blocked": 29,
+        "candidates": 202,
+        "contractFailed": 0,
+        "contractPassed": 64,
+        "expanded": 173,
+        "expandedExplicitOptions": 84,
+        "noExplicitOptions": 89,
+        "optionPaths": 1091,
+        "routerDifferences": 26
+      },
+      "status": "PASS",
+      "step": "全候选批量展开并保留类型边界"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/contracts-final.json",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/old-six-plugin-check.log"
+      ],
+      "id": "PCT-03",
+      "observed": {
+        "getterCases": 14,
+        "mergeCases": 9,
+        "paths": 43
+      },
+      "status": "PASS",
+      "step": "Splash嵌套类型与配置行为"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/contracts-final.json"
+      ],
+      "id": "PCT-04",
+      "observed": {
+        "differences": 26,
+        "infoPlistCases": 2,
+        "pluginCases": 27,
+        "schemaPaths": 31,
+        "typePaths": 14
+      },
+      "status": "PASS",
+      "step": "Router类型/schema差异与原校验器"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/contracts-final.json"
+      ],
+      "id": "PCT-05",
+      "observed": {
+        "accesses": 35,
+        "asyncCases": 12
+      },
+      "status": "PASS",
+      "step": "Router语法访问及asyncRoutes消费切片"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/batch-red.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/batch-green.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/resolver-red.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/resolver-green.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/tools.log"
+      ],
+      "id": "PCT-06",
+      "observed": {
+        "passed": 450,
+        "tests": 450
+      },
+      "status": "PASS",
+      "step": "红绿复现与工具回归"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/validation-results.json",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/executions.json"
+      ],
+      "id": "PCT-07",
+      "observed": {
+        "canonicalPassed": true,
+        "rejectedVariants": 16
+      },
+      "status": "PASS",
+      "step": "源重建双向核验及兼容检查"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/remaining-work.json"
+      ],
+      "id": "PCT-08",
+      "observed": {
+        "blockedPluginCandidates": 29,
+        "historicalBoundaries": "UNCHANGED"
+      },
+      "status": "BLOCKED",
+      "step": "完整公开面与下游链闭合"
+    },
+    {
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/remaining-work.json",
+        "outputs/sdk54/ai-e2e/20261023-m0-plugin-contracts/stage-check.log"
+      ],
+      "id": "PCT-09",
+      "observed": {
+        "acceptedUnits": 4,
+        "closed": false,
+        "percent": 66,
+        "totalUnits": 6
+      },
+      "status": "BLOCKED",
+      "step": "M0阶段关闭"
+    }
+  ],
+  "runId": "20261023-m0-plugin-contracts",
+  "schemaVersion": 1,
+  "tasks": [
+    "M0-02",
+    "M0-03"
+  ]
+}

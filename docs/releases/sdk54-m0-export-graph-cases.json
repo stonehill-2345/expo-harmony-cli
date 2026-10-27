@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "taskIds": ["M0-02", "M0-03"],
+  "cases": [
+    { "id": "EG-01", "expected": "从固定Git树重建所有根和输入，逐blob校验，不读宿主依赖和默认库" },
+    { "id": "EG-02", "expected": "相对/包根/深入口、条件、wildcard、build来源投影及exports封装正确；alias/未知/平台边界明确" },
+    { "id": "EG-03", "expected": "符号图展开重导出与循环，默认不经star导出，同源别名合并，namespace保留目标；定位原始声明与类型/值空间" },
+    { "id": "EG-04", "expected": "静态CommonJS转发可追源；冲突、缺named符号、外部star和不能解析项明确记录，不能伪成功" },
+    { "id": "EG-05", "expected": "上一轮10个workspace-star、7个external-star和1个entry-missing逐条映射实际源结果，无漏评或假关闭" },
+    { "id": "EG-06", "expected": "固定输入重复输出字节一致，正常校验从源重建通过" },
+    { "id": "EG-07", "expected": "删模块/符号/原声明/解析边/审阅、重复、伪全量等实际CLI负例均非零并指出差异" },
+    { "id": "EG-08", "expected": "工具/CLI/类型、既有索引/基线/接受/仓库/归属检查和证据hash通过；公开面和阶段完整标记仍false" }
+  ],
+  "stageClosable": false
+}

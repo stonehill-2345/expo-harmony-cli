@@ -1,0 +1,12 @@
+{
+  "schemaVersion": 1,
+  "tasks": ["M0-02", "M0-03"],
+  "cases": [
+    {"id":"SP-01","required":true,"assertion":"先红后绿：published peer/dev作用域、唯一/歧义peer、精确依赖不可替代、非法范围及传递配置选择完整守卫"},
+    {"id":"SP-02","required":true,"assertion":"原275消费引用零丢失，3份原缺配置各绑定唯一固定依赖链，其他边界保留"},
+    {"id":"SP-03","required":true,"assertion":"新全图生成；原导出/推断/插件逐ID来源零丢失，新增及状态变化独立记录；新投影带来源边界"},
+    {"id":"SP-04","required":true,"assertion":"真实源重建正例通过，篡改选择依据/候选/关系/来源/关闭状态拒绝；默认exact历史图重建兼容"},
+    {"id":"SP-05","required":true,"assertion":"全工具、仓库、目录、阶段检查及来源/归档/编译库/工具/证据hash复核通过"},
+    {"id":"SP-06","required":true,"assertion":"原M0完整清单及双向完整性接受条件全部满足方可关闭M0-02/03"}
+  ]
+}

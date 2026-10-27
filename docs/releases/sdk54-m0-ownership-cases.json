@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "stage": "M0",
+  "taskIds": ["M0-05"],
+  "acceptanceIds": ["M0-A05/ownership-and-regression-map"],
+  "cases": [
+    { "id": "OWN-01", "expected": "枚举当前apps/cli源码/测试/内容库/模板/构建输入、scripts/sdk54、根脚本与workflow，逐文件稳定ID和hash，无未分类文件" },
+    { "id": "OWN-02", "expected": "TS AST提取import/export/type/dynamic import/require关系；静态相对引用解析到实际源码，动态引用保留表达式与位置，不能因无静态调用方直接判可删" },
+    { "id": "OWN-03", "expected": "保护SDK52版本解析、创建参数、共享生成器、SDK52 patch/shim及Screens发行overlay；混合文件列出保留和退出内容，禁止整目录删除" },
+    { "id": "OWN-04", "expected": "每个SDK54待退出文件有调用方/内容或构建引用、后续任务和回归；本轮删除执行数为0，readyToDelete为false" },
+    { "id": "OWN-05", "expected": "有效SDK54能力列出明确移交所有者和位置、尚未纳入的上游来源及退出前提；区分未来迁入与当前已有文件" },
+    { "id": "OWN-06", "expected": "root/app scripts、CI run、package files、动态内容目录和跨独立CLI的发行依赖逐项保存；完整处置顺序可追溯到源码锚点" },
+    { "id": "OWN-07", "expected": "删/增文件、重复ID、错分类、缺回归、缺目标、篡改hash或伪造可删除均拒绝；重复生成确定一致" },
+    { "id": "OWN-08", "expected": "工具和产品CLI回归、类型检查、前轮基线和进度核验通过；本轮报告与原始证据hash落盘后才计M0-05完成" }
+  ],
+  "stageClosable": false
+}

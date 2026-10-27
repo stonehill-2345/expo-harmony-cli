@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "runId": "20261023-m0-project-context",
+  "tasks": [
+    "M0-02",
+    "M0-03"
+  ],
+  "cases": [
+    {
+      "id": "PRJ-01",
+      "step": "39组来源按消费点逐项审阅",
+      "status": "PASS",
+      "observed": {
+        "groups": 39,
+        "consumers": 275,
+        "inputs": 4391,
+        "summary": {
+          "BLOCKED_CONSUMER_IDENTITY": 27,
+          "BLOCKED_LOCAL_ALIAS_TARGET": 1,
+          "BLOCKED_PLATFORM_SELECTION": 2,
+          "BLOCKED_PROJECT_CONFIG": 25,
+          "BLOCKED_RELATIVE_TARGET": 20,
+          "BLOCKED_WORKSPACE_ENTRY": 6,
+          "EXPECTED_FAILURE_FIXTURE": 1,
+          "LOCAL_SOURCE_PROVENANCE": 132,
+          "LOCK_PROVENANCE_RUNTIME_UNVERIFIED": 47,
+          "RESOURCE_PROVENANCE_ONLY": 13,
+          "UNINSTANTIATED_TEMPLATE_PARAMETER": 1
+        },
+        "exactProvenanceConsumers": 65
+      },
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-project-context/source-audit.json",
+        "outputs/sdk54/ai-e2e/20261023-m0-project-context/source-audit-repeat.json"
+      ],
+      "boundary": "PASS仅表示来源调查完整落表；未解决的来源、配置和运行条件仍阻塞"
+    },
+    {
+      "id": "PRJ-02",
+      "step": "本地别名、遗漏源码及Speech输出根映射接入",
+      "status": "PASS",
+      "observed": {
+        "additionalCode": 65,
+        "sourceInputs": 4390,
+        "exports": 13942,
+        "added": 136,
+        "removed": 0,
+        "inferences": 9312,
+        "plugins": 202
+      },
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-project-context/contracts-final.log",
+        "outputs/sdk54/ai-e2e/20261023-m0-project-context/semantic-project.json.gz",
+        "outputs/sdk54/ai-e2e/20261023-m0-project-context/semantic-comparison.json"
+      ],
+      "boundary": "源码和有限类型投影；资源只核固定树位置，推导输出根不等于实际发行或构建"
+    },
+    {
+      "id": "PRJ-03",
+      "step": "双向重建、变异拒绝与回归",
+      "status": "PASS",
+      "observed": {
+        "auditMutations": 13,
+        "semanticMutations": 10,
+        "compatibilityChecks": 2
+      },
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-project-context/executions.json",
+        "outputs/sdk54/ai-e2e/20261023-m0-project-context/audit-validation-results.json",
+        "outputs/sdk54/ai-e2e/20261023-m0-project-context/semantic-validation-results.json",
+        "outputs/sdk54/ai-e2e/20261023-m0-project-context/regression-results.json"
+      ]
+    },
+    {
+      "id": "PRJ-04",
+      "step": "全部公开入口、类型和插件契约验收",
+      "status": "BLOCKED",
+      "evidence": [
+        "outputs/sdk54/ai-e2e/20261023-m0-project-context/remaining-work.json"
+      ],
+      "reason": "项目配置、缺来源/平台/入口、外部归档及类型/插件边界未全部关闭；不得把来源候选数计为支持数"
+    },
+    {
+      "id": "PRJ-05",
+      "step": "按原计划关闭M0",
+      "status": "BLOCKED",
+      "observed": {
+        "acceptedUnits": 4,
+        "totalUnits": 6,
+        "percent": 66,
+        "closed": false
+      },
+      "evidence": [
+        "docs/releases/sdk54-stage-progress.json"
+      ],
+      "reason": "M0-02/03仍未接受，原任务分母及退出条件不变"
+    }
+  ]
+}

@@ -1,0 +1,148 @@
+{
+  "acceptance": {
+    "blocked": 1,
+    "passed": 5,
+    "results": {
+      "path": "outputs/sdk54/ai-e2e/20261023-m0-declared-types/acceptance-results.json",
+      "sha256": "43b6403aa01925d6f9ee8d2adda7c401b9d5b94a7334b9cbc615abce6f19e6fb"
+    }
+  },
+  "archives": 147,
+  "artifact": {
+    "path": "outputs/sdk54/ai-e2e/20261023-m0-declared-types/semantic-final.json.gz",
+    "sha256": "cee9798c0b569ad54763690df904592dff60d26cff51a04f4c66aa30c50b80cf"
+  },
+  "artifactFormat": "sdk54-semantic-shards-v1",
+  "counts": {
+    "exports": 13942,
+    "inferences": 9312,
+    "inputs": 4390,
+    "plugins": 202,
+    "priorTypes": 103605,
+    "types": 148975
+  },
+  "declarationIdentityBoundaries": 204,
+  "declarationRoots": 361,
+  "declaredTypeProjections": 207,
+  "deviceAcceptance": "NOT_RUN",
+  "exportOriginChanges": 4,
+  "inferenceStatusChanges": [
+    {
+      "after": "EVALUATED",
+      "before": "EVALUATED_WITH_BOUNDARY",
+      "id": "GAP:DECL:packages/@expo/cli/e2e/playwright.config.ts#VariableDeclaration:isCI:1:inferred-type",
+      "source": {
+        "blob": "9f9563c492a7d1341ecf5af714429f981d925ca1",
+        "column": 7,
+        "end": 162,
+        "line": 5,
+        "path": "packages/@expo/cli/e2e/playwright.config.ts",
+        "start": 135
+      }
+    },
+    {
+      "after": "EVALUATED",
+      "before": "EVALUATED_WITH_BOUNDARY",
+      "id": "GAP:DECL:packages/@expo/cli/e2e/utils/log.ts#VariableDeclaration:EXPO_E2E_VERBOSE:1:inferred-type",
+      "source": {
+        "blob": "d86ff33ce54d523cb0644481f4f260c14e7c7bd1",
+        "column": 7,
+        "end": 283,
+        "line": 5,
+        "path": "packages/@expo/cli/e2e/utils/log.ts",
+        "start": 205
+      }
+    },
+    {
+      "after": "EVALUATED",
+      "before": "EVALUATED_WITH_BOUNDARY",
+      "id": "GAP:DECL:packages/@expo/cli/src/utils/env.ts#VariableDeclaration:env:1:inferred-type",
+      "source": {
+        "blob": "23dcd0be62461630ca6cc254f6fbb39515f0af54",
+        "column": 14,
+        "end": 10941,
+        "line": 306,
+        "path": "packages/@expo/cli/src/utils/env.ts",
+        "start": 10926
+      }
+    },
+    {
+      "after": "EVALUATED",
+      "before": "EVALUATED_WITH_BOUNDARY",
+      "id": "GAP:DECL:packages/@expo/image-utils/src/env.ts#VariableDeclaration:env:1:inferred-type",
+      "source": {
+        "blob": "5379b9b7611f4d57a7cd081e3cc07af02c8f43a2",
+        "column": 14,
+        "end": 370,
+        "line": 15,
+        "path": "packages/@expo/image-utils/src/env.ts",
+        "start": 355
+      }
+    },
+    {
+      "after": "EVALUATED",
+      "before": "EVALUATED_WITH_BOUNDARY",
+      "id": "GAP:DECL:packages/create-expo/src/utils/env.ts#VariableDeclaration:env:1:inferred-type",
+      "source": {
+        "blob": "232b2de3853ffbc2e68320d6949cfe2eba513910",
+        "column": 14,
+        "end": 699,
+        "line": 26,
+        "path": "packages/create-expo/src/utils/env.ts",
+        "start": 684
+      }
+    }
+  ],
+  "installedIdentityAcceptance": "NOT_VERIFIED",
+  "lockEdges": 226,
+  "moduleBoundaries": 2875,
+  "nativeModsAcceptance": "NOT_RUN",
+  "netReduction": 158,
+  "newUnresolvedReferences": 25,
+  "originalResolved": 183,
+  "pluginStatusChanges": [],
+  "priorUnresolved": 1228,
+  "progress": {
+    "acceptedUnits": [
+      "M0-01",
+      "M0-04",
+      "M0-05",
+      "M0-06"
+    ],
+    "closed": false,
+    "pendingUnits": [
+      "M0-02",
+      "M0-03"
+    ],
+    "percent": 66,
+    "totalUnits": 6
+  },
+  "publicSurfaceComplete": false,
+  "remainingUnresolved": 1070,
+  "runId": "20261023-m0-declared-types",
+  "schemaVersion": 1,
+  "source": {
+    "revision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1",
+    "tree": "5457e824b21d968e55c8f533cdf1751860160a92"
+  },
+  "stageClosable": false,
+  "tests": {
+    "graphMutationRejections": 10,
+    "legacyBytesIdentical": true,
+    "priorSourceRebuild": true,
+    "sourceRebuild": true,
+    "tools": 478
+  },
+  "typeBoundaries": 36882,
+  "typeBoundaryKinds": {
+    "compiler-error-type": 178,
+    "declaration-instantiation-detail-budget": 31796,
+    "generic-operation-not-expanded": 74,
+    "generic-operation-not-instantiated": 926,
+    "mapped-modifiers-not-verified": 233,
+    "symbolic-generic-members-not-instantiated": 3672,
+    "unconstrained-any": 2,
+    "unconstrained-unknown": 1
+  },
+  "typeShards": 4656
+}

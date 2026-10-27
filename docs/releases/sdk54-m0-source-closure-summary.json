@@ -1,0 +1,126 @@
+{
+  "schemaVersion": 1,
+  "runId": "20261023-m0-source-closure",
+  "source": {
+    "revision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1",
+    "tree": "5457e824b21d968e55c8f533cdf1751860160a92"
+  },
+  "artifact": {
+    "path": "outputs/sdk54/ai-e2e/20261023-m0-source-closure/public-surface.json",
+    "sha256": "ee26dea051659c2b721c29545b99ec4a1d11580c954c1564917b0e10da570bb0"
+  },
+  "counts": {
+    "boundaries": 1395,
+    "candidateDispositions": 3959,
+    "declarations": 146919,
+    "entries": 629,
+    "exports": 13942,
+    "fileDependencies": 20248,
+    "inferences": 9312,
+    "inputs": 14809,
+    "members": 356451,
+    "modules": 3959,
+    "packages": 146,
+    "plugins": 202,
+    "publication": 146,
+    "resolutions": 20248,
+    "typeEdges": 546748,
+    "types": 151107,
+    "uses": 70682
+  },
+  "semanticInput": {
+    "path": "outputs/sdk54/ai-e2e/20261023-m0-source-closure/semantic-closure.json.gz",
+    "sha256": "09d46b6bf7b1b213fefeb136c56a8201aa6bf2b92f93b6e6f7f4417b41ed98a4",
+    "rebuiltThisRun": true
+  },
+  "changes": {
+    "originalNodeUsesProbed": 37,
+    "independentNodeResolutions": 7,
+    "originalPublicTypeRootUsesLinked": 194,
+    "oldSourceUsesRepaired": 27,
+    "oldPublicSourceUsesRepaired": 19,
+    "extraFixedArchivesAccepted": 4,
+    "sha1OnlyRejected": 1
+  },
+  "seedEvidence": {
+    "seeds": 13,
+    "publisherIdentities": 13,
+    "fixedArchiveBytesVerified": 4,
+    "fixedArchiveVerified": 3,
+    "rejectedStructure": 1,
+    "publisherSourceLinksRecordedNotFetched": 9,
+    "explicitVersionDeprecations": 4,
+    "historicalSeedIdentitiesClosed": 0,
+    "pendingSeedIdentityDecisions": 13,
+    "acquisitionFailures": 0
+  },
+  "reachability": {
+    "types": 91565,
+    "boundaries": {
+      "compiler-error-type": 37,
+      "declaration-instantiation-detail-budget": 22480,
+      "generic-operation-not-expanded": 68,
+      "generic-operation-not-instantiated": 892,
+      "mapped-modifiers-not-verified": 118,
+      "symbolic-generic-members-not-instantiated": 2394,
+      "unconstrained-any": 1,
+      "unconstrained-unknown": 1
+    },
+    "referenceStatuses": {
+      "missing-compatible-peer-source": 10,
+      "missing-declared-identity": 46,
+      "missing-exact-archive": 257,
+      "node-global-context": 984,
+      "project-alias-boundary": 3,
+      "source": 17596,
+      "unresolved-declaration-entry": 257
+    }
+  },
+  "tests": {
+    "tools": 605,
+    "mutationsRejected": 16,
+    "cliMissingProbeExit": 1,
+    "repeatBytesIdentical": true,
+    "semanticSourceCheck": true,
+    "publicSourceCheck": true
+  },
+  "acceptance": {
+    "passedWithBoundaries": 5,
+    "blocked": 1,
+    "results": {
+      "path": "outputs/sdk54/ai-e2e/20261023-m0-source-closure/acceptance-results.json",
+      "sha256": "0467e3157b33548f4b5f35f7b4a6438fb2a4d6afb22aad5b1dde01279e3f3719"
+    }
+  },
+  "progress": {
+    "closed": false,
+    "acceptedUnits": [
+      "M0-01",
+      "M0-04",
+      "M0-05",
+      "M0-06"
+    ],
+    "pendingUnits": [
+      "M0-02",
+      "M0-03"
+    ],
+    "totalUnits": 6,
+    "percent": 66
+  },
+  "publicSurfaceComplete": false,
+  "stageClosable": false,
+  "buildAcceptance": "NOT_VERIFIED",
+  "runtimeAcceptance": "NOT_VERIFIED",
+  "deviceAcceptance": "NOT_RUN",
+  "previousSummaryPortabilityCorrection": {
+    "original": {
+      "path": "outputs/sdk54/ai-e2e/20261023-m0-source-closure/prior-entry-template-summary.original.json",
+      "sha256": "9830f0dca57fc6d28a8f1af844e26035e41ce06e1e37a4cd2b25669c25694633"
+    },
+    "current": {
+      "path": "docs/releases/sdk54-m0-entry-template-summary.json",
+      "sha256": "bff0d9203f5c5073da68eab7a6cc48eb2e0949b0eaf0bedff6b5937bee528e5e"
+    },
+    "reason": "machine absolute path replaced with repository-relative path; original historical bytes preserved"
+  }
+}
