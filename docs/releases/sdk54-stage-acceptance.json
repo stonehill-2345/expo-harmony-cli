@@ -37,15 +37,15 @@
           "sha256": "22d02acadc6b4b406d433da126aa842f2cbbe8b422a535f1da47ad4034deb1c5"
         },
         {
-          "path": "scripts/sdk54/legacy-ownership.mjs",
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/m0-ownership-baseline/scripts/sdk54/legacy-ownership.mjs",
           "sha256": "e45bb161a8889e644747e642a2c129350ade33504700585b7de61f23c74dff98"
         },
         {
-          "path": "scripts/sdk54/legacy-ownership-policy.mjs",
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/m0-ownership-baseline/scripts/sdk54/legacy-ownership-policy.mjs",
           "sha256": "1ea7b643e9c130d246f2587590b82df9822018928eab40beb490edf66795be24"
         },
         {
-          "path": "scripts/sdk54/__tests__/legacy-ownership.test.mjs",
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/m0-ownership-baseline/scripts/sdk54/__tests__/legacy-ownership.test.mjs",
           "sha256": "896725fe12bd5b0628ec6db7db851c58cab50679537cedcacaaa88b2f9c175de"
         }
       ]
@@ -133,6 +133,96 @@
           "sha256": "8780144a87e706c07eb95eed1cba6eebf7f7b014ccf927c98caad3adf492dadb"
         }
       ]
+    },
+    {
+      "id": "M0A-01",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/create-source.json",
+          "sha256": "ccd6fdef44baa97c9cea895430d3e5e4df25ac21cf9401ac4863c386e67b73af"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/creator/creator.json",
+          "sha256": "9a3e451f7a21c4fe224642a9fc1990441f70e5aca78ede490b06291f7490cdda"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/create-candidate-consumer.json",
+          "sha256": "d07a980b597013e8c7696f6b8ce061b8a4fd448ffa0042df1ea8a17fc2a91d08"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-creation-audit.json",
+          "sha256": "7b30a92f24089926df9bcdc658ca575e3a7379cfb9e4a3ecc571ce7b5563c5c9"
+        }
+      ]
+    },
+    {
+      "id": "M0A-02",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/templates/templates.json",
+          "sha256": "96aa2550bb698f57824073f49a08e204a03ea4252f099dafe483692b43766049"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-creation-audit.json",
+          "sha256": "7b30a92f24089926df9bcdc658ca575e3a7379cfb9e4a3ecc571ce7b5563c5c9"
+        }
+      ]
+    },
+    {
+      "id": "M0A-03",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-install-recovery-audit.json",
+          "sha256": "bac28cef0d7b023a84e9d4e3012b324899bebb7cb6c1730e189c421081c4bb6a"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-install-recovery-audit.mjs",
+          "sha256": "cc408027c3be6c0ce48e0284dcdab3bfda8a9940aa83d7b96d7022edaa7029d4"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-install-recovery-audit.md",
+          "sha256": "acd9719a335ef8ef3340fb5f414f8407f311b997e7dd9c0e17f6bdb95aae6a99"
+        }
+      ]
+    },
+    {
+      "id": "M0A-04",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-legacy-removal-audit.json",
+          "sha256": "df091e1f2064ee55b62998e2aea6e3dbaf6aef43d6fcbc1b73ba5cb84c20afd7"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-legacy-removal-audit.md",
+          "sha256": "eec6e823378413bd7127fb21684b36613d80b6995e495d9b6c6986056bc793d1"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-legacy-removal-audit.mjs",
+          "sha256": "2a5322490f572c2086837225af0e4606db5ddab8737c90a5671d1e938b5824f4"
+        }
+      ]
+    },
+    {
+      "id": "M0A-05",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-install-recovery-final.json",
+          "sha256": "7189179db44a97934ffdc5a8933635c66fb2a46436d761cdd2d1ff74c35d3cbe"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-install-recovery-final.mjs",
+          "sha256": "dda6e5dee053d07b88e8154c03d7d3bbf3e3969bcbd8051d5a593d92a5fa0fa5"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-install-recovery-final.md",
+          "sha256": "86745fa48aa35b3feec2dd18d88a948c8408073f2f3324a053625d106f8a89c2"
+        }
+      ]
     }
   ],
   "closures": [
@@ -151,6 +241,24 @@
         {
           "path": "outputs/sdk54/ai-e2e/20261027-m0-final-closure/final-evidence-seal.json",
           "sha256": "8780144a87e706c07eb95eed1cba6eebf7f7b014ccf927c98caad3adf492dadb"
+        }
+      ]
+    },
+    {
+      "stage": "M0A",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "docs/releases/2026-10-27-sdk54-m0a-creation-acceptance.md",
+          "sha256": "3b3adfdf4446d1e4ca80b98a1c77cc30ca5b9476e152d860ec867fb100b528cc"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-install-recovery-audit.json",
+          "sha256": "bac28cef0d7b023a84e9d4e3012b324899bebb7cb6c1730e189c421081c4bb6a"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m0a-creation/review-install-recovery-final.json",
+          "sha256": "7189179db44a97934ffdc5a8933635c66fb2a46436d761cdd2d1ff74c35d3cbe"
         }
       ]
     }

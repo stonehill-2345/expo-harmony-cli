@@ -37,12 +37,14 @@ if(p.name==='@expo/cli'){
  write('build/bin/cli',"#!/usr/bin/env node\\nif(process.argv.includes('--version')){console.log('54.0.27');process.exit(0)}if(process.argv[2]==='run:harmony'&&process.argv.includes('--help')){console.log('Usage: expo run:harmony');process.exit(0)}process.exit(2);\\n",0o755);
  write('build/src/run/harmony/index.js','exports.expoRunHarmony=()=>{};\\n');
  write('build/src/run/harmony/runHarmonyAsync.js','exports.runHarmonyAsync=async()=>{};\\n');
+ write('build/src/harmony/project.js','exports.isHarmonyProject=()=>false;\\n');
  write('build/src/prebuild/harmony/prebuildHarmonyAsync.js','exports.prebuildHarmonyAsync=async()=>({harmonyRoot:"/mock"});\\n');
  write('build/src/prebuild/index.js','exports.expoPrebuild=async()=>require("./harmony/prebuildHarmonyAsync.js").prebuildHarmonyAsync();\\n');
 }else if(p.name==='@expo/metro-config'){
  write('build/ExpoMetroConfig.js',"require('./withHarmony');module.exports={};\\n");
  write('build/ExpoMetroConfig.d.ts','export declare function getDefaultConfig(): object;\\n');
  write('build/withHarmony.js','exports.withHarmony=(config)=>config;\\n');
+ write('build/harmonyProject.js','exports.isHarmonyProject=()=>false;\\n');
 }else{
  write('build/index.js',"module.exports=async(args)=>{if(args.includes('resolve')&&args.includes('harmony'))console.log(JSON.stringify({modules:[]}));else process.exitCode=1};\\n");
  write('build/index.d.ts','declare const main: Function; export = main;\\n');

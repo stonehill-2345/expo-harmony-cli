@@ -92,6 +92,14 @@ function assertPackedContentDoesNotContainLocalState(cwd: string, files: string[
 }
 
 describe('expo-harmony-cli 实际打包产物', () => {
+  it('does not publish transferred SDK54 creation implementations or stale build files', () => {
+    const { root, files } = readPackedCli();
+    const transferred = /^(?:dist\/sdk54\/)(?:create|create-release|template-contract|default-image-substitution)\.(?:js(?:\.map)?|d\.ts(?:\.map)?)$/;
+    expect(files.filter(file => transferred.test(file))).toEqual([]);
+    const creator = fs.readFileSync(path.join(root, 'dist/creator.js'), 'utf8');
+    expect(creator).not.toContain('sdk54/create-release');
+  });
+
   it('从源码生成入口，并清理旧编译文件', () => {
     const { files } = readPackedCli();
     expect(files).toContain('dist/index.js');
@@ -134,10 +142,10 @@ describe('expo-harmony-cli 实际打包产物', () => {
     expect(files.filter(file => file.startsWith('content/patches/sdk-54/')).sort())
       .toEqual([...declaredSdk54Assets].sort());
     for (const runtimeFile of [
-      'dist/sdk54/create-options.js', 'dist/sdk54/create.js', 'dist/sdk54/default-image-substitution.js',
+      'dist/sdk54/create-options.js',
       'dist/sdk54/docs.js', 'dist/sdk54/doctor.js', 'dist/sdk54/file-transaction.js',
       'dist/sdk54/install-patches.js', 'dist/sdk54/package-json.js', 'dist/sdk54/patch-manifest.js',
-      'dist/sdk54/project-state.js', 'dist/sdk54/template-contract.js', 'dist/sdk54/verify-runtime.js',
+      'dist/sdk54/project-state.js', 'dist/sdk54/verify-runtime.js',
     ]) expect(files).toContain(runtimeFile);
     expect(files).toContain('content/docs/sdk-54/HARMONY.md');
     expect(files).toContain('content/docs/README.md');

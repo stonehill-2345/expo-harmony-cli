@@ -37,6 +37,21 @@ test('OWN-02: AST separates runtime/type/literal/dynamic references without trea
   assert.match(dynamic.expression, /path.join/);
 });
 
+test('OWN-01 edge: deleted tracked files leave the current graph while missing imports remain errors', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-ownership-deleted-'));
+  try {
+    execFileSync('git', ['init', '--quiet', root]);
+    const file = path.join(root, 'apps/cli/src/removed.ts');
+    fs.mkdirSync(path.dirname(file), { recursive: true });
+    fs.writeFileSync(file, 'export const removed = true;');
+    execFileSync('git', ['add', 'apps/cli/src/removed.ts'], { cwd: root });
+    fs.unlinkSync(file);
+    assert.deepEqual(discoverOwnershipFiles(root), []);
+    const references = indexModuleReferences(new Map([['apps/cli/src/caller.ts', "import './removed';"]]), root);
+    assert.equal(references[0].resolution, 'MISSING_RELATIVE');
+  } finally { fs.rmSync(root, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 }); }
+});
+
 test('OWN-01/03/04/05/06: current file decisions preserve SDK52 and record release transfer dependencies', () => {
   const inventory = createOwnershipInventory();
   const find = (file) => inventory.files.find((entry) => entry.path === file);
@@ -45,7 +60,9 @@ test('OWN-01/03/04/05/06: current file decisions preserve SDK52 and record relea
     assert.equal(find(file).decision.category, 'KEEP_SDK52', file);
   }
   assert.ok(find('apps/cli/src/sdk54/npm-spec.ts').incoming.some((entry) => entry.source === 'apps/cli/src/version-matrix.ts'));
-  assert.equal(find('apps/cli/src/sdk54/default-image-substitution.ts').decision.category, 'REMOVE_SDK54');
+  for (const name of ['create', 'create-release', 'template-contract', 'default-image-substitution']) {
+    assert.equal(find(`apps/cli/src/sdk54/${name}.ts`), undefined, `M0A-04 removed ${name}`);
+  }
   assert.equal(find('scripts/sdk54/generate-external-screens-patch.mjs').decision.category, 'TRANSFER_SDK54');
   assert.ok(find('scripts/sdk54/generate-external-screens-patch.mjs').incoming.some((entry) => entry.source === 'scripts/sdk54/prepare-npm-release.mjs'));
   assert.ok(find('apps/cli/src/sdk54/release-runtime.ts').incoming.some((entry) => entry.source === 'scripts/sdk54/test-release-install.mjs' && entry.kind === 'reviewed-generated-projection'));

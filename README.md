@@ -34,13 +34,15 @@
 
 ## 快速开始
 
-### SDK54（推荐）
+### SDK54（新架构候选）
 
-使用官方 `create-expo-app` 创建 fresh 项目，并通过 npm alias 安装 15 个已发布的 `@expo-oh` HarmonyOS 运行时包：
+使用独立创建器 `@expo-oh/create-expo@3.5.12` 和配套模板创建项目，模板通过 npm alias 固定 HarmonyOS 运行时依赖。此创建器及模板组合尚未发布；以下命令仅适用于已配置完整候选包的测试 registry。
 
 ```bash
-# 1. 创建 SDK54 项目（--template：default 含 Expo Router / blank-typescript；--pnpm 可换 --npm）
-npx expo-harmony-cli@latest create my-app --sdk 54 --template default --pnpm
+# 1. 使用 npm 创建 SDK54 项目（省略 --template 时使用 default，含 Expo Router）
+npx @expo-oh/create-expo@3.5.12 my-app --template default
+# 或使用 pnpm 创建空白 TypeScript 项目
+# pnpm dlx @expo-oh/create-expo@3.5.12 my-app --template blank-typescript
 
 # 2. 生成 HarmonyOS 原生工程
 cd my-app
@@ -53,9 +55,9 @@ npx expo run:harmony
 npx expo start
 ```
 
-clean Release 构建使用 `npx expo run:harmony --configuration Release --no-build-cache`。SDK54 的公开保证范围是 fresh `default` 和 `blank-typescript`：新项目不安装 `patch-package`，也不复制本地 patch；旧 SDK54 patch 项目不会自动迁移。
+clean Release 构建使用 `npx expo run:harmony --configuration Release --no-build-cache`。候选已有 fresh `default` / `blank-typescript` × npm/pnpm 的完整安装成功证据，blank 两种包管理器的模拟器最小首屏通过；default 原生模块、真机及签名 Release 仍按后续阶段验收，详见仓库 `docs/releases/2026-10-27-sdk54-m0a-creation-acceptance.md`。新项目不安装 `patch-package`，也不复制本地 patch；旧 SDK54 patch 项目不会自动迁移。
 
-14 个 Expo 适配包和 `@expo-oh/react-native-screens` 已使用 `harmony` dist-tag 发布。项目仍保留 `expo`、`expo-router`、`@expo/cli` 等原始依赖键和 import，实际包通过 alias 解析到 `@expo-oh/*`。产品 CLI 继续使用无 scope 包名 `expo-harmony-cli`，不属于这 15 个运行时包的发布集合。
+项目保留 `expo`、`expo-router`、`@expo/cli` 等原始依赖键和 import，实际包通过 alias 解析到 `@expo-oh/*`。候选创建器、两份模板与 15 个运行时包按固定组合验收，不能用此前的公开 dist-tag 代替本轮候选。独立 CLI `expo-harmony-cli` 的创建入口仅保留 SDK52；传入 SDK54 会在创建文件前拒绝并提示新入口。
 
 ### SDK52（legacy）
 
@@ -87,13 +89,13 @@ pnpm start:harmony
 
 | 能力                | 说明                                                                                          |
 | ------------------- | --------------------------------------------------------------------------------------------- |
-| 🚀 **一键创建**     | `npx expo-harmony-cli <目录名> [--sdk=52\|54]` 创建 Expo 项目，自动注入 HarmonyOS 开发基线    |
+| 🚀 **一键创建**     | SDK52 使用 `npx expo-harmony-cli <目录名> --sdk=52`；SDK54 使用独立候选创建器，见快速开始    |
 | 🧬 **原生工程生成** | 生成 HarmonyOS 原生工程、Metro 配置、RNOH（React Native OpenHarmony）依赖和开发文档           |
-| 📦 **依赖管理**     | SDK54 使用已发布的 `@expo-oh` 包；SDK52 继续由 CLI 管理 patch、alias 与原生注册               |
+| 📦 **依赖管理**     | SDK54 候选模板直接声明固定 `@expo-oh` 发行组合；SDK52 由 CLI 管理 patch、alias 与原生注册      |
 | 🔗 **智能原生注册** | 官方优先：优先调用 RNOH 官方 `link-harmony`，未覆盖由内置映射表补充，均未覆盖逐包提示适配指引 |
 | 🩺 **环境诊断**     | 内置 `env` / `doctor` 命令，工具链检查 + 项目健康诊断，退出码分级可接入 CI                    |
 | 🛡️ **文件保护**     | autolinking 托管文件被手动修改时阻断覆盖，事务写入失败自动回滚                                |
-| ✅ **装后验证**     | SDK54 创建后校验实际包名、版本、运行入口和原生文件，失败即报错                               |
+| ✅ **候选验证**     | SDK54 验收工具检查实际安装身份、模板文件、普通 Metro 与原生构建，并保留失败证据               |
 | 🔄 **Expo 兼容**    | 保留 Android、iOS 与 Web 的 Expo 标准工作流，不影响现有开发生态                               |
 
 ## 效果预览
@@ -180,9 +182,9 @@ pnpm --dir apps/cli exec node dist/index.js --help
 
 - [CLI 使用指南](apps/cli/docs/guide.md)（SDK52 legacy 流程）
 - [CLI 更新日志](apps/cli/CHANGELOG.md)
-- [设计文档与验收证据](docs/)
+- [设计文档与验收证据](https://github.com/stonehill-2345/expo-harmony-cli/tree/main/docs)
 - [HarmonyOS 快速开始与逐包说明](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony/getting-started.md)
-- [SDK54 @expo-oh 发布计划](docs/plans/2026-10-09-sdk54-expo-oh-npm-release.md)
+- [SDK54 @expo-oh 发布计划](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/plans/2026-10-09-sdk54-expo-oh-npm-release.md)
 - [贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [行为准则](CODE_OF_CONDUCT.md)
 - [第三方声明](NOTICE.md)
 

@@ -86,6 +86,7 @@ test('declares package-specific runtime outputs and executable runtime probes', 
       'build/bin/cli',
       'build/src/run/harmony/runHarmonyAsync.js',
       'build/src/prebuild/harmony/prebuildHarmonyAsync.js',
+      'build/src/harmony/project.js',
     ],
   );
   assert.equal(
@@ -94,7 +95,7 @@ test('declares package-specific runtime outputs and executable runtime probes', 
   );
   assert.deepEqual(
     getDescriptorByName('@expo/metro-config').runtime.requiredFiles.map(({ path }) => path),
-    ['build/withHarmony.js'],
+    ['build/withHarmony.js', 'build/harmonyProject.js'],
   );
   assert.deepEqual(
     getDescriptorByName('expo-modules-autolinking').runtime.requiredFiles.map(({ path }) => path),

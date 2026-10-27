@@ -5,7 +5,7 @@ import {
 } from '../../src/sdk54/create-options';
 
 describe('parseCreateArgs', () => {
-  it('defaults SDK54 create options to default template and pnpm', () => {
+  it('parses legacy create options with default template and pnpm', () => {
     expect(parseCreateArgs(['myapp'])).toEqual({
       projectName: 'myapp',
       requestedSdk: null,
@@ -58,15 +58,16 @@ describe('assertCreateSelectionSupported', () => {
     expect(() => assertCreateSelectionSupported(parsed, 'sdk-52')).toThrow(/SDK 52.*default/);
   });
 
-  it.each(['yarn', 'bun'] as const)('rejects %s for SDK54', packageManager => {
+  it.each(['npm', 'pnpm', 'yarn', 'bun'] as const)('redirects SDK54 %s to the new creator', packageManager => {
     const parsed = parseCreateArgs(['myapp', `--${packageManager}`]);
-    expect(() => assertCreateSelectionSupported(parsed, 'sdk-54')).toThrow(/SDK 54.*npm.*pnpm/);
+    expect(() => assertCreateSelectionSupported(parsed, 'sdk-54')).toThrow(
+      'npx @expo-oh/create-expo@3.5.12 myapp --template default',
+    );
   });
 
   it.each([
     ['sdk-52', ['myapp', '--npm']],
-    ['sdk-54', ['myapp', '--npm']],
-    ['sdk-54', ['myapp', '--pnpm', '--template', 'blank-typescript']],
+    ['sdk-52', ['myapp', '--pnpm']],
   ] as const)('accepts supported selection %s %j', (sdk, args) => {
     const parsed = parseCreateArgs([...args]);
     expect(() => assertCreateSelectionSupported(parsed, sdk)).not.toThrow();

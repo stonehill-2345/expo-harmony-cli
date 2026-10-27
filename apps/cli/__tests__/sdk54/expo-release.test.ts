@@ -1,20 +1,43 @@
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
+// Source-workspace tests resolve the same helper source that the candidate package compiles.
+vi.mock('@expo/metro-config/build/harmonyProject', async () =>
+  import('../../../../packages/@expo/metro-config/src/harmonyProject'),
+);
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { getHarmonyRelease, versionHarmonyPackage, harmonyInstallSpec, hasReleaseIdentity } from '../../../../packages/@expo/cli/src/harmony/release';
 import { loadReleaseManifest } from '../../src/sdk54/release-manifest';
 import { enableHarmonyMetroForManagedProject } from '../../../../packages/@expo/cli/src/start';
+import currentRelease from '../../../../docs/releases/sdk54-expo-oh-harmony.1.json';
 
-it('enables standalone Harmony Metro for scoped managed projects', () => {
+it('requires installed release identities and keeps Harmony enabled after managed state is deleted', () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'expo-release-start-'));
   const previous = process.env.EXPO_HARMONY_METRO;
   try {
+    const stateOnlyDir = path.join(dir, 'state-only');
+    fs.mkdirSync(path.join(stateOnlyDir, '.expo-harmony'), { recursive: true });
+    fs.writeFileSync(path.join(stateOnlyDir, '.expo-harmony/managed-state.json'), JSON.stringify({ sdk54: { mode: 'sdk54-scoped-packages' } }));
+    delete process.env.EXPO_HARMONY_METRO;
+    expect(enableHarmonyMetroForManagedProject(stateOnlyDir)).toBe(false);
+    const expo = currentRelease.packages.find(item => item.installName === 'expo')!;
+    const expoRoot = path.join(dir, 'node_modules/expo');
+    const rnohName = '@react-native-oh/react-native-harmony';
+    const rnohRoot = path.join(dir, 'node_modules', rnohName);
+    fs.mkdirSync(expoRoot, { recursive: true });
+    fs.mkdirSync(rnohRoot, { recursive: true });
+    fs.writeFileSync(path.join(expoRoot, 'package.json'), JSON.stringify({ name: expo.publishName, version: expo.publishVersion }));
+    fs.writeFileSync(path.join(expoRoot, 'harmony-release.json'), JSON.stringify(currentRelease));
+    fs.writeFileSync(path.join(rnohRoot, 'package.json'), JSON.stringify({ name: rnohName, version: currentRelease.catalog.external[rnohName] }));
     fs.mkdirSync(path.join(dir, '.expo-harmony'));
     fs.writeFileSync(path.join(dir, '.expo-harmony/managed-state.json'), JSON.stringify({ sdk54: { mode: 'sdk54-scoped-packages' } }));
-    delete process.env.EXPO_HARMONY_METRO;
     expect(enableHarmonyMetroForManagedProject(dir)).toBe(true);
-    expect(process.env.EXPO_HARMONY_METRO).toBe('1');
+    fs.rmSync(path.join(dir, '.expo-harmony'), { recursive: true });
+    expect(enableHarmonyMetroForManagedProject(dir)).toBe(true);
+    expect(process.env.EXPO_HARMONY_METRO).toBeUndefined();
+    fs.writeFileSync(path.join(expoRoot, 'package.json'), JSON.stringify({ name: 'expo', version: expo.publishVersion }));
+    process.env.EXPO_HARMONY_METRO = '1';
+    expect(enableHarmonyMetroForManagedProject(dir)).toBe(false);
   } finally {
     if (previous === undefined) delete process.env.EXPO_HARMONY_METRO;
     else process.env.EXPO_HARMONY_METRO = previous;

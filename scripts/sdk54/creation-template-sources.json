@@ -1,0 +1,393 @@
+{
+  "schemaVersion": 1,
+  "repository": "https://github.com/expo/expo.git",
+  "revision": "5b42e3d21e0ac5e086752361ca8a5cb4de53bec1",
+  "templates": {
+    "default": {
+      "sourcePath": "templates/expo-template-default",
+      "manifest": {
+        "name": "expo-template-default",
+        "license": "0BSD",
+        "main": "expo-router/entry",
+        "version": "54.0.63",
+        "scripts": {
+          "start": "expo start",
+          "reset-project": "node ./scripts/reset-project.js",
+          "android": "expo start --android",
+          "ios": "expo start --ios",
+          "web": "expo start --web",
+          "lint": "expo lint"
+        },
+        "dependencies": {
+          "@expo/vector-icons": "^15.0.3",
+          "@react-navigation/bottom-tabs": "^7.4.0",
+          "@react-navigation/elements": "^2.6.3",
+          "@react-navigation/native": "^7.1.8",
+          "expo": "~54.0.37",
+          "expo-constants": "~18.0.14",
+          "expo-font": "~14.0.12",
+          "expo-haptics": "~15.0.8",
+          "expo-image": "~3.0.11",
+          "expo-linking": "~8.0.12",
+          "expo-router": "~6.0.24",
+          "expo-splash-screen": "~31.0.13",
+          "expo-status-bar": "~3.0.9",
+          "expo-symbols": "~1.0.8",
+          "expo-system-ui": "~6.0.9",
+          "expo-web-browser": "~15.0.11",
+          "react": "19.1.0",
+          "react-dom": "19.1.0",
+          "react-native": "0.81.5",
+          "react-native-gesture-handler": "~2.28.0",
+          "react-native-worklets": "0.5.1",
+          "react-native-reanimated": "~4.1.1",
+          "react-native-safe-area-context": "~5.6.0",
+          "react-native-screens": "~4.16.0",
+          "react-native-web": "~0.21.0"
+        },
+        "devDependencies": {
+          "@types/react": "~19.1.0",
+          "typescript": "~5.9.2",
+          "eslint": "^9.25.0",
+          "eslint-config-expo": "~10.0.0"
+        }
+      },
+      "files": [
+        {
+          "path": ".npmignore",
+          "mode": "100644",
+          "blob": "73f6bdb233a58dec977f67333d78ead7139e09bf",
+          "sha256": "35b30116e5b1b2e3066b67cb3a8e88e49645cdf1a0952c6c24d1119bd64f3109"
+        },
+        {
+          "path": ".vscode/extensions.json",
+          "mode": "100644",
+          "blob": "b7ed83779759a0a1e6cf2d181f45fe6b67be47dc",
+          "sha256": "f54cd822dce0af53953015f71ce04f91d4fcec4ac02ecb28658d636004c4bbce"
+        },
+        {
+          "path": ".vscode/settings.json",
+          "mode": "100644",
+          "blob": "e2798e4264cbbbf1806ebf8f1ab263c009458ff9",
+          "sha256": "c9d2a3300e5453b399d9a092a29aabb67adfc59623abd5b03b1143557386c39c"
+        },
+        {
+          "path": "README.md",
+          "mode": "100644",
+          "blob": "48dd63ff3ef9d87e1378e6babeac488e7ecc37b3",
+          "sha256": "724011847f042c61ca1ddf8bc00a3fe723672734b00f37348e4e7ddef1965091"
+        },
+        {
+          "path": "_vscode/extensions.json",
+          "mode": "100644",
+          "blob": "b7ed83779759a0a1e6cf2d181f45fe6b67be47dc",
+          "sha256": "f54cd822dce0af53953015f71ce04f91d4fcec4ac02ecb28658d636004c4bbce"
+        },
+        {
+          "path": "_vscode/settings.json",
+          "mode": "100644",
+          "blob": "e2798e4264cbbbf1806ebf8f1ab263c009458ff9",
+          "sha256": "c9d2a3300e5453b399d9a092a29aabb67adfc59623abd5b03b1143557386c39c"
+        },
+        {
+          "path": "app.json",
+          "mode": "100644",
+          "blob": "522e8e7c95b26aea30b437c19a52ec34c0d19c9e",
+          "sha256": "1229615909e6bb8fa04280f6f7ed4744ef22fc21acef154c1397dd78de65b8d9"
+        },
+        {
+          "path": "app/(tabs)/_layout.tsx",
+          "mode": "100644",
+          "blob": "54e11d00f2973a7c377c77acaca7fb664b815fcf",
+          "sha256": "d344f792879521ca9c7f07ef37070762b2b9b0e9c5344de376b726c1b7270e80"
+        },
+        {
+          "path": "app/(tabs)/explore.tsx",
+          "mode": "100644",
+          "blob": "71518f9a734ac01246c13aa6ad528efdfc8c4fcd",
+          "sha256": "42195d1fcc3b37b4d1cd7d953ff643970297afc705327c17a254b5010fa8460a"
+        },
+        {
+          "path": "app/(tabs)/index.tsx",
+          "mode": "100644",
+          "blob": "786b7366c28b40e0b1d844507861f69179889b95",
+          "sha256": "6eb90b4657ccaf8d2be7dbaceaf6c7628785ad0880343f5ed439327fbd061fdc"
+        },
+        {
+          "path": "app/_layout.tsx",
+          "mode": "100644",
+          "blob": "f518c9b00020d21cfb98c7c6e3fd1d18156c734d",
+          "sha256": "6504dc6809b5bd740da152889b4f77634c2377bdac9ef28d57ac43c39a61715b"
+        },
+        {
+          "path": "app/modal.tsx",
+          "mode": "100644",
+          "blob": "6dfbc1ab957b7b533d81e9cde3977508ab15d670",
+          "sha256": "5a88c22a8eebe5b2b41bd21c89f8d6068d93fe823813c0594011e64543267372"
+        },
+        {
+          "path": "assets/images/android-icon-background.png",
+          "mode": "100644",
+          "blob": "5ffefc5bb57a3d7b39ec6ff4e96979226522cc49",
+          "sha256": "fb139c2dee362ebf2070e23b96da6fc0d43f8492de38b8af1fd7223e19b5861d"
+        },
+        {
+          "path": "assets/images/android-icon-foreground.png",
+          "mode": "100644",
+          "blob": "3a9e5016dca4804f37ba410ba49e70055e1ccad2",
+          "sha256": "9e3d0315a33c6799de601dd34cd8bf8cc3a8d16f3bf75592baec2ceb7240b391"
+        },
+        {
+          "path": "assets/images/android-icon-monochrome.png",
+          "mode": "100644",
+          "blob": "77484ebdbca253297baea4a7d416233aa47a45c0",
+          "sha256": "6371fc2c12e33ad2215a86c281db3d682a81bebe7c957a842c13b8bf00cceb83"
+        },
+        {
+          "path": "assets/images/favicon.png",
+          "mode": "100644",
+          "blob": "408bd746615785760b09e6f23fa8378d3e614331",
+          "sha256": "a4e030697a7571b3e95d31860e4da55d2f98e5e861e2b55e414f45a8556828ba"
+        },
+        {
+          "path": "assets/images/icon.png",
+          "mode": "100644",
+          "blob": "7165a53c7475d846df195bc570482459d61bad67",
+          "sha256": "119462bb78eb240a65c869fc067ee599639b3cb5a41953f25c07b17d2a8c7e0f"
+        },
+        {
+          "path": "assets/images/partial-react-logo.png",
+          "mode": "100644",
+          "blob": "66fd9570e4fac42bca15352def191c563100b2ed",
+          "sha256": "015a72aeb24c1166243ebc185355c9488cc892fbf3aa82f9ae66819a10f3451c"
+        },
+        {
+          "path": "assets/images/react-logo.png",
+          "mode": "100644",
+          "blob": "9d72a9ffcbb39d89709073e1a7edd8ba414932c1",
+          "sha256": "224b7636b15e672801579b5b418077cbc2ca42f0146389062364356b0ecb5c5c"
+        },
+        {
+          "path": "assets/images/react-logo@2x.png",
+          "mode": "100644",
+          "blob": "2229b130ad5b73fdef7d59ff544abd4cb2377bef",
+          "sha256": "fa600be9ad2f869c7a8dbaffc78bb15af741123e1319c948f0be51753a153cde"
+        },
+        {
+          "path": "assets/images/react-logo@3x.png",
+          "mode": "100644",
+          "blob": "a99b2032221d57c88b6c44e7e22d93ddda78e008",
+          "sha256": "cd84e02a5d542a3e71b7fa10a685c1b9fb51db4aff92aca6c0da6461ce17be16"
+        },
+        {
+          "path": "assets/images/splash-icon.png",
+          "mode": "100644",
+          "blob": "03d6f6b6c6727954aec1d8206222769afd178d8d",
+          "sha256": "5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8"
+        },
+        {
+          "path": "components/external-link.tsx",
+          "mode": "100644",
+          "blob": "883e515a432a0231ce417c6368b9cea9341c50ba",
+          "sha256": "2838582e2dc21877652b710d4aee5f4ba5a795b17fcf63bd7ac9c25a749c8c26"
+        },
+        {
+          "path": "components/haptic-tab.tsx",
+          "mode": "100644",
+          "blob": "7f3981cb940657b88f3495bb0411d00c76f83d5e",
+          "sha256": "eeb1860d6e4edb647e1ebeb116ff81393ec50e2d721560c1fe2d686716a518f8"
+        },
+        {
+          "path": "components/hello-wave.tsx",
+          "mode": "100644",
+          "blob": "5def547c2a5db1708ce1b5dcf21d7c0bda189784",
+          "sha256": "2f0b9b1f7740f0de0c1aed071142a2251ceb9936cca0d210f69bc85ce08dd579"
+        },
+        {
+          "path": "components/parallax-scroll-view.tsx",
+          "mode": "100644",
+          "blob": "6f674a762a114b0906c7676eba062f722dab0023",
+          "sha256": "37857f0334e989274920465789c9665327ffaba2688292c26dd484db7d95feb9"
+        },
+        {
+          "path": "components/themed-text.tsx",
+          "mode": "100644",
+          "blob": "d79d0a1c58253114f97328485a9155db2e316379",
+          "sha256": "06d02c5a33dd258563726e8586a4b588e2df7c087ac291be6a225f89bf1ac974"
+        },
+        {
+          "path": "components/themed-view.tsx",
+          "mode": "100644",
+          "blob": "6f181d826ea41908e90f5fec0aefd7332111496e",
+          "sha256": "b95ec1df30abf73d26593db2b6e6280af33b39f3f3b6d960765e99fb6f6843c8"
+        },
+        {
+          "path": "components/ui/collapsible.tsx",
+          "mode": "100644",
+          "blob": "6345fdebeb55f10c59eff08af5b3f09e7c269944",
+          "sha256": "edf4096c1dd0b7e2835773ec327a69ab8b333f459710fd3590334daaec41739c"
+        },
+        {
+          "path": "components/ui/icon-symbol.ios.tsx",
+          "mode": "100644",
+          "blob": "9177f4daf238a4eb6688308695e68a8c19dc5eb3",
+          "sha256": "c4e56fc2c481f0964d06ff0c9dda51eeba1ca7f6f554336dfdceb4a75c80eb2c"
+        },
+        {
+          "path": "components/ui/icon-symbol.tsx",
+          "mode": "100644",
+          "blob": "b7ece6b3502856d5d4e1a5f05834e653b20130d2",
+          "sha256": "5cf33b25a381429479bb5f56e744111bcd8b81f99969e9cb56e14988293e338f"
+        },
+        {
+          "path": "constants/theme.ts",
+          "mode": "100644",
+          "blob": "f06facd2f6ef28cccef038d12b45aadf2194ed06",
+          "sha256": "2e62645f6e9f46e520a0c9db49289c3f71b5849b946466b4ba48d3469b6911dc"
+        },
+        {
+          "path": "eslint.config.js",
+          "mode": "100644",
+          "blob": "5025da683d6b6ecdced898af11f2e5dc5a73a4c1",
+          "sha256": "3b0c823fd936f964905db962e66e92e24773b7085c0c82750a4d4f0b1808c41c"
+        },
+        {
+          "path": "gitignore",
+          "mode": "100644",
+          "blob": "f8c6c2e83a6de11bc0beffa256c9c2808fc375f6",
+          "sha256": "adf9eba69e0e560f18cf1f83fc8a5070d18e2e7806cbb57c21bf52a95f9d88c7"
+        },
+        {
+          "path": "hooks/use-color-scheme.ts",
+          "mode": "100644",
+          "blob": "17e3c63e1acfe711d436c1c205d90c4e2fe46131",
+          "sha256": "33beb965500ae5fdfe5c8699805a6be94c8c126a751fbe2ed7bcae87df394882"
+        },
+        {
+          "path": "hooks/use-color-scheme.web.ts",
+          "mode": "100644",
+          "blob": "7eb1c1b7071ceedf76252509fabb05c603774ad8",
+          "sha256": "84f19b5c1a8e941ab9868d2e83f6e61db11d3d9bf4fa91fac979bcd0fdc8019b"
+        },
+        {
+          "path": "hooks/use-theme-color.ts",
+          "mode": "100644",
+          "blob": "0cbc3a6e6f98cc51a7b565df78249a43fe22794d",
+          "sha256": "49ec7d86e952e315f8172e7994a879d3c63023f2955f667fedba6ab5c89c1710"
+        },
+        {
+          "path": "package.json",
+          "mode": "100644",
+          "blob": "ee142de9221009eeb1be24473bf9e74d46c91397",
+          "sha256": "e89a794862e724eb2e6f01de5c2d3ca7361abfb5601a4a9ed3644245cb608723"
+        },
+        {
+          "path": "scripts/reset-project.js",
+          "mode": "100755",
+          "blob": "51dff15acba333398064fe4cd8008ed4ed5105b9",
+          "sha256": "cdb729cfc560944bfc199c18c638153c6537e507e3e86f50cba0ac6be8543c26"
+        },
+        {
+          "path": "tsconfig.json",
+          "mode": "100644",
+          "blob": "909e9010867004d96567d0a03ef3dceea154eff6",
+          "sha256": "e8e9605c3b1a521e797d6d3a5fd271121fdfbd0aab0904be0873469bc0347a77"
+        }
+      ]
+    },
+    "blank-typescript": {
+      "sourcePath": "templates/expo-template-blank-typescript",
+      "manifest": {
+        "name": "expo-template-blank-typescript",
+        "description": "The Blank project template includes the minimum dependencies to run and an empty root component.",
+        "license": "0BSD",
+        "version": "54.0.47",
+        "main": "index.ts",
+        "scripts": {
+          "start": "expo start",
+          "android": "expo start --android",
+          "ios": "expo start --ios",
+          "web": "expo start --web"
+        },
+        "dependencies": {
+          "expo": "~54.0.37",
+          "expo-status-bar": "~3.0.9",
+          "react": "19.1.0",
+          "react-native": "0.81.5"
+        },
+        "devDependencies": {
+          "@types/react": "~19.1.0",
+          "typescript": "~5.9.2"
+        }
+      },
+      "files": [
+        {
+          "path": ".npmignore",
+          "mode": "100644",
+          "blob": "73f6bdb233a58dec977f67333d78ead7139e09bf",
+          "sha256": "35b30116e5b1b2e3066b67cb3a8e88e49645cdf1a0952c6c24d1119bd64f3109"
+        },
+        {
+          "path": "App.tsx",
+          "mode": "100644",
+          "blob": "0329d0c93c3a2f575e4d87faeea9b6029d400ef1",
+          "sha256": "c61c877a2e12a17a0f54189be468e0c8b16e4f071a19109fc929a149f642e473"
+        },
+        {
+          "path": "app.json",
+          "mode": "100644",
+          "blob": "8944f95a3e8c2c0683882bf3c4b3f11ea07444e7",
+          "sha256": "f5b0498bd7ea445097a4bbc5d6d3aa1f370383dae09c833ff69852336f3314cf"
+        },
+        {
+          "path": "assets/adaptive-icon.png",
+          "mode": "100644",
+          "blob": "03d6f6b6c6727954aec1d8206222769afd178d8d",
+          "sha256": "5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8"
+        },
+        {
+          "path": "assets/favicon.png",
+          "mode": "100644",
+          "blob": "e75f697b1801871ad8cd9309b05e8ffe8c6b6d01",
+          "sha256": "24272cdaeff82cc5facdaccd982a6f05b60c4504704bbf94c19a6388659880bb"
+        },
+        {
+          "path": "assets/icon.png",
+          "mode": "100644",
+          "blob": "a0b1526fc7b78680fd8d733dbc6113e1af695487",
+          "sha256": "74c64047eb557b1341bba7a2831eedde9ddb705e6451a9ad9f5552bf558f13de"
+        },
+        {
+          "path": "assets/splash-icon.png",
+          "mode": "100644",
+          "blob": "03d6f6b6c6727954aec1d8206222769afd178d8d",
+          "sha256": "5f4c0a732b6325bf4071d9124d2ae67e037cb24fcc9c482ef82bea742109a3b8"
+        },
+        {
+          "path": "gitignore",
+          "mode": "100644",
+          "blob": "d914c328fe1d7c235283f985f1679a330b40b565",
+          "sha256": "5936b94a73a28b6735de672b54c2c058a33c9ae1edb62d87d6a4418e14447805"
+        },
+        {
+          "path": "index.ts",
+          "mode": "100644",
+          "blob": "1d6e981ef6c4ea336e6fe8f3fbce9487221a075c",
+          "sha256": "5c157f4d44972d9c84415e1e4bda595b3abcd8cf733f8a9cd20935bec3eccc42"
+        },
+        {
+          "path": "package.json",
+          "mode": "100644",
+          "blob": "00d93bca7a67b8b5e3dcfb9e39c5d6ab9248e67c",
+          "sha256": "13b60431574c33e12fc32c50f7e6473f77073993efd11345495feb88388482e9"
+        },
+        {
+          "path": "tsconfig.json",
+          "mode": "100644",
+          "blob": "b9567f6052d70ca2c9035e33667fded3cc4ed71f",
+          "sha256": "712583ff9cdb4b4e4f9b000a4a56d68db8dc1921cbfbc36d490a3a9f2be3dd72"
+        }
+      ]
+    }
+  }
+}

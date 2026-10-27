@@ -36,19 +36,15 @@ export const ownershipRules = [
     'releaseRuntimeFailures的安装身份/嵌套依赖探针有效；runReleaseDoctorChecks依赖旧managed-state，不能直接搬入新工具链。',
     { path: 'packages/@expo/cli/src/harmony/release.ts', status: 'existing' },
     [{ anchor: 'export function releaseRuntimeFailures', keep: '真实依赖身份和必需文件校验', remove: '旧managed-state准入和独立CLI doctor入口' }]),
-  transfer('TRANSFER-CREATE-RELEASE', { files: [`${cli}src/sdk54/create-release.ts`, `${cli}src/sdk54/template-contract.ts`] },
-    [`${tests}sdk54/create-release.test.ts`, `${tests}sdk54/template-contract.test.ts`],
-    '创建编排、模板身份验证迁入固定create来源；不复制创建后改依赖、写SDK54状态或expo-image替换约束。',
-    { path: 'packages/create-expo', status: 'planned-from-pinned-source', provenance: 'docs/releases/sdk54-source-provenance.json#/creationSource' }),
   transfer('TRANSFER-TRANSACTION', { files: [`${cli}src/sdk54/file-transaction.ts`] }, [`${tests}sdk54/file-transaction.test.ts`],
     '文本事务/回滚能力用于新发行维护，退出defaultImage消费端改写用途。',
     { path: 'packages/@expo/cli/src/harmony/release.ts', status: 'existing' }),
-  remove('REMOVE-OLD-SDK54-RUNTIME', { files: ['create', 'default-image-substitution', 'docs', 'doctor', 'install-patches', 'package-json', 'project-state', 'verify-runtime'].map((name) => `${cli}src/sdk54/${name}.ts`) },
+  remove('REMOVE-OLD-SDK54-RUNTIME', { files: ['docs', 'doctor', 'install-patches', 'package-json', 'project-state', 'verify-runtime'].map((name) => `${cli}src/sdk54/${name}.ts`) },
     [`${tests}sdk54/command-routing.test.ts`, `${tests}version-matrix.test.ts`, `${tests}creator.test.ts`],
     '退出旧patch创建/注入、SDK54子类型识别、专属诊断和图像替换；先解除混合命令和发行工具的入边。'),
   keep('KEEP-SDK54-MIXED-TESTS', { files: [`${tests}sdk54/create-options.test.ts`, `${tests}sdk54/command-routing.test.ts`] },
     [`${tests}creator.test.ts`, `${tests}version-matrix.test.ts`], '保留SDK52断言，替换/移除SDK54旧路由与参数断言，不能整删混合测试。'),
-  remove('REMOVE-OLD-SDK54-TESTS', { files: ['create', 'default-image-substitution', 'docs', 'doctor', 'install-patches', 'package-json', 'project-state', 'verify-runtime'].map((name) => `${tests}sdk54/${name}.test.ts`) },
+  remove('REMOVE-OLD-SDK54-TESTS', { files: ['docs', 'doctor', 'install-patches', 'package-json', 'project-state', 'verify-runtime'].map((name) => `${tests}sdk54/${name}.test.ts`) },
     [`${tests}creator.test.ts`, `${tests}version-matrix.test.ts`], '产品旧入口退出后删除专属兼容断言；新来源身份与标准Expo路径另建真实消费回归。'),
   transfer('TRANSFER-SDK54-TESTS', { prefixes: [`${tests}sdk54/`] }, [`${toolTests}release-pack.test.mjs`, `${tests}creator.test.ts`],
     '保留包身份、源码契约和事务等有效断言，迁到对应SDK/发行工具测试；不能用旧CLI mock代替新消费验收。',
@@ -109,7 +105,6 @@ export const reviewedResources = [
   { source: `${cli}src/sdk54/install-patches.ts`, anchor: "'content/patches/sdk-54'", targets: [`${cli}content/patches/sdk-54/`], kind: 'reviewed-directory-reference' },
   { source: `${cli}src/sdk54/patch-manifest.ts`, anchor: "'content/patches/sdk-54/manifest.json'", targets: [`${cli}content/patches/sdk-54/manifest.json`], kind: 'reviewed-directory-reference' },
   { source: `${cli}src/sdk54/docs.ts`, anchor: "'../../content/docs/sdk-54'", targets: [`${cli}content/docs/sdk-54/`], kind: 'reviewed-directory-reference' },
-  { source: `${cli}src/sdk54/create-release.ts`, anchor: "'../../content/releases/sdk-54'", targets: [`${cli}content/releases/sdk-54/`], kind: 'reviewed-directory-reference' },
   { source: 'scripts/sdk54/release-catalog.mjs', anchor: "'apps/cli/content/patches/sdk-54/manifest.json'", targets: [`${cli}content/patches/sdk-54/manifest.json`], kind: 'reviewed-directory-reference' },
   { source: 'scripts/sdk54/release-catalog.mjs', anchor: "'apps/cli/package.json'", targets: [`${cli}package.json`], kind: 'reviewed-directory-reference' },
   { source: 'scripts/sdk54/test-release-install.mjs', anchor: "'dist/sdk54/release-manifest.js'", targets: [`${cli}src/sdk54/release-manifest.ts`], kind: 'reviewed-generated-projection', artifact: `${cli}dist/sdk54/release-manifest.js` },
@@ -118,7 +113,6 @@ export const reviewedResources = [
 ];
 
 export const splitAnchors = [
-  { source: `${cli}src/index.ts`, anchor: 'SDK52 legacy；SDK54 @expo-oh packages', keep: 'SDK52命令分发与帮助', remove: 'SDK54帮助、示例和选项宣传' },
   ...['OhPackageJson5Template', 'EntryOhPackageJson5Template'].map((name) => ({
     source: `${cli}src/harmony-project/templates/${name}.ts`, anchor: "private sdk: SdkVersion = 'sdk-54'",
     keep: 'SDK52模板参数和原有输出', remove: '旧SDK54默认参数和Worklets专属分支；不得改动SDK52实际输出',
@@ -128,7 +122,6 @@ export const splitAnchors = [
   { source: `${cli}src/version-matrix.ts`, anchor: 'export const VERSION_MATRIX_54', keep: 'VERSION_MATRIX_52及SDK52识别', remove: 'SDK54默认版本/检测fallback/弃用默认导出' },
   { source: `${cli}src/scanner/compat-table.ts`, anchor: 'function buildCompatTable54', keep: 'buildCompatTable52及其SDK52 patch/shim', remove: 'SDK54兼容表、默认COMPAT_TABLE和SDK54选择分支' },
   { source: `${cli}src/lifecycle/managed-state.ts`, anchor: 'function validSdk54', keep: 'SDK52受管文件/hash/drift生命周期', remove: 'sdk54模式与旧兼容状态验证字段' },
-  { source: `${cli}src/creator.ts`, anchor: "if (sdk === 'sdk-54')", keep: 'SDK52模板创建/注入/扫描', remove: 'SDK54交互选项、动态create-release调用与默认值' },
   { source: `${cli}src/lib/pkg-manager.ts`, anchor: 'export function sdk54InstallCommand', keep: 'SDK52 resolvePm和通用命令', remove: 'SDK54专属安装策略移交真实create' },
   ...['commands/prebuild', 'commands/doctor', 'commands/scan', 'commands/sync', 'installer/installer', 'installer/uninstaller'].map((name) => ({
     source: `${cli}src/${name}.ts`, anchor: 'const kind = classifyHarmonyProject', keep: '原SDK52命令主流程', remove: 'SDK54旧项目分类/分流/仅诊断和迁移提示',

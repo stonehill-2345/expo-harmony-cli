@@ -35,7 +35,9 @@
     "sdk54:release:manifest": "node scripts/sdk54/generate-release-manifest.mjs",
     "sdk54:release:check": "node scripts/sdk54/generate-release-manifest.mjs --check && node --test scripts/sdk54/__tests__/release-*.test.mjs",
     "sdk54:release:prepare": "node scripts/sdk54/prepare-npm-release.mjs",
-    "sdk54:release:verify": "node scripts/sdk54/verify-npm-release.mjs"
+    "sdk54:release:verify": "node scripts/sdk54/verify-npm-release.mjs",
+    "sdk54:create:build": "node scripts/sdk54/build-create.mjs --output outputs/sdk54/m0a-create",
+    "sdk54:templates:pack": "node scripts/sdk54/creation-catalog.mjs --output outputs/sdk54/m0a-templates"
   },
   "devDependencies": {
     "@ast-grep/lang-c": "0.0.6",

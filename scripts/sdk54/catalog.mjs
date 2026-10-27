@@ -95,12 +95,13 @@ const CLI_RUNTIME = runtime(
     { path: 'build/bin/cli', executable: true },
     { path: 'build/src/run/harmony/runHarmonyAsync.js' },
     { path: 'build/src/prebuild/harmony/prebuildHarmonyAsync.js' },
+    { path: 'build/src/harmony/project.js' },
   ],
   { type: 'cli', version: '54.0.27' },
 );
 
 const METRO_RUNTIME = runtime(
-  [{ path: 'build/withHarmony.js' }],
+  [{ path: 'build/withHarmony.js' }, { path: 'build/harmonyProject.js' }],
   { type: 'metro', peerProviders: ['expo'] },
 );
 

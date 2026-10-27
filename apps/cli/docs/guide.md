@@ -17,7 +17,7 @@
 
 | 命令                                                            | 用途                                                                                                    |
 | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `npx expo-harmony-cli <目录名>`                                 | 创建 Expo SDK 52（RN 0.77）或 SDK 54（RN 0.82）项目并注入 HarmonyOS 基线；不指定 `--sdk=52|54` 时交互选择。      |
+| `npx expo-harmony-cli <目录名> --sdk=52`                        | 创建 Expo SDK52（RN 0.77）项目并注入 HarmonyOS 基线；SDK54 请求在创建文件前拒绝。                          |
 | `pnpm dlx expo-harmony-cli install <包名>`                      | 使用 Expo 安装依赖；命中兼容表时自动追加 HarmonyOS 适配依赖、patch 或原生工程刷新。                     |
 | `pnpm dlx expo-harmony-cli uninstall <包名>`                    | 卸载原包，并清理 CLI 管理的 HarmonyOS 伴随包、alias、patch 与原生注册；`remove` 是同义别名。            |
 | `pnpm dlx expo-harmony-cli scan --apply`                        | 重新扫描现有 `package.json`，补齐可自动识别的 HarmonyOS 适配，并回收此前 CLI 管理但原包已不存在的残留。 |
@@ -29,7 +29,9 @@
 | `pnpm start:harmony`                                            | 启动 HarmonyOS Metro，与 Android/iOS 统一端口 `8081`。                                                     |
 | `pnpm expo run:android` / `pnpm expo run:ios`                   | 按 Expo 标准方式构建 Android / iOS。                                                                    |
 
-默认不带 `--platform` 的 `prebuild` 会同时执行 Expo 原生预构建和 HarmonyOS 工程生成；只调试 HarmonyOS 时建议显式使用 `--platform harmony`。
+上表中的依赖管理、同步及 `start:harmony` 为 SDK52 legacy 工作流。SDK54 新架构候选使用 `@expo-oh/create-expo@3.5.12` 创建，随后使用项目内 `expo prebuild --platform harmony`、`expo run:harmony` 和普通 `expo start`。创建器与配套模板尚未发布，需配置完整候选测试 registry，见仓库根 README 的快速开始。
+
+SDK52 默认不带 `--platform` 的 `prebuild` 会同时执行 Expo 原生预构建和 HarmonyOS 工程生成；只调试 HarmonyOS 时建议显式使用 `--platform harmony`。
 
 首次生成 `harmony/` 时不需要 `--force`。只有已有 `harmony/` 需要整体重生成、模板升级或工程异常需要回到生成器基线时，才使用 `prebuild --platform harmony --force`；该参数会覆盖生成器管理的文件。
 
@@ -82,7 +84,7 @@ pnpm dlx expo-harmony-cli doctor
 | HarmonyOS 开发工具              | DevEco Studio 5.0+ 与对应 OpenHarmony SDK |
 | iOS 构建工具                    | 遵循对应 Expo SDK 版本官方要求             |
 
-已验证的主路径是创建 Expo 默认模板、生成 HarmonyOS 工程、通过 CLI 安装关键原生依赖并运行开发构建。其他模板和原生模块按需适配。
+SDK52 沿用创建、原生工程生成和依赖管理流程。SDK54 新架构候选已有 default / blank-typescript × npm/pnpm 的完整安装成功证据，blank 两种包管理器的模拟器首屏通过；default 原生模块、真机及签名 Release 按后续阶段验收，以仓库 `docs/releases/2026-10-27-sdk54-m0a-creation-acceptance.md` 为准。
 
 ## 三方依赖
 
@@ -200,7 +202,7 @@ pnpm add -D @react-native-community/cli@20.1.1
 
 ## 使用须知
 
-- 当前支持 Expo SDK 52（RN 0.77 / RNOH 0.77.x）和 SDK 54（RN 0.82 / RNOH 0.82.x）两种基线；不要跨基线混搭版本。
+- 独立 CLI 创建入口仅支持 Expo SDK52（RN 0.77 / RNOH 0.77.x）；SDK54（RN 0.82 / RNOH 0.82.x）转交独立候选创建器，尚未完成阶段关闭。不要跨基线混搭版本。
 - 不是所有 Expo / React Native 原生模块都已适配 HarmonyOS；请以 `list` 输出、生成项目的 `docs/HARMONY.md` 和 `.agent/skills/expo-harmony-adapter/SKILL.md` 适配资料为准。
 - `react-native-mmkv` 尚未完成 Nitro 伴随依赖闭环；`react-native-fast-image@9.2.1` 与 React 19 peer 不兼容；clipboard、permissions、device-info、fs、image-picker 和 media-library 的部分版本原生闭环尚未发布或验证，CLI 会报告 unsupported 而不会降级安装。
 - Expo Image 的 HarmonyOS 实现覆盖基础渲染和 prefetch；清缓存为无操作成功，`loadAsync` 暂不支持。

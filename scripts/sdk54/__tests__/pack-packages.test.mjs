@@ -57,6 +57,7 @@ if (manifest.name === '@expo/cli') {
   write('build/bin/cli', fs.existsSync(path.join(stage, 'BROKEN_RUNTIME')) ? "#!/usr/bin/env node\\n// run:harmony run/harmony/index.js\\nif (process.argv.includes('--version')) console.log('54.0.27'); else process.exit(2);\\n" : "#!/usr/bin/env node\\nif (process.argv.includes('--version')) { console.log('54.0.27'); process.exit(0); }\\nif (process.argv[2] === 'run:harmony' && process.argv.includes('--help')) { console.log('Usage: expo run:harmony'); process.exit(0); }\\nprocess.exit(2);\\n", 0o755);
   write('build/src/run/harmony/index.js', "exports.expoRunHarmony = () => {};\\n");
   write('build/src/run/harmony/runHarmonyAsync.js', "exports.runHarmonyAsync = async () => {};\\n");
+  write('build/src/harmony/project.js', 'exports.isHarmonyProject = () => false;\\n');
   write('build/src/prebuild/harmony/prebuildHarmonyAsync.js', fs.existsSync(path.join(stage, 'BROKEN_PREBUILD_HELPER')) ? "// prebuildHarmonyAsync harmony callable\\nmodule.exports = {};\\n" : "exports.prebuildHarmonyAsync = async () => ({ harmonyRoot: '/mock' });\\n");
   write('build/src/prebuild/index.js', fs.existsSync(path.join(stage, 'BROKEN_PREBUILD_DISPATCH')) ? "// harmony prebuildHarmonyAsync dispatcher\\nexports.expoPrebuild = async () => {};\\n" : "exports.expoPrebuild = async () => require('./harmony/prebuildHarmonyAsync.js').prebuildHarmonyAsync();\\n");
 } else if (manifest.name === '@expo/metro-config') {
@@ -64,6 +65,7 @@ if (manifest.name === '@expo/cli') {
   write('build/ExpoMetroConfig.d.ts', 'export declare function getDefaultConfig(): object;\\n');
   write('build/withHarmony.js', fs.existsSync(path.join(stage, 'BROKEN_RUNTIME')) ? '// exports.withHarmony function\\nmodule.exports = {};\\n' : 'exports.withHarmony = (config) => config;\\n');
   write('build/withHarmony.d.ts', 'export declare function withHarmony(config: object): object;\\n');
+  write('build/harmonyProject.js', 'exports.isHarmonyProject = () => false;\\n');
 } else {
   write('build/index.js', fs.existsSync(path.join(stage, 'BROKEN_RUNTIME')) ? "// harmony require('../platforms/harmony')\\nmodule.exports = async () => { console.error('No linking implementation is available for platform harmony'); process.exitCode = 1; };\\n" : (fs.existsSync(path.join(stage, 'DEV_ONLY_RUNTIME')) ? "require('dev-only-runtime');\\nmodule.exports = async () => console.log(JSON.stringify({ modules: [] }));\\n" : "module.exports = async (args) => { if (args.includes('resolve') && args.includes('harmony')) console.log(JSON.stringify({ modules: [] })); else process.exitCode = 1; };\\n"));
   write('build/index.d.ts', 'declare const main: (args: string[]) => Promise<void>; export = main;\\n');

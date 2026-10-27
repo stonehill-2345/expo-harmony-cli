@@ -79,10 +79,11 @@ export function discoverOwnershipFiles(root = repository) {
     .filter((file) => !ownershipScope.exclusions.some((excluded) => excluded.includes('/') ? file === excluded : file.split('/').includes(excluded)))
     .sort(compare).map((file) => {
       const absolute = path.join(root, file);
-      const stat = fs.lstatSync(absolute);
+      const stat = fs.lstatSync(absolute, { throwIfNoEntry: false });
+      if (!stat) return null;
       if (!stat.isFile() || stat.isSymbolicLink()) throw new Error(`Ownership input must be a regular file: ${file}`);
       return file;
-    });
+    }).filter(Boolean);
 }
 
 function matches(rule, file) {

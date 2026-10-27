@@ -25,7 +25,7 @@ function writeRootManifest(root, overrides = {}) {
 
 function createRepository(t, { initializeGit = false } = {}) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-repository-'));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true, maxRetries: 3, retryDelay: 50 }));
   fs.mkdirSync(path.join(root, 'apps/cli'), { recursive: true });
   fs.mkdirSync(path.join(root, 'packages/expo-asset'), { recursive: true });
   writeRootManifest(root);
@@ -76,6 +76,17 @@ test('ignores workspace-installed root node_modules inside a Git checkout', (t) 
   fs.writeFileSync(installedFile, 'installed dependency\n');
   const report = checkRepository(root);
   assert.equal(report.forbiddenFiles.some((value) => value.includes('node_modules')), false, JSON.stringify(report, null, 2));
+});
+
+test('checks the private creator workspace and ignores only its installed dependencies', (t) => {
+  const root = createRepository(t, { initializeGit: true });
+  const creator = path.join(root, 'packages/create-expo');
+  fs.mkdirSync(path.join(creator, 'node_modules/dependency'), { recursive: true });
+  fs.writeFileSync(path.join(creator, 'node_modules/dependency/index.js'), 'installed dependency');
+  fs.writeFileSync(path.join(creator, 'package.json'), JSON.stringify({ name: '@expo-oh/create-expo', private: true }));
+  assert.deepEqual(checkRepository(root).forbiddenFiles, []);
+  fs.writeFileSync(path.join(creator, 'package.json'), JSON.stringify({ name: '@expo-oh/create-expo', private: false }));
+  assert.ok(checkRepository(root).failures.some(failure => failure.includes('sole publishable package')));
 });
 
 test('does not treat source examples and test fixtures as leaked machine configuration', (t) => {

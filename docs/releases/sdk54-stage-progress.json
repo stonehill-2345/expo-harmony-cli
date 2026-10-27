@@ -17,17 +17,17 @@
       "percent": 100
     },
     "M0A": {
-      "closed": false,
-      "acceptedUnits": [],
-      "pendingUnits": [
+      "closed": true,
+      "acceptedUnits": [
         "M0A-01",
         "M0A-02",
         "M0A-03",
         "M0A-04",
         "M0A-05"
       ],
+      "pendingUnits": [],
       "totalUnits": 5,
-      "percent": 0
+      "percent": 100
     },
     "M1": {
       "closed": false,
