@@ -24,7 +24,8 @@ interface HarmonyPrebuildDependencies {
   getConfig: typeof getConfig;
   ensureDependencies: typeof ensureHarmonyDependenciesAsync;
   loadAutolinking: (projectRoot: string) => Promise<HarmonyAutolinkingExports>;
-  removeHarmonyProject: (harmonyRoot: string) => Promise<void>;
+  /** @deprecated Native generation owns cleaning and recovery. */
+  removeHarmonyProject?: (harmonyRoot: string) => Promise<void>;
   updateDebugBundlePath: typeof updateHarmonyDebugBundlePathAsync;
   compileConfig?: typeof compileHarmonyConfigAsync;
 }
@@ -35,9 +36,6 @@ const defaultDependencies: HarmonyPrebuildDependencies = {
   loadAutolinking: async (projectRoot) => {
     const expoPackageJson = resolveFrom(projectRoot, 'expo/package.json');
     return createRequire(expoPackageJson)('expo-modules-autolinking/exports');
-  },
-  removeHarmonyProject: async (harmonyRoot) => {
-    await fs.promises.rm(harmonyRoot, { recursive: true, force: true });
   },
   updateDebugBundlePath: updateHarmonyDebugBundlePathAsync,
   compileConfig: compileHarmonyConfigAsync,
@@ -91,8 +89,8 @@ export async function prebuildHarmonyAsync(
     snapshot
   );
   await autolinking.validateHarmonyAppAssetsAsync(projectRoot, snapshot.expoConfig);
-  if (options.clean) {
-    await dependencies.removeHarmonyProject(path.join(projectRoot, 'harmony'));
+  if (options.clean && fs.existsSync(path.join(projectRoot, 'harmony'))) {
+    Log.log('Harmony clean rebuilds declared configuration; the current project will be retained in .expo/harmony-backups.');
   }
   const rnohRoot = path.join(
     projectRoot,
@@ -110,8 +108,12 @@ export async function prebuildHarmonyAsync(
     modules,
     inputHarPath: path.join(rnohRoot, 'react_native_openharmony.har'),
     corePackageRoot: core.packageRoot,
+    clean: options.clean,
+    finalize: async (stageRoot: string) => {
+      await dependencies.updateDebugBundlePath(projectRoot, stageRoot);
+    },
   });
-  await dependencies.updateDebugBundlePath(projectRoot, native.harmonyRoot);
+  if (native.backupPath) Log.log(`Harmony project backup: ${native.backupPath}`);
   return native;
 }
 

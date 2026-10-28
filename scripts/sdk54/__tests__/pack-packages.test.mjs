@@ -75,6 +75,7 @@ if (manifest.name === '@expo/cli') {
   write('build/platforms/harmony/index.js', "module.exports = require('./harmony');\\n");
   write('build/platforms/harmony/harmony.js', 'exports.resolveModulesAsync = async () => [];\\n');
   write('build/platforms/harmony/nativeProject.js', 'exports.generatePackageListAsync = async () => {};\\n');
+  for(const name of ['generationTransaction','generationState','releasedCompatibility']) write('build/platforms/harmony/'+name+'.js', 'exports.ready = true;\\n');
 }
 if (fs.existsSync(path.join(stage, 'UNSAFE_MAP'))) write('build/unsafe.js.map', JSON.stringify({ version: 3, sources: [stage + '/src/index.ts'], names: [], mappings: '' }));
 if (fs.existsSync(path.join(stage, 'WINDOWS_MAP'))) write('build/windows.js.map', JSON.stringify({ version: 3, sources: ['C:\\\\repo\\src\\index.ts'], names: [], mappings: '' }));

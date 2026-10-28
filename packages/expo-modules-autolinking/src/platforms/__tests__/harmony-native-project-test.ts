@@ -4,6 +4,7 @@ jest.unmock('node:fs');
 jest.unmock('node:fs/promises');
 
 import { execFileSync } from 'child_process';
+import { createHash } from 'crypto';
 import fs from 'fs';
 import os from 'os';
 import path from 'path';
@@ -15,10 +16,11 @@ import {
   prepareRnohCompatibilityHarAsync,
   renderExpoModulesAppOverlays,
   renderExpoModulesLifecycle,
-  RNOH_INPUT_HAR_SHA256,
+  RNOH_OUTPUT_HAR_SHA256,
   stageHarmonyEtsPackagesAsync,
   syncHarmonyNativeProjectAsync,
 } from '../harmony/nativeProject';
+import { copyReleasedHarmonyHarAsync } from '../harmony/releasedCompatibility';
 
 const cpp = {
   packageClass: 'example::RenamedPackage',
@@ -145,9 +147,9 @@ describe(renderExpoModulesAppOverlays, () => {
 
 describe(prepareHarmonyNativeProjectAsync, () => {
   const lockedInputHar = process.env.RNOH_INPUT_HAR;
-  const lockedOutputHar = process.env.RNOH_OUTPUT_HAR;
+  const releasedCoreRoot = process.env.RNOH_RELEASED_CORE_ROOT;
 
-  (lockedInputHar && lockedOutputHar ? it : it.skip)(
+  (lockedInputHar && releasedCoreRoot ? it : it.skip)(
     'assembles a blank app native project from the template and generated files',
     async () => {
       const root = fs.mkdtempSync(path.join(os.tmpdir(), 'expo-harmony-project-'));
@@ -162,7 +164,9 @@ describe(prepareHarmonyNativeProjectAsync, () => {
         const corePackageRoot = path.join(root, 'node_modules', 'expo-modules-core');
         fs.mkdirSync(path.join(packageRoot, 'harmony/src/main/ets'), { recursive: true });
         fs.mkdirSync(path.join(packageRoot, 'harmony/src/main/cpp'), { recursive: true });
-        fs.mkdirSync(path.join(corePackageRoot, 'harmony/rnoh-compat'), { recursive: true });
+        fs.mkdirSync(path.join(corePackageRoot, 'harmony'), { recursive: true });
+        fs.cpSync(path.join(releasedCoreRoot!, 'harmony/released-compatibility'),
+          path.join(corePackageRoot, 'harmony/released-compatibility'), { recursive: true });
         const appConfigScriptPath = path.join(
           root,
           'node_modules/expo-constants/scripts/getAppConfig.js'
@@ -176,10 +180,6 @@ describe(prepareHarmonyNativeProjectAsync, () => {
         fs.writeFileSync(
           path.join(packageRoot, 'harmony/src/main/ets/ExpoAssetPackage.ets'),
           'export class ExpoAssetPackage {}\n'
-        );
-        fs.writeFileSync(
-          path.join(corePackageRoot, 'harmony/rnoh-compat/prepare_har.py'),
-          '# test\n'
         );
         const module: ModuleDescriptorHarmony = {
           packageName: 'expo-asset',
@@ -208,10 +208,7 @@ describe(prepareHarmonyNativeProjectAsync, () => {
           modules: [module],
           inputHarPath: lockedInputHar!,
           corePackageRoot,
-          runCompatibilityTool: async ({ outputHarPath }) => {
-            fs.copyFileSync(lockedOutputHar!, outputHarPath);
-            fs.copyFileSync(`${lockedOutputHar!}.manifest.json`, `${outputHarPath}.manifest.json`);
-          },
+          runCompatibilityTool: async () => { throw new Error('consumer must not run conversion'); },
           runAppConfigGenerator: async () => {
             throw new Error('snapshot must not be reevaluated');
           },
@@ -254,7 +251,6 @@ describe(prepareHarmonyNativeProjectAsync, () => {
           recursive: true,
         });
         fs.writeFileSync(path.join(root, 'harmony/expo-modules/stale-package/old.ets'), 'stale\n');
-        fs.writeFileSync(result.generatedFiles.lifecycle, 'stale generated\n');
 
         await syncHarmonyNativeProjectAsync({
           projectRoot: root,
@@ -273,7 +269,7 @@ describe(prepareHarmonyNativeProjectAsync, () => {
         });
 
         expect(fs.readFileSync(abilityPath, 'utf8')).toContain('// USER_MARKER');
-        expect(fs.existsSync(path.join(root, 'harmony/expo-modules/stale-package'))).toBe(false);
+        expect(fs.readFileSync(path.join(root, 'harmony/expo-modules/stale-package/old.ets'), 'utf8')).toBe('stale\n');
         expect(fs.readFileSync(result.generatedFiles.lifecycle, 'utf8')).toContain(
           'export class ExpoModulesLifecycle'
         );
@@ -435,45 +431,30 @@ describe(prepareRnohCompatibilityHarAsync, () => {
         inputHarPath: outputHarPath,
         corePackageRoot: path.join(root, 'expo-modules-core'),
       })
-    ).rejects.toThrow(RNOH_INPUT_HAR_SHA256);
+    ).rejects.toThrow('input SHA256');
     expect(fs.readFileSync(outputHarPath, 'utf8')).toBe('unknown');
   });
 
   const lockedInputHar = process.env.RNOH_INPUT_HAR;
-  (lockedInputHar ? it : it.skip)(
-    'invokes the SDK compatibility tool with project-local output arguments',
+  const releasedCoreRoot = process.env.RNOH_RELEASED_CORE_ROOT;
+  (lockedInputHar && releasedCoreRoot ? it : it.skip)(
+    'copies the released SDK artifact without invoking compatibility tools',
     async () => {
       const harmonyRoot = path.join(root, 'harmony');
       const corePackageRoot = path.join(root, 'expo-modules-core');
-      const scriptPath = path.join(corePackageRoot, 'harmony/rnoh-compat/prepare_har.py');
-      fs.mkdirSync(path.dirname(scriptPath), { recursive: true });
-      fs.writeFileSync(scriptPath, '# test\n');
-      let invocation: unknown;
-
-      await expect(
-        prepareRnohCompatibilityHarAsync({
-          harmonyRoot,
-          inputHarPath: lockedInputHar!,
-          corePackageRoot,
-          pythonExecutable: 'python-test',
-          runCompatibilityTool: async (args) => {
-            invocation = args;
-            fs.writeFileSync(args.outputHarPath, 'invalid output');
-            fs.writeFileSync(`${args.outputHarPath}.manifest.json`, '{}');
-          },
-        })
-      ).rejects.toThrow('output SHA256 mismatch');
-
-      expect(invocation).toEqual({
-        pythonExecutable: 'python-test',
-        scriptPath,
-        inputHarPath: lockedInputHar,
-        outputHarPath: path.join(harmonyRoot, 'dependencies/react_native_openharmony.har'),
-        profile: 'core-v1-v3',
+      fs.mkdirSync(path.join(corePackageRoot, 'harmony'), { recursive: true });
+      fs.cpSync(path.join(releasedCoreRoot!, 'harmony/released-compatibility'),
+        path.join(corePackageRoot, 'harmony/released-compatibility'), { recursive: true });
+      const output = await prepareRnohCompatibilityHarAsync({
+        harmonyRoot, inputHarPath: lockedInputHar!, corePackageRoot,
+        pythonExecutable: '/nonexistent/python-disabled',
+        runCompatibilityTool: async () => { throw new Error('consumer must not run conversion'); },
       });
-      expect(
-        fs.existsSync(path.join(harmonyRoot, 'dependencies/react_native_openharmony.har'))
-      ).toBe(false);
+      expect(createHash('sha256').update(fs.readFileSync(output)).digest('hex')).toBe(RNOH_OUTPUT_HAR_SHA256);
+      expect(fs.existsSync(`${output}.manifest.json`)).toBe(true);
+      fs.appendFileSync(path.join(corePackageRoot, 'harmony/released-compatibility/rnoh-core-v1-v3.har'), 'corrupt');
+      await expect(prepareRnohCompatibilityHarAsync({ harmonyRoot, inputHarPath: lockedInputHar!, corePackageRoot })).rejects.toThrow('SHA256 mismatch');
+      expect(createHash('sha256').update(fs.readFileSync(output)).digest('hex')).toBe(RNOH_OUTPUT_HAR_SHA256);
     }
   );
 });
@@ -557,7 +538,8 @@ describe('third-party HAR staging', () => {
   });
 
   const lockedScreensHar = process.env.RNOH_SCREENS_INPUT_HAR;
-  (lockedScreensHar ? it : it.skip)(
+  const releasedCoreRoot = process.env.RNOH_RELEASED_CORE_ROOT;
+  (lockedScreensHar && releasedCoreRoot ? it : it.skip)(
     'keeps native modal pop animation while allowing the top screen to handle Back',
     async () => {
       const packageRoot = path.join(root, 'node_modules/@react-native-ohos/react-native-screens');
@@ -568,7 +550,9 @@ describe('third-party HAR staging', () => {
         kind: 'rnoh-package', cpp, ets,
         hars: [{ packageName: '@react-native-ohos/react-native-screens', packagePath: path.join(packageRoot, 'harmony/screens.har'), primary: true, transform: 'screens-content-wrapper-v1' }],
         lifecycleDependencies: [],
-      }], harmonyRoot);
+      }], harmonyRoot, (transform, inputHarPath, outputHarPath) => copyReleasedHarmonyHarAsync({
+        transform, inputHarPath, outputHarPath, corePackageRoot: releasedCoreRoot!,
+      }));
       const outputHar = path.join(harmonyRoot, 'dependencies/expo-modules/react-native-ohos__react-native-screens/screens.har');
       const source = execFileSync('tar', ['-xOzf', outputHar, 'package/src/main/ets/components/RNSScreen.ets'], { encoding: 'utf8' });
       expect(source).toContain("if ((this.from || this.viewTagArr?.length > 0) &&\n          this.pageId !== RNSScreen.TOP_PAGEID) {");
@@ -578,7 +562,7 @@ describe('third-party HAR staging', () => {
     }
   );
 
-  it('keeps the previous managed HAR set when a transform fails', async () => {
+  it('keeps the previous managed HAR set when released artifact copying fails', async () => {
     const previous = path.join(harmonyRoot, 'dependencies/expo-modules/previous/previous.har');
     fs.mkdirSync(path.dirname(previous), { recursive: true });
     fs.writeFileSync(previous, 'previous');
@@ -612,10 +596,10 @@ describe('third-party HAR staging', () => {
         async (_transform, _input, output) => {
           fs.mkdirSync(path.dirname(output), { recursive: true });
           fs.writeFileSync(output, 'partial');
-          throw new Error('transform failed');
+          throw new Error('released artifact copy failed');
         }
       )
-    ).rejects.toThrow('transform failed');
+    ).rejects.toThrow('released artifact copy failed');
 
     expect(fs.readFileSync(previous, 'utf8')).toBe('previous');
     expect(fs.existsSync(path.join(harmonyRoot, '.expo-har-staging'))).toBe(false);

@@ -104,6 +104,9 @@ test('declares package-specific runtime outputs and executable runtime probes', 
     [
       'build/platforms/harmony/index.js',
       'build/platforms/harmony/nativeProject.js',
+      'build/platforms/harmony/generationTransaction.js',
+      'build/platforms/harmony/generationState.js',
+      'build/platforms/harmony/releasedCompatibility.js',
     ],
   );
   for (const name of ['@expo/cli', '@expo/metro-config', 'expo-modules-autolinking']) {

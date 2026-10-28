@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { createHash } from 'crypto';
-import { spawn } from 'child_process';
+import JSON5 from 'json5';
 
 import type {
   HarmonyHarConfig,
@@ -9,6 +8,10 @@ import type {
   ModuleDescriptorHarmony,
 } from '../../types';
 import { generatePackageListAsync } from './harmony';
+import { mergeHarmonyGenerationStateAsync } from './generationState';
+import { runHarmonyGenerationTransactionAsync } from './generationTransaction';
+import type { HarmonyGenerationFaultPoint } from './generationTransaction';
+import { copyReleasedHarmonyHarAsync, copyReleasedRnohCompatibilityHarAsync } from './releasedCompatibility';
 
 type OwnedLifecycleDependency = HarmonyLifecycleDependency & {
   packageName: string;
@@ -53,26 +56,17 @@ export interface HarmonyNativeProjectOptions {
   corePackageRoot: string;
   pythonExecutable?: string;
   runCompatibilityTool?: RunCompatibilityTool;
+  clean?: boolean;
+  finalize?: (stageRoot: string) => Promise<void>;
+  generationFault?: (point: HarmonyGenerationFaultPoint) => Promise<void>;
   /** @deprecated Ignored. appConfig is the already evaluated public configuration snapshot. */
   runAppConfigGenerator?: RunAppConfigGenerator;
   templateRoot?: string;
 }
 
-export async function prepareHarmonyNativeProjectAsync({
-  projectRoot,
-  appName,
-  bundleName,
-  appConfig,
-  userInterfaceStyle,
-  nativeConfig,
-  modules,
-  inputHarPath,
-  corePackageRoot,
-  pythonExecutable,
-  runCompatibilityTool,
-  templateRoot = path.resolve(__dirname, '../../../templates/harmony'),
-}: HarmonyNativeProjectOptions): Promise<{
+type HarmonyNativeProjectResult = {
   harmonyRoot: string;
+  backupPath?: string;
   rnohHarPath: string;
   generatedFiles: {
     cpp: string;
@@ -81,39 +75,12 @@ export async function prepareHarmonyNativeProjectAsync({
     lifecycle: string;
     overlays: string;
   };
-}> {
-  const harmonyRoot = path.join(projectRoot, 'harmony');
-  if (fs.existsSync(harmonyRoot)) {
-    throw new Error(`Harmony native project already exists at "${harmonyRoot}"`);
-  }
+};
 
-  try {
-    resolveHarmonyUserInterfaceStyle(appConfig, userInterfaceStyle);
-    assertHarmonyThemeManifestPlan(nativeConfig);
-    await validateHarmonyAppAssetsAsync(projectRoot, appConfig);
-    await fs.promises.cp(templateRoot, harmonyRoot, { recursive: true });
-    await copyHarmonyTemplateMediaAsync(projectRoot, harmonyRoot, appConfig);
-    await replaceTemplatePlaceholdersAsync(harmonyRoot, {
-      __EXPO_APP_NAME__: appName,
-      __EXPO_BUNDLE_NAME__: bundleName,
-    });
-    await writeHarmonyAppIdentityAsync(harmonyRoot, appName, bundleName, nativeConfig);
-    const { rnohHarPath, generatedFiles } = await assembleHarmonyGeneratedAreasAsync({
-      projectRoot,
-      appConfig,
-      userInterfaceStyle,
-      harmonyRoot,
-      modules,
-      inputHarPath,
-      corePackageRoot,
-      pythonExecutable,
-      runCompatibilityTool,
-    });
-    return { harmonyRoot, rnohHarPath, generatedFiles };
-  } catch (error) {
-    await fs.promises.rm(harmonyRoot, { recursive: true, force: true });
-    throw error;
-  }
+export async function prepareHarmonyNativeProjectAsync(
+  options: HarmonyNativeProjectOptions
+): Promise<HarmonyNativeProjectResult> {
+  return generateHarmonyNativeProjectAsync(options, true);
 }
 
 export async function copyHarmonyTemplateMediaAsync(
@@ -131,7 +98,7 @@ export async function copyHarmonyTemplateMediaAsync(
   const colorsPath = path.join(harmonyRoot, 'entry/src/main/resources/base/element/color.json');
   await assertHarmonyTargetPathAsync(harmonyRoot, colorsPath);
   const colors = fs.existsSync(colorsPath)
-    ? JSON.parse(await fs.promises.readFile(colorsPath, 'utf8'))
+    ? JSON5.parse(await fs.promises.readFile(colorsPath, 'utf8'))
     : { color: [] };
   const existing = colors.color.find(
     (item: { name: string }) => item.name === 'start_window_background'
@@ -241,45 +208,53 @@ async function assertHarmonyTargetPathAsync(harmonyRoot: string, target: string)
 export async function syncHarmonyNativeProjectAsync(
   options: HarmonyNativeProjectOptions
 ): ReturnType<typeof prepareHarmonyNativeProjectAsync> {
-  const harmonyRoot = path.join(options.projectRoot, 'harmony');
-  if (!fs.existsSync(harmonyRoot)) {
-    return await prepareHarmonyNativeProjectAsync(options);
-  }
+  return generateHarmonyNativeProjectAsync(options, false);
+}
 
+async function generateHarmonyNativeProjectAsync(
+  options: HarmonyNativeProjectOptions,
+  prepareOnly: boolean
+): Promise<HarmonyNativeProjectResult> {
+  const currentRoot = path.join(options.projectRoot, 'harmony');
   resolveHarmonyUserInterfaceStyle(options.appConfig, options.userInterfaceStyle);
   assertHarmonyThemeManifestPlan(options.nativeConfig);
-  await validateHarmonyAppConfigurationAsync(harmonyRoot);
-  await copyHarmonyTemplateMediaAsync(options.projectRoot, harmonyRoot, options.appConfig);
-  await writeHarmonyAppIdentityAsync(
-    harmonyRoot,
-    options.appName,
-    options.bundleName,
-    options.nativeConfig
-  );
-  await Promise.all([
-    fs.promises.rm(path.join(harmonyRoot, 'expo-modules'), { recursive: true, force: true }),
-    fs.promises.rm(path.join(harmonyRoot, 'dependencies/expo-modules'), {
-      recursive: true,
-      force: true,
-    }),
-    fs.promises.rm(path.join(harmonyRoot, 'entry/src/main/cpp/generated'), {
-      recursive: true,
-      force: true,
-    }),
-    fs.promises.rm(path.join(harmonyRoot, 'entry/src/main/ets/generated'), {
-      recursive: true,
-      force: true,
-    }),
-    fs.promises.rm(path.join(harmonyRoot, '.expo-autolinking'), {
-      recursive: true,
-      force: true,
-    }),
-  ]);
-  const { rnohHarPath, generatedFiles } = await assembleHarmonyGeneratedAreasAsync({
-    ...options,
-    harmonyRoot,
+  await validateHarmonyAppAssetsAsync(options.projectRoot, options.appConfig);
+  const transaction = await runHarmonyGenerationTransactionAsync({
+    projectRoot: options.projectRoot,
+    clean: options.clean,
+    prepareOnly,
+    fault: options.generationFault,
+    generate: async (stageRoot) => {
+      if (!options.clean && fs.existsSync(currentRoot)) await validateHarmonyAppConfigurationAsync(currentRoot);
+      const templateRoot = options.templateRoot ?? path.resolve(__dirname, '../../../templates/harmony');
+      await assertHarmonyPackageSourceAsync(templateRoot, templateRoot);
+      await fs.promises.cp(templateRoot, stageRoot, { recursive: true });
+      await copyHarmonyTemplateMediaAsync(options.projectRoot, stageRoot, options.appConfig);
+      await replaceTemplatePlaceholdersAsync(stageRoot, {
+        __EXPO_APP_NAME__: options.appName,
+        __EXPO_BUNDLE_NAME__: options.bundleName,
+      });
+      await writeHarmonyAppIdentityAsync(stageRoot, options.appName, options.bundleName, options.nativeConfig);
+      const modules = [...options.modules].sort((a, b) => a.packageName.localeCompare(b.packageName));
+      const generated = await assembleHarmonyGeneratedAreasAsync({ ...options, modules, harmonyRoot: stageRoot });
+      await options.finalize?.(stageRoot);
+      await mergeHarmonyGenerationStateAsync({ stageRoot, currentRoot, clean: options.clean });
+      // Restore the documented insertion when users have removed only the theme wiring.
+      const ability = await getHarmonyAppConfigurationEntryAsync(stageRoot);
+      await fs.promises.writeFile(ability.abilityPath, ability.contents, 'utf8');
+      return {
+        rnohHarPath: path.relative(stageRoot, generated.rnohHarPath),
+        generatedFiles: Object.fromEntries(Object.entries(generated.generatedFiles).map(([key, file]) => [key, path.relative(stageRoot, file)])),
+      };
+    },
+    validate: validateHarmonyAppConfigurationAsync,
   });
-  return { harmonyRoot, rnohHarPath, generatedFiles };
+  return {
+    harmonyRoot: transaction.harmonyRoot,
+    ...(transaction.backupPath ? { backupPath: transaction.backupPath } : {}),
+    rnohHarPath: path.join(transaction.harmonyRoot, transaction.value.rnohHarPath),
+    generatedFiles: Object.fromEntries(Object.entries(transaction.value.generatedFiles).map(([key, file]) => [key, path.join(transaction.harmonyRoot, file)])) as HarmonyNativeProjectResult['generatedFiles'],
+  };
 }
 
 async function assembleHarmonyGeneratedAreasAsync({
@@ -303,10 +278,19 @@ async function assembleHarmonyGeneratedAreasAsync({
     pythonExecutable,
     runCompatibilityTool,
   });
-  await stageHarmonyEtsPackagesAsync(modules, harmonyRoot);
+  await stageHarmonyEtsPackagesAsync(modules, harmonyRoot, (transform, inputHarPath, outputHarPath) =>
+    copyReleasedHarmonyHarAsync({ transform, inputHarPath, outputHarPath, corePackageRoot })
+  );
 
   const scratch = path.join(harmonyRoot, '.expo-autolinking');
-  await generatePackageListAsync(modules, scratch, 'expo.modules');
+  const finalCppRoot = path.join(projectRoot, 'harmony/entry/src/main/cpp');
+  const relativeModules = modules.map((module) => ({
+    ...module,
+    ...(module.cpp && module.kind !== 'rnoh-package' ? {
+      cpp: { ...module.cpp, cmakePath: path.relative(finalCppRoot, module.cpp.cmakePath).split(path.sep).join('/') },
+    } : {}),
+  }));
+  await generatePackageListAsync(relativeModules, scratch, 'expo.modules');
   const generatedFiles = {
     cpp: path.join(harmonyRoot, 'entry/src/main/cpp/generated/ExpoModulesPackages.cpp'),
     ets: path.join(harmonyRoot, 'entry/src/main/ets/generated/ExpoModulesPackages.ets'),
@@ -414,13 +398,13 @@ async function writeHarmonyAppIdentityAsync(
 ): Promise<void> {
   const appPath = path.join(harmonyRoot, 'AppScope/app.json5');
   await assertHarmonyTargetPathAsync(harmonyRoot, appPath);
-  const app = JSON.parse(await fs.promises.readFile(appPath, 'utf8'));
+  const app = JSON5.parse(await fs.promises.readFile(appPath, 'utf8'));
   app.app = mergeHarmonyManifest(app.app, { bundleName, ...nativeConfig?.app });
   delete app.app.colorMode;
   await fs.promises.writeFile(appPath, JSON.stringify(app, null, 2) + '\n');
   const modulePath = path.join(harmonyRoot, 'entry/src/main/module.json5');
   await assertHarmonyTargetPathAsync(harmonyRoot, modulePath);
-  const module = JSON.parse(await fs.promises.readFile(modulePath, 'utf8'));
+  const module = JSON5.parse(await fs.promises.readFile(modulePath, 'utf8'));
   module.module = mergeHarmonyManifest(module.module, nativeConfig?.module ?? {});
   await fs.promises.writeFile(modulePath, JSON.stringify(module, null, 2) + '\n');
   for (const relativePath of [
@@ -429,7 +413,7 @@ async function writeHarmonyAppIdentityAsync(
   ]) {
     const filePath = path.join(harmonyRoot, relativePath);
     await assertHarmonyTargetPathAsync(harmonyRoot, filePath);
-    const resource = JSON.parse(await fs.promises.readFile(filePath, 'utf8'));
+    const resource = JSON5.parse(await fs.promises.readFile(filePath, 'utf8'));
     for (const item of resource.string ?? []) {
       if (
         ['app_name', 'module_desc', 'EntryAbility_desc', 'EntryAbility_label'].includes(item.name)
@@ -499,8 +483,6 @@ export async function prepareRnohCompatibilityHarAsync({
   harmonyRoot,
   inputHarPath,
   corePackageRoot,
-  pythonExecutable = resolveHarmonyPythonExecutable(),
-  runCompatibilityTool = runCompatibilityToolAsync,
 }: {
   harmonyRoot: string;
   inputHarPath: string;
@@ -508,39 +490,8 @@ export async function prepareRnohCompatibilityHarAsync({
   pythonExecutable?: string;
   runCompatibilityTool?: RunCompatibilityTool;
 }): Promise<string> {
-  await assertSha256Async(inputHarPath, RNOH_INPUT_HAR_SHA256, 'input');
   const outputHarPath = path.join(harmonyRoot, 'dependencies', 'react_native_openharmony.har');
-  if (fs.existsSync(outputHarPath)) {
-    await assertSha256Async(outputHarPath, RNOH_OUTPUT_HAR_SHA256, 'output');
-    return outputHarPath;
-  }
-
-  const scriptPath = path.join(corePackageRoot, 'harmony', 'rnoh-compat', 'prepare_har.py');
-  if (!fs.existsSync(scriptPath)) {
-    throw new Error(`RNOH compatibility tool does not exist at "${scriptPath}"`);
-  }
-  await fs.promises.mkdir(path.dirname(outputHarPath), { recursive: true });
-  try {
-    await runCompatibilityTool({
-      pythonExecutable,
-      scriptPath,
-      inputHarPath,
-      outputHarPath,
-      profile: 'core-v1-v3',
-    });
-    await assertSha256Async(outputHarPath, RNOH_OUTPUT_HAR_SHA256, 'output');
-    const manifestPath = `${outputHarPath}.manifest.json`;
-    if (!fs.existsSync(manifestPath)) {
-      throw new Error(`RNOH compatibility manifest does not exist at "${manifestPath}"`);
-    }
-    return outputHarPath;
-  } catch (error) {
-    await Promise.all([
-      fs.promises.rm(outputHarPath, { force: true }),
-      fs.promises.rm(`${outputHarPath}.manifest.json`, { force: true }),
-    ]);
-    throw error;
-  }
+  return copyReleasedRnohCompatibilityHarAsync({ inputHarPath, outputHarPath, corePackageRoot });
 }
 
 export type RunHarmonyHarTransform = (
@@ -552,7 +503,9 @@ export type RunHarmonyHarTransform = (
 export async function stageHarmonyEtsPackagesAsync(
   modules: ModuleDescriptorHarmony[],
   harmonyRoot: string,
-  runHarTransform: RunHarmonyHarTransform = runHarmonyHarTransformAsync
+  runHarTransform: RunHarmonyHarTransform = async (transform) => {
+    throw new Error(`Released Harmony compatibility artifact lookup requires Core package root for ${transform}`);
+  }
 ): Promise<Record<string, string>> {
   const packages = new Map<
     string,
@@ -573,6 +526,27 @@ export async function stageHarmonyEtsPackagesAsync(
   }
 
   const dependencies = new Map<string, { specifier: string; owner: string }>();
+  const harEntries = modules
+    .flatMap((module) => (module.hars ?? []).map((har) => ({ har, owner: module.packageName })))
+    .sort((a, b) => a.har.packageName.localeCompare(b.har.packageName));
+  const etsPaths = new Map<string, string>();
+  const moduleNames = new Map<string, string>();
+  const harPaths = new Map<string, string>();
+  const claimName = (claims: Map<string, string>, generatedName: string, ohName: string) => {
+    const existing = claims.get(generatedName);
+    if (existing && existing !== ohName) {
+      throw new Error(`Harmony generated path collision: "${existing}" and "${ohName}" both resolve to "${generatedName}"`);
+    }
+    claims.set(generatedName, ohName);
+  };
+  for (const name of packages.keys()) {
+    const stagingName = sanitizeOhPackageName(name);
+    claimName(etsPaths, stagingName, name);
+    claimName(moduleNames, stagingName.replace(/[^A-Za-z0-9_.]/g, '_'), name);
+  }
+  for (const { har } of harEntries) {
+    if (!har.version) claimName(harPaths, sanitizeOhPackageName(har.packageName), har.packageName);
+  }
   const projectModules: Array<{
     name: string;
     srcPath: string;
@@ -588,6 +562,7 @@ export async function stageHarmonyEtsPackagesAsync(
         `Harmony ETS entrypoint for "${module.packageName}" is outside its package root`
       );
     }
+    await assertHarmonyPackageSourceAsync(module.packageRoot, module.ets.entrypoint);
 
     await fs.promises.mkdir(stagingRoot, { recursive: true });
     await copyFileAsync(module.ets.entrypoint, path.join(stagingRoot, entrypointRelative));
@@ -596,6 +571,7 @@ export async function stageHarmonyEtsPackagesAsync(
     try {
       const stats = await fs.promises.stat(sourceEtsRoot);
       if (stats.isDirectory()) {
+        await assertHarmonyPackageSourceAsync(module.packageRoot, sourceEtsRoot);
         await fs.promises.cp(
           sourceEtsRoot,
           path.join(stagingRoot, path.relative(module.packageRoot, sourceEtsRoot)),
@@ -663,9 +639,6 @@ export async function stageHarmonyEtsPackagesAsync(
   const managedHarRoot = path.join(harmonyRoot, 'dependencies', 'expo-modules');
   const managedHarScratch = path.join(harmonyRoot, '.expo-har-staging');
   await fs.promises.rm(managedHarScratch, { recursive: true, force: true });
-  const harEntries = modules
-    .flatMap((module) => (module.hars ?? []).map((har) => ({ har, owner: module.packageName })))
-    .sort((a, b) => a.har.packageName.localeCompare(b.har.packageName));
   let hasLocalHars = false;
   try {
     for (const { har, owner } of harEntries) {
@@ -713,7 +686,7 @@ export async function stageHarmonyEtsPackagesAsync(
 
   const rootManifestPath = path.join(harmonyRoot, 'oh-package.json5');
   if (fs.existsSync(rootManifestPath)) {
-    const rootManifest = JSON.parse(await fs.promises.readFile(rootManifestPath, 'utf8'));
+    const rootManifest = JSON5.parse(await fs.promises.readFile(rootManifestPath, 'utf8'));
     const harOverrides = Object.fromEntries(
       harEntries.map(({ har }) => [
         har.packageName,
@@ -743,14 +716,14 @@ export async function stageHarmonyEtsPackagesAsync(
   );
 
   const entryManifestPath = path.join(harmonyRoot, 'entry', 'oh-package.json5');
-  const entryManifest = JSON.parse(await fs.promises.readFile(entryManifestPath, 'utf8'));
+  const entryManifest = JSON5.parse(await fs.promises.readFile(entryManifestPath, 'utf8'));
   entryManifest.dependencies = {
     '@rnoh/react-native-openharmony': 'file:../dependencies/react_native_openharmony.har',
     ...dependencySpecifiers,
   };
   await fs.promises.writeFile(entryManifestPath, JSON.stringify(entryManifest, null, 2) + '\n');
   const buildProfilePath = path.join(harmonyRoot, 'build-profile.json5');
-  const buildProfile = JSON.parse(await fs.promises.readFile(buildProfilePath, 'utf8'));
+  const buildProfile = JSON5.parse(await fs.promises.readFile(buildProfilePath, 'utf8'));
   buildProfile.modules = [
     ...(buildProfile.modules ?? []).filter(
       (module: { srcPath?: string }) => !module.srcPath?.startsWith('./expo-modules/')
@@ -761,31 +734,20 @@ export async function stageHarmonyEtsPackagesAsync(
   return dependencySpecifiers;
 }
 
-async function runHarmonyHarTransformAsync(
-  transform: NonNullable<HarmonyHarConfig['transform']>,
-  input: string,
-  output: string
-): Promise<void> {
-  await fs.promises.mkdir(path.dirname(output), { recursive: true });
-  const script = path.resolve(
-    __dirname,
-    `../../../scripts/harmony/${
-      transform === 'screens-content-wrapper-v1' ? 'prepare-screens.py' : 'prepare-worklets.py'
-    }`
-  );
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(
-      resolveHarmonyPythonExecutable(),
-      [script, '--input-har', input, '--output-har', output],
-      { stdio: 'inherit' }
-    );
-    child.once('error', reject);
-    child.once('exit', (code) =>
-      code === 0
-        ? resolve()
-        : reject(new Error(`Harmony HAR transform ${transform} failed with exit code ${code}`))
-    );
-  });
+async function assertHarmonyPackageSourceAsync(packageRoot: string, source: string): Promise<void> {
+  const info = await fs.promises.lstat(source);
+  if (info.isSymbolicLink()) throw new Error(`Harmony package source must not be a symbolic link: ${source}`);
+  const realRoot = await fs.promises.realpath(packageRoot);
+  const realSource = await fs.promises.realpath(source);
+  const relative = path.relative(realRoot, realSource);
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new Error(`Harmony source is outside its package root: ${source}`);
+  }
+  if (info.isDirectory()) {
+    for (const entry of (await fs.promises.readdir(source)).sort()) {
+      await assertHarmonyPackageSourceAsync(packageRoot, path.join(source, entry));
+    }
+  }
 }
 
 function registerHarmonyDependency(
@@ -1016,69 +978,6 @@ function getOhPackageName(importPath: string): string {
 async function copyFileAsync(source: string, target: string): Promise<void> {
   await fs.promises.mkdir(path.dirname(target), { recursive: true });
   await fs.promises.copyFile(source, target);
-}
-
-async function assertSha256Async(
-  filePath: string,
-  expected: string,
-  label: 'input' | 'output'
-): Promise<void> {
-  let data: Buffer;
-  try {
-    data = await fs.promises.readFile(filePath);
-  } catch (error: any) {
-    if (error?.code === 'ENOENT') {
-      throw new Error(`RNOH compatibility ${label} HAR does not exist at "${filePath}"`);
-    }
-    throw error;
-  }
-  const actual = createHash('sha256').update(data).digest('hex');
-  if (actual !== expected) {
-    throw new Error(
-      `RNOH compatibility ${label} SHA256 mismatch for "${filePath}": expected ${expected}, got ${actual}`
-    );
-  }
-}
-
-function runCompatibilityToolAsync(options: RunCompatibilityToolOptions): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(
-      options.pythonExecutable,
-      [
-        options.scriptPath,
-        '--input-har',
-        options.inputHarPath,
-        '--output-har',
-        options.outputHarPath,
-        '--profile',
-        options.profile,
-      ],
-      { stdio: 'inherit' }
-    );
-    child.once('error', reject);
-    child.once('exit', (code, signal) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(
-          new Error(
-            `RNOH compatibility tool failed with ${
-              signal ? `signal ${signal}` : `exit code ${code}`
-            }`
-          )
-        );
-      }
-    });
-  });
-}
-
-function resolveHarmonyPythonExecutable(): string {
-  if (process.env.EXPO_HARMONY_PYTHON) {
-    return process.env.EXPO_HARMONY_PYTHON;
-  }
-  const candidates =
-    process.platform === 'darwin' ? ['/opt/homebrew/bin/python3', '/usr/local/bin/python3'] : [];
-  return candidates.find((candidate) => fs.existsSync(candidate)) ?? 'python3';
 }
 
 async function replaceTemplatePlaceholdersAsync(

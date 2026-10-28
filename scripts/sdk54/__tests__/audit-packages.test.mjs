@@ -54,6 +54,7 @@ if(p.name==='@expo/cli'){
  write('build/platforms/harmony/index.js',"module.exports=require('./harmony');\\n");
  write('build/platforms/harmony/harmony.js','exports.resolveModulesAsync=async()=>[];\\n');
  write('build/platforms/harmony/nativeProject.js','exports.generatePackageListAsync=async()=>{};\\n');
+ for(const name of ['generationTransaction','generationState','releasedCompatibility']) write('build/platforms/harmony/'+name+'.js','exports.ready=true;\\n');
 }
 `, 0o755);
   const previousPath = process.env.PATH;

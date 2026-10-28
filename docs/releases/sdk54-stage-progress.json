@@ -43,9 +43,8 @@
       "percent": 100
     },
     "M2": {
-      "closed": false,
-      "acceptedUnits": [],
-      "pendingUnits": [
+      "closed": true,
+      "acceptedUnits": [
         "M2-01",
         "M2-02",
         "M2-03",
@@ -53,8 +52,9 @@
         "M2-05",
         "M2-06"
       ],
+      "pendingUnits": [],
       "totalUnits": 6,
-      "percent": 0
+      "percent": 100
     },
     "M3": {
       "closed": false,

@@ -321,6 +321,170 @@
           "sha256": "0d3f72c806186fdaa53de8944a1dea618582d45488e9960f24e0a66558e067d6"
         }
       ]
+    },
+    {
+      "id": "M2-01",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.json",
+          "sha256": "972f3f550134c18850c28e0c66f70374b3dc4d64b5eb15abc2e5d09eb80d5ac4"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.md",
+          "sha256": "8384da4c7a8e09f79525b1559cf302c303c5149dc1fbcfad805624bb9276ef20"
+        },
+        {
+          "path": "docs/harmony-generation.md",
+          "sha256": "a6105e22b42f4ff4e4c24602af42dc09fe0df093b29af60d7c9a574bbd7482c2"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/review-source-accepted.md",
+          "sha256": "488adffb1ddf527d220acb7761a0b6c5e9aa23569b7a1985e72e99191b0650fe"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/consumers/generation-consumer-report.json",
+          "sha256": "e9f2b9e2b41be6fcafd672b9a4eb13a80830fb033723b96c871e5195bb4f41ad"
+        }
+      ]
+    },
+    {
+      "id": "M2-02",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.json",
+          "sha256": "972f3f550134c18850c28e0c66f70374b3dc4d64b5eb15abc2e5d09eb80d5ac4"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.md",
+          "sha256": "8384da4c7a8e09f79525b1559cf302c303c5149dc1fbcfad805624bb9276ef20"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/review-source.md",
+          "sha256": "8a8a9d7d603ea46267d463f56ee370387822656435ca3cff985ac257e0bc1770"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/consumers/generation-consumer-report.json",
+          "sha256": "e9f2b9e2b41be6fcafd672b9a4eb13a80830fb033723b96c871e5195bb4f41ad"
+        }
+      ]
+    },
+    {
+      "id": "M2-03",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.json",
+          "sha256": "972f3f550134c18850c28e0c66f70374b3dc4d64b5eb15abc2e5d09eb80d5ac4"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.md",
+          "sha256": "8384da4c7a8e09f79525b1559cf302c303c5149dc1fbcfad805624bb9276ef20"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/consumers/generation-consumer-report.json",
+          "sha256": "e9f2b9e2b41be6fcafd672b9a4eb13a80830fb033723b96c871e5195bb4f41ad"
+        }
+      ]
+    },
+    {
+      "id": "M2-04",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.json",
+          "sha256": "972f3f550134c18850c28e0c66f70374b3dc4d64b5eb15abc2e5d09eb80d5ac4"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.md",
+          "sha256": "8384da4c7a8e09f79525b1559cf302c303c5149dc1fbcfad805624bb9276ef20"
+        },
+        {
+          "path": "docs/harmony-generation.md",
+          "sha256": "a6105e22b42f4ff4e4c24602af42dc09fe0df093b29af60d7c9a574bbd7482c2"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/review-source.md",
+          "sha256": "8a8a9d7d603ea46267d463f56ee370387822656435ca3cff985ac257e0bc1770"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/consumers/generation-consumer-report.json",
+          "sha256": "e9f2b9e2b41be6fcafd672b9a4eb13a80830fb033723b96c871e5195bb4f41ad"
+        }
+      ]
+    },
+    {
+      "id": "M2-05",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.json",
+          "sha256": "972f3f550134c18850c28e0c66f70374b3dc4d64b5eb15abc2e5d09eb80d5ac4"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.md",
+          "sha256": "8384da4c7a8e09f79525b1559cf302c303c5149dc1fbcfad805624bb9276ef20"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/review-source.md",
+          "sha256": "8a8a9d7d603ea46267d463f56ee370387822656435ca3cff985ac257e0bc1770"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/review-source-accepted.md",
+          "sha256": "488adffb1ddf527d220acb7761a0b6c5e9aa23569b7a1985e72e99191b0650fe"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/runtime-accepted/release.json",
+          "sha256": "fafd39501044906ebdcc6ad602060bda5452209f93dbb87e235ce49b7b0b1a10"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/consumers/generation-consumer-report.json",
+          "sha256": "e9f2b9e2b41be6fcafd672b9a4eb13a80830fb033723b96c871e5195bb4f41ad"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/native-build-report.json",
+          "sha256": "96f2f1eac4100571da539bed677c204d91c3eaa0eab42b5982be407e2b2f1aba"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/run-integrity-report.json",
+          "sha256": "133b0fafb40a1e229f9500dfb489dfdb1346f140ac6fa079859544744f7b3f2b"
+        }
+      ]
+    },
+    {
+      "id": "M2-06",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.json",
+          "sha256": "972f3f550134c18850c28e0c66f70374b3dc4d64b5eb15abc2e5d09eb80d5ac4"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.md",
+          "sha256": "8384da4c7a8e09f79525b1559cf302c303c5149dc1fbcfad805624bb9276ef20"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/consumers/generation-consumer-report.json",
+          "sha256": "e9f2b9e2b41be6fcafd672b9a4eb13a80830fb033723b96c871e5195bb4f41ad"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/consumers/npm-transitive-modules.json",
+          "sha256": "d16d92eb8d2c8167dba9e80f3418bb3b8d974794f0e2e9b6e75793f2630a0b40"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/consumers/pnpm-transitive-modules.json",
+          "sha256": "f1a58bccf0f46fe23c5176042f3ad363f7be35bd15256bccfb5a603eb031a793"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/consumers/npm-removed-modules.json",
+          "sha256": "49e1cfb59247deca168de9075130aef73330a27a8b16f4ed5a9aaddc5a5c12a2"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/consumers/pnpm-removed-modules.json",
+          "sha256": "4fa31828b55a222cb27f8c62d4a451c351572198cefd1d1a9cb7656121f67a6b"
+        }
+      ]
     }
   ],
   "closures": [
@@ -387,6 +551,52 @@
         {
           "path": "outputs/sdk54/ai-e2e/20261027-m1-config/final-source-verification.log",
           "sha256": "3683c35f9194d8e09c2fbeed4550f9d21f9dc94e739e9f04e2029ecd1a1893f0"
+        }
+      ]
+    },
+    {
+      "stage": "M2",
+      "status": "PASS",
+      "evidence": [
+        {
+          "path": "docs/releases/2026-10-27-sdk54-m2-generation-acceptance.md",
+          "sha256": "5258885eb919f8dc8840cb3f8483795b579994de0e400d9a4dda2697c7198ee0"
+        },
+        {
+          "path": "docs/harmony-generation.md",
+          "sha256": "a6105e22b42f4ff4e4c24602af42dc09fe0df093b29af60d7c9a574bbd7482c2"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.json",
+          "sha256": "972f3f550134c18850c28e0c66f70374b3dc4d64b5eb15abc2e5d09eb80d5ac4"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/review-closure.md",
+          "sha256": "8384da4c7a8e09f79525b1559cf302c303c5149dc1fbcfad805624bb9276ef20"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/audit-closure.mjs",
+          "sha256": "b9977b681089075d9615f780ccf8dbd5821e0cd66444527480616007d24b6cb1"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/runtime-accepted/release.json",
+          "sha256": "fafd39501044906ebdcc6ad602060bda5452209f93dbb87e235ce49b7b0b1a10"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/native-build-report.json",
+          "sha256": "96f2f1eac4100571da539bed677c204d91c3eaa0eab42b5982be407e2b2f1aba"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/run-integrity-report.json",
+          "sha256": "133b0fafb40a1e229f9500dfb489dfdb1346f140ac6fa079859544744f7b3f2b"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/tools-closure.log",
+          "sha256": "fb58e70db6c9309175b9366f66dac77f4b9104d0127424b9e34bd68b0f85aae4"
+        },
+        {
+          "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/registry-closure.log",
+          "sha256": "4544d2aea79a61c4bf6b78607804ab209948674e06d349402171b9e820b6ffd1"
         }
       ]
     }

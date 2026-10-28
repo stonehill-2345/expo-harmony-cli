@@ -129,6 +129,11 @@ export const splitAnchors = [
 ];
 
 export const dynamicReviews = [
+  ...['harmony/config', 'prebuild/harmony/configPlugins', 'prebuild/harmony/prebuildHarmonyAsync'].map(module => ({
+    source: 'scripts/sdk54/test-m2-generation.mjs', expression: `cliRequest(path.join(cliRoot, 'build/src/${module}.js'))`,
+    conclusion: 'M2真实消费故障执行器从消费项目实际解析的CLI发行包加载生成接口；候选先经完整逐字节检查，不读取仓库构建或独立CLI。', task: 'M6-04' })),
+  { source: 'scripts/sdk54/test-m2-compatibility.mjs', expression: 'import(pathToFileURL(toolPath).href)',
+    conclusion: 'M2验收从明确指定的候选发行Core加载兼容复制工具，验证消费不调用Python且不修改依赖；不加载独立CLI或仓库链接。', task: 'M6-04' },
   { source: `${toolTests}harmony-config.test.mjs`, expression: "require(path.join(root, 'packages/expo/package.json'))",
     conclusion: 'M1类型测试读取Expo直接依赖列表构造隔离消费布局，保证类型出口不借仓库扁平布局；仅测试设施。', task: 'M6-04' },
   { source: `${toolTests}harmony-config.test.mjs`, expression: "require(path.join(root, 'packages/expo/harmony-config.schema.json'))",

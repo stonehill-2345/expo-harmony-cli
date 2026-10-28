@@ -111,6 +111,9 @@ const AUTOLINKING_RUNTIME = runtime(
   [
     { path: 'build/platforms/harmony/index.js' },
     { path: 'build/platforms/harmony/nativeProject.js' },
+    { path: 'build/platforms/harmony/generationTransaction.js' },
+    { path: 'build/platforms/harmony/generationState.js' },
+    { path: 'build/platforms/harmony/releasedCompatibility.js' },
   ],
   { type: 'autolinking' },
 );

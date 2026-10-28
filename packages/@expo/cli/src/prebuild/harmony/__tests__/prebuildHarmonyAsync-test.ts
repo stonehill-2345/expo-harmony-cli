@@ -55,8 +55,13 @@ describe(prebuildHarmonyAsync, () => {
     );
   });
 
-  it('removes harmony before synchronization when clean is enabled', async () => {
+  it('delegates clean and staged finalization to native generation', async () => {
     const removeHarmonyProject = jest.fn(async () => {});
+    const updateDebugBundlePath = jest.fn(async () => {});
+    const syncProject = jest.fn(async (options: { finalize: (stageRoot: string) => Promise<void> }) => {
+      await options.finalize('/stage/harmony');
+      return { harmonyRoot: '/app/harmony' };
+    });
     await prebuildHarmonyAsync(
       '/app',
       { install: false, clean: true, bundleName: 'com.example.custom' },
@@ -68,14 +73,16 @@ describe(prebuildHarmonyAsync, () => {
           queryAutolinkingModulesFromProjectAsync: jest.fn(async () => [
             { packageName: 'expo-modules-core', packageRoot: '/core' },
           ]),
-          syncHarmonyNativeProjectAsync: jest.fn(async () => ({})),
+          syncHarmonyNativeProjectAsync: syncProject,
           validateHarmonyAppAssetsAsync: jest.fn(async () => {}),
         }),
         removeHarmonyProject,
-        updateDebugBundlePath: jest.fn(async () => {}),
+        updateDebugBundlePath,
       }
     );
-    expect(removeHarmonyProject).toHaveBeenCalledWith('/app/harmony');
+    expect(removeHarmonyProject).not.toHaveBeenCalled();
+    expect(syncProject).toHaveBeenCalledWith(expect.objectContaining({ clean: true }));
+    expect(updateDebugBundlePath).toHaveBeenCalledWith('/app', '/stage/harmony');
   });
 });
 

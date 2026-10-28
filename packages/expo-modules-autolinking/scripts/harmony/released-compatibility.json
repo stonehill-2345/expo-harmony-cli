@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "artifacts": [
+    {
+      "transform": "rnoh-core-v1-v3",
+      "compatibilityId": "expo-rnoh-0.82.30-core-v1-v3",
+      "packageName": "@react-native-oh/react-native-harmony",
+      "packageVersion": "0.82.30",
+      "inputSHA256": "cac2b5d1b9ce7d306079218931db12489aaceb240002c9c32e6c13185c577011",
+      "outputSHA256": "0e0cf3dbb5b2e510f49c819ff5db2f43ad5a5918d38e840cc2714055c9f6fd83",
+      "file": "rnoh-core-v1-v3.har"
+    },
+    {
+      "transform": "screens-content-wrapper-v1",
+      "compatibilityId": "screens-4.9.0-content-wrapper-modal-back-v2",
+      "packageName": "@react-native-ohos/react-native-screens",
+      "packageVersion": "4.9.0",
+      "inputSHA256": "133a75df8e05117c79c30b492aa0137c076801f2f82367696eeb8101afce11dd",
+      "outputSHA256": "78287fa54f91de5e345b88c678d47cc1b3f03f1f7af156ad899a24a4903c061b",
+      "file": "screens-content-wrapper-v1.har"
+    },
+    {
+      "transform": "worklets-private-symbols-v2",
+      "compatibilityId": "worklets-1.0.0-private-symbols-v2",
+      "packageName": "@react-native-ohos/react-native-worklets",
+      "packageVersion": "1.0.0",
+      "inputSHA256": "9560c0070ccedef07b5eead5fd9db189794922e05299dac411ea77a5ab7fa6b8",
+      "outputSHA256": "29c396e1f71d9e4a5347e9aa7aba7040724027ce558bde5ca677ee003887fce4",
+      "file": "worklets-private-symbols-v2.har"
+    }
+  ]
+}

@@ -11,7 +11,7 @@ import ts from 'typescript';
 const repository = fileURLToPath(new URL('../../../', import.meta.url));
 function loadSource(filename) {
   const localRequire = createRequire(filename);
-  const require = (id) => id.startsWith('.')
+  const require = (id) => id.startsWith('.') && !id.endsWith('.json')
     ? loadSource(path.resolve(path.dirname(filename), `${id}.ts`))
     : localRequire(id);
   const output = ts.transpileModule(fs.readFileSync(filename, 'utf8'), {
@@ -163,12 +163,13 @@ test('invalid manifest theme plans fail before creating or changing native files
 });
 
 test('prepare and sync apply the same snapshot while retaining template and user content', {
-  skip: !process.env.RNOH_INPUT_HAR || !process.env.RNOH_OUTPUT_HAR,
+  skip: !process.env.RNOH_INPUT_HAR || !process.env.RNOH_RELEASED_CORE_ROOT,
 }, async (t) => {
   const root = fixture(t);
   const corePackageRoot = path.join(root, 'node_modules/expo-modules-core');
-  fs.mkdirSync(path.join(corePackageRoot, 'harmony/rnoh-compat'), { recursive: true });
-  fs.writeFileSync(path.join(corePackageRoot, 'harmony/rnoh-compat/prepare_har.py'), '# injected real locked output');
+  fs.mkdirSync(path.join(corePackageRoot, 'harmony'), { recursive: true });
+  fs.cpSync(path.join(process.env.RNOH_RELEASED_CORE_ROOT, 'harmony/released-compatibility'),
+    path.join(corePackageRoot, 'harmony/released-compatibility'), { recursive: true });
   const options = {
     projectRoot: root, appName: 'App "Quoted" \'Single\'\\Slash\nNext', bundleName: 'dev.expo.dynamic', modules: [],
     inputHarPath: process.env.RNOH_INPUT_HAR, corePackageRoot,
@@ -179,10 +180,6 @@ test('prepare and sync apply the same snapshot while retaining template and user
       module: { querySchemes: ['first'], abilities: [{ name: 'EntryAbility', orientation: 'portrait' }] },
     },
     runAppConfigGenerator: async () => { throw new Error('must not evaluate again'); },
-    runCompatibilityTool: async ({ outputHarPath }) => {
-      fs.copyFileSync(process.env.RNOH_OUTPUT_HAR, outputHarPath);
-      fs.copyFileSync(`${process.env.RNOH_OUTPUT_HAR}.manifest.json`, `${outputHarPath}.manifest.json`);
-    },
   };
   await native.prepareHarmonyNativeProjectAsync(options);
   assert.equal(fs.existsSync(path.join(root, 'app.json')), false);
@@ -214,7 +211,6 @@ test('prepare and sync apply the same snapshot while retaining template and user
   await native.syncHarmonyNativeProjectAsync({ ...options, appName: 'Synced', appConfig: updated,
     userInterfaceStyle: 'automatic',
     nativeConfig: { app: { versionName: '3.0.0', versionCode: 30 }, module: { querySchemes: ['second'], abilities: [{ name: 'EntryAbility', orientation: 'landscape' }] } },
-    runCompatibilityTool: async () => { throw new Error('existing HAR must be reused'); },
   });
   assert.equal(read(root, 'entry/src/main/resources/rawfile/app.config'), JSON.stringify(updated));
   assert.ok(read(root, 'entry/src/main/ets/generated/ExpoAppConfiguration.ets').includes('ConfigurationConstant.ColorMode.COLOR_MODE_NOT_SET'));

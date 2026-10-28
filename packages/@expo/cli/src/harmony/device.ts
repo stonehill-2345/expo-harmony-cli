@@ -47,6 +47,17 @@ function getHdcOutput(result: spawnAsync.SpawnResult): string {
   if ([result.stdout, result.stderr].some((text) => text?.includes('Connect server failed'))) {
     throw Object.assign(new HdcServerConnectionError('Connect server failed'), result);
   }
+  const diagnostic = [result.stdout, result.stderr].filter(Boolean).join('\n').trim();
+  // HDC reports some failures with exit code zero, including its untagged argument error.
+  if (
+    /^\s*\[(?:Fail|F)\]/im.test(diagnostic) ||
+    /^\s*Sizeo of of parament '-t' \d+ is too long\s*$/im.test(diagnostic)
+  ) {
+    throw Object.assign(
+      new CommandError('HARMONY_DEVICE', `Harmony HDC command failed: ${diagnostic}`),
+      result
+    );
+  }
   return result.stdout.trim();
 }
 
@@ -55,7 +66,6 @@ async function listHarmonyTargetsAsync(hdcPath: string) {
 }
 
 export async function resolveHarmonyDeviceAsync(hdcPath: string, requested?: string) {
-  if (requested) return requested;
   let output: string;
   try {
     output = await listHarmonyTargetsAsync(hdcPath);
@@ -76,6 +86,15 @@ export async function resolveHarmonyDeviceAsync(hdcPath: string, requested?: str
     .split(/\r?\n/)
     .map((x) => x.trim().split(/\s+/)[0])
     .filter((x) => x && x !== '[Empty]');
+  if (requested) {
+    if (!targets.includes(requested)) {
+      throw new CommandError(
+        'HARMONY_DEVICE',
+        `Harmony device "${requested}" is not connected.`
+      );
+    }
+    return requested;
+  }
   if (targets.length !== 1)
     throw new CommandError(
       'HARMONY_DEVICE',
