@@ -1,0 +1,6 @@
+cmake_minimum_required(VERSION 3.16)
+add_library(rnoh_m3_author_fixture STATIC AuthorFixtureModule.cpp AuthorFixtureView.cpp)
+target_include_directories(rnoh_m3_author_fixture PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}")
+target_include_directories(rnoh_m3_author_fixture PRIVATE "$<TARGET_PROPERTY:rnoh_expo_modules_core,SOURCE_DIR>/../../../../common/cpp")
+target_compile_features(rnoh_m3_author_fixture PUBLIC cxx_std_20)
+target_link_libraries(rnoh_m3_author_fixture PUBLIC rnoh_expo_modules_core)

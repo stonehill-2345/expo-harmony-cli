@@ -1,0 +1,8 @@
+{
+  "platforms": ["harmony"],
+  "harmony": {
+    "kind": "view",
+    "cpp": { "packageClass": "expo::harmony::m3::AuthorFixturePackage", "header": "AuthorFixturePackage.h", "cmakeTarget": "rnoh_m3_author_fixture", "cmakePath": "harmony/cpp" },
+    "ets": { "packageClass": "AuthorFixturePackage", "importPath": "@expo-harmony/m3-author-fixture/harmony", "entrypoint": "harmony/index.ets" }
+  }
+}

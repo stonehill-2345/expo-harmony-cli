@@ -12,6 +12,7 @@ import { mergeHarmonyGenerationStateAsync } from './generationState';
 import { runHarmonyGenerationTransactionAsync } from './generationTransaction';
 import type { HarmonyGenerationFaultPoint } from './generationTransaction';
 import { copyReleasedHarmonyHarAsync, copyReleasedRnohCompatibilityHarAsync } from './releasedCompatibility';
+import { validateHarmonyModuleGraph, validateHarmonyModuleSourcesAsync } from './moduleValidation';
 
 type OwnedLifecycleDependency = HarmonyLifecycleDependency & {
   packageName: string;
@@ -216,6 +217,7 @@ async function generateHarmonyNativeProjectAsync(
   prepareOnly: boolean
 ): Promise<HarmonyNativeProjectResult> {
   const currentRoot = path.join(options.projectRoot, 'harmony');
+  await validateHarmonyModuleSourcesAsync(options.modules);
   resolveHarmonyUserInterfaceStyle(options.appConfig, options.userInterfaceStyle);
   assertHarmonyThemeManifestPlan(options.nativeConfig);
   await validateHarmonyAppAssetsAsync(options.projectRoot, options.appConfig);
@@ -507,6 +509,7 @@ export async function stageHarmonyEtsPackagesAsync(
     throw new Error(`Released Harmony compatibility artifact lookup requires Core package root for ${transform}`);
   }
 ): Promise<Record<string, string>> {
+  await validateHarmonyModuleSourcesAsync(modules);
   const packages = new Map<
     string,
     ModuleDescriptorHarmony & { ets: NonNullable<ModuleDescriptorHarmony['ets']> }
@@ -770,6 +773,7 @@ function sanitizeOhPackageName(packageName: string): string {
 }
 
 export function renderExpoModulesLifecycle(modules: ModuleDescriptorHarmony[]): string {
+  validateHarmonyModuleGraph(modules);
   const dependencies = collectLifecycleDependencies(modules);
   const imports = deduplicateLifecycleImports(dependencies)
     .map(
@@ -823,6 +827,7 @@ export function renderExpoModulesLifecycle(modules: ModuleDescriptorHarmony[]): 
 }
 
 export function renderExpoModulesAppOverlays(modules: ModuleDescriptorHarmony[]): string {
+  validateHarmonyModuleGraph(modules);
   const overlays = collectLifecycleDependencies(modules)
     .filter((dependency) => dependency.arkUIOverlay != null)
     .map((dependency) => ({ ...dependency, overlay: dependency.arkUIOverlay! }));

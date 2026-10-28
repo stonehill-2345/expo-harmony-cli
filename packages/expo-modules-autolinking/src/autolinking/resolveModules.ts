@@ -1,8 +1,10 @@
 import { AutolinkingOptions } from '../commands/autolinkingOptions';
 import { getLinkingImplementationForPlatform } from '../platforms';
+import { validateHarmonyModuleGraph } from '../platforms/harmony/moduleValidation';
 import type {
   ExtraDependencies,
   ModuleDescriptor,
+  ModuleDescriptorHarmony,
   SearchResults,
   SupportedPlatform,
 } from '../types';
@@ -33,9 +35,13 @@ export async function resolveModulesAsync(
     })
   );
 
-  return moduleDescriptorList
+  const resolvedModules = moduleDescriptorList
     .filter((moduleDescriptor) => moduleDescriptor != null)
     .sort((a, b) => a.packageName.localeCompare(b.packageName));
+  if (autolinkingOptions.platform === 'harmony') {
+    validateHarmonyModuleGraph(resolvedModules as ModuleDescriptorHarmony[]);
+  }
+  return resolvedModules;
 }
 
 interface ResolveExtraBuildDependenciesParams {

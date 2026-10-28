@@ -485,6 +485,49 @@
           "sha256": "4fa31828b55a222cb27f8c62d4a451c351572198cefd1d1a9cb7656121f67a6b"
         }
       ]
+    },
+    {
+      "id": "M3-01",
+      "status": "PASS",
+      "evidence": [
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/review-consumers-resumed.md", "sha256": "2cc625664f25657a49e51f8cc653fff70d91d48d19dd0aef2862c1bdb1462525" },
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/consumers-resumed/author-consumer-report.json", "sha256": "bb63d4e4d91dca2751791f7d09690f38407094676233312e14393d0e39da0a30" },
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/runtime-alias-fixed/release.json", "sha256": "3bfb790e225b71f7cb3939bfffc4b18664e4a73817c3987728697dfae491648f" }
+      ]
+    },
+    {
+      "id": "M3-02",
+      "status": "PASS",
+      "evidence": [
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/review-consumers-resumed.md", "sha256": "2cc625664f25657a49e51f8cc653fff70d91d48d19dd0aef2862c1bdb1462525" },
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/consumers-resumed/author-consumer-report.json", "sha256": "bb63d4e4d91dca2751791f7d09690f38407094676233312e14393d0e39da0a30" },
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/tools-resumed.log", "sha256": "fb0203a35f866a18606999aad6f511446b8b3b9287acee24185c5cba86613423" }
+      ]
+    },
+    {
+      "id": "M3-03",
+      "status": "PASS",
+      "evidence": [
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/review-consumers-resumed.md", "sha256": "2cc625664f25657a49e51f8cc653fff70d91d48d19dd0aef2862c1bdb1462525" },
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/review-alias-fixed.md", "sha256": "16797a9fc7c6f3abbe91cd19689f040d01641a8bcddb5e60a02d9f02b05a9476" },
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/navigation-negative.json", "sha256": "513b7775c3a66b8d9c28a38967e1cf69fdd855120edb03497ea3bcf2bb9cb5f5" }
+      ]
+    },
+    {
+      "id": "M3-04",
+      "status": "PASS",
+      "evidence": [
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/review3-evidence-verification.json", "sha256": "ff5ba0720e2907461617258226e4dd5ae5d7035bd7690a44a1e3f1e8c8a7188d" },
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/core-device-review-green.log", "sha256": "7875c8373921bb543986154ae7f5f15c41af827da588a482671a6ad9e6482d36" }
+      ]
+    },
+    {
+      "id": "M3-05",
+      "status": "PASS",
+      "evidence": [
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/review3-evidence-verification.json", "sha256": "ff5ba0720e2907461617258226e4dd5ae5d7035bd7690a44a1e3f1e8c8a7188d" },
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/navigation-negative-review2.json", "sha256": "6aebc94aa998f51c352a9e174b273578dd7a570e8ec059a1e9b16847cd05dc47" }
+      ]
     }
   ],
   "closures": [
@@ -598,6 +641,15 @@
           "path": "outputs/sdk54/ai-e2e/20261027-m2-generation/final/registry-closure.log",
           "sha256": "4544d2aea79a61c4bf6b78607804ab209948674e06d349402171b9e820b6ffd1"
         }
+      ]
+    },
+    {
+      "stage": "M3",
+      "status": "PASS",
+      "evidence": [
+        { "path": "docs/releases/2026-10-28-sdk54-m3-author-contract-acceptance.md", "sha256": "00de239e6704c4ca0c5f499e6a1ce9072a61b032b9c148ef789723d1a9389662" },
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/review3-evidence-verification.json", "sha256": "ff5ba0720e2907461617258226e4dd5ae5d7035bd7690a44a1e3f1e8c8a7188d" },
+        { "path": "outputs/sdk54/ai-e2e/20261028-m3-author-contract/tools-independent-review-env.log", "sha256": "b9d290ad550895a8f83b1f2b38caad76c3ce2c77d2a2320d23a4b6c57c6b9790" }
       ]
     }
   ]

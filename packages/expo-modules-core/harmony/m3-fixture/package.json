@@ -1,0 +1,9 @@
+{
+  "name": "@expo-harmony/m3-author-fixture",
+  "version": "0.0.1",
+  "description": "Independent Harmony Core author contract probe",
+  "license": "MIT",
+  "main": "index.js",
+  "files": ["index.js", "FixtureProbe.js", "check-device.cjs", "app.plugin.js", "expo-module.config.json", "harmony", "README.md", "LICENSE"],
+  "peerDependencies": { "expo": "*", "expo-modules-core": "*", "react": "*", "react-native": "*" }
+}

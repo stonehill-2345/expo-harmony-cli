@@ -130,6 +130,8 @@ test('native generation uses a fresh transaction stage, relative CMake paths, an
   const packageRoot = path.join(root, 'node_modules/example-module');
   write(packageRoot, 'harmony/index.ets', 'export class ExamplePackage {}');
   write(packageRoot, 'harmony/src/main/ets/Example.ets', 'export class Example {}');
+  write(packageRoot, 'harmony/cpp/Example.h', '// fixture header');
+  write(packageRoot, 'harmony/cpp/CMakeLists.txt', 'add_library(example SHARED Example.cpp)');
   const module = { packageName: 'example-module', packageRoot, kind: 'turbo-module', lifecycleDependencies: [],
     cpp: { packageClass: 'ExamplePackage', header: 'Example.h', cmakeTarget: 'example', cmakePath: path.join(packageRoot, 'harmony/cpp') },
     ets: { packageClass: 'ExamplePackage', importPath: '@example/module', entrypoint: path.join(packageRoot, 'harmony/index.ets') } };
@@ -184,7 +186,7 @@ test('staging rejects ETS source links that escape the declaring package', async
   fs.symlinkSync(path.join(root, 'outside.ets'), path.join(packageRoot, 'index.ets'));
   const native = loadM1Source('packages/expo-modules-autolinking/src/platforms/harmony/nativeProject.ts');
   await assert.rejects(native.stageHarmonyEtsPackagesAsync([{ packageName: 'escape', packageRoot, kind: 'turbo-module',
-    ets: { importPath: '@test/escape', entrypoint: path.join(packageRoot, 'index.ets') }, lifecycleDependencies: [] }], stage), /outside its package root|symbolic link/i);
+    ets: { packageClass: 'Escape', importPath: '@test/escape', entrypoint: path.join(packageRoot, 'index.ets') }, lifecycleDependencies: [] }], stage), /outside its package root|symbolic link/i);
 });
 
 test('removing an edited named managed item rejects the conflicting update', async t => {
@@ -261,13 +263,13 @@ test('distinct OHPM package names cannot collide in ETS or HAR generated paths',
       const packageRoot = path.join(root, `package-${index}`);
       write(packageRoot, 'index.ets', `export class Package${index} {}`);
       return { packageName: `package-${index}`, packageRoot, kind: 'turbo-module', lifecycleDependencies: [],
-        ets: { importPath: name, entrypoint: path.join(packageRoot, 'index.ets') } };
+        ets: { packageClass: `Package${index}`, importPath: name, entrypoint: path.join(packageRoot, 'index.ets') } };
     });
     await assert.rejects(native.stageHarmonyEtsPackagesAsync(modules, stage), /collision/i);
   }
   write(root, 'input.har', 'HAR');
   await assert.rejects(native.stageHarmonyEtsPackagesAsync(['@a/b', 'a__b'].map((name, index) => ({
-    packageName: `har-${index}`, lifecycleDependencies: [], kind: 'har', hars: [{ packageName: name, packagePath: path.join(root, 'input.har') }],
+    packageName: `har-${index}`, packageRoot: root, lifecycleDependencies: [], kind: 'har', hars: [{ packageName: name, packagePath: path.join(root, 'input.har') }],
   })), stage), /collision/i);
 });
 

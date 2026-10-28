@@ -5,14 +5,25 @@ import type {
   ExtraDependencies,
   HarmonyCppPackageConfig,
   HarmonyEtsPackageConfig,
+  HarmonyHarConfig,
   ModuleDescriptorHarmony,
   PackageRevision,
   RawModuleConfigHarmony,
 } from '../../types';
+import { validateHarmonyModuleGraph } from './moduleValidation';
 
 const GENERATED_NATIVE_KINDS = new Set(['turbo-module', 'view', 'ability-lifecycle']);
 
 export async function resolveModuleAsync(
+  packageName: string,
+  revision: PackageRevision
+): Promise<ModuleDescriptorHarmony | null> {
+  const result = await resolveModuleMetadataAsync(packageName, revision);
+  if (result) validateHarmonyModuleGraph([result]);
+  return result;
+}
+
+async function resolveModuleMetadataAsync(
   packageName: string,
   revision: PackageRevision
 ): Promise<ModuleDescriptorHarmony | null> {
@@ -23,9 +34,12 @@ export async function resolveModuleAsync(
 
   const identity = {
     packageName,
+    npmPackageName: revision.npmPackageName,
+    npmPackageVersion: revision.npmPackageVersion,
     packageVersion: revision.version,
     packageRoot: revision.path,
   };
+  validateMetadataIdentifiers(packageName, config);
 
   if (config.kind === 'rnoh-reuse') {
     if (!config.reason?.trim()) {
@@ -119,7 +133,7 @@ async function resolveHarConfigsAsync(
   }
   const packageNames = new Set<string>();
   const packagePaths = new Set<string>();
-  const hars = [];
+  const hars: HarmonyHarConfig[] = [];
   for (const har of rawHars) {
     if (!har.packageName?.trim() || !har.packagePath?.trim()) {
       throw configError(packageName, 'har metadata requires packageName and packagePath');
@@ -129,6 +143,7 @@ async function resolveHarConfigsAsync(
     }
     packageNames.add(har.packageName);
     const packagePath = path.resolve(packageRoot, har.packagePath);
+    await assertContainedPathAsync(packageName, packageRoot, packagePath);
     if (packagePaths.has(packagePath)) {
       throw configError(packageName, `duplicate HAR packagePath "${har.packagePath}"`);
     }
@@ -182,6 +197,8 @@ async function resolveCppConfigAsync(
   const cmakePath = path.resolve(packageRoot, cpp.cmakePath);
   const headerPath = path.join(cmakePath, cpp.header);
   const cmakeFile = path.join(cmakePath, 'CMakeLists.txt');
+  await assertContainedPathAsync(packageName, packageRoot, headerPath);
+  await assertContainedPathAsync(packageName, packageRoot, cmakeFile);
 
   await assertFileAsync(packageName, headerPath, `C++ header "${cpp.header}"`);
   await assertFileAsync(packageName, cmakeFile, 'CMakeLists.txt');
@@ -208,6 +225,7 @@ async function resolveEtsConfigAsync(
   }
 
   const entrypoint = path.resolve(packageRoot, ets.entrypoint);
+  await assertContainedPathAsync(packageName, packageRoot, entrypoint);
   await assertFileAsync(packageName, entrypoint, `ETS entrypoint "${ets.entrypoint}"`);
   const contents = await fs.promises.readFile(entrypoint, 'utf8');
   assertEtsExport(packageName, contents, ets.packageClass);
@@ -290,6 +308,63 @@ function configError(packageName: string, message: string): Error {
   return new Error(`Invalid Harmony autolinking config for "${packageName}": ${message}`);
 }
 
+async function assertContainedPathAsync(packageName: string, root: string, target: string): Promise<void> {
+  const relative = path.relative(path.resolve(root), target);
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw configError(packageName, `path "${target}" escapes package root "${root}"`);
+  }
+  try {
+    const realRoot = await fs.promises.realpath(root);
+    const realTarget = await fs.promises.realpath(target);
+    const realRelative = path.relative(realRoot, realTarget);
+    if (realRelative === '..' || realRelative.startsWith(`..${path.sep}`) || path.isAbsolute(realRelative)) {
+      throw configError(packageName, `path "${target}" escapes real package root "${realRoot}"`);
+    }
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+  }
+}
+
+function validateMetadataIdentifiers(packageName: string, config: RawModuleConfigHarmony): void {
+  const identifier = /^[A-Za-z_][A-Za-z0-9_]*$/;
+  const cppIdentifier = /^[A-Za-z_][A-Za-z0-9_]*(?:::[A-Za-z_][A-Za-z0-9_]*)*$/;
+  const safeText = (label: string, value: unknown) => {
+    if (typeof value !== 'string' || !value.trim() || /[\r\n"'`\x00-\x1f]/.test(value)) throw configError(packageName, `invalid ${label}`);
+  };
+  const symbol = (label: string, value: string, pattern = identifier) => {
+    if (typeof value !== 'string' || !pattern.test(value)) throw configError(packageName, `invalid ${label} "${value}"`);
+  };
+  if (config.cpp) {
+    symbol('cpp.packageClass', config.cpp.packageClass, cppIdentifier);
+    symbol('cpp.cmakeTarget', config.cpp.cmakeTarget, /^[A-Za-z_][A-Za-z0-9_.+-]*$/);
+    safeText('cpp.header', config.cpp.header);
+    assertPackageRelativePath(packageName, 'C++ header', config.cpp.header);
+    safeText('cpp.cmakePath', config.cpp.cmakePath);
+    assertPackageRelativePath(packageName, 'CMake path', config.cpp.cmakePath);
+  }
+  if (config.ets) {
+    symbol('ets.packageClass', config.ets.packageClass);
+    safeText('ets.importPath', config.ets.importPath);
+    safeText('ets.entrypoint', config.ets.entrypoint);
+    assertPackageRelativePath(packageName, 'ETS entrypoint', config.ets.entrypoint);
+    if (config.ets.importKind && !['named', 'default'].includes(config.ets.importKind)) throw configError(packageName, 'invalid ets.importKind');
+  }
+  for (const har of config.har ? (Array.isArray(config.har) ? config.har : [config.har]) : []) {
+    safeText('HAR packageName', har.packageName);
+    safeText('HAR packagePath', har.packagePath);
+    assertPackageRelativePath(packageName, 'HAR packagePath', har.packagePath);
+  }
+  for (const dependency of config.lifecycleDependencies ?? []) {
+    symbol('lifecycle localName', dependency.localName); symbol('lifecycle className', dependency.className);
+    safeText('lifecycle importPath', dependency.importPath); safeText('lifecycle appStorageKey', dependency.appStorageKey);
+    if (dependency.arkUIOverlay) {
+      symbol('overlay className', dependency.arkUIOverlay.className);
+      symbol('overlay controllerProperty', dependency.arkUIOverlay.controllerProperty);
+      safeText('overlay importPath', dependency.arkUIOverlay.importPath);
+    }
+  }
+}
+
 function escapeRegExp(value: string): string {
   return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
@@ -299,6 +374,7 @@ export async function generatePackageListAsync(
   targetDirectory: string,
   _namespace: string
 ): Promise<void> {
+  validateHarmonyModuleGraph(modules);
   const sortedModules = [...modules].sort((a, b) => a.packageName.localeCompare(b.packageName));
   const nativeModules = sortedModules.filter(hasGeneratedNativePackage);
   const skippedModules = sortedModules.filter((module) => !hasGeneratedNativePackage(module));
@@ -350,6 +426,7 @@ function renderEts(
   modules: GeneratedNativeModule[],
   skippedModules: ModuleDescriptorHarmony[]
 ): string {
+  const seenImports = new Set<string>();
   const imports = modules
     .flatMap((module) => [
       {
@@ -363,6 +440,12 @@ function renderEts(
         importKind: 'named' as const,
       })),
     ])
+    .filter(({ className, importPath, importKind }) => {
+      const key = JSON.stringify([className, importPath, importKind ?? 'named']);
+      if (seenImports.has(key)) return false;
+      seenImports.add(key);
+      return true;
+    })
     .sort((a, b) => {
       const importPathComparison = a.importPath.localeCompare(b.importPath);
       return importPathComparison || a.className.localeCompare(b.className);
