@@ -1,0 +1,15 @@
+# M0 消费者 typeRoots 隔离语义设计
+
+前批M0仍66%(4/6)，本批落实原194条公开使用的隔离语义绑定。固定Expo revision/tree沿用前批；不提交、不下载、不修改旧封存。用户已连续授权实施及合批验收。
+
+根因：createDeclarationContext只提供typeRootContext来源证据，共享indexSemanticSurface固定types:[]且排除workspace ambient根；引用扫描noResolve/noLib只证明词法import绑定。当前公开图有17组typeRoot解析/212条使用，涉及config-plugins与osascript两个配置；历史194条来自config-plugins，不能以当前新增使用数替代历史ID。
+
+方案：显式--type-root-isolation consumer-v1在公开图构建后附加consumerTypeContexts。按有效配置及输入hash分组创建新Program/checker，使用TypeScript自动类型指令规则选择完整授权typeRoots入口，尊重继承、types白名单和types:[]。完整声明文件及其安全引用进入该上下文；不将其加进共享Program。虚拟host只读已验证files、标准库及原图已验证解析，无宿主文件系统回退。
+
+复用indexSemanticSurface编码器，增加默认关闭的consumerProjection参数：rootPaths、ambientRootPaths、compilerOptions、contextId、referenceCandidates。仅消费文件为语义根，显式授权ambient根进入Program，所有context类型使用独立命名空间。referenceCandidates按原USE精确AST范围定位，求得类型和import alias目标声明；保留诊断，不以模块成功加载或any作为符号绑定已验证的充分条件。
+
+附加metadata包括policy/source、contexts（配置及输入hash、选择的类型根、Program实际输入、命名空间类型图、逐USE绑定与诊断）、summary和boundaries。上下文图与原17表分开，原ID/target/解析observations和类型状态不变；USE通过id链接上下文，不混合无上下文resolution造成歧义。原TYPE顺序ID、MODULE/EXPORT与上下文类型变体不冲突。类型图引用须全部在该context闭合，预算超限抛错不输出伪完整图。
+
+接口：buildTypeRootIsolation({surface, files, projectContext})，projectContext为上游graph.projectContext已核配置快照。返回consumerTypeContexts metadata。loader默认不执行；显式开启后metadata纳入既有validatePublicSurface来源重建比较，删除链接或篡改类型必须拒绝。
+
+实际验收须证明：历史194 USE ID逐一存在且有真实alias目标声明；当前212 USE分别记录结果，未绑定保留明确边界；两个上下文互不污染，types opt-out及冲突同名模块隔离；默认字节兼容，全17表不变，重复/check/真实CLI删context负例、全工具及独立审查。上游semantic仅复用，不能声称26错误类型、22590预算节点或M0关闭已解决。

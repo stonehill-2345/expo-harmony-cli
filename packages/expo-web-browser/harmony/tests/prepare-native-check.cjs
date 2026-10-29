@@ -52,7 +52,9 @@ const modules = ['expo-splash-screen', 'expo-web-browser'].map(packageName => {
   fs.mkdirSync(target, { recursive: true });
   fs.copyFileSync(path.join(source, 'index.ets'), path.join(target, 'index.ets'));
   fs.cpSync(path.join(source, 'src'), path.join(target, 'src'), { recursive: true });
-  return { packageName, lifecycleDependencies: require(path.join(packagesRoot, packageName, 'expo-module.config.json')).harmony.lifecycleDependencies };
+  const packageRoot = path.join(packagesRoot, packageName);
+  return { packageName, packageRoot, packageVersion: require(path.join(packageRoot, 'package.json')).version,
+    lifecycleDependencies: require(path.join(packageRoot, 'expo-module.config.json')).harmony.lifecycleDependencies };
 });
 for (const [name, render] of [['ExpoModulesAppOverlays', renderExpoModulesAppOverlays], ['ExpoModulesLifecycle', renderExpoModulesLifecycle]]) {
   let generated = render(modules);

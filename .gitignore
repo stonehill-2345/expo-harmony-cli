@@ -11,7 +11,7 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.tgz
-docs/superpowers/
+# docs/superpowers/
 
 # bing local changelog artifacts
 docs/changelog/local/
