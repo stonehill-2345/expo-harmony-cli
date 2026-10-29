@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import { createHash } from 'node:crypto';
 import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
@@ -22,6 +23,24 @@ const fixture = t => {
   return { root, stage, current };
 };
 const api = () => loadM1Source(source);
+
+test('regeneration preserves private and executable user files and managed file permissions', async t => {
+  const { stage, current } = fixture(t);
+  write(stage, 'module.json5', { version: 1 });
+  await api().mergeHarmonyGenerationStateAsync({ stageRoot: stage });
+  fs.cpSync(stage, current, { recursive: true });
+  write(current, 'user-build.sh', '#!/bin/sh\necho build\n');
+  write(current, 'private.txt', 'private');
+  fs.chmodSync(path.join(current, 'user-build.sh'), 0o755);
+  fs.chmodSync(path.join(current, 'private.txt'), 0o600);
+  fs.chmodSync(path.join(current, 'module.json5'), 0o640);
+  write(stage, 'module.json5', { version: 2 });
+  await api().mergeHarmonyGenerationStateAsync({ stageRoot: stage, currentRoot: current });
+  for (const [file, mode] of [['user-build.sh', 0o755], ['private.txt', 0o600], ['module.json5', 0o640]]) {
+    assert.equal(fs.statSync(path.join(stage, file)).mode & 0o777, mode, file);
+  }
+  assert.equal(JSON.parse(fs.readFileSync(path.join(stage, 'module.json5'))).version, 2);
+});
 
 test('state deterministically tracks only relative generated paths and no user files', async t => {
   const { stage, current } = fixture(t);
@@ -328,4 +347,111 @@ test('ownership dictionaries treat constructor and toString filenames as ordinar
   assert.equal(state.files.constructor.owner, 'expo-harmony');
   assert.equal(fs.readFileSync(path.join(stage, 'toString'), 'utf8'), 'user file');
   assert.equal(Object.hasOwn(state.files, 'toString'), false);
+});
+
+test('large unowned files are copied without whole-file buffering and remain independent', async t => {
+  const { stage, current } = fixture(t);
+  const file = path.join(current, 'entry/build/large-user.bin');
+  fs.mkdirSync(path.dirname(file), { recursive: true });
+  const fd = fs.openSync(file, 'w');
+  fs.writeSync(fd, Buffer.alloc(1024 * 1024, 0x51)); fs.ftruncateSync(fd, 64 * 1024 * 1024); fs.closeSync(fd);
+  fs.chmodSync(file, 0o600);
+  const oldTime = new Date('2020-01-01T00:00:00Z'); fs.utimesSync(file, oldTime, oldTime);
+  write(current, 'unowned.json', 'not JSON; user content must remain opaque');
+  const guardedFs = { ...fs, promises: { ...fs.promises, readFile: async (target, ...args) => {
+    assert.notEqual(path.resolve(target), file, 'large passthrough files must not be materialized as one Buffer');
+    return fs.promises.readFile(target, ...args);
+  } } };
+  await loadM1Source(source, { fs: guardedFs }).mergeHarmonyGenerationStateAsync({ stageRoot: stage, currentRoot: current });
+  const target = path.join(stage, 'entry/build/large-user.bin');
+  assert.equal(fs.statSync(target).size, fs.statSync(file).size);
+  assert.equal(fs.statSync(target).mode & 0o777, 0o600);
+  assert.equal(fs.statSync(target).mtimeMs, oldTime.getTime());
+  assert.notEqual(fs.statSync(target).ino, fs.statSync(file).ino);
+  const digest = async file => {
+    const hash = createHash('sha256');
+    for await (const chunk of fs.createReadStream(file)) hash.update(chunk);
+    return hash.digest('hex');
+  };
+  assert.equal(await digest(target), await digest(file));
+  const handle = fs.openSync(target, 'r+'); fs.writeSync(handle, Buffer.from('changed'), 0, 7, 0); fs.closeSync(handle);
+  const original = Buffer.alloc(7); const originalHandle = fs.openSync(file, 'r');
+  fs.readSync(originalHandle, original, 0, 7, 0); fs.closeSync(originalHandle);
+  assert.deepEqual(original, Buffer.alloc(7, 0x51));
+  assert.equal(fs.readFileSync(path.join(stage, 'unowned.json'), 'utf8'), 'not JSON; user content must remain opaque');
+});
+
+test('unchanged generated content keeps current timestamps and private mode', async t => {
+  const { stage, current } = fixture(t);
+  write(stage, 'generated.ets', 'unchanged');
+  await api().mergeHarmonyGenerationStateAsync({ stageRoot: stage });
+  fs.cpSync(stage, current, { recursive: true });
+  const oldTime = new Date('2020-01-01T00:00:00Z');
+  fs.chmodSync(path.join(current, 'generated.ets'), 0o600);
+  fs.utimesSync(path.join(current, 'generated.ets'), oldTime, oldTime);
+  await api().mergeHarmonyGenerationStateAsync({ stageRoot: stage, currentRoot: current });
+  assert.equal(fs.statSync(path.join(stage, 'generated.ets')).mtimeMs, oldTime.getTime());
+  assert.equal(fs.statSync(path.join(stage, 'generated.ets')).mode & 0o777, 0o600);
+});
+
+test('copy failure does not modify the original user file', async t => {
+  const { stage, current } = fixture(t);
+  write(current, 'user.bin', 'original');
+  const error = Object.assign(new Error('disk full'), { code: 'ENOSPC' });
+  const failingFs = { ...fs, promises: { ...fs.promises, copyFile: async () => { throw error; } } };
+  await assert.rejects(loadM1Source(source, { fs: failingFs }).mergeHarmonyGenerationStateAsync({ stageRoot: stage, currentRoot: current }), { code: 'ENOSPC' });
+  assert.equal(fs.readFileSync(path.join(current, 'user.bin'), 'utf8'), 'original');
+});
+
+for (const code of ['ENOSPC', 'EACCES', 'EIO']) {
+  test(`partial copy ${code} rolls back the transaction without changing source`, async t => {
+    const { root } = fixture(t);
+    write(root, 'harmony/user.bin', 'user data');
+    write(root, 'harmony/.expo-harmony-state.json', { schemaVersion: 1, files: {} });
+    const failingFs = { ...fs, promises: { ...fs.promises, copyFile: async (_source, target) => {
+      fs.writeFileSync(target, 'partial');
+      throw Object.assign(new Error('injected copy failure'), { code });
+    } } };
+    const merge = loadM1Source(source, { fs: failingFs }).mergeHarmonyGenerationStateAsync;
+    const transaction = loadM1Source('packages/expo-modules-autolinking/src/platforms/harmony/generationTransaction.ts');
+    await assert.rejects(transaction.runHarmonyGenerationTransactionAsync({ projectRoot: root,
+      generate: stageRoot => merge({ stageRoot, currentRoot: path.join(root, 'harmony') }),
+    }), { code });
+    assert.equal(fs.readFileSync(path.join(root, 'harmony/user.bin'), 'utf8'), 'user data');
+    assert.equal(fs.existsSync(path.join(root, '.expo-harmony-generation/lock.json')), false);
+  });
+}
+
+test('independent copy fallback preserves bytes when filesystem cloning is unavailable', async t => {
+  const { stage, current } = fixture(t);
+  write(current, 'user.bin', 'opaque data');
+  let copies = 0;
+  const fallbackFs = { ...fs, promises: { ...fs.promises, copyFile: async (from, to, flags) => {
+    assert.equal(flags, fs.constants.COPYFILE_FICLONE);
+    copies++;
+    // Model Node's documented non-FORCE fallback on a filesystem without reflinks.
+    await fs.promises.copyFile(from, to);
+  } } };
+  await loadM1Source(source, { fs: fallbackFs }).mergeHarmonyGenerationStateAsync({ stageRoot: stage, currentRoot: current });
+  assert.equal(copies, 1);
+  assert.equal(fs.readFileSync(path.join(stage, 'user.bin'), 'utf8'), 'opaque data');
+  assert.notEqual(fs.statSync(path.join(stage, 'user.bin')).ino, fs.statSync(path.join(current, 'user.bin')).ino);
+});
+
+test('config regeneration preserves the unchanged ability timestamp', async t => {
+  const { root } = fixture(t);
+  write(root, 'icon.png', 'icon');
+  const native = loadM1Source('packages/expo-modules-autolinking/src/platforms/harmony/nativeProject.ts', {
+    './releasedCompatibility': { copyReleasedRnohCompatibilityHarAsync: async ({ outputHarPath }) => {
+      write(path.dirname(outputHarPath), path.basename(outputHarPath), 'released HAR'); return outputHarPath;
+    } },
+  });
+  const options = { projectRoot: root, appName: 'App', bundleName: 'dev.example.app', appConfig: { icon: './icon.png' }, modules: [], inputHarPath: 'verified boundary', corePackageRoot: 'verified boundary' };
+  const result = await native.prepareHarmonyNativeProjectAsync(options);
+  const ability = path.join(result.harmonyRoot, 'entry/src/main/ets/entryability/EntryAbility.ets');
+  const before = fs.readFileSync(ability);
+  const oldTime = new Date('2020-01-01T00:00:00Z'); fs.utimesSync(ability, oldTime, oldTime);
+  await native.syncHarmonyNativeProjectAsync({ ...options, nativeConfig: { app: { versionName: '1.0.1' } } });
+  assert.deepEqual(fs.readFileSync(ability), before);
+  assert.equal(fs.statSync(ability).mtimeMs, oldTime.getTime());
 });

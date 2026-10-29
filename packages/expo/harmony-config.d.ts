@@ -22,13 +22,20 @@ export interface HarmonyOptions {
   versionCode?: number;
   icon?: string;
   foregroundImage?: string;
-  splash?: { image?: string; backgroundColor?: string };
+  splash?: HarmonySplashOptions;
   scheme?: string | string[];
   querySchemes?: string[];
   permissions?: HarmonyPermission[];
   orientation?: 'default' | 'portrait' | 'landscape';
   userInterfaceStyle?: 'light' | 'dark' | 'automatic';
   extensions?: { app?: HarmonyJSONObject; module?: HarmonyJSONObject };
+}
+export interface HarmonySplashOptions {
+  image?: string;
+  backgroundColor?: string;
+  imageWidth?: number;
+  resizeMode?: 'contain' | 'cover' | 'native';
+  dark?: { image?: string; backgroundColor?: string };
 }
 export type HarmonyExpoConfig = ExpoConfig & {
   harmony?: HarmonyOptions;
@@ -58,7 +65,7 @@ export interface ResolvedHarmonyOptions
   permissions: HarmonyPermission[];
   orientation: 'default' | 'portrait' | 'landscape';
   userInterfaceStyle: 'light' | 'dark' | 'automatic';
-  splash: { image?: string; backgroundColor?: string };
+  splash: HarmonySplashOptions;
   extensions: { app?: HarmonyJSONObject; module?: HarmonyJSONObject };
 }
 export interface HarmonyConfigSnapshot {

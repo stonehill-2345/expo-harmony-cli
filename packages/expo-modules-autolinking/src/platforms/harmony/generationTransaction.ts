@@ -8,6 +8,7 @@ export type HarmonyGenerationFaultPoint =
 interface Owner { schemaVersion: 1; pid: number; token: string }
 interface Journal {
   schemaVersion: 1;
+  hashVersion?: 2;
   phase: 'GENERATING' | 'PREPARED' | 'BACKED_UP' | 'INSTALLED' | 'COMMITTED';
   hadTarget: boolean;
   preserveBackup: boolean;
@@ -100,20 +101,35 @@ async function claimLock(
   throw new Error('Harmony generation lock changed repeatedly; retry generation');
 }
 
-async function hashTree(root: string): Promise<string> {
+async function hashTree(root: string, includeModes = true): Promise<string> {
   const hash = createHash('sha256');
   async function visit(directory: string, prefix: string) {
     const entries = (await fs.promises.readdir(directory, { withFileTypes: true })).sort((a, b) => a.name.localeCompare(b.name));
-    for (const entry of entries) {
-      const relative = path.posix.join(prefix, entry.name);
-      const absolute = path.join(directory, entry.name);
-      hash.update(JSON.stringify([relative, entry.isDirectory() ? 'dir' : entry.isSymbolicLink() ? 'link' : 'file']));
-      if (entry.isSymbolicLink()) hash.update(await fs.promises.readlink(absolute));
-      else if (entry.isDirectory()) await visit(absolute, relative);
-      else {
+    // Bound open streams and retained digests, while preserving the exact journal
+    // fingerprint order. Each call still reads every file independently.
+    for (let offset = 0; offset < entries.length; offset += 8) {
+      const batch = entries.slice(offset, offset + 8);
+      const results = await Promise.allSettled(batch.map(async (entry) => {
+        const absolute = path.join(directory, entry.name);
+        if (entry.isSymbolicLink()) return { link: await fs.promises.readlink(absolute) };
+        if (entry.isDirectory()) return {};
+        const mode = includeModes ? (await fs.promises.lstat(absolute)).mode & 0o7777 : undefined;
         const digest = createHash('sha256');
         for await (const chunk of fs.createReadStream(absolute)) digest.update(chunk);
-        hash.update(digest.digest());
+        return { mode, digest: digest.digest() };
+      }));
+      // Settle all readers before recovery can remove or rename this tree.
+      for (const result of results) if (result.status === 'rejected') throw result.reason;
+      for (const [index, entry] of batch.entries()) {
+        const relative = path.posix.join(prefix, entry.name);
+        const result = results[index] as PromiseFulfilledResult<{ link?: string; mode?: number; digest?: Buffer }>;
+        hash.update(JSON.stringify([relative, entry.isDirectory() ? 'dir' : entry.isSymbolicLink() ? 'link' : 'file']));
+        if (entry.isSymbolicLink()) hash.update(result.value.link!);
+        else if (entry.isDirectory()) await visit(path.join(directory, entry.name), relative);
+        else {
+          if (includeModes) hash.update(JSON.stringify(result.value.mode));
+          hash.update(result.value.digest!);
+        }
       }
     }
   }
@@ -135,7 +151,7 @@ async function recoverWorkspace(projectRoot: string, transactionRoot: string, ow
     return;
   }
   const journal: Journal = JSON.parse(await fs.promises.readFile(journalPath, 'utf8'));
-  if (journal.schemaVersion !== 1 || !['GENERATING', 'PREPARED', 'BACKED_UP', 'INSTALLED', 'COMMITTED'].includes(journal.phase)
+  if (journal.schemaVersion !== 1 || (journal.hashVersion !== undefined && journal.hashVersion !== 2) || !['GENERATING', 'PREPARED', 'BACKED_UP', 'INSTALLED', 'COMMITTED'].includes(journal.phase)
     || typeof journal.hadTarget !== 'boolean' || typeof journal.preserveBackup !== 'boolean') {
     throw new Error(`Invalid Harmony recovery journal: ${journalPath}`);
   }
@@ -147,7 +163,7 @@ async function recoverWorkspace(projectRoot: string, transactionRoot: string, ow
     if (hasBackup || !journal.hadTarget) {
       if (await exists(target)) {
         await assertDirectory(target);
-        if (!journal.candidateHash || await hashTree(target) !== journal.candidateHash) {
+        if (!journal.candidateHash || await hashTree(target, journal.hashVersion === 2) !== journal.candidateHash) {
           throw new Error(`Harmony recovery conflict: current project changed after interruption; backup retained at ${backup}`);
         }
         await fs.promises.rm(target, { recursive: true });
@@ -192,7 +208,7 @@ export async function runHarmonyGenerationTransactionAsync<T>(options: {
     const initialHash = hadTarget ? await hashTree(harmonyRoot) : undefined;
     if (options.prepareOnly && hadTarget) throw new Error(`Harmony native project already exists at "${harmonyRoot}"`);
     const preserveBackup = hadTarget && (!!options.clean || !await exists(path.join(harmonyRoot, '.expo-harmony-state.json')));
-    journal = { schemaVersion: 1, phase: 'GENERATING', hadTarget, preserveBackup };
+    journal = { schemaVersion: 1, hashVersion: 2, phase: 'GENERATING', hadTarget, preserveBackup };
     const journalPath = path.join(workspace, 'journal.json');
     await writeJSON(journalPath, journal);
     const stage = path.join(workspace, 'stage');

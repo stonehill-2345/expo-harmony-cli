@@ -25,6 +25,16 @@
       "additionalProperties": false,
       "properties": {
         "image": { "type": "string", "minLength": 1 },
+        "imageWidth": { "type": "number", "exclusiveMinimum": 0 },
+        "resizeMode": { "enum": ["contain", "cover", "native"] },
+        "dark": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "image": { "type": "string", "minLength": 1 },
+            "backgroundColor": { "type": "string", "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$" }
+          }
+        },
         "backgroundColor": {
           "type": "string",
           "pattern": "^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$"

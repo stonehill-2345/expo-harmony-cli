@@ -4,6 +4,7 @@ import os from 'node:os';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 import { registerDynamicLanguage } from '@ast-grep/napi';
 import java from '@ast-grep/lang-java';
 import ruby from '@ast-grep/lang-ruby';
@@ -22,10 +23,11 @@ let provenance;
 let swiftFrontend;
 let kotlinFrontend;
 let groovyFrontend;
+const toolingRoot = fileURLToPath(new URL('../../.tmp/sdk54/tooling/', import.meta.url));
 
 export function parseGroovySource(content) {
   if (!groovyFrontend) {
-    const lib = process.env.SDK54_GROOVY_LIB ?? path.join(os.homedir(), '.gradle/wrapper/dists/gradle-8.14.3-bin/cv11ve7ro1n3o1j4so8xd9n66/gradle-8.14.3/lib');
+    const lib = process.env.SDK54_GROOVY_LIB ?? path.join(toolingRoot, 'groovy');
     const jars = ['groovy-3.0.24.jar', 'groovy-json-3.0.24.jar'].map(name => ({ name, sha256: sha(fs.readFileSync(path.join(lib, name))) }));
     const script = new URL('./m0-groovy-syntax.groovy', import.meta.url);
     groovyFrontend = { script: script.pathname, classpath: jars.map(({ name }) => path.join(lib, name)).join(path.delimiter), metadata: { engine: 'GroovyCompiler/AST', sourceSha256: sha(fs.readFileSync(script)), jars, javaVersion: execFileSync('java', ['--version'], { encoding: 'utf8' }).trim(), phases: ['PARSING', 'CONVERSION'] } };
@@ -35,7 +37,7 @@ export function parseGroovySource(content) {
 
 export function parseKotlinSource(content, filename = 'Source.kt') {
   if (!kotlinFrontend) {
-    const lib = process.env.SDK54_KOTLIN_LIB ?? '/Applications/Android Studio.app/Contents/plugins/Kotlin/kotlinc/lib';
+    const lib = process.env.SDK54_KOTLIN_LIB ?? path.join(toolingRoot, 'kotlin');
     const jars = ['kotlin-compiler.jar', 'kotlin-stdlib.jar', 'kotlinx-coroutines-core-jvm.jar', 'annotations-13.0.jar'].map(name => ({ name, sha256: sha(fs.readFileSync(path.join(lib, name))) }));
     const source = new URL('./M0KotlinSyntax.java', import.meta.url);
     const sourceSha256 = sha(fs.readFileSync(source));

@@ -49,3 +49,11 @@ RNOH、Screens、Worklets 的兼容转换在发行 staging 执行。Core 携带 
 发行维护者使用 `prepare-npm-release.mjs --screens-archive <已核验上游tgz> --rnoh-har <输入HAR> --worklets-har <输入HAR> --output <新目录>`。输入必须匹配固定策略 SHA256；Screens 输入从完整性校验后的 tgz 取得。Python 只用于此发行 staging 步骤。随后运行 `verify-npm-release.mjs <候选目录>`，Core 缺兼容 bundle 时验证失败。
 
 本说明不代表所有内置模块、真机运行或签名 Release 已完成验收；各阶段结论以冻结验收记录为准。
+
+## 文件处理与增量构建
+
+生成器先扫描文件清单，仅按需读取状态及参与合并的 JSON；未知用户 JSON 保持原始字节。二进制按流计算摘要，保留的文件使用独立复制（文件系统支持时尝试写时复制），不使用硬链接。复制失败由原事务恢复机制处理。
+
+输出字节未变时保留当前文件的权限与时间戳，避免配置变更导致其他源码无效重编译。时间戳和大小不作为内容相等的依据。单次树校验最多并行读取 8 个文件，摘要仍按原顺序组合；失败时等待本批读取结束再恢复。提交前、交换后和恢复时的独立校验全部保留，state schemaVersion 1、日志 hashVersion 2 及旧日志兼容规则不变。
+
+`.hvigor`、`entry/.cxx`、`entry/build` 和 OHPM 树仍在完整保护范围内。本次文件处理优化不代表缓存分离或全部性能目标已通过。

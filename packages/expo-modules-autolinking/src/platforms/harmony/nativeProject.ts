@@ -89,7 +89,7 @@ export async function copyHarmonyTemplateMediaAsync(
   harmonyRoot: string,
   appConfig: Record<string, any>
 ): Promise<void> {
-  const { media, background } = resolveHarmonyAppAssets(projectRoot, appConfig);
+  const { media, background, darkBackground, imageWidth, resizeMode } = resolveHarmonyAppAssets(projectRoot, appConfig);
   for (const [source, relativeTarget] of media) {
     const target = path.join(harmonyRoot, relativeTarget);
     await assertHarmonyTargetPathAsync(harmonyRoot, target);
@@ -108,6 +108,22 @@ export async function copyHarmonyTemplateMediaAsync(
   else colors.color.push({ name: 'start_window_background', value: background });
   await fs.promises.mkdir(path.dirname(colorsPath), { recursive: true });
   await fs.promises.writeFile(colorsPath, JSON.stringify(colors, null, 2) + '\n');
+  const resources: [string, Record<string, { name: string; value: string }[]>][] = [
+    ['base/element/float.json', { float: [{ name: 'expo_splash_image_width', value: `${imageWidth}vp` }] }],
+    ['base/element/string.json', { string: [{ name: 'expo_splash_resize_mode', value: resizeMode }] }],
+  ];
+  if (darkBackground) resources.push(['dark/element/color.json', { color: [{ name: 'start_window_background', value: darkBackground }] }]);
+  for (const [relative, additions] of resources) {
+    const target = path.join(harmonyRoot, 'entry/src/main/resources', relative);
+    await assertHarmonyTargetPathAsync(harmonyRoot, target);
+    const contents = fs.existsSync(target) ? JSON5.parse(await fs.promises.readFile(target, 'utf8')) : {};
+    for (const [type, entries] of Object.entries(additions)) {
+      const names = new Set(entries.map((entry: { name: string }) => entry.name));
+      contents[type] = [...(contents[type] ?? []).filter((entry: { name: string }) => !names.has(entry.name)), ...entries];
+    }
+    await fs.promises.mkdir(path.dirname(target), { recursive: true });
+    await fs.promises.writeFile(target, JSON.stringify(contents, null, 2) + '\n');
+  }
 }
 
 export async function validateHarmonyAppAssetsAsync(
@@ -138,6 +154,14 @@ function resolveHarmonyAppAssets(projectRoot: string, appConfig: Record<string, 
   if (typeof background !== 'string' || !/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(background)) {
     throw new Error('Harmony splash.backgroundColor must be a six or eight digit hex color');
   }
+  const darkBackground = harmony.splash?.dark?.backgroundColor;
+  if (darkBackground !== undefined && (typeof darkBackground !== 'string' || !/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(darkBackground))) {
+    throw new Error('Harmony splash.dark.backgroundColor must be a six or eight digit hex color');
+  }
+  const imageWidth = harmony.splash?.imageWidth ?? 100;
+  const resizeMode = harmony.splash?.resizeMode ?? 'contain';
+  if (typeof imageWidth !== 'number' || !Number.isFinite(imageWidth) || imageWidth <= 0) throw new Error('Invalid Harmony splash.imageWidth');
+  if (!['contain', 'cover', 'native'].includes(resizeMode)) throw new Error('Invalid Harmony splash.resizeMode');
   const realProjectRoot = fs.realpathSync(projectRoot);
   const resolveAsset = (relativePath: unknown, field: string): string => {
     if (typeof relativePath !== 'string' || !relativePath)
@@ -163,7 +187,7 @@ function resolveHarmonyAppAssets(projectRoot: string, appConfig: Record<string, 
       throw new Error(`${field} must stay inside the project`);
     return absolute;
   };
-  const media = [
+  const media: [string, string][] = [
     [resolveAsset(icon, 'expo.icon'), 'entry/src/main/resources/base/media/background.png'],
     [
       resolveAsset(foreground, 'expo.android.adaptiveIcon.foregroundImage'),
@@ -174,8 +198,11 @@ function resolveHarmonyAppAssets(projectRoot: string, appConfig: Record<string, 
       'entry/src/main/resources/base/media/startIcon.png',
     ],
     [resolveAsset(icon, 'expo.icon'), 'AppScope/resources/base/media/app_icon.png'],
-  ] as const;
-  return { media, background };
+  ];
+  if (harmony.splash?.dark?.image) {
+    media.push([resolveAsset(harmony.splash.dark.image, 'harmony.splash.dark.image'), 'entry/src/main/resources/dark/media/startIcon.png']);
+  }
+  return { media, background, darkBackground, imageWidth, resizeMode };
 }
 
 async function assertHarmonyTargetPathAsync(harmonyRoot: string, target: string): Promise<void> {
@@ -243,7 +270,9 @@ async function generateHarmonyNativeProjectAsync(
       await mergeHarmonyGenerationStateAsync({ stageRoot, currentRoot, clean: options.clean });
       // Restore the documented insertion when users have removed only the theme wiring.
       const ability = await getHarmonyAppConfigurationEntryAsync(stageRoot);
-      await fs.promises.writeFile(ability.abilityPath, ability.contents, 'utf8');
+      if (await fs.promises.readFile(ability.abilityPath, 'utf8') !== ability.contents) {
+        await fs.promises.writeFile(ability.abilityPath, ability.contents, 'utf8');
+      }
       return {
         rnohHarPath: path.relative(stageRoot, generated.rnohHarPath),
         generatedFiles: Object.fromEntries(Object.entries(generated.generatedFiles).map(([key, file]) => [key, path.relative(stageRoot, file)])),

@@ -36,6 +36,8 @@
 
 ### SDK54（新架构候选）
 
+当前开发状态与风险修复见[本轮记录](docs/releases/2026-10-29-sdk54-risk-remediation.md)。历史 M0～M3 验收的部分原始工件尚未随仓库移交，`pnpm sdk54:evidence:check` 会明确报告缺口；阶段历史完成记录不等于当前候选已完成设备或发布复验。
+
 使用独立创建器 `@expo-oh/create-expo@3.5.12` 和配套模板创建项目，模板通过 npm alias 固定 HarmonyOS 运行时依赖。此创建器及模板组合尚未发布；以下命令仅适用于已配置完整候选包的测试 registry。
 
 ```bash
@@ -149,14 +151,19 @@ CLI 对依赖分五类自动处理：纯 JS 包、alias-only、native/bump-nativ
 
 ## 开发与贡献
 
-使用 Node.js ≥ 20.19.4、pnpm 10.19.0，在仓库根目录执行：
+使用 Node.js ≥ 20.19.4、pnpm 10.19.0。全量源码分析测试还需要 macOS/Xcode（SwiftSyntax）、JDK 17+、Python 3 和 curl；CI 使用 macOS runner。在仓库根目录执行：
 
 ```bash
-pnpm install --frozen-lockfile
+pnpm install --frozen-lockfile --ignore-scripts
+pnpm sdk54:tools:setup
 pnpm check
 ```
 
 `pnpm check` 是 CI 同入口：类型检查 → 源码测试 → 打包产物测试 → SDK54 工具链校验（目录校验、打包确定性、归档审计、patch 审计、仓库检查）。
+
+仓库依赖安装禁用生命周期脚本：导入的 Expo 包仍保留上游 `prepare`，会在工作区直接重建并覆盖已跟踪产物，且依赖完整上游开发环境。本仓库通过上述检查中的独立 staging 构建验证候选包；此安装选项不用于跳过候选构建或消费项目验收。
+
+`sdk54:tools:setup` 将固定版本的解析工具安装到被忽略的 `.tmp/sdk54/tooling`，不修改全局安装。工具测试串行执行，避免多个进程同时写入共享解析器缓存；不删减测试案例。仅运行产品 CLI 测试时无需这些解析工具。
 
 常用命令：
 

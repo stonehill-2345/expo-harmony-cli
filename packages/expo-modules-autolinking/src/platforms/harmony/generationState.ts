@@ -84,8 +84,11 @@ function assertRelative(file: string): void {
   }
 }
 
-async function readTree(root: string, links?: Map<string, string>): Promise<Map<string, Buffer>> {
-  const files = new Map<string, Buffer>();
+type FileContent = { path?: string; contents?: Buffer; digest?: string; stat?: fs.Stats };
+
+// Inventory only: build outputs and unknown user files must never accumulate in memory.
+async function readTree(root: string, links?: Map<string, string>): Promise<Map<string, FileContent>> {
+  const files = new Map<string, FileContent>();
   if (!fs.existsSync(root)) return files;
   async function visit(directory: string): Promise<void> {
     const stat = await fs.promises.lstat(directory);
@@ -98,7 +101,10 @@ async function readTree(root: string, links?: Map<string, string>): Promise<Map<
         if (!links) throw new Error(`Harmony generation rejects symbolic links: ${absolute}`);
         links.set(path.relative(root, absolute).split(path.sep).join('/'), await fs.promises.readlink(absolute));
       } else if (info.isDirectory()) await visit(absolute);
-      else if (info.isFile()) files.set(path.relative(root, absolute).split(path.sep).join('/'), await fs.promises.readFile(absolute));
+      else if (info.isFile()) {
+        const relative = path.relative(root, absolute).split(path.sep).join('/');
+        files.set(relative, { path: absolute, stat: info });
+      }
       else throw new Error(`Unsupported Harmony generation file: ${absolute}`);
     }
   }
@@ -106,8 +112,20 @@ async function readTree(root: string, links?: Map<string, string>): Promise<Map<
   return files;
 }
 
-function hash(contents: Buffer): string {
-  return createHash('sha256').update(contents).digest('hex');
+async function contents(file: FileContent): Promise<Buffer> {
+  return file.contents ??= await fs.promises.readFile(file.path!);
+}
+
+function generated(value: JsonValue): FileContent {
+  return { contents: Buffer.from(serialize(value)) };
+}
+
+async function hash(file: FileContent): Promise<string> {
+  if (file.digest) return file.digest;
+  const digest = createHash('sha256');
+  if (file.contents) digest.update(file.contents);
+  else for await (const chunk of fs.createReadStream(file.path!)) digest.update(chunk);
+  return file.digest = digest.digest('hex');
 }
 
 function readState(contents: Buffer | undefined): GenerationState | undefined {
@@ -135,23 +153,25 @@ export async function mergeHarmonyGenerationStateAsync({
   owners?: Record<string, string>;
 }): Promise<void> {
   const desired = await readTree(stageRoot);
+  const staged = new Map(desired);
   desired.delete(STATE_FILE);
   const links = new Map<string, string>();
-  const current = currentRoot ? await readTree(currentRoot, links) : new Map<string, Buffer>();
+  const current = currentRoot ? await readTree(currentRoot, links) : new Map<string, FileContent>();
   if (links.has(STATE_FILE)) throw new Error('Harmony generation state must not be a symbolic link');
-  const previous = readState(current.get(STATE_FILE));
+  const previousFile = current.get(STATE_FILE);
+  const previous = readState(previousFile ? await contents(previousFile) : undefined);
   current.delete(STATE_FILE);
   const state: GenerationState = { schemaVersion: 1, files: Object.create(null) };
-  const result = new Map<string, Buffer>();
+  const result = new Map<string, FileContent>();
 
   for (const file of [...desired.keys()].sort()) {
     assertRelative(file);
     const content = desired.get(file)!;
-    const json = /\.json5?$/.test(file) ? JSON5.parse(content.toString('utf8')) : undefined;
-    const canonical = json === undefined ? content : Buffer.from(serialize(json));
+    const json = /\.json5?$/.test(file) ? JSON5.parse((await contents(content)).toString('utf8')) : undefined;
+    const canonical = json === undefined ? content : generated(json);
     desired.set(file, canonical);
     const owner = Object.prototype.hasOwnProperty.call(owners, file) ? owners[file] : 'expo-harmony';
-    state.files[file] = { sha256: hash(canonical), owner, ...(json === undefined ? {} : { json: ordered(json) }) };
+    state.files[file] = { sha256: await hash(canonical), owner, ...(json === undefined ? {} : { json: ordered(json) }) };
   }
 
   for (const link of links.keys()) {
@@ -166,7 +186,7 @@ export async function mergeHarmonyGenerationStateAsync({
     const present = clean ? undefined : current.get(file);
     const before = !clean && previous && Object.prototype.hasOwnProperty.call(previous.files, file) ? previous.files[file] : undefined;
     if (clean || !present) {
-      if (!clean && before && after && before.sha256 !== hash(after)) conflict(file);
+      if (!clean && before && after && before.sha256 !== await hash(after)) conflict(file);
       if (after && (clean || !before)) result.set(file, after);
       continue;
     }
@@ -175,7 +195,7 @@ export async function mergeHarmonyGenerationStateAsync({
       else if (!previous) {
         // Legacy projects have no proof of ownership. Keep overlapping user values.
         if (/\.json5?$/.test(file)) {
-          const existing = JSON5.parse(present.toString('utf8'));
+          const existing = JSON5.parse((await contents(present)).toString('utf8'));
           const legacyMerge = (generated: JsonValue, user: JsonValue): JsonValue => {
             if (isObject(generated) && isObject(user)) {
               const value = Object.assign(Object.create(null), generated);
@@ -184,30 +204,48 @@ export async function mergeHarmonyGenerationStateAsync({
             }
             return user;
           };
-          result.set(file, Buffer.from(serialize(legacyMerge(state.files[file].json, existing))));
+          result.set(file, generated(legacyMerge(state.files[file].json, existing)));
         } else result.set(file, present);
-      } else if (hash(present) === hash(after)) result.set(file, after);
-      else if (/\.json5?$/.test(file)) result.set(file, Buffer.from(serialize(mergeJson(ABSENT, JSON5.parse(present.toString('utf8')), state.files[file].json, file))));
+      } else if (await hash(present) === await hash(after)) result.set(file, after);
+      else if (/\.json5?$/.test(file)) result.set(file, generated(mergeJson(ABSENT, JSON5.parse((await contents(present)).toString('utf8')), state.files[file].json, file)));
       else conflict(file);
       continue;
     }
     if (before.json !== undefined) {
-      const merged = mergeJson(before.json, JSON5.parse(present.toString('utf8')), after ? state.files[file].json : ABSENT, file);
-      if (merged !== ABSENT) result.set(file, Buffer.from(serialize(merged)));
-    } else if (hash(present) === before.sha256) {
+      const merged = mergeJson(before.json, JSON5.parse((await contents(present)).toString('utf8')), after ? state.files[file].json : ABSENT, file);
+      if (merged !== ABSENT) result.set(file, generated(merged));
+    } else if (await hash(present) === before.sha256) {
       if (after) result.set(file, after);
-    } else if (after && before.sha256 === hash(after)) result.set(file, present);
-    else if (after && hash(present) === hash(after)) result.set(file, after);
+    } else if (after && before.sha256 === await hash(after)) result.set(file, present);
+    else if (after && await hash(present) === await hash(after)) result.set(file, after);
     else conflict(file);
   }
 
   // All conflicts and unsafe paths have been checked before stage mutations begin.
-  for (const file of (await readTree(stageRoot)).keys()) {
+  for (const file of staged.keys()) {
     if (!result.has(file)) await fs.promises.rm(path.join(stageRoot, file), { force: true });
   }
   for (const [file, content] of result) {
     await fs.promises.mkdir(path.dirname(path.join(stageRoot, file)), { recursive: true });
-    await fs.promises.writeFile(path.join(stageRoot, file), content);
+    const target = path.join(stageRoot, file);
+    const present = !clean ? current.get(file) : undefined;
+    const original = staged.get(file);
+    const mode = present?.stat ? present.stat.mode & 0o7777 : undefined;
+    // Compare bytes, never size/mtime. A descriptor's digest lives only in this merge.
+    const unchanged = present && (present === content || await hash(present) === await hash(content));
+    if (original !== content && (!original || await hash(original) !== await hash(content))) {
+      if (content.contents) await fs.promises.writeFile(target, content.contents, { mode });
+      else {
+        // FICLONE falls back to an independent copy when cloning is unsupported.
+        // Never use hard links: stage mutations must not reach the current tree.
+        await fs.promises.copyFile(content.path!, target, fs.constants.COPYFILE_FICLONE);
+      }
+    }
+    // writeFile's mode applies only to new files and is masked by umask.
+    if (mode !== undefined) await fs.promises.chmod(target, mode);
+    if (unchanged && present.stat) {
+      await fs.promises.utimes(target, present.stat.atime, present.stat.mtime);
+    }
   }
   await fs.promises.writeFile(path.join(stageRoot, STATE_FILE), serialize(state));
   if (!clean) {

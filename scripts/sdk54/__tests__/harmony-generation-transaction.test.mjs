@@ -4,6 +4,8 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
+import { Readable } from 'node:stream';
+import { createHash } from 'node:crypto';
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { loadM1Source } from '../m1-test-support.mjs';
@@ -46,6 +48,121 @@ if (process.argv[2] === '--child') {
     if (mode === point) process.exit(77);
   } });
 } else {
+  test('recovers a pre-permissions journal using its original content-only fingerprint', async () => {
+    const project = root(); seed(project);
+    const before = tree(path.join(project, 'harmony'));
+    const child = spawn(process.execPath, [self, '--child', project, 'after-install'], { stdio: 'pipe' });
+    try {
+      assert.equal((await once(child, 'exit'))[0], 77);
+      const owner = JSON.parse(fs.readFileSync(path.join(project, '.expo-harmony-generation/lock.json')));
+      const journalFile = path.join(project, '.expo-harmony-generation', owner.token, 'journal.json');
+      const journal = JSON.parse(fs.readFileSync(journalFile));
+      const hash = createHash('sha256');
+      for (const name of fs.readdirSync(path.join(project, 'harmony')).sort((a, b) => a.localeCompare(b))) {
+        hash.update(JSON.stringify([name, 'file']));
+        hash.update(createHash('sha256').update(fs.readFileSync(path.join(project, 'harmony', name))).digest());
+      }
+      journal.candidateHash = hash.digest('hex');
+      delete journal.hashVersion;
+      fs.writeFileSync(journalFile, JSON.stringify(journal));
+      await run({ projectRoot: project, generate: async stage => {
+        assert.deepEqual(tree(path.join(project, 'harmony')), before);
+        return generate(stage);
+      } });
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  test('permission-only generation changes are committed and concurrent chmod is rejected', async () => {
+    const project = root();
+    const file = path.join(project, 'harmony/current.txt');
+    try {
+      await run({ projectRoot: project, generate });
+      fs.chmodSync(file, 0o644);
+      await run({ projectRoot: project, generate: async stage => {
+        await generate(stage);
+        fs.chmodSync(path.join(stage, 'current.txt'), 0o600);
+      } });
+      assert.equal(fs.statSync(file).mode & 0o777, 0o600);
+      await assert.rejects(run({ projectRoot: project, generate: async stage => {
+        await generate(stage);
+        fs.chmodSync(file, 0o640);
+      } }), /changed|conflict/i);
+      assert.equal(fs.statSync(file).mode & 0o777, 0o640);
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  test('same-size concurrent edits with restored mtime still abort', async () => {
+    const project = root(); seed(project);
+    const file = path.join(project, 'harmony/current.txt');
+    const original = fs.statSync(file);
+    try {
+      await assert.rejects(run({ projectRoot: project, generate: async stage => {
+        fs.writeFileSync(file, 'edit'.slice(0, original.size));
+        fs.utimesSync(file, original.atime, original.mtime);
+        return generate(stage);
+      } }), /changed|conflict/i);
+      assert.equal(fs.readFileSync(file, 'utf8'), 'edi');
+      assert.equal(fs.statSync(file).size, original.size);
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  test('bounded hashing preserves the sequential version 2 fingerprint across nested files and links', async () => {
+    const project = root();
+    try {
+      await run({ projectRoot: project, generate: async stage => {
+        await generate(stage);
+        for (let i = 0; i < 25; i++) {
+          put(stage, `file-${i}`, `value ${i}`);
+          fs.chmodSync(path.join(stage, `file-${i}`), i % 2 ? 0o600 : 0o755);
+        }
+        put(stage, 'dir/nested', 'nested');
+        fs.symlinkSync('missing', path.join(stage, 'link'));
+      }, fault: async point => {
+        if (point !== 'after-install') return;
+        const hash = createHash('sha256');
+        const visit = (directory, prefix = '') => {
+          for (const entry of fs.readdirSync(directory, { withFileTypes: true }).sort((a,b) => a.name.localeCompare(b.name))) {
+            const file = path.join(directory, entry.name), relative = path.posix.join(prefix, entry.name);
+            hash.update(JSON.stringify([relative, entry.isDirectory() ? 'dir' : entry.isSymbolicLink() ? 'link' : 'file']));
+            if (entry.isSymbolicLink()) hash.update(fs.readlinkSync(file));
+            else if (entry.isDirectory()) visit(file, relative);
+            else {
+              hash.update(JSON.stringify(fs.statSync(file).mode & 0o7777));
+              hash.update(createHash('sha256').update(fs.readFileSync(file)).digest());
+            }
+          }
+        };
+        visit(path.join(project, 'harmony'));
+        const lock = JSON.parse(fs.readFileSync(path.join(project, '.expo-harmony-generation/lock.json')));
+        const journal = JSON.parse(fs.readFileSync(path.join(project, '.expo-harmony-generation', lock.token, 'journal.json')));
+        assert.equal(journal.hashVersion, 2);
+        assert.equal(journal.candidateHash, hash.digest('hex'));
+      } });
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  test('a failed parallel hash waits for all open readers before rollback', async () => {
+    const project = root();
+    let active = 0, peak = 0;
+    const injectedFs = { ...fs, createReadStream: file => {
+      active++; peak = Math.max(peak, active);
+      return Readable.from((async function* () {
+        try {
+          await new Promise(resolve => setTimeout(resolve, file.endsWith('file-0') ? 1 : 15));
+          if (file.endsWith('file-0')) throw Object.assign(new Error('hash read failed'), { code: 'EIO' });
+          yield fs.readFileSync(file);
+        } finally { active--; }
+      })());
+    }, promises: { ...fs.promises, rm: async (...args) => {
+      assert.equal(active, 0, 'rollback must not race pending readers');
+      return fs.promises.rm(...args);
+    } } };
+    try {
+      const transaction = loadM1Source(source, { fs: injectedFs });
+      await assert.rejects(transaction.runHarmonyGenerationTransactionAsync({ projectRoot: project, generate: async stage => {
+        for (let i = 0; i < 20; i++) put(stage, `file-${i}`, 'contents');
+      } }), /hash read failed/);
+      assert.ok(peak > 1 && peak <= 8);
+      assert.equal(active, 0);
+      assert.equal(fs.existsSync(path.join(project, 'harmony')), false);
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
   test('transaction API exists', () => assert.equal(typeof api.runHarmonyGenerationTransactionAsync, 'function'));
   test('successful generation commits one tree and an identical next generation is a no-op', async () => {
     const project = root();

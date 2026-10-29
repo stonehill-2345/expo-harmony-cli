@@ -42,6 +42,9 @@ export function resolveHarmonyConfig(exp: Config, options: { bundleName?: string
     ...(override.icon ?? exp.icon ? { icon: override.icon ?? exp.icon } : {}),
     ...(override.foregroundImage ? { foregroundImage: override.foregroundImage } : {}),
     splash: {
+      ...(override.splash?.imageWidth !== undefined ? { imageWidth: override.splash.imageWidth } : {}),
+      ...(override.splash?.resizeMode !== undefined ? { resizeMode: override.splash.resizeMode } : {}),
+      ...(override.splash?.dark !== undefined ? { dark: override.splash.dark } : {}),
       ...(override.splash?.image ?? exp.splash?.image
         ? { image: override.splash?.image ?? exp.splash?.image }
         : {}),

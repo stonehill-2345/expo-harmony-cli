@@ -18,9 +18,10 @@ const revision = '5b42e3d21e0ac5e086752361ca8a5cb4de53bec1';
 const tree = '5457e824b21d968e55c8f533cdf1751860160a92';
 const censusSha256 = '42a1b8b584d042e29952f83a4f1b1c90fe49204a76cd41bfaa62f3658d3653e2';
 let bashRuntime, javaRuntime;
-const cmakeRoot = process.env.SDK54_CMAKELANG_ROOT ?? '/tmp/sdk54-build-cmake-parser';
-const proguardJar = process.env.SDK54_PROGUARD_JAR ?? '/Users/wum/Library/Android/sdk/tools/proguard/lib/proguard.jar';
-const shfmtPath = process.env.SDK54_SHFMT ?? '/tmp/sdk54-build-shfmt';
+const toolingRoot = fileURLToPath(new URL('../../.tmp/sdk54/tooling/', import.meta.url));
+const cmakeRoot = process.env.SDK54_CMAKELANG_ROOT ?? path.join(toolingRoot, 'cmakelang');
+const proguardJar = process.env.SDK54_PROGUARD_JAR ?? path.join(toolingRoot, 'proguard.jar');
+const shfmtPath = process.env.SDK54_SHFMT ?? path.join(toolingRoot, 'shfmt');
 
 const cmakeHelper = String.raw`
 import sys,json,os,hashlib
@@ -79,13 +80,13 @@ public class M0BuildSyntax {
     }
     String source=new String(bytes,StandardCharsets.UTF_8);
     List<Object> tokens=new ArrayList<>();SafeReader reader=new SafeReader(source);String word;int braces=0;String previous="";
-    while((word=reader.nextWord(false))!=null){tokens.add(map("value",word,"location",reader.locationDescription()));
+    while((word=reader.nextWord(false,false))!=null){tokens.add(map("value",word,"location",reader.locationDescription()));
       if(word.startsWith("-") && word.length()>1 && "-include".startsWith(word))throw new IllegalArgumentException("Unresolved ProGuard include directive");
       if(word.equals("@") && braces==0 && !(previous.startsWith("-keep") || previous.equals("allowobfuscation") || previous.equals("allowoptimization") || previous.equals("allowshrinking")))throw new IllegalArgumentException("Unresolved ProGuard @file include");
       if(word.equals("{"))braces++;if(word.equals("}"))braces--;previous=word;
     }
     reader.close();
-    Configuration config=new Configuration();ConfigurationParser parser=new ConfigurationParser(new SafeReader(source));parser.parse(config);parser.close();
+    Configuration config=new Configuration();ConfigurationParser parser=new ConfigurationParser(new SafeReader(source),new Properties());parser.parse(config);parser.close();
     System.out.print(json(map("tokens",tokens,"configuration",config)));
   }
 }

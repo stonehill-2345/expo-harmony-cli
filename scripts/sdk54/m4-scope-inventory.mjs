@@ -120,26 +120,30 @@ export function collectM4CurrentAdditions(files) {
     for (const node of parsed.statements) {
       if (ts.isExportAssignment(node)) {
         if (node.isExportEquals) throw new Error(`CommonJS export assignment requires explicit review: ${file}`);
+        if (ts.isArrowFunction(node.expression) || ts.isFunctionExpression(node.expression)) throw new Error(`Unsupported function export: ${file}`);
         names.add('default');
       }
       else if (ts.isExportDeclaration(node)) {
         if (!node.exportClause || ts.isNamespaceExport(node.exportClause)) names.add(node.exportClause?.name?.text ?? '*');
         else for (const element of node.exportClause.elements) names.add(element.name.text);
       } else if (node.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword)) {
-        if (node.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.DefaultKeyword)) names.add('default');
+        const isDefault = node.modifiers.some(modifier => modifier.kind === ts.SyntaxKind.DefaultKeyword);
+        if (isDefault && !ts.isFunctionDeclaration(node)) names.add('default');
         else if (ts.isVariableStatement(node)) {
           for (const declaration of node.declarationList.declarations) {
             if (!ts.isIdentifier(declaration.name)) throw new Error(`Unsupported export binding: ${file}`);
+            if (declaration.initializer && (ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))) throw new Error(`Unsupported function export: ${file}`);
             names.add(declaration.name.text);
           }
-        } else if (node.name && ts.isIdentifier(node.name)) {
-          names.add(node.name.text);
+        } else if (isDefault || (node.name && ts.isIdentifier(node.name))) {
+          const name = isDefault ? 'default' : node.name.text;
+          names.add(name);
           if (ts.isFunctionDeclaration(node)) {
             for (const [role, declarations] of [['type-parameter', node.typeParameters ?? []], ['parameter', node.parameters]]) {
               declarations.forEach((declaration, index) => {
                 if (!ts.isIdentifier(declaration.name)) throw new Error(`Unsupported exported function binding: ${file}`);
-                members.push({ id: `CURRENT-MEMBER:${file}#${node.name.text}/${role}/${index}`, kind: 'current-member',
-                  parentName: node.name.text, memberRole: role, name: declaration.name.text,
+                members.push({ id: `CURRENT-MEMBER:${file}#${name}/${role}/${index}`, kind: 'current-member',
+                  parentName: name, memberRole: role, name: declaration.name.text,
                   signature: declaration.getText(parsed), source });
               });
             }

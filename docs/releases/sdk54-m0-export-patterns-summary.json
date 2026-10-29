@@ -10,7 +10,7 @@
     "sha256": "c4b385c8aead205ee02d6f6dc8724b770ad32179fda694559f213d8ec43b8183"
   },
   "semanticInput": {
-    "path": "/Users/wum/2345/expo-harmony-cli/outputs/sdk54/ai-e2e/20261023-m0-transitive-sources/semantic-final.json.gz",
+    "path": "outputs/sdk54/ai-e2e/20261023-m0-transitive-sources/semantic-final.json.gz",
     "sha256": "a9c1bd5892bfb4d5a5e671b0bf6f2092ce3ab4484bb6cafe4bc467c91a0206c3",
     "rebuiltThisRun": false
   },
