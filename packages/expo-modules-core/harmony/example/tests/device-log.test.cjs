@@ -6,7 +6,8 @@ const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const tool = path.resolve(__dirname, '../tools/check-device-log.cjs');
 const log = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'core-log-test-')), 'device.log');
-const group = (marker, n, passed = true) => marker + JSON.stringify(Array.from({ length: n }, (_, i) => ({ name: String(i), passed, detail: 'test parser input' })));
+const cases = require('../tools/core-test-cases.cjs');
+const group = (marker, n, passed = true) => marker + JSON.stringify(cases[marker.slice(0, -1)].slice(0, n).map(name => ({ name, passed, detail: 'test parser input' })));
 const baseline = group('EXPO_CORE_EXAMPLE_RESULTS=', 8);
 const probe = group('EXPO_CORE_INTEROP_RESULTS=', 16);
 const context = group('EXPO_CORE_CONTEXT_RESULTS=', 7);
@@ -52,3 +53,28 @@ for (const [name, text, status] of [
     assert.equal(spawnSync(process.execPath, [tool, log, '--reload']).status, status);
   });
 }
+
+for (const [name, change] of [
+  ['rejects duplicated case identity with an unchanged passing count', rows => { rows[1] = rows[0]; }],
+  ['rejects unknown case identity with an unchanged passing count', rows => { rows[0].name = 'invented case'; }],
+  ['rejects malformed result rows', rows => { rows[0] = null; }],
+]) {
+  test(name, () => {
+    const rows = JSON.parse(baseline.slice(baseline.indexOf('=') + 1));
+    change(rows);
+    fs.writeFileSync(log, full.replace(baseline, 'EXPO_CORE_EXAMPLE_RESULTS=' + JSON.stringify(rows)));
+    const result = spawnSync(process.execPath, [tool, log], { encoding: 'utf8' });
+    assert.equal(result.status, 1);
+    assert.doesNotMatch(result.stderr, /TypeError/, 'invalid evidence must receive a controlled diagnostic');
+  });
+}
+test('reload rejects pending view work from a different boot', () => {
+  fs.writeFileSync(log, reloaded.replace(viewPending, 'EXPO_CORE_VIEW_PENDING_RELOAD=999'));
+  assert.equal(spawnSync(process.execPath, [tool, log, '--reload']).status, 1);
+});
+test('every reload transition requires its own late completion evidence', () => {
+  const twoReloads = [boot(1), full, request, viewPending, boot(2), full,
+    'EXPO_CORE_PUBLIC_RELOAD_REQUEST=2', 'EXPO_CORE_VIEW_PENDING_RELOAD=2', boot(3), full, late, viewFinished].join('\n');
+  fs.writeFileSync(log, twoReloads);
+  assert.equal(spawnSync(process.execPath, [tool, log, '--reload']).status, 1);
+});

@@ -11,6 +11,10 @@ function loadModule(options = {}) {
   let registerCalls = 0;
   class UITurboModule { constructor(ctx) { this.ctx = ctx; } __onDestroy__() {} }
   const imports = {
+    '@ohos.graphics.drawing': { Typeface: { makeFromFile: file => {
+      if (options.decodeError) throw options.decodeError;
+      return options.decodeResult === undefined ? {} : options.decodeResult;
+    } } },
     '@rnoh/react-native-openharmony': { UITurboModule },
     '@ohos.file.fs': {
       OpenMode: { READ_ONLY: 0 }, accessSync: file => options.exists !== false,
@@ -78,4 +82,25 @@ test('destroy clears instance state and rejects later work', async () => {
   f.module.__onDestroy__();
   assert.deepEqual(Array.from(f.module.getLoadedFonts()), []);
   await assert.rejects(f.module.loadAsync('Later', 'file:///data/cache/later.ttf'), /destroyed/);
+});
+
+test('renderer resolves registered font files without exposing extra public aliases', async () => {
+  const f = loadModule();
+  assert.equal(f.module.getFontPath('serif'), undefined);
+  await f.module.loadAsync('Material "Icons"', 'file:///data/cache/material.ttf');
+  assert.equal(f.module.getFontPath('Material "Icons"'), '/data/cache/material.ttf');
+  assert.equal(f.registerCalls(), 1);
+  assert.deepEqual(Array.from(f.module.getLoadedFonts()), ['Material "Icons"']);
+  f.module.__onDestroy__();
+  assert.throws(() => f.module.getFontPath('Material "Icons"'), /destroyed/);
+});
+
+test('a bounded sfnt that the native decoder rejects is not registered or marked loaded', async () => {
+  for (const options of [{ decodeResult: null }, { decodeError: new Error('native decode failed') }]) {
+    const f = loadModule(options);
+    await assert.rejects(f.module.loadAsync('Malformed', 'file:///data/cache/malformed.ttf'), /decode/);
+    assert.equal(f.registerCalls(), 0);
+    assert.deepEqual(Array.from(f.module.getLoadedFonts()), []);
+    assert.equal(f.module.getFontPath('Malformed'), undefined);
+  }
 });

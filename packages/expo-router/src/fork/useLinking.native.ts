@@ -213,8 +213,8 @@ export function useLinking(
 export function getInitialURLWithTimeout(): string | null | Promise<string | null> {
   if (typeof window === 'undefined') {
     return '';
-  } else if (Platform.OS === 'ios') {
-    // Use the new Expo API for iOS. This has better support for App Clips and handoff.
+  } else if (Platform.OS === 'ios' || (Platform.OS as string) === 'harmony') {
+    // Harmony retains the latest Ability Want across RN instance reloads in ExpoLinking.
     return ExpoLinking.getLinkingURL();
   }
 

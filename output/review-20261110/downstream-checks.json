@@ -1,0 +1,38 @@
+[
+  {
+    "command": "pnpm sdk54:validate",
+    "exitCode": 0,
+    "seconds": 0.43,
+    "log": "sdk54-validate.log"
+  },
+  {
+    "command": "pnpm sdk54:pack:check",
+    "exitCode": 0,
+    "seconds": 15.43,
+    "log": "sdk54-pack-check.log"
+  },
+  {
+    "command": "pnpm sdk54:audit",
+    "exitCode": 0,
+    "seconds": 9.64,
+    "log": "sdk54-audit.log"
+  },
+  {
+    "command": "pnpm sdk54:patch:audit",
+    "exitCode": 0,
+    "seconds": 0.2,
+    "log": "sdk54-patch-audit.log"
+  },
+  {
+    "command": "pnpm sdk54:repo-check",
+    "exitCode": 0,
+    "seconds": 0.59,
+    "log": "sdk54-repo-check.log"
+  },
+  {
+    "command": "pnpm sdk54:release:check",
+    "exitCode": 0,
+    "seconds": 0.27,
+    "log": "sdk54-release-check.log"
+  }
+]

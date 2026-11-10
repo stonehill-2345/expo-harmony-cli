@@ -40,6 +40,7 @@ export struct ExpoSplashScreenView {
   }
 
   public aboutToDisappear(): void {
+    this.animationToken += 1;
     this.unsubscribe?.();
     this.unsubscribe = undefined;
   }

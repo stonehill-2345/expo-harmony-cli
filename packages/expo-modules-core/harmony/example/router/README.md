@@ -111,6 +111,8 @@ compatibility has been established.
 The v2 Worklets fix passed real Debug/Release module creation and public reload;
 see `docs/harmony-sdk54/evidence/2026-09-20-worklets-fix/`. The later blank page
 was fixed by registering the existing `RNSScreenContentWrapper` ArkTS builder in
-a fixed-hash Screens HAR. The Screens JS/native `fullScreenSwipeEnabled` types
+a fixed-hash Screens HAR. The current deterministic transform also ignores the
+root screen in its modal-back handler, matching the released compatibility artifact.
+The Screens JS/native `fullScreenSwipeEnabled` types
 still disagree; it did not block this matrix, but gesture-specific acceptance
 remains open.

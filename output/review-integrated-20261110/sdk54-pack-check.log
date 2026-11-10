@@ -1,0 +1,10 @@
+
+> expo-harmony-workspace@ sdk54:pack:check /Users/zhansh/project/expo-harmony-cli-a
+> node scripts/sdk54/pack-packages.mjs --compare-rounds
+
+{
+  "deterministic": true,
+  "failures": [],
+  "internalEdges": 22,
+  "packages": 14
+}

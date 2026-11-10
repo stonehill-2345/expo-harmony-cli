@@ -1,0 +1,82 @@
+ M packages/expo-asset/harmony/tests/asset-lifecycle.test.cjs
+ M packages/expo-font/README.md
+ M packages/expo-font/harmony/README.md
+ M packages/expo-font/harmony/src/main/cpp/CMakeLists.txt
+ M packages/expo-font/harmony/src/main/cpp/ExpoFontLoaderPackage.h
+ M packages/expo-font/harmony/src/main/ets/ExpoFontLoaderPackage.ets
+ M packages/expo-font/harmony/src/main/ets/ExpoFontLoaderTurboModule.ets
+ M packages/expo-font/harmony/src/main/ets/FontFile.ts
+ M packages/expo-font/harmony/tests/font-file.test.mjs
+ M packages/expo-font/harmony/tests/font-lifecycle.test.cjs
+ M packages/expo-modules-core/build/Platform.d.ts
+ M packages/expo-modules-core/build/Platform.d.ts.map
+ M packages/expo-modules-core/harmony/example/bundle.cjs
+ M packages/expo-modules-core/harmony/example/font/FontApp.tsx
+ M packages/expo-modules-core/harmony/example/font/README.md
+ M packages/expo-modules-core/harmony/example/font/check-log.cjs
+ M packages/expo-modules-core/harmony/example/router/README.md
+ M packages/expo-modules-core/harmony/example/router/RouterProbe.tsx
+ M packages/expo-modules-core/harmony/example/router/prepare-screens.py
+ M packages/expo-modules-core/harmony/example/tests/device-log.test.cjs
+ M packages/expo-modules-core/harmony/example/tests/font-device-log.test.cjs
+ M packages/expo-modules-core/harmony/example/tests/metro-config.test.cjs
+ M packages/expo-modules-core/harmony/example/tests/router-fixture.test.cjs
+ M packages/expo-modules-core/harmony/example/tests/screens-artifact.test.py
+ M packages/expo-modules-core/harmony/example/tools/build-i0.sh
+ M packages/expo-modules-core/harmony/example/tools/check-device-log.cjs
+ M packages/expo-modules-core/harmony/example/tools/prepare-fixture.cjs
+ M packages/expo-modules-core/harmony/example/tools/prepare-router.cjs
+ M packages/expo-router/build/fork/useLinking.native.js
+ M packages/expo-router/build/fork/useLinking.native.js.map
+ M packages/expo-router/src/fork/useLinking.native.ts
+ M packages/expo-splash-screen/harmony/README.md
+ M packages/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenLifecycle.ets
+ M packages/expo-splash-screen/harmony/src/main/ets/ExpoSplashScreenView.ets
+ M packages/expo-splash-screen/harmony/tests/splash-screen-module.test.cjs
+ M packages/expo-system-ui/harmony/README.md
+ M packages/expo-system-ui/harmony/src/main/ets/ExpoSystemUITurboModule.ets
+ M packages/expo-system-ui/harmony/tests/system-ui-module.test.cjs
+ M packages/expo-web-browser/harmony/README.md
+?? docs/releases/2026-10-29-sdk54-a-first-batch.md
+?? docs/releases/2026-10-29-sdk54-a-to-b-handoff.md
+?? docs/releases/2026-10-29-sdk54-source-evidence-reconstruction.md
+?? docs/releases/2026-10-30-sdk54-a-core-hap-acceptance.md
+?? docs/releases/2026-10-30-sdk54-a-font-asset-acceptance.md
+?? docs/releases/2026-10-30-sdk54-a-font-format-acceptance.md
+?? docs/releases/2026-10-30-sdk54-a-linking-router-acceptance.md
+?? docs/releases/2026-10-30-sdk54-a-native-tabs-acceptance.md
+?? docs/releases/2026-10-30-sdk54-a-scope-core-acceptance.md
+?? docs/releases/2026-10-30-sdk54-a-screens-gestures-acceptance.md
+?? docs/releases/2026-10-30-sdk54-a-splash-status-acceptance.md
+?? docs/releases/2026-10-30-sdk54-a-system-ui-acceptance.md
+?? docs/releases/2026-10-30-sdk54-a-web-browser-acceptance.md
+?? docs/releases/2026-11-01-sdk54-a05-release-consistency.md
+?? docs/releases/2026-11-02-sdk54-a06-expo-image-contract.json
+?? docs/releases/2026-11-02-sdk54-a06-expo-image-preparation.md
+?? docs/releases/2026-11-02-sdk54-a07-entry-gate.json
+?? docs/releases/2026-11-02-sdk54-a07-entry-gate.md
+?? packages/expo-font/harmony/example/
+?? packages/expo-font/harmony/src/main/cpp/ExpoFontUtilsTurboModule.cpp
+?? packages/expo-font/harmony/src/main/cpp/ExpoFontUtilsTurboModule.h
+?? packages/expo-font/harmony/src/main/ets/ExpoFontUtilsTurboModule.ets
+?? packages/expo-font/harmony/tests/font-image-log.test.cjs
+?? packages/expo-font/harmony/tests/font-image.test.cjs
+?? packages/expo-modules-core/harmony/example/tools/core-test-cases.cjs
+?? packages/expo-modules-core/harmony/example/tools/prepare-web-browser.cjs
+?? packages/expo-modules-core/harmony/tests/platform-declaration.test.mjs
+?? packages/expo-router/harmony/tests/linking-reload.test.cjs
+?? packages/expo-splash-screen/harmony/example/
+?? packages/expo-splash-screen/harmony/tests/splash-screen-view.test.cjs
+?? packages/expo-system-ui/harmony/example/
+?? packages/expo-web-browser/harmony/example/
+?? packages/expo-web-browser/harmony/tests/device-fixture.test.cjs
+?? scripts/sdk54/__tests__/a-expo-image-evidence.test.mjs
+?? scripts/sdk54/__tests__/a-m4-evidence.test.mjs
+?? scripts/sdk54/__tests__/a-m7-entry-gate.test.mjs
+?? scripts/sdk54/__tests__/a-source-evidence.test.mjs
+?? scripts/sdk54/__tests__/screens-harmony-boolean.test.mjs
+?? scripts/sdk54/a-expo-image-evidence.mjs
+?? scripts/sdk54/a-fetch-sdk54-source.mjs
+?? scripts/sdk54/a-m4-evidence.mjs
+?? scripts/sdk54/a-m7-entry-gate.mjs
+?? scripts/sdk54/a-rebuild-source-evidence.mjs

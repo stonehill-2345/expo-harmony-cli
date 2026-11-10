@@ -14,7 +14,9 @@ The module implements `setOptions`, `hide`, `hideAsync`,
 `preventAutoHideAsync`, `internalPreventAutoHideAsync`, and
 `internalMaybeHideAsync`.
 
-- RNOH `CONTENT_APPEARED` hides an unclaimed splash screen.
+- RNOH `CONTENT_APPEARED` hides an unclaimed splash screen after
+  `RUN_JS_BUNDLE_STOP`, so a module-scope prevention call can take ownership
+  even when the native surface attaches before JavaScript starts.
 - Router's internal prevention holds the screen until internal maybe-hide.
 - A user `preventAutoHideAsync()` call keeps ownership until explicit `hide()`
   or `hideAsync()`.

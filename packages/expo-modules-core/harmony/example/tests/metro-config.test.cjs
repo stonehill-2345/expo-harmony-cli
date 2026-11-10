@@ -2,6 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const path = require('node:path');
 const { createRequire } = require('node:module');
+const { execFileSync } = require('node:child_process');
 
 const root = process.env.EXPO_HARMONY_EXAMPLE_ROOT;
 assert.ok(root, 'EXPO_HARMONY_EXAMPLE_ROOT is required');
@@ -21,4 +22,11 @@ test('SDK config does not change the default Android/iOS initialization', () => 
   const before = config.serializer.getModulesRunBeforeMainModule(path.join(root, 'index.ts'));
   assert.ok(before[0].includes('/react-native/Libraries/Core/InitializeCore'));
   assert.ok(!before[0].includes('react-native-harmony'));
+});
+
+test('fixture bundler resolves Metro from its declaring SDK package in an isolated consumer', () => {
+  const output = execFileSync(process.execPath, [path.resolve(__dirname, '../bundle.cjs'), root], {
+    encoding: 'utf8', timeout: 120000,
+  });
+  assert.match(output, /CORE_EXAMPLE_BUNDLE_READY/);
 });

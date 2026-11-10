@@ -1,6 +1,7 @@
 const fs = require('node:fs');
 const assert = require('node:assert/strict');
 const log = process.argv[2] ? fs.readFileSync(process.argv[2], 'utf8') : fs.readFileSync(0, 'utf8');
+const legacy = process.env.EXPO_FONT_LEGACY_V1_EVIDENCE === '1';
 try {
   const rows = log.split('\n').filter(line => line.includes('I0_FONT='))
     .map(line => JSON.parse(line.slice(line.indexOf('I0_FONT=') + 'I0_FONT='.length)));
@@ -15,7 +16,12 @@ try {
   }
   for (const boot of boots) {
     const group=rows.filter(row=>row.boot===boot.boot);
-    for (const kind of ['static-pass','file-pass','remote-pass','font-utils-unsupported','unmounted-hook-finished','public-pass','material-layout']) assert.ok(group.some(row=>row.kind===kind),`Missing ${kind}`);
+    for (const kind of ['static-pass','file-pass','remote-pass',legacy ? 'font-utils-unsupported' : 'font-utils-pass','unmounted-hook-finished','public-pass','material-layout']) assert.ok(group.some(row=>row.kind===kind),`Missing ${kind}`);
+    if (!legacy) {
+      const image = group.find(row => row.kind === 'font-utils-pass');
+      assert.ok(typeof image.uri === 'string' && image.uri.startsWith('file:///') &&
+        [image.width, image.height, image.scale].every(value => Number.isFinite(value) && value > 0), 'Invalid Font image metadata');
+    }
     const publicPass=group.find(row=>row.kind==='public-pass');
     for(const family of ['material','HookMaterial','MaterialFileAlias','MaterialRemoteAlias','UnmountedHookMaterial']) assert.ok(publicPass.fonts.includes(family),`Missing ${family}`);
     for(const family of ['MissingFont','EmptyFont','CorruptFont','']) assert.ok(group.some(row=>row.kind==='expected-rejection'&&row.family===family),`Missing rejection ${family}`);

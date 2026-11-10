@@ -1,6 +1,7 @@
 const test=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const path=require('node:path');const {spawnSync}=require('node:child_process');
 const root=process.env.EXPO_FONT_EVIDENCE_ROOT||path.resolve(__dirname,'../../../../../docs/harmony-sdk54/evidence/2026-09-20-font-v1');const checker=path.resolve(__dirname,'../font/check-log.cjs');
-const run=input=>spawnSync(process.execPath,[checker],{input,encoding:'utf8'});
+// These archived Font-v1 runs intentionally predate the renderer. Current acceptance must not use this flag.
+const run=input=>spawnSync(process.execPath,[checker],{input,encoding:'utf8',env:{...process.env,EXPO_FONT_LEGACY_V1_EVIDENCE:'1'}});
 test('Font checker accepts real D/R reload evidence and rejects missing visual/public records',()=>{
   for(const mode of ['debug','release']){
     const original=fs.readFileSync(path.join(root,mode,'reload3-after-timeout.log'),'utf8');assert.equal(run(original).status,0);

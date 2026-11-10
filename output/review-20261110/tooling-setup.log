@@ -1,0 +1,13 @@
+
+> expo-harmony-workspace@ sdk54:tools:setup /Users/zhansh/project/expo-harmony-cli-a
+> python3 scripts/sdk54/setup-tooling.py
+
+Collecting cmakelang==0.6.13
+  Downloading cmakelang-0.6.13-py3-none-any.whl.metadata (23 kB)
+Collecting six==1.17.0
+  Downloading six-1.17.0-py2.py3-none-any.whl.metadata (1.7 kB)
+Downloading cmakelang-0.6.13-py3-none-any.whl (159 kB)
+Downloading six-1.17.0-py2.py3-none-any.whl (11 kB)
+Installing collected packages: six, cmakelang
+Successfully installed cmakelang-0.6.13 six-1.17.0
+SDK54 analysis tools ready. Full source tests also require JDK 17+ and macOS/Xcode SwiftSyntax.

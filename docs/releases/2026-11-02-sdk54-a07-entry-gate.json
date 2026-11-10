@@ -1,0 +1,131 @@
+{
+  "format": "sdk54-a07-entry-gate-v1",
+  "task": "A-07-entry",
+  "gate": {
+    "a06Ready": true,
+    "stages": {
+      "M4": {
+        "closed": false,
+        "percent": 0,
+        "acceptedUnits": [],
+        "pendingUnits": [
+          "M4-A01",
+          "M4-A02",
+          "M4-A03",
+          "M4-A04",
+          "M4-A05",
+          "M4-A06",
+          "M4-A07"
+        ]
+      },
+      "M5": {
+        "closed": false,
+        "percent": 0,
+        "acceptedUnits": [],
+        "pendingUnits": [
+          "M5-01",
+          "M5-02",
+          "M5-03",
+          "M5-04",
+          "M5-05"
+        ]
+      },
+      "V": {
+        "closed": false,
+        "percent": 0,
+        "acceptedUnits": [],
+        "pendingUnits": [
+          "V-01",
+          "V-02",
+          "V-03",
+          "V-04",
+          "V-05"
+        ]
+      },
+      "M6": {
+        "closed": false,
+        "percent": 0,
+        "acceptedUnits": [],
+        "pendingUnits": [
+          "M6-01",
+          "M6-02",
+          "M6-03",
+          "M6-04",
+          "M6-05"
+        ]
+      }
+    },
+    "release": {
+      "release": "sdk54-expo-oh-harmony.1",
+      "packageCount": 15,
+      "expoImage": null
+    },
+    "implementationReady": false,
+    "integrationReady": false,
+    "decision": "BLOCKED",
+    "blockers": [
+      {
+        "id": "STAGE_EVIDENCE_INVALID",
+        "owner": "B/A",
+        "detail": "ENOENT: no such file or directory, open '<repo>/outputs/sdk54/ai-e2e/20261027-m0a-creation/m0-ownership-baseline/scripts/sdk54/legacy-ownership.mjs'"
+      },
+      {
+        "id": "M4_NOT_CLOSED",
+        "owner": "A/B"
+      },
+      {
+        "id": "M5_NOT_CLOSED",
+        "owner": "B/A"
+      },
+      {
+        "id": "V_NOT_CLOSED",
+        "owner": "B/A"
+      },
+      {
+        "id": "M6_NOT_CLOSED",
+        "owner": "B/A"
+      },
+      {
+        "id": "EXPO_IMAGE_RELEASE_IDENTITY_MISSING",
+        "owner": "B/A"
+      }
+    ]
+  },
+  "inputs": [
+    {
+      "path": "docs/releases/2026-11-02-sdk54-a06-expo-image-contract.json",
+      "sha256": "2b43ff18cfe8ecc1ff3ade0c38d7c02be28056cfbddc815f253d3f95d06822d1"
+    },
+    {
+      "path": "docs/releases/sdk54-stage-progress-definition.json",
+      "sha256": "335c81b19f77a76817ff191db4f5cf9df35d7f7ef40a59393d119979c5d7049d"
+    },
+    {
+      "path": "docs/releases/sdk54-stage-acceptance.json",
+      "sha256": "290fc4cd27afb9212e3399c0b008663f2ee131006e6e7f8416176e074ed33ff8"
+    },
+    {
+      "path": "docs/releases/sdk54-stage-progress.json",
+      "sha256": "ca40bb9683060850176a5517937616e5be004ac5d9adaa44d04973ec4daffdef"
+    },
+    {
+      "path": "scripts/sdk54/catalog.mjs",
+      "sha256": "5523d5da8aa36eb693d3f91a4dfcd4ba9a2d9e2431adddd3687ebdc4ca89e9cd"
+    },
+    {
+      "path": "scripts/sdk54/release-catalog.mjs",
+      "sha256": "09b82b5df8827f8a8f5d96bdcec2bf5a2e9e42b083ad11ab9eea8ef0149333c0"
+    },
+    {
+      "path": "apps/cli/content/patches/sdk-54/manifest.json",
+      "sha256": "73481600d9e6bcef378424f61e6b3d58b4de2642105039b685bbf1704e7a4d3b"
+    }
+  ],
+  "handoffRequirements": [
+    "B updates only checked acceptance evidence; M4, M5, V and M6 cannot be closed by editing percentages",
+    "M6 must reach a checked closure before A starts formal M7.4 package implementation",
+    "The release mechanism must represent expo-image@3.0.11 before formal combined-candidate integration",
+    "Candidate TGZ, installed files, HAP and device evidence must share one freshness identity",
+    "GI remains a separate device decision after this entry gate passes"
+  ]
+}

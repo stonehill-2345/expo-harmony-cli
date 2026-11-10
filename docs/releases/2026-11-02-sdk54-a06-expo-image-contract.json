@@ -1,0 +1,769 @@
+{
+  "format": "sdk54-a06-expo-image-contract-v1",
+  "task": "A-06",
+  "package": "expo-image",
+  "version": "3.0.11",
+  "implementationStatus": "NOT_STARTED",
+  "preparationStatus": "PASS",
+  "stageClosable": false,
+  "source": {
+    "identity": {
+      "name": "expo-image",
+      "version": "3.0.11",
+      "commit": "172a69f5f70c1d0e043e1532f924de97210cabc3",
+      "tarball": "https://registry.npmjs.org/expo-image/-/expo-image-3.0.11.tgz",
+      "integrity": "sha512-4TudfUCLgYgENv+f48omnU8tjS2S0Pd9EaON5/s1ZUBRwZ7K8acEr4NfvLPSaeXvxW24iLAiyQ7sV7BXQH3RoA==",
+      "shasum": "54195565dc710e632c10414c3609deebb7149ac5",
+      "sha256": "e17879a4cc6cebdf50efadf3170956b2601363f1525f0426b10859a6154178bb"
+    },
+    "package": {
+      "main": "src/index.ts",
+      "types": "build/index.d.ts",
+      "peerDependencies": {
+        "expo": "*",
+        "react": "*",
+        "react-native": "*",
+        "react-native-web": "*"
+      }
+    },
+    "moduleConfig": {
+      "platforms": [
+        "apple",
+        "android"
+      ],
+      "apple": {
+        "modules": [
+          "ImageModule"
+        ]
+      },
+      "android": {
+        "modules": [
+          "expo.modules.image.ExpoImageModule"
+        ]
+      }
+    },
+    "publicationComparison": {
+      "gitFiles": 199,
+      "npmFiles": 217,
+      "commonFiles": 192,
+      "unchangedCommonFiles": 190,
+      "changedCommonFiles": [
+        "expo-module.config.json",
+        "package.json"
+      ],
+      "gitOnly": [
+        ".npmignore",
+        "android/.gitignore",
+        "babel.config.js",
+        "src/__rsc_tests__/__snapshots__/index.test.tsx.snap.android",
+        "src/__rsc_tests__/__snapshots__/index.test.tsx.snap.ios",
+        "src/__rsc_tests__/__snapshots__/index.test.tsx.snap.web",
+        "src/__rsc_tests__/index.test.tsx"
+      ],
+      "npmOnly": [
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11-sources.jar",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11-sources.jar.md5",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11-sources.jar.sha1",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11-sources.jar.sha256",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11-sources.jar.sha512",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.aar",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.aar.md5",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.aar.sha1",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.aar.sha256",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.aar.sha512",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.module",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.module.md5",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.module.sha1",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.module.sha256",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.module.sha512",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.pom",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.pom.md5",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.pom.sha1",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.pom.sha256",
+        "local-maven-repo/BareExpo/expo.modules.image/3.0.11/expo.modules.image-3.0.11.pom.sha512",
+        "local-maven-repo/BareExpo/expo.modules.image/maven-metadata.xml",
+        "local-maven-repo/BareExpo/expo.modules.image/maven-metadata.xml.md5",
+        "local-maven-repo/BareExpo/expo.modules.image/maven-metadata.xml.sha1",
+        "local-maven-repo/BareExpo/expo.modules.image/maven-metadata.xml.sha256",
+        "local-maven-repo/BareExpo/expo.modules.image/maven-metadata.xml.sha512"
+      ]
+    },
+    "configPlugin": {
+      "present": false,
+      "evidence": "No app.plugin.js, package plugin field, or plugin/ source directory"
+    }
+  },
+  "publicContract": {
+    "entry": {
+      "named": [
+        "Image",
+        "ImageBackground",
+        "useImage"
+      ],
+      "exportAll": [
+        "./Image.types"
+      ]
+    },
+    "typeExports": [
+      {
+        "name": "ImageBackgroundProps",
+        "kind": "InterfaceDeclaration"
+      },
+      {
+        "name": "ImageContentFit",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageContentPosition",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageContentPositionObject",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageContentPositionString",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageContentPositionValue",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageDecodeFormat",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageErrorEventData",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageLoadEventData",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageLoadOptions",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageNativeModule",
+        "kind": "ClassDeclaration"
+      },
+      {
+        "name": "ImageNativeProps",
+        "kind": "InterfaceDeclaration"
+      },
+      {
+        "name": "ImagePrefetchOptions",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageProgressEventData",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageProps",
+        "kind": "InterfaceDeclaration"
+      },
+      {
+        "name": "ImageRef",
+        "kind": "ClassDeclaration"
+      },
+      {
+        "name": "ImageSource",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageStyle",
+        "kind": "TypeAliasDeclaration"
+      },
+      {
+        "name": "ImageTransition",
+        "kind": "TypeAliasDeclaration"
+      }
+    ],
+    "imageProps": [
+      {
+        "name": "style",
+        "type": "StyleProp<RNImageStyle>",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "source",
+        "type": "ImageSource | string | number | ImageSource[] | string[] | SharedRefType<'image'> | null",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "placeholder",
+        "type": "| ImageSource\n    | string\n    | number\n    | ImageSource[]\n    | string[]\n    | SharedRefType<'image'>\n    | null",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "contentFit",
+        "type": "ImageContentFit",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "placeholderContentFit",
+        "type": "ImageContentFit",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "contentPosition",
+        "type": "ImageContentPosition",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "transition",
+        "type": "ImageTransition | number | null",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "blurRadius",
+        "type": "number",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "tintColor",
+        "type": "string | null",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "priority",
+        "type": "'low' | 'normal' | 'high' | null",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "cachePolicy",
+        "type": "'none' | 'disk' | 'memory' | 'memory-disk' | /** @hidden */ null",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "responsivePolicy",
+        "type": "'live' | 'initial' | 'static'",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "recyclingKey",
+        "type": "string | null",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "autoplay",
+        "type": "boolean",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onLoadStart",
+        "type": "() => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onLoad",
+        "type": "(event: ImageLoadEventData) => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onProgress",
+        "type": "(event: ImageProgressEventData) => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onError",
+        "type": "(event: ImageErrorEventData) => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onLoadEnd",
+        "type": "() => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onDisplay",
+        "type": "() => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "defaultSource",
+        "type": "ImageSource | null",
+        "optional": true,
+        "readonly": false,
+        "deprecated": true
+      },
+      {
+        "name": "loadingIndicatorSource",
+        "type": "ImageSource | null",
+        "optional": true,
+        "readonly": false,
+        "deprecated": true
+      },
+      {
+        "name": "resizeMode",
+        "type": "'cover' | 'contain' | 'stretch' | 'repeat' | 'center'",
+        "optional": true,
+        "readonly": false,
+        "deprecated": true
+      },
+      {
+        "name": "fadeDuration",
+        "type": "number",
+        "optional": true,
+        "readonly": false,
+        "deprecated": true
+      },
+      {
+        "name": "focusable",
+        "type": "boolean",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "accessible",
+        "type": "boolean",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "accessibilityLabel",
+        "type": "string",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "alt",
+        "type": "string",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "enableLiveTextInteraction",
+        "type": "boolean",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "allowDownscaling",
+        "type": "boolean",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "decodeFormat",
+        "type": "ImageDecodeFormat",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "useAppleWebpCodec",
+        "type": "boolean",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "enforceEarlyResizing",
+        "type": "boolean",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      }
+    ],
+    "events": [
+      {
+        "name": "onLoadStart",
+        "type": "() => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onLoad",
+        "type": "(event: ImageLoadEventData) => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onProgress",
+        "type": "(event: ImageProgressEventData) => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onError",
+        "type": "(event: ImageErrorEventData) => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onLoadEnd",
+        "type": "() => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      },
+      {
+        "name": "onDisplay",
+        "type": "() => void",
+        "optional": true,
+        "readonly": false,
+        "deprecated": false
+      }
+    ],
+    "eventPayloads": {
+      "ImageLoadEventData": [
+        {
+          "name": "cacheType",
+          "type": "'none' | 'disk' | 'memory'",
+          "optional": false,
+          "readonly": false,
+          "deprecated": false
+        },
+        {
+          "name": "source",
+          "type": "{\n    url: string;\n    width: number;\n    height: number;\n    mediaType: string | null;\n    isAnimated?: boolean;\n  }",
+          "optional": false,
+          "readonly": false,
+          "deprecated": false
+        }
+      ],
+      "ImageProgressEventData": [
+        {
+          "name": "loaded",
+          "type": "number",
+          "optional": false,
+          "readonly": false,
+          "deprecated": false
+        },
+        {
+          "name": "total",
+          "type": "number",
+          "optional": false,
+          "readonly": false,
+          "deprecated": false
+        }
+      ],
+      "ImageErrorEventData": [
+        {
+          "name": "error",
+          "type": "string",
+          "optional": false,
+          "readonly": false,
+          "deprecated": false
+        }
+      ]
+    },
+    "imageRef": {
+      "heritage": [
+        "extends SharedRef<'image'>"
+      ],
+      "properties": [
+        {
+          "name": "width",
+          "type": "number",
+          "optional": false,
+          "readonly": true,
+          "deprecated": false
+        },
+        {
+          "name": "height",
+          "type": "number",
+          "optional": false,
+          "readonly": true,
+          "deprecated": false
+        },
+        {
+          "name": "scale",
+          "type": "number",
+          "optional": false,
+          "readonly": true,
+          "deprecated": false
+        },
+        {
+          "name": "mediaType",
+          "type": "string | null",
+          "optional": false,
+          "readonly": true,
+          "deprecated": false
+        },
+        {
+          "name": "isAnimated",
+          "type": "boolean",
+          "optional": true,
+          "readonly": true,
+          "deprecated": false
+        }
+      ]
+    },
+    "imageClass": {
+      "staticProperties": [
+        "Image"
+      ],
+      "staticMethods": [
+        "clearDiskCache",
+        "clearMemoryCache",
+        "generateBlurhashAsync",
+        "generateThumbhashAsync",
+        "getCachePathAsync",
+        "loadAsync",
+        "prefetch"
+      ],
+      "instanceMethods": [
+        "lockResourceAsync",
+        "reloadAsync",
+        "startAnimating",
+        "stopAnimating",
+        "unlockResourceAsync"
+      ],
+      "componentMembers": [
+        {
+          "name": "nativeViewRef",
+          "kind": "PropertyDeclaration",
+          "static": false,
+          "type": "React.RefObject<ExpoImage | null>",
+          "definite": false
+        },
+        {
+          "name": "containerViewRef",
+          "kind": "PropertyDeclaration",
+          "static": false,
+          "type": "React.RefObject<View | null>",
+          "definite": false
+        },
+        {
+          "name": "constructor",
+          "kind": "Constructor",
+          "static": false,
+          "type": null,
+          "definite": false
+        },
+        {
+          "name": "getAnimatableRef",
+          "kind": "PropertyDeclaration",
+          "static": false,
+          "type": null,
+          "definite": false
+        },
+        {
+          "name": "render",
+          "kind": "MethodDeclaration",
+          "static": false,
+          "type": null,
+          "definite": false
+        }
+      ]
+    },
+    "native": {
+      "moduleCalls": [
+        [
+          "ExpoImage"
+        ]
+      ],
+      "viewCalls": [
+        [
+          "ExpoImage"
+        ]
+      ],
+      "moduleName": "ExpoImage",
+      "viewName": "default",
+      "expectedHarmonyComponentName": "ViewManagerAdapter_ExpoImage",
+      "commands": [
+        {
+          "name": "startAnimating",
+          "type": "() => Promise<unknown> | unknown"
+        },
+        {
+          "name": "stopAnimating",
+          "type": "() => Promise<unknown> | unknown"
+        },
+        {
+          "name": "lockResourceAsync",
+          "type": "() => Promise<void>"
+        },
+        {
+          "name": "unlockResourceAsync",
+          "type": "() => Promise<void>"
+        },
+        {
+          "name": "reloadAsync",
+          "type": "() => Promise<void>"
+        }
+      ]
+    },
+    "dependencies": {
+      "expo": [
+        "NativeModule",
+        "SharedRef",
+        "SharedRefType",
+        "requireNativeModule"
+      ],
+      "expo-modules-core": [
+        "Platform",
+        "createSnapshotFriendlyRef",
+        "requireNativeViewManager"
+      ],
+      "react": [
+        "DependencyList",
+        "default",
+        "useEffect",
+        "useRef",
+        "useState"
+      ],
+      "react-native": [
+        "NativeSyntheticEvent",
+        "Platform",
+        "RNImageStyle",
+        "StyleProp",
+        "StyleSheet",
+        "View",
+        "ViewProps",
+        "ViewStyle",
+        "processColor"
+      ]
+    }
+  },
+  "defaultUsage": {
+    "manifest": {
+      "path": "package.json",
+      "sha256": "7ddf1fe5d35b2799a820fb05438389df82334aa2b16817bfd580963af38c9a5a",
+      "dependency": "3.0.11",
+      "main": "expo-router/entry"
+    },
+    "pages": [
+      {
+        "page": "app/(tabs)/index.tsx",
+        "pageSha256": "6eb90b4657ccaf8d2be7dbaceaf6c7628785ad0880343f5ed439327fbd061fdc",
+        "source": "@/assets/images/partial-react-logo.png",
+        "asset": "assets/images/partial-react-logo.png",
+        "assetSha256": "015a72aeb24c1166243ebc185355c9488cc892fbf3aa82f9ae66819a10f3451c",
+        "pixels": {
+          "width": 518,
+          "height": 316
+        },
+        "display": {
+          "width": 290,
+          "height": 178
+        },
+        "usage": "local PNG numeric require resource"
+      },
+      {
+        "page": "app/(tabs)/explore.tsx",
+        "pageSha256": "42195d1fcc3b37b4d1cd7d953ff643970297afc705327c17a254b5010fa8460a",
+        "source": "@/assets/images/react-logo.png",
+        "asset": "assets/images/react-logo.png",
+        "assetSha256": "224b7636b15e672801579b5b418077cbc2ca42f0146389062364356b0ecb5c5c",
+        "pixels": {
+          "width": 100,
+          "height": 100
+        },
+        "display": {
+          "width": 100,
+          "height": 100
+        },
+        "usage": "local PNG numeric require resource"
+      }
+    ]
+  },
+  "failureBaseline": {
+    "error": "Native Harmony view is not registered: ExpoImage/default",
+    "occurrences": 2,
+    "captures": [
+      "default-debug-first-screen",
+      "default-cold-restart-recaptured"
+    ],
+    "overallAcceptance": "FAIL",
+    "reason": "Original default template cannot render because ExpoImage/default is not registered; error reproduced after cold restart.",
+    "modulePlatforms": [
+      "apple",
+      "android"
+    ],
+    "artifacts": [
+      {
+        "file": "default-debug-hilog.txt",
+        "sha256": "132034848edd4f569f5d2338e39a9676a988ee6c9448fa72214821ae1619f2a0"
+      },
+      {
+        "file": "default-debug-unsigned.hap",
+        "sha256": "cf6af49cfb55ba181d7d40ebfdd8d5c8b890952621e31b4b8708badf741253c7"
+      },
+      {
+        "file": "default-expo-image-module-config.json",
+        "sha256": "9c1773f416794b36f35a603986d910ad57bbed8ce69b2a23ace9cc4116206cc5"
+      },
+      {
+        "file": "default-debug-first-screen.png",
+        "sha256": "600e5c906266f59a2c8112fb07facb976a64db384e488d9d1125b9ed6fe5358a"
+      },
+      {
+        "file": "default-cold-restart-recaptured.png",
+        "sha256": "e90b735d5bda6d9dd6a48af305040d0a69b7d18c3b006075f2e599a985926ed5"
+      }
+    ],
+    "acceptanceResult": {
+      "file": "acceptance-result.json",
+      "sha256": "0ef6d154953a887c4460571f1b0a7a4f3f433a1fb45c79178b1c0de916ad81e2"
+    }
+  },
+  "acceptanceAssertions": [
+    "ExpoImage/default registration error is absent from a fresh default run",
+    "Original default pages and both local PNG resources remain unchanged and render visible image content",
+    "Image load failure is observable through onError and onLoadEnd",
+    "Unmount and reload do not deliver stale callbacks",
+    "GI unblock, expo-image module completion, and M7.4 completion remain separate decisions"
+  ],
+  "boundaries": [
+    "No packages/expo-image Harmony implementation is introduced by A-06",
+    "The recorded nova16 result is a fixed failure baseline, not a passing device result",
+    "No config plugin exists in expo-image 3.0.11; this record does not invent one",
+    "A-06 does not close GI, expo-image, M7.4, or any release stage"
+  ]
+}

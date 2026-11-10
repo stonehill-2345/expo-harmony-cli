@@ -185,8 +185,8 @@ function getInitialURLWithTimeout() {
     if (typeof window === 'undefined') {
         return '';
     }
-    else if (react_native_1.Platform.OS === 'ios') {
-        // Use the new Expo API for iOS. This has better support for App Clips and handoff.
+    else if (react_native_1.Platform.OS === 'ios' || react_native_1.Platform.OS === 'harmony') {
+        // Harmony retains the latest Ability Want across RN instance reloads in ExpoLinking.
         return ExpoLinking.getLinkingURL();
     }
     return Promise.race([

@@ -1,0 +1,60 @@
+{
+  "packages": {
+    "expo-modules-core": {
+      "checked": 1133,
+      "mismatches": [],
+      "unexpectedFiles": [],
+      "archiveMatches": true
+    },
+    "@expo/metro-config": {
+      "checked": 235,
+      "mismatches": [],
+      "unexpectedFiles": [],
+      "archiveMatches": true
+    },
+    "expo-constants": {
+      "checked": 81,
+      "mismatches": [],
+      "unexpectedFiles": [],
+      "archiveMatches": true
+    },
+    "expo-asset": {
+      "checked": 160,
+      "mismatches": [],
+      "unexpectedFiles": [],
+      "archiveMatches": true
+    },
+    "expo-system-ui": {
+      "checked": 77,
+      "mismatches": [],
+      "unexpectedFiles": [],
+      "archiveMatches": true
+    },
+    "expo-linking": {
+      "checked": 119,
+      "mismatches": [],
+      "unexpectedFiles": [],
+      "archiveMatches": true
+    },
+    "expo-router": {
+      "checked": 930,
+      "mismatches": [],
+      "unexpectedFiles": [],
+      "archiveMatches": true
+    },
+    "expo-splash-screen": {
+      "checked": 89,
+      "mismatches": [],
+      "unexpectedFiles": [],
+      "archiveMatches": true
+    }
+  },
+  "coreConsumers": {
+    "expo": "<projects>/sdk54-ab-a-consumers/20261031-a04-router-v6-sheet-npm/node_modules/expo-modules-core/src/index.ts",
+    "expo-asset": "<projects>/sdk54-ab-a-consumers/20261031-a04-router-v6-sheet-npm/node_modules/expo-modules-core/src/index.ts",
+    "expo-constants": "<projects>/sdk54-ab-a-consumers/20261031-a04-router-v6-sheet-npm/node_modules/expo-modules-core/src/index.ts",
+    "expo-linking": "<projects>/sdk54-ab-a-consumers/20261031-a04-router-v6-sheet-npm/node_modules/expo-modules-core/src/index.ts",
+    "expo-router": "<projects>/sdk54-ab-a-consumers/20261031-a04-router-v6-sheet-npm/node_modules/expo-modules-core/src/index.ts"
+  },
+  "expectedCore": "<projects>/sdk54-ab-a-consumers/20261031-a04-router-v6-sheet-npm/node_modules/expo-modules-core/src/index.ts"
+}

@@ -9,16 +9,16 @@ const tooling = process.env.EXPO_HARMONY_TOOLING_ROOT;
 assert.ok(tooling, 'EXPO_HARMONY_TOOLING_ROOT must provide TypeScript');
 const ts = createRequire(path.join(tooling, 'package.json'))('typescript');
 
-function fixture({ stored, colorMode = 1 } = {}) {
+function fixture({ stored, colorMode = 1, onFlush, storeError, windowError } = {}) {
   const applied = [];
   const values = new Map();
   if (stored !== undefined) values.set('backgroundColor', stored);
   let flushes = 0;
   const preferences = {
     getSync: (key, fallback) => values.has(key) ? values.get(key) : fallback,
-    putSync: (key, value) => values.set(key, value),
-    deleteSync: (key) => values.delete(key),
-    flush: async () => { flushes++; },
+    putSync: (key, value) => { if (storeError) throw storeError; values.set(key, value); },
+    deleteSync: (key) => { if (storeError) throw storeError; values.delete(key); },
+    flush: async () => { flushes++; await onFlush?.(); },
   };
   const imports = {
     '@kit.ArkUI': {},
@@ -61,7 +61,10 @@ function fixture({ stored, colorMode = 1 } = {}) {
       config: { colorMode },
       windowStage: {
         getMainWindowSync: () => ({
-          setWindowBackgroundColor: (color) => applied.push(color),
+          setWindowBackgroundColor: (color) => {
+            if (applied.length && windowError) throw windowError;
+            applied.push(color);
+          },
         }),
       },
     },
@@ -81,6 +84,57 @@ test('module restores a persisted color into the real main window', async () => 
   const f = fixture({ stored: '#123456' });
   assert.deepEqual(f.applied, ['#123456']);
   assert.equal(await f.module.getBackgroundColorAsync(), '#123456');
+});
+
+function deferred() {
+  let resolve, reject;
+  const promise = new Promise((yes, no) => { resolve = yes; reject = no; });
+  return { promise, resolve, reject };
+}
+
+test('get reflects the applied window while persistence is pending', async () => {
+  const gate = deferred(); const f = fixture({ onFlush: () => gate.promise });
+  const pending = f.module.setBackgroundColorAsync(0xff112233);
+  assert.equal(await f.module.getBackgroundColorAsync(), '#112233');
+  gate.resolve(); await pending;
+});
+
+test('older flush completion cannot overwrite a later applied color', async () => {
+  const first = deferred(), second = deferred(); const gates = [first, second];
+  const f = fixture({ onFlush: () => gates.shift().promise });
+  const a = f.module.setBackgroundColorAsync(0xff112233);
+  const b = f.module.setBackgroundColorAsync(0xff445566);
+  second.resolve(); await b; first.resolve(); await a;
+  assert.equal(await f.module.getBackgroundColorAsync(), '#445566');
+  assert.equal(f.applied.at(-1), '#445566');
+  assert.equal(f.values.get('backgroundColor'), '#445566');
+});
+
+test('persistence errors reject the setter but get still describes the applied window', async () => {
+  for (const options of [{ onFlush: async () => { throw new Error('flush failed'); } },
+    { storeError: new Error('store failed') }]) {
+    const f = fixture(options);
+    await assert.rejects(f.module.setBackgroundColorAsync(0xff112233), /failed/);
+    assert.equal(await f.module.getBackgroundColorAsync(), '#112233');
+    assert.equal(f.applied.at(-1), '#112233');
+  }
+});
+
+test('window failure preserves the previously applied value and never persists the new color', async () => {
+  const f = fixture({ stored: '#abcdef', windowError: new Error('window failed') });
+  await assert.rejects(f.module.setBackgroundColorAsync(0xff112233), /window failed/);
+  assert.equal(await f.module.getBackgroundColorAsync(), '#abcdef');
+  assert.equal(f.values.get('backgroundColor'), '#abcdef');
+  assert.equal(f.flushes(), 0);
+});
+
+test('destroy during pending persistence rejects late completion without applying again', async () => {
+  const gate = deferred(); const f = fixture({ onFlush: () => gate.promise });
+  const pending = f.module.setBackgroundColorAsync(0xff112233);
+  f.module.__onDestroy__(); gate.resolve();
+  await assert.rejects(pending, /destroyed/);
+  assert.deepEqual(f.applied, ['#ffffff', '#112233']);
+  await assert.rejects(f.module.getBackgroundColorAsync(), /destroyed/);
 });
 
 test('set applies the window before persisting and get reports the applied value', async () => {

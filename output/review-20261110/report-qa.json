@@ -1,0 +1,10 @@
+{
+  "html": "report.html",
+  "linksChecked": 45,
+  "missingLinks": 0,
+  "pendingPlaceholders": 0,
+  "browser": "Safari",
+  "observed": "Chinese headline and findings readable; table columns visible; progress anchor navigation works",
+  "sourceStatusUnchanged": true,
+  "limitations": "Desktop presentation checked; no mobile browser test"
+}

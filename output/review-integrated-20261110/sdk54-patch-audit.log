@@ -1,0 +1,25 @@
+
+> expo-harmony-workspace@ sdk54:patch:audit /Users/zhansh/project/expo-harmony-cli-a
+> node scripts/sdk54/audit-cli-patches.mjs apps/cli/content/patches/sdk-54 apps/cli/content/patches/sdk-54/manifest.json
+
+{
+  "ok": true,
+  "packages": [
+    "@expo/cli",
+    "@expo/metro-config",
+    "@react-native-ohos/react-native-screens",
+    "expo",
+    "expo-asset",
+    "expo-constants",
+    "expo-font",
+    "expo-linking",
+    "expo-modules-autolinking",
+    "expo-modules-core",
+    "expo-router",
+    "expo-splash-screen",
+    "expo-status-bar",
+    "expo-system-ui",
+    "expo-web-browser"
+  ],
+  "failures": []
+}

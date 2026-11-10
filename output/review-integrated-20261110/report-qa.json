@@ -1,0 +1,50 @@
+{
+  "htmlStructureErrors": [],
+  "unclosedTags": [],
+  "brokenLinks": [],
+  "duplicateIds": [],
+  "counts": {
+    "html": 1,
+    "head": 1,
+    "meta": 2,
+    "title": 1,
+    "style": 1,
+    "body": 1,
+    "main": 1,
+    "header": 1,
+    "p": 50,
+    "h1": 1,
+    "br": 14,
+    "code": 11,
+    "div": 11,
+    "strong": 27,
+    "nav": 1,
+    "a": 48,
+    "section": 7,
+    "h2": 7,
+    "article": 7,
+    "h3": 11,
+    "span": 7,
+    "table": 5,
+    "thead": 5,
+    "tr": 40,
+    "th": 18,
+    "tbody": 5,
+    "td": 125,
+    "ul": 2,
+    "li": 13,
+    "ol": 1,
+    "footer": 1
+  },
+  "browserVerification": {
+    "browser": "Safari",
+    "status": "PASS",
+    "checked": [
+      "Chinese homepage rendering",
+      "Table column layout and wrapping",
+      "TOC anchor navigation",
+      "Complete document accessibility tree"
+    ],
+    "date": "2026-11-10"
+  }
+}

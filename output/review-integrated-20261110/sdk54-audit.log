@@ -1,0 +1,9 @@
+
+> expo-harmony-workspace@ sdk54:audit /Users/zhansh/project/expo-harmony-cli-a
+> node scripts/sdk54/audit-packages.mjs
+
+{
+  "packages": 14,
+  "internalEdges": 22,
+  "failures": []
+}

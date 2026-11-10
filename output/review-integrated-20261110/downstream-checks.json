@@ -1,0 +1,34 @@
+[
+  {
+    "command": "pnpm sdk54:validate",
+    "exitCode": 0,
+    "log": "sdk54-validate.log"
+  },
+  {
+    "command": "pnpm sdk54:pack:check",
+    "exitCode": 0,
+    "log": "sdk54-pack-check.log"
+  },
+  {
+    "command": "pnpm sdk54:audit",
+    "exitCode": 0,
+    "log": "sdk54-audit.log"
+  },
+  {
+    "command": "pnpm sdk54:patch:audit",
+    "exitCode": 0,
+    "log": "sdk54-patch-audit.log"
+  },
+  {
+    "command": "pnpm sdk54:repo-check",
+    "exitCode": 0,
+    "log": "sdk54-repo-check-final.log",
+    "initialExitCode": 1,
+    "note": "Initial failure was caused only by absolute local paths in review JSON artifacts. Raw copies preserved under ignored outputs/review-integrated-20261110/raw; report copies now use portable path labels."
+  },
+  {
+    "command": "pnpm sdk54:release:check",
+    "exitCode": 0,
+    "log": "sdk54-release-check.log"
+  }
+]

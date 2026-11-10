@@ -1,0 +1,56 @@
+
+> expo-harmony-workspace@ sdk54:release:check /Users/zhansh/project/expo-harmony-cli-a
+> node scripts/sdk54/generate-release-manifest.mjs --check && node --test scripts/sdk54/__tests__/release-*.test.mjs
+
+TAP version 13
+# Subtest: release covers all fourteen Expo packages and screens without the product CLI
+ok 1 - release covers all fourteen Expo packages and screens without the product CLI
+  ---
+  duration_ms: 0.827542
+  type: 'test'
+  ...
+# Subtest: rewrite preserves dependency keys, optional peers and source manifests
+ok 2 - rewrite preserves dependency keys, optional peers and source manifests
+  ---
+  duration_ms: 4.026916
+  type: 'test'
+  ...
+# Subtest: runtime manifest maps template packages without patch dependencies
+ok 3 - runtime manifest maps template packages without patch dependencies
+  ---
+  duration_ms: 0.3525
+  type: 'test'
+  ...
+# Subtest: staging expo adds runtime metadata and license without changing source
+ok 4 - staging expo adds runtime metadata and license without changing source
+  ---
+  duration_ms: 2.807916
+  type: 'test'
+  ...
+# Subtest: all runtime packages have portable Harmony docs, including external screens
+ok 5 - all runtime packages have portable Harmony docs, including external screens
+  ---
+  duration_ms: 0.774416
+  type: 'test'
+  ...
+# Subtest: verification rejects incomplete release and unsafe artifact path
+ok 6 - verification rejects incomplete release and unsafe artifact path
+  ---
+  duration_ms: 0.956667
+  type: 'test'
+  ...
+# Subtest: publication is blocked by missing device evidence or mismatched tarballs
+ok 7 - publication is blocked by missing device evidence or mismatched tarballs
+  ---
+  duration_ms: 0.239834
+  type: 'test'
+  ...
+1..7
+# tests 7
+# suites 0
+# pass 7
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 67.259542

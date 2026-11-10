@@ -1,0 +1,18 @@
+
+> expo-harmony-workspace@ sdk54:repo-check /Users/zhansh/project/expo-harmony-cli-a
+> node scripts/sdk54/check-repository.mjs
+
+{
+  "publishable": [
+    "expo-harmony-cli"
+  ],
+  "forbiddenFiles": [],
+  "forbiddenText": [
+    "output/review-20261110/a05-install-replay.json: /Users/",
+    "output/review-integrated-20261110/new-findings.json: /Users/"
+  ],
+  "failures": [
+    "2 forbidden repository text matches"
+  ]
+}
+ ELIFECYCLE  Command failed with exit code 1.

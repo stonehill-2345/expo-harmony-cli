@@ -1,12 +1,13 @@
 import type { UITurboModuleContext } from '@rnoh/react-native-openharmony';
 import { UITurboModule } from '@rnoh/react-native-openharmony';
 import fs from '@ohos.file.fs';
+import drawing from '@ohos.graphics.drawing';
 import { validateFontRequest, validateSfntFont } from './FontFile';
 
 export class ExpoFontLoaderTurboModule extends UITurboModule {
   public static readonly NAME = 'ExpoFontLoader';
 
-  private readonly loadedFonts = new Set<string>();
+  private readonly loadedFonts = new Map<string, string>();
   private destroyed = false;
 
   public constructor(ctx: UITurboModuleContext) {
@@ -14,7 +15,12 @@ export class ExpoFontLoaderTurboModule extends UITurboModule {
   }
 
   public getLoadedFonts(): string[] {
-    return Array.from(this.loadedFonts).sort();
+    return Array.from(this.loadedFonts.keys()).sort();
+  }
+
+  public getFontPath(family: string): string | undefined {
+    this.assertActive();
+    return this.loadedFonts.get(family);
   }
 
   public async loadAsync(fontFamilyName: string, localUri: string): Promise<void> {
@@ -39,9 +45,12 @@ export class ExpoFontLoaderTurboModule extends UITurboModule {
     } finally {
       fs.closeSync(file);
     }
+    if (!drawing.Typeface.makeFromFile(request.path)) {
+      throw new Error(`Font file '${request.path}' could not be decoded`);
+    }
     this.ctx.rnInstance.registerFont(request.family, request.path);
     this.assertActive();
-    this.loadedFonts.add(request.family);
+    this.loadedFonts.set(request.family, request.path);
   }
 
   public override __onDestroy__(): void {

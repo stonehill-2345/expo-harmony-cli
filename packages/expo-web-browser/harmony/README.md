@@ -5,11 +5,12 @@ SDK54 / `expo-web-browser@15.0.11` / RNOH 0.82.30 的首版源码适配。
 应用继续使用 `import * as WebBrowser from 'expo-web-browser'`，无需应用 JS shim。
 
 当前完成源码测试、公共 JS 类型检查、C++ 编译检查，以及包含 Splash/WebBrowser
-自动生成浮层的 Debug/Release ArkTS HAR 编译。**完整 Expo HAP 和设备 API 尚未验收。**
+自动生成浮层的 Debug/Release ArkTS HAR 编译。独立 npm Release HAP 已在 nova API 22
+完成本地设备专项；正式 npm/pnpm × Debug/Release 发行矩阵仍需单独验收。
 
 ## API 与边界
 
-下表描述源码实现的行为，仍需设备验证。
+下表描述当前实现行为。本地 Release 已覆盖核心公开路径；未覆盖边界见下文。
 
 | API / 场景 | Harmony 行为 |
 | --- | --- |
@@ -76,6 +77,7 @@ DEVECO_SDK_HOME=/Applications/DevEco-Studio.app/Contents/sdk \
 compatible API20；它验证真实 ArkTS 接口和生成的多浮层结构，不打包 JS bundle、不编译
 C++、不安装设备，不能替代 SDK54 完整 HAP 验收。
 
-设备验收仍需：真实页面加载/关闭、系统返回、连续打开、程序 dismiss、并发、
-主文档失败、真实 302/JS redirect、错误 redirect、pending auth/browser 时公共 reload、
-RN 底层点击和 Splash 拦截回归，并分别验证 Debug 与真正 Release。
+本地 Release 已验证真实页面加载/关闭、系统返回、连续打开、程序 dismiss、普通与认证
+并发、JS redirect、错误 redirect、主文档连接失败、pending browser 时 public reload、
+前后台和冷启动隔离。仍需正式验证 Debug、pnpm、TLS/renderer 失败、生产 OAuth，以及
+Splash 共存时的真实叠层与 hit-test。
