@@ -33,7 +33,7 @@ import { createTemplateHtmlFromExpoConfigAsync } from '../webTemplate';
 
 const debug = require('debug')('expo:start:server:middleware:manifest') as typeof console.log;
 
-const supportedPlatforms = ['ios', 'android', 'web', 'none'];
+const supportedPlatforms = ['ios', 'android', 'web', 'harmony', 'none'];
 
 export function getEntryWithServerRoot(
   projectRoot: string,

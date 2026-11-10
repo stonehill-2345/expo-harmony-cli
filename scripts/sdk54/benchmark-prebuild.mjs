@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import crypto from 'node:crypto';
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { assertExternalConsumerWorkspace } from './creation-workspace.mjs';
 
@@ -24,7 +24,9 @@ function noLink(file) {
 const marker = '.sdk54-prebuild-benchmark.json';
 const digest = file => crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
 function copy(source, target) {
-  fs.cpSync(source, target, { recursive: true, verbatimSymlinks: true, preserveTimestamps: true, mode: fs.constants.COPYFILE_FICLONE });
+  fs.mkdirSync(path.dirname(target), { recursive: true });
+  if (process.platform === 'darwin') execFileSync('/bin/cp', ['-c', '-p', '-R', source, target]);
+  else fs.cpSync(source, target, { recursive: true, verbatimSymlinks: true, preserveTimestamps: true, mode: fs.constants.COPYFILE_FICLONE });
 }
 export function inventory(directory) {
   const categories = {};

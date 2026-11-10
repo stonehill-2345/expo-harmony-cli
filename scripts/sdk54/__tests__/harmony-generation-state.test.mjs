@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
 import fs from 'node:fs';
 import { createHash } from 'node:crypto';
 import os from 'node:os';
@@ -392,6 +393,170 @@ test('unchanged generated content keeps current timestamps and private mode', as
   await api().mergeHarmonyGenerationStateAsync({ stageRoot: stage, currentRoot: current });
   assert.equal(fs.statSync(path.join(stage, 'generated.ets')).mtimeMs, oldTime.getTime());
   assert.equal(fs.statSync(path.join(stage, 'generated.ets')).mode & 0o777, 0o600);
+});
+
+test('native no-op detection does not scan or clone unchanged unowned package trees', async t => {
+  const { stage, current } = fixture(t);
+  write(stage, 'generated.ets', 'unchanged');
+  await api().mergeHarmonyGenerationStateAsync({ stageRoot: stage });
+  fs.cpSync(stage, current, { recursive: true });
+  write(current, 'oh_modules/.ohpm/package/index.ets', 'installed package');
+  fs.rmSync(stage, { recursive: true });
+  fs.mkdirSync(stage);
+  write(stage, 'generated.ets', 'unchanged');
+  const guardedFs = { ...fs, promises: { ...fs.promises, readdir: async (target, ...args) => {
+    assert.equal(path.resolve(target).startsWith(path.join(current, 'oh_modules')), false, 'no-op must not scan OHPM');
+    return fs.promises.readdir(target, ...args);
+  } } };
+  const childProcess = { execFile: () => { throw new Error('no-op must not clone caches'); } };
+
+  const result = await loadM1Source(source, { fs: guardedFs, child_process: childProcess }).mergeHarmonyGenerationStateAsync({
+    stageRoot: stage,
+    currentRoot: current,
+    detectUnchanged: true,
+  });
+
+  assert.deepEqual(result, { clonedRoots: [], unchanged: true });
+});
+
+test('managed changes produce a sparse patch without scanning unowned package trees', async t => {
+  const { stage, current } = fixture(t);
+  write(stage, 'module.json5', { version: 1 });
+  await api().mergeHarmonyGenerationStateAsync({ stageRoot: stage });
+  fs.cpSync(stage, current, { recursive: true });
+  write(current, 'oh_modules/.ohpm/package/index.ets', 'installed package');
+  fs.rmSync(stage, { recursive: true });
+  fs.mkdirSync(stage);
+  write(stage, 'module.json5', { version: 2 });
+  const guardedFs = { ...fs, promises: { ...fs.promises, readdir: async (target, ...args) => {
+    assert.equal(path.resolve(target).startsWith(path.join(current, 'oh_modules')), false, 'managed patch must not scan OHPM');
+    return fs.promises.readdir(target, ...args);
+  } } };
+  const childProcess = { execFile: () => { throw new Error('managed patch must not clone caches'); } };
+
+  const result = await loadM1Source(source, { fs: guardedFs, child_process: childProcess }).mergeHarmonyGenerationStateAsync({
+    stageRoot: stage,
+    currentRoot: current,
+    detectUnchanged: true,
+  });
+
+  assert.equal(result.unchanged, false);
+  assert.deepEqual(result.clonedRoots, []);
+  assert.deepEqual(result.managedPatch.writes.sort(), ['.expo-harmony-state.json', 'module.json5']);
+  assert.deepEqual(result.managedPatch.deletes, []);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(current, 'module.json5'))).version, 1);
+  assert.equal(JSON.parse(fs.readFileSync(path.join(stage, 'module.json5'))).version, 2);
+});
+
+test('compiled native trees preserve timestamps without per-file utimes truncation', async t => {
+  if (process.platform !== 'darwin') return t.skip('macOS clonefile metadata behavior');
+  const { stage, current } = fixture(t);
+  write(current, 'oh_modules/.ohpm/package/index.ets', 'installed package');
+  write(current, 'entry/.cxx/cache/object.o', 'compiled object');
+  write(current, 'entry/build/output.so', 'linked output');
+  fs.symlinkSync('../build/output.so', path.join(current, 'entry/cache-link'));
+  const object = path.join(current, 'entry/.cxx/cache/object.o');
+  const oldTime = new Date('2020-01-01T00:00:00.123Z');
+  fs.utimesSync(object, oldTime, oldTime);
+  const before = fs.statSync(object, { bigint: true });
+  const guardedFs = { ...fs, promises: { ...fs.promises, utimes: async () => {
+    throw new Error('compiled tree must not restore timestamps through Date-based utimes');
+  } } };
+  const cloneSources = [];
+  const childProcess = { execFile: (command, args, callback) => {
+    cloneSources.push(args.at(-2));
+    return execFile(command, args, callback);
+  } };
+
+  const clonedRoots = await loadM1Source(source, { fs: guardedFs, child_process: childProcess }).mergeHarmonyGenerationStateAsync({
+    stageRoot: stage,
+    currentRoot: current,
+  });
+
+  const after = fs.statSync(path.join(stage, 'entry/.cxx/cache/object.o'), { bigint: true });
+  assert.equal(after.mtimeNs, before.mtimeNs);
+  assert.notEqual(after.ino, before.ino);
+  assert.equal(fs.readFileSync(path.join(stage, 'entry/build/output.so'), 'utf8'), 'linked output');
+  assert.equal(fs.readlinkSync(path.join(stage, 'entry/cache-link')), '../build/output.so');
+  assert.deepEqual(cloneSources.sort(), [
+    path.join(current, 'oh_modules'),
+    path.join(current, 'entry/.cxx'),
+    path.join(current, 'entry/build'),
+  ].sort());
+  assert.deepEqual(clonedRoots.clonedRoots.sort(), ['entry/.cxx', 'entry/build', 'oh_modules'].sort());
+  assert.equal(clonedRoots.unchanged, false);
+});
+
+test('compiled tree clone falls back to an independent metadata-preserving copy across filesystems', async t => {
+  if (process.platform !== 'darwin') return t.skip('macOS cp clone fallback behavior');
+  const { stage, current } = fixture(t);
+  write(current, 'entry/.cxx/cache/object.o', 'compiled object');
+  const calls = [];
+  const childProcess = { execFile: (command, args, callback) => {
+    calls.push(args);
+    const target = args.at(-1);
+    if (args.includes('-c')) {
+      fs.mkdirSync(target, { recursive: true });
+      fs.writeFileSync(path.join(target, 'partial'), 'partial');
+      callback(Object.assign(new Error('clonefile failed'), {
+        code: 1,
+        stderr: 'clonefile failed: Cross-device link',
+      }));
+      return;
+    }
+    return execFile(command, args, callback);
+  } };
+
+  await loadM1Source(source, { child_process: childProcess }).mergeHarmonyGenerationStateAsync({
+    stageRoot: stage,
+    currentRoot: current,
+  });
+
+  assert.equal(calls.length, 2);
+  assert.deepEqual(calls[0].slice(0, 3), ['-c', '-p', '-R']);
+  assert.deepEqual(calls[1].slice(0, 2), ['-p', '-R']);
+  assert.equal(fs.existsSync(path.join(stage, 'entry/.cxx/partial')), false);
+  assert.equal(fs.readFileSync(path.join(stage, 'entry/.cxx/cache/object.o'), 'utf8'), 'compiled object');
+  assert.notEqual(fs.statSync(path.join(stage, 'entry/.cxx/cache/object.o')).ino, fs.statSync(path.join(current, 'entry/.cxx/cache/object.o')).ino);
+});
+
+test('compiled tree clone failure cleans the temporary clone without changing either tree', async t => {
+  if (process.platform !== 'darwin') return t.skip('macOS clonefile metadata behavior');
+  const { root, stage, current } = fixture(t);
+  write(stage, 'generated.txt', 'desired');
+  write(current, 'entry/.cxx/cache/object.o', 'compiled object');
+  write(current, 'user.txt', 'user');
+  const cloneError = Object.assign(new Error('clone failed'), { code: 'EIO' });
+  const childProcess = { execFile: (_command, args, callback) => {
+    const target = args.at(-1);
+    fs.mkdirSync(target, { recursive: true });
+    fs.writeFileSync(path.join(target, 'partial'), 'partial');
+    callback(cloneError);
+  } };
+  await assert.rejects(
+    loadM1Source(source, { child_process: childProcess }).mergeHarmonyGenerationStateAsync({
+      stageRoot: stage,
+      currentRoot: current,
+    }),
+    { code: 'EIO' },
+  );
+  assert.equal(fs.readFileSync(path.join(stage, 'generated.txt'), 'utf8'), 'desired');
+  assert.equal(fs.readFileSync(path.join(current, 'user.txt'), 'utf8'), 'user');
+  assert.deepEqual(fs.readdirSync(root).filter(name => name.includes('.compiled-')), []);
+});
+
+test('compiled cache clone still removes a previously managed file', async t => {
+  if (process.platform !== 'darwin') return t.skip('macOS clonefile metadata behavior');
+  const { stage, current } = fixture(t);
+  write(stage, 'entry/.cxx/managed.o', 'managed cache file');
+  await api().mergeHarmonyGenerationStateAsync({ stageRoot: stage });
+  fs.cpSync(stage, current, { recursive: true });
+  fs.rmSync(stage, { recursive: true });
+  fs.mkdirSync(stage);
+
+  await api().mergeHarmonyGenerationStateAsync({ stageRoot: stage, currentRoot: current });
+
+  assert.equal(fs.existsSync(path.join(stage, 'entry/.cxx/managed.o')), false);
 });
 
 test('copy failure does not modify the original user file', async t => {

@@ -253,7 +253,7 @@ async function generateHarmonyNativeProjectAsync(
     clean: options.clean,
     prepareOnly,
     fault: options.generationFault,
-    generate: async (stageRoot) => {
+    generate: async (stageRoot, hash) => {
       if (!options.clean && fs.existsSync(currentRoot)) await validateHarmonyAppConfigurationAsync(currentRoot);
       const templateRoot = options.templateRoot ?? path.resolve(__dirname, '../../../templates/harmony');
       await assertHarmonyPackageSourceAsync(templateRoot, templateRoot);
@@ -267,7 +267,15 @@ async function generateHarmonyNativeProjectAsync(
       const modules = [...options.modules].sort((a, b) => a.packageName.localeCompare(b.packageName));
       const generated = await assembleHarmonyGeneratedAreasAsync({ ...options, modules, harmonyRoot: stageRoot });
       await options.finalize?.(stageRoot);
-      await mergeHarmonyGenerationStateAsync({ stageRoot, currentRoot, clean: options.clean });
+      const merge = await mergeHarmonyGenerationStateAsync({
+        stageRoot,
+        currentRoot,
+        clean: options.clean,
+        detectUnchanged: true,
+      });
+      if (merge.unchanged) hash.reuseCurrentTree();
+      else if (merge.managedPatch) hash.applyManagedPatch(merge.managedPatch);
+      else for (const root of merge.clonedRoots) hash.reuseClonedRoot(root);
       // Restore the documented insertion when users have removed only the theme wiring.
       const ability = await getHarmonyAppConfigurationEntryAsync(stageRoot);
       if (await fs.promises.readFile(ability.abilityPath, 'utf8') !== ability.contents) {

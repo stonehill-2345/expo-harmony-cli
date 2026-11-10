@@ -216,7 +216,7 @@ ExpoImage 的最小解阻验收必须包含：原来的 `ExpoImage/default` 注�
 
 | 任务集合 | 主负责人 | 当前开发状态 | 本轮实际验收结果 | 复核人 | 本轮证据 |
 | --- | --- | --- | --- | --- | --- |
-| G0 | B，A 参与 | 未开始 | NOT_RUN | A | 尚未产生 |
+| G0 | B，A 参与 | B 基线与设备驱动 smoke 已完成；等待 A 复核、完整候选和性能资源 | BLOCKED | A | `docs/releases/2026-10-30-sdk54-ab-g0-b-baseline.md`；workspace 候选 manifest `283118c...c5ed2`；target `127.0.0.1:5557` |
 | A-01 | A | 未开始 | NOT_RUN | B | 尚未产生 |
 | A-02 | A | 未开始 | NOT_RUN | B | 尚未产生 |
 | A-03 | A | 未开始 | NOT_RUN | B | 尚未产生 |
@@ -224,18 +224,22 @@ ExpoImage 的最小解阻验收必须包含：原来的 `ExpoImage/default` 注�
 | A-05 | A | 未开始 | NOT_RUN | B | 尚未产生 |
 | A-06 | A | 未开始；仅前期准备 | NOT_RUN | B | 尚未产生 |
 | A-07 / A-08 | A | 等待所属阶段前置 | NOT_RUN | B | 尚未产生 |
-| B-01 | B | 未开始；继承性能未达问题 | NOT_RUN | A | 尚未产生；旧结果见第 1 节 |
-| B-02 | B | 未开始 | NOT_RUN | A | 尚未产生 |
-| B-03 | B | 未开始 | NOT_RUN | A | 尚未产生 |
-| B-04 | B | 未开始 | NOT_RUN | A | 尚未产生 |
-| B-05 | B | 等待第一批候选交接 | NOT_RUN | A | 尚未产生 |
-| B-06 / B-07 / B-08 | B | 等待所属阶段前置 | NOT_RUN | A | 尚未产生 |
+| B-01 | B | Debug/Release、配置、模块增删、clean、首次/no-op、后续构建、跨卷与设备全矩阵完成 | PASS（B） | A | `docs/releases/2026-10-30-sdk54-b01-ninja-diagnostics.md`；专项 61/61；Autolinking `e9ea310c...2698`；summary `8ef5c887...e0bf` |
+| B-02 | B | 工具、负例与既有 blank 设备 smoke 完成；远端 A 分支仍为共同基点，无正式夹具/完整候选 | BLOCKED（A 输入） | A | `scripts/sdk54/ai-e2e/`；完整 SDK54 工具 1090 pass/20 skip；B-05 预检 `8f34b291...bc14` |
+| B-03 | B | pnpm/npm Harmony/all export、install/check/fix/config、自定义 resolver/serializer 全矩阵完成 | PASS（B） | A | `docs/releases/2026-11-02-sdk54-b03-export-harmony.md`；validation `bd1d2a73...d9b1a`；CLI `2474adcd...5e9e` |
+| B-04 | B | blank×npm/pnpm Debug/Release、离线、Fast Refresh、空格路径、端口/设备/HDC 失败矩阵完成；default 等待 A 候选 | PASS（B）；default BLOCKED（A） | A | `docs/releases/2026-11-10-sdk54-b04-harmony-run.md`；validation `7c650aa6...47d1`；CLI 39/39、SDK54 工具 1090 pass/20 skip |
+| B-05 | B | 已检查本地及远端 A 分支；A 分支与基点相同，无提交、候选、manifest 或夹具 | BLOCKED（A 输入） | A | `docs/releases/2026-11-10-sdk54-b05-a-handoff-preflight.md`；blocker `8f34b291...bc14` |
+| B-06 / B-07 / B-08 | B | 分别等待 G1、M6/G6、G2 与最终组合候选；当前上游前置未产生 | BLOCKED（阶段前置） | A | 同 B-05 预检；不得越级关闭 |
 
 ### 每轮追加记录格式
 
 | 轮次 / 日期 | 任务与原验收 ID / 场景 | 主责 / 复核 | 源码与候选组合 hash | 预期 | 实际结果与状态 | 命令 / 报告 / 原始证据 | 下一步 |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | 待首次执行后追加 | 不预填成功项 | — | — | — | NOT_RUN | — | 完成 G0 |
+| B-G0 / 2026-10-30 | G0、B-02.1～B-02.6 / V-01/V-02 工具与设备 smoke | B / A 待复核 | source `19a0375cff7e0ef3bc62d54fd5ed57b913bb2000`；workspace candidate manifest `283118c2386bc51e1e50fb2a203d015eefa00d80a1893a263ccf22ba6c2c5ed2` | 冻结 B 输入；缺用例、重复结果、错误 hash、空截图、缺设备、超时、中断均不得关闭；命令无 shell且只清理本次进程；畸形 schema、无效候选/环境和路径穿越必须失败关闭；设备操作绑定明确 target/PID/bundle | G0 `BLOCKED`；B-02 工具与既有 blank 驱动 smoke `PASS`，完整候选/A 夹具验收 `NOT_RUN` | `docs/releases/2026-10-30-sdk54-ab-g0-b-baseline.md`；专项 29/29；target `127.0.0.1:5557`；JPEG/hilog 已核验；SDK54 工具 1073 pass/20 skip/0 fail | A 复核 G0；接入 A 夹具和完整候选后执行 B-02；继续 B-01 正式 blank 诊断 |
+| B-01-final / 2026-11-10 | B-01 / 全性能、安全、Debug/Release 与设备矩阵 | B / A 待复核 | Autolinking `e9ea310c2ae3f043cf3c9420df26b43065ae8c6f4b3b3a334e33e031d5212698`；CLI `2474adcd5bc8c9a52819d6763a44f733328b284291207f69eba40b58555b5e9e` | Debug/Release no-op、配置、模块、clean、首次/重复、后续构建、跨卷、设备全部达到第 8 节门槛 | `PASS（B）`；Debug 1.54 s、Release 1.76 s、配置 5.92 s；61/61；Debug/Release 页面通过 | `outputs/sdk54/b01-final-validation-20261110/validation-summary.json`；B-01 报告 | A 交叉复核；B 继续 B-03/B-04 |
+| B-03-final / 2026-11-10 | B-03 / M5-01/02/04 | B / A 待复核 | CLI `2474adcd5bc8c9a52819d6763a44f733328b284291207f69eba40b58555b5e9e`；pnpm/npm 锁文件见证据目录 | 两包管理器 Harmony/all export；config、install check/fix；自定义 resolver/serializer 不丢失且三平台隔离 | `PASS（B）`；八项机器断言全 true | `outputs/sdk54/b03-export-final-20261110/validation.json`；B-03 报告 | A 交叉复核；B-05 接入 A 候选后重跑受影响项 |
+| B-04-final / 2026-11-10 | B-04 / M5-03/05、V-03 blank/CLI 范围 | B / A 待复核 | CLI `2474adcd...5e9e`；Autolinking `e9ea310c...2698`；四个 HAP hash 见报告 | blank×npm/pnpm Debug/Release；离线、刷新、空格路径、端口、设备和 HDC 假成功失败关闭；只清理本次资源 | `PASS（B）`；十二项机器断言全 true；default `BLOCKED（A）` | `outputs/sdk54/b04-final-20261110/validation.json`；B-04 报告；CLI 39/39；SDK54 工具 1090 pass/20 skip | A 交付 default/M4 夹具与候选；B 接入 B-02/B-05，不以 blank 替代 default |
 
 每份明细还必须包含：完整用例集合与展开矩阵、来源/适配 revision、包与 HAP SHA256、Node/包管理器/SDK/设备版本、命令/退出码/断言、构建/安装/启动/页面分项结果、截图文件头与窗口/UI 核验、逻辑/物理指标口径、未完成项、清理与回退记录。门禁结果需能从这些证据重新计算。
 

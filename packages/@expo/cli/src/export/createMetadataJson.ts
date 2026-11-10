@@ -2,7 +2,7 @@ import path from 'path';
 
 import type { BundleOutput } from './saveAssets';
 
-export type BundlePlatform = 'android' | 'ios';
+export type BundlePlatform = 'android' | 'ios' | 'harmony';
 
 type PlatformMetadataAsset = { path: string; ext: string };
 

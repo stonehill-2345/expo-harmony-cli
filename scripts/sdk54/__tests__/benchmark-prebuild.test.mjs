@@ -22,6 +22,10 @@ test('prepare refuses existing, nested and repository-alias workspaces without t
   fs.symlinkSync(repository, path.join(root, 'repo-alias'));
   assert.throws(() => prepare(source, path.join(root, 'repo-alias', 'nested'), repository), /outside the source repository/);
   prepare(source, workspace, repository);
+  const sourceStat = fs.statSync(path.join(source, 'app.json'), { bigint: true });
+  const copiedStat = fs.statSync(path.join(workspace, 'project/app.json'), { bigint: true });
+  assert.equal(copiedStat.mtimeNs, sourceStat.mtimeNs);
+  assert.notEqual(copiedStat.ino, sourceStat.ino);
   assert.throws(() => prepare(source, workspace, repository), /must be new/);
   assert.equal(fs.readFileSync(path.join(source, 'app.json'), 'utf8'), '{}');
 });

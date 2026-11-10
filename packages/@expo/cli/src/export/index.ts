@@ -56,7 +56,7 @@ export const expoExport: Command = async (argv) => {
         `--max-workers <number>     Maximum number of tasks to allow the bundler to spawn`,
         `--dump-assetmap            Emit an asset map for further processing`,
         `--no-ssg, --api-only       Skip exporting static HTML files and only export API routes for web`,
-        chalk`-p, --platform <platform>  Options: android, ios, web, all. {dim Default: all}`,
+        chalk`-p, --platform <platform>  Options: android, ios, web, harmony, all. {dim Default: all}`,
         `-s, --source-maps          Emit JavaScript source maps`,
         `-c, --clear                Clear the bundler cache`,
         `-h, --help                 Usage info`,

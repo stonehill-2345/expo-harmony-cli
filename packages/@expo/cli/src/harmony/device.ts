@@ -119,7 +119,16 @@ function isHdcServerUnavailable(error: unknown): boolean {
 }
 
 export async function reverseHarmonyPortAsync(hdcPath: string, target: string, port: number) {
-  await hdc(hdcPath, target, ['rport', `tcp:${port}`, `tcp:${port}`]);
+  const mapping = `tcp:${port}`;
+  const forwards = await hdc(hdcPath, target, ['fport', 'ls']);
+  const hasExactReverse = forwards.split(/\r?\n/).some((line) => {
+    const columns = line.trim().split(/\s+/);
+    return columns.includes('[Reverse]')
+      && columns.at(-3) === mapping
+      && columns.at(-2) === mapping;
+  });
+  if (hasExactReverse) await hdc(hdcPath, target, ['fport', 'rm', mapping, mapping]);
+  await hdc(hdcPath, target, ['rport', mapping, mapping]);
 }
 export async function installHarmonyAppAsync(hdcPath: string, target: string, hap: string) {
   await hdc(hdcPath, target, ['install', '-r', hap]);

@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { Readable } from 'node:stream';
 import { createHash } from 'node:crypto';
@@ -30,6 +30,27 @@ function seed(project) {
   put(project, 'harmony/current.txt', 'old');
   put(project, 'outside.txt', 'outside');
 }
+function fingerprint(file) {
+  if (!fs.existsSync(file)) return { kind: 'absent' };
+  const stat = fs.statSync(file);
+  return { kind: 'file', sha256: createHash('sha256').update(fs.readFileSync(file)).digest('hex'), mode: stat.mode & 0o7777 };
+}
+function patchPlan(project, stage) {
+  return {
+    writes: ['.expo-harmony-state.json', 'current.txt'],
+    deletes: [],
+    entries: {
+      '.expo-harmony-state.json': {
+        before: fingerprint(path.join(project, 'harmony/.expo-harmony-state.json')),
+        after: fingerprint(path.join(stage, '.expo-harmony-state.json')),
+      },
+      'current.txt': {
+        before: fingerprint(path.join(project, 'harmony/current.txt')),
+        after: fingerprint(path.join(stage, 'current.txt')),
+      },
+    },
+  };
+}
 const generate = async stage => {
   put(stage, '.expo-harmony-state.json', '{"schemaVersion":1}');
   put(stage, 'current.txt', 'new');
@@ -38,14 +59,16 @@ const generate = async stage => {
 const self = fileURLToPath(import.meta.url);
 if (process.argv[2] === '--child') {
   const [, , , project, mode] = process.argv;
-  await run({ projectRoot: project, generate: async stage => {
+  await run({ projectRoot: project, generate: async (stage, hash) => {
     if (mode === 'hold') {
       process.send('holding');
       await once(process, 'message');
     }
-    return generate(stage);
+    const value = await generate(stage);
+    if (mode.startsWith('patch-')) hash.applyManagedPatch(patchPlan(project, stage));
+    return value;
   }, fault: async point => {
-    if (mode === point) process.exit(77);
+    if (mode === point || mode === `patch-${point}`) process.exit(77);
   } });
 } else {
   test('recovers a pre-permissions journal using its original content-only fingerprint', async () => {
@@ -102,6 +125,146 @@ if (process.argv[2] === '--child') {
       assert.equal(fs.readFileSync(file, 'utf8'), 'edi');
       assert.equal(fs.statSync(file).size, original.size);
     } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  test('unchanged old-tree files reuse their initial content digests during commit checks', async () => {
+    const project = root(); seed(project);
+    let reads = 0;
+    const injectedFs = { ...fs, createReadStream: (...args) => {
+      reads++;
+      return fs.createReadStream(...args);
+    } };
+    try {
+      const transaction = loadM1Source(source, { fs: injectedFs });
+      await transaction.runHarmonyGenerationTransactionAsync({ projectRoot: project, generate });
+      assert.equal(reads, 4, 'two old-tree files and two candidate files should each be read once');
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  test('candidate hashing reuses files from generator-declared cloned roots', async () => {
+    if (process.platform !== 'darwin') return;
+    const project = root(); seed(project); put(project, 'harmony/cache/package.bin', 'cached');
+    let reads = 0;
+    const injectedFs = { ...fs, createReadStream: (...args) => {
+      reads++;
+      return fs.createReadStream(...args);
+    } };
+    try {
+      const transaction = loadM1Source(source, { fs: injectedFs });
+      await transaction.runHarmonyGenerationTransactionAsync({ projectRoot: project, generate: async (stage, hash) => {
+        fs.copyFileSync(path.join(project, 'harmony/.expo-harmony-state.json'), path.join(stage, '.expo-harmony-state.json'));
+        fs.copyFileSync(path.join(project, 'harmony/current.txt'), path.join(stage, 'current.txt'));
+        execFileSync('/bin/cp', ['-c', '-p', '-R', path.join(project, 'harmony/cache'), path.join(stage, 'cache')]);
+        put(stage, 'current.txt', 'new');
+        hash.reuseClonedRoot('cache');
+      } });
+      assert.equal(reads, 5, 'three initial files and two non-cloned candidate files should be read');
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  test('a persisted file hash cache avoids rereading an unchanged current tree', async () => {
+    const project = root(); seed(project);
+    let reads = 0;
+    const injectedFs = { ...fs, createReadStream: (...args) => {
+      reads++;
+      return fs.createReadStream(...args);
+    } };
+    try {
+      const transaction = loadM1Source(source, { fs: injectedFs });
+      await transaction.runHarmonyGenerationTransactionAsync({ projectRoot: project, generate });
+      reads = 0;
+      await transaction.runHarmonyGenerationTransactionAsync({ projectRoot: project, generate: async (stage, hash) => {
+        await generate(stage);
+        hash.reuseCurrentTree();
+      } });
+      assert.equal(reads, 0, 'the second no-op run should not read current or candidate contents');
+      assert.equal(fs.existsSync(path.join(project, '.expo-harmony-generation/tree-hash-cache-v1.json')), true);
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  test('a declared no-op does not read current file contents before generation', async () => {
+    const project = root(); seed(project);
+    let reads = 0;
+    const injectedFs = { ...fs, createReadStream: (...args) => {
+      reads++;
+      return fs.createReadStream(...args);
+    } };
+    try {
+      const transaction = loadM1Source(source, { fs: injectedFs });
+      await transaction.runHarmonyGenerationTransactionAsync({ projectRoot: project, generate: async (stage, hash) => {
+        fs.cpSync(path.join(project, 'harmony'), stage, { recursive: true });
+        hash.reuseCurrentTree();
+      } });
+      assert.equal(reads, 0);
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  test('managed patch commits only declared files and preserves the Harmony root', async () => {
+    const project = root(); seed(project); put(project, 'harmony/user.txt', 'user');
+    const rootInode = fs.statSync(path.join(project, 'harmony')).ino;
+    const userInode = fs.statSync(path.join(project, 'harmony/user.txt')).ino;
+    try {
+      await run({ projectRoot: project, generate: async (stage, hash) => {
+        await generate(stage);
+        hash.applyManagedPatch(patchPlan(project, stage));
+        return 'patched';
+      } });
+      assert.equal(fs.readFileSync(path.join(project, 'harmony/current.txt'), 'utf8'), 'new');
+      assert.equal(fs.readFileSync(path.join(project, 'harmony/user.txt'), 'utf8'), 'user');
+      assert.equal(fs.statSync(path.join(project, 'harmony')).ino, rootInode);
+      assert.equal(fs.statSync(path.join(project, 'harmony/user.txt')).ino, userInode);
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  for (const point of ['after-backup', 'after-install']) {
+    test(`managed patch fault at ${point} restores every declared file`, async () => {
+      const project = root(); seed(project);
+      const before = tree(path.join(project, 'harmony'));
+      try {
+        await assert.rejects(run({ projectRoot: project, generate: async (stage, hash) => {
+          await generate(stage);
+          hash.applyManagedPatch(patchPlan(project, stage));
+        }, fault: async current => {
+          if (current === point) throw new Error(`injected patch ${point}`);
+        } }), new RegExp(`injected patch ${point}`));
+        assert.deepEqual(tree(path.join(project, 'harmony')), before);
+      } finally { fs.rmSync(project, { recursive: true, force: true }); }
+    });
+  }
+  test('managed patch rejects a concurrent edit without losing it', async () => {
+    const project = root(); seed(project);
+    try {
+      await assert.rejects(run({ projectRoot: project, generate: async (stage, hash) => {
+        await generate(stage);
+        const patch = patchPlan(project, stage);
+        put(project, 'harmony/current.txt', 'concurrent');
+        hash.applyManagedPatch(patch);
+      } }), /managed patch conflict/i);
+      assert.equal(fs.readFileSync(path.join(project, 'harmony/current.txt'), 'utf8'), 'concurrent');
+    } finally { fs.rmSync(project, { recursive: true, force: true }); }
+  });
+  test('invalid or symlinked file hash caches fall back without touching external files', async () => {
+    for (const mode of ['invalid', 'symlink']) {
+      const project = root(), external = root(); seed(project);
+      let reads = 0;
+      const injectedFs = { ...fs, createReadStream: (...args) => {
+        reads++;
+        return fs.createReadStream(...args);
+      } };
+      try {
+        const transaction = loadM1Source(source, { fs: injectedFs });
+        await transaction.runHarmonyGenerationTransactionAsync({ projectRoot: project, generate });
+        const cache = path.join(project, '.expo-harmony-generation/tree-hash-cache-v1.json');
+        if (mode === 'invalid') fs.writeFileSync(cache, '{invalid');
+        else {
+          const outside = path.join(external, 'outside.json');
+          fs.writeFileSync(outside, 'external');
+          fs.rmSync(cache);
+          fs.symlinkSync(outside, cache);
+        }
+        reads = 0;
+        await transaction.runHarmonyGenerationTransactionAsync({ projectRoot: project, generate });
+        assert.equal(reads, 4, `${mode} cache must fall back to current and candidate reads`);
+        if (mode === 'symlink') assert.equal(fs.readFileSync(path.join(external, 'outside.json'), 'utf8'), 'external');
+      } finally {
+        fs.rmSync(project, { recursive: true, force: true });
+        fs.rmSync(external, { recursive: true, force: true });
+      }
+    }
   });
   test('bounded hashing preserves the sequential version 2 fingerprint across nested files and links', async () => {
     const project = root();
@@ -231,6 +394,20 @@ if (process.argv[2] === '--child') {
           return generate(stage);
         } });
         assert.equal(fs.readFileSync(path.join(project, 'harmony/current.txt'), 'utf8'), 'new');
+      } finally { fs.rmSync(project, { recursive: true, force: true }); }
+    });
+  }
+  for (const point of ['after-backup', 'after-install']) {
+    test(`a process exiting at managed patch ${point} is recovered before the next generation`, async () => {
+      const project = root(); seed(project);
+      const before = tree(path.join(project, 'harmony'));
+      const child = spawn(process.execPath, [self, '--child', project, `patch-${point}`], { stdio: 'pipe' });
+      try {
+        assert.equal((await once(child, 'exit'))[0], 77);
+        await run({ projectRoot: project, generate: async stage => {
+          assert.deepEqual(tree(path.join(project, 'harmony')), before);
+          return generate(stage);
+        } });
       } finally { fs.rmSync(project, { recursive: true, force: true }); }
     });
   }
