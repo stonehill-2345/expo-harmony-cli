@@ -18,7 +18,9 @@ export function buildFiniteDeclarations({ files, bindings = [] }) {
     paths.add(file.path);
     const sha256 = hash(file.content);
     if (file.sha256 && sha256 !== file.sha256) throw new Error(`Finite source hash mismatch: ${file.path}`);
-    const ast = ts.createSourceFile(file.path, file.content, ts.ScriptTarget.Latest, true, /tsx$/.test(file.path) ? ts.ScriptKind.TSX : ts.ScriptKind.TS);
+    const scriptKind = /tsx$/.test(file.path) ? ts.ScriptKind.TSX
+      : /(?:jsx|\.[cm]?js)$/.test(file.path) ? ts.ScriptKind.JSX : ts.ScriptKind.TS;
+    const ast = ts.createSourceFile(file.path, file.content, ts.ScriptTarget.Latest, true, scriptKind);
     if (ast.parseDiagnostics.length) throw new Error(`Finite source parse failure: ${file.path}: ${ts.flattenDiagnosticMessageText(ast.parseDiagnostics[0].messageText, ' ')}`);
     result.sources.push({ path: file.path, sha256, ...(file.origin ? { origin: file.origin } : {}), ...(file.provenance ? { provenance: file.provenance } : {}) });
     const anchor = node => {
@@ -27,8 +29,15 @@ export function buildFiniteDeclarations({ files, bindings = [] }) {
         expression, sha256: hash(expression), nodeType: ts.SyntaxKind[node.kind] };
     };
     const walk = (node, scope = []) => {
-      if (namedDeclaration(node) && node.name) {
-        const name = node.name.getText(ast), qualifiedName = [...scope, name].join('.'), source = anchor(node);
+      const modifiers = ts.canHaveModifiers(node) ? ts.getModifiers(node) ?? [] : [];
+      const assignment = ts.isExpressionStatement(node) && ts.isBinaryExpression(node.expression)
+        && node.expression.operatorToken.kind === ts.SyntaxKind.EqualsToken
+        && (ts.isPropertyAccessExpression(node.expression.left) || ts.isElementAccessExpression(node.expression.left));
+      const name = namedDeclaration(node) && node.name ? node.name.getText(ast)
+        : ts.isFunctionDeclaration(node) && modifiers.some(row => row.kind === ts.SyntaxKind.DefaultKeyword) ? '<default>'
+          : ts.isExportAssignment(node) ? '<default>' : assignment ? node.expression.left.getText(ast) : null;
+      if (name) {
+        const qualifiedName = [...scope, name].join('.'), source = anchor(node);
         const id = `FINITE-DECLARATION:${encodeURIComponent(file.path)}:${source.start}:${source.end}:${encodeURIComponent(qualifiedName)}`;
         const declaration = { id, name, qualifiedName, ...source, typeParameters: (node.typeParameters ?? []).map(row => row.getText(ast)),
           heritage: (node.heritageClauses ?? []).map(row => row.getText(ast)), members: [], rules: [] };

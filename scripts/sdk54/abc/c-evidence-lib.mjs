@@ -35,4 +35,9 @@ export function args(argv, allowed) {
  return value;
 }
 export const escapeHtml = v => String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;');
-export function html(title, value) { return '<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:,"><title>'+escapeHtml(title)+'</title><style>body{font:16px system-ui;max-width:1200px;margin:40px auto;padding:24px;background:#f4f6fa;color:#18243a}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:24px;border-radius:12px}a{color:#125bc7}</style><h1>'+escapeHtml(title)+'</h1><pre>'+escapeHtml(JSON.stringify(value,null,2))+'</pre></html>'; }
+const safeReportLink = value => typeof value==='string' && value && !path.isAbsolute(value) && !value.includes('\\') && !value.split('/').includes('..') && !/^[a-z][a-z0-9+.-]*:/i.test(value);
+export function html(title, value) {
+ const links=(Array.isArray(value?.links)?value.links:[]).filter(safeReportLink);
+ const navigation=links.length?'<nav aria-label="证据链接">'+links.map(link=>`<a href="${escapeHtml(link)}">${escapeHtml(link)}</a>`).join('')+'</nav>':'';
+ return '<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width"><link rel="icon" href="data:,"><title>'+escapeHtml(title)+'</title><style>body{font:16px system-ui;max-width:1200px;margin:40px auto;padding:24px;background:#f4f6fa;color:#18243a}nav{display:flex;flex-wrap:wrap;gap:12px;margin:0 0 20px}nav a{background:white;border:1px solid #b7c2d4;border-radius:6px;padding:8px 12px}pre{white-space:pre-wrap;overflow-wrap:anywhere;background:white;padding:24px;border-radius:8px}a{color:#125bc7}</style></head><body><h1>'+escapeHtml(title)+'</h1>'+navigation+'<pre>'+escapeHtml(JSON.stringify(value,null,2))+'</pre></body></html>';
+}

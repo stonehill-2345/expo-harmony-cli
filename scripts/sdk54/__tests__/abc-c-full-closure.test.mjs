@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { buildSourceClosure } from '../abc/c-public-closure.mjs';
+import { buildSourceClosure, expandRelativeSourceEvidence, relativeSourceTargets } from '../abc/c-public-closure.mjs';
 
 const source = `export interface Demo { value: string }\nexport const demo: Demo = { value: 'x' };\n`;
 const fixture = ({ missingMemberSource = false, missingExport = false } = {}) => ({
@@ -47,4 +47,76 @@ test('retains an unresolved finite binding without dropping derived evidence', (
   const result = buildSourceClosure(input);
   assert.ok(result.blockers.some(row => row.code === 'FINITE_DECLARATION_BLOCKER' && row.recordId === 'M'));
   assert.ok(result.derived.records.some(row => row.recordId === 'M'));
+});
+
+test('discovers existing relative import and reexport targets with declaration and platform suffixes', () => {
+  const available = new Set([
+    'packages/router/ui.d.ts',
+    'packages/router/build/ui.d.ts',
+    'packages/router/build/Tabs.tsx',
+    'packages/router/build/Tabs.web.tsx',
+    'packages/router/build/internal/index.ts',
+    'packages/router/build/types/index.d.ts',
+    'packages/router/build/styles.css',
+    'packages/router/unrelated.ts',
+  ]);
+  assert.deepEqual(relativeSourceTargets('packages/router/ui.d.ts', "export * from './build/ui'; export * from 'external';", available), [
+    'packages/router/build/ui.d.ts',
+  ]);
+  assert.deepEqual(relativeSourceTargets('packages/router/build/ui.d.ts', "import './internal'; import './styles.css'; export * from './types'; export { Tabs } from './Tabs'; require('external');", available), [
+    'packages/router/build/Tabs.tsx',
+    'packages/router/build/Tabs.web.tsx',
+    'packages/router/build/internal/index.ts',
+    'packages/router/build/types/index.d.ts',
+  ]);
+});
+
+test('does not parse non-code source receipts as TypeScript dependencies', () => {
+  assert.deepEqual(relativeSourceTargets('packages/router/package.json', '{"main":"./build/index.js"}', new Set()), []);
+});
+
+test('records recursively loaded fixed sources with a replayable hash and transitive role', () => {
+  const contents = new Map([['packages/router/ui.ts', {
+    path: 'packages/router/ui.ts', content: "export * from './build/ui';", sha256: 'direct', origin: 'fixed-expo-git',
+  }]]);
+  const entries = new Map([
+    ['packages/router/ui.ts', { path: 'packages/router/ui.ts', oid: 'direct-blob' }],
+    ['packages/router/build/ui.ts', { path: 'packages/router/build/ui.ts', oid: 'transitive-blob' }],
+  ]);
+  const receipts = expandRelativeSourceEvidence({
+    contents,
+    entries,
+    readBlobs: selected => new Map(selected.map(entry => [entry.path, Buffer.from('export const ui = true;')])),
+  });
+  assert.equal(contents.has('packages/router/build/ui.ts'), true);
+  assert.deepEqual(receipts, [{
+    path: 'packages/router/build/ui.ts',
+    sha256: 'befef08f757556e0fc623ef4863edfeb7843e8103ace3da835283178eb1a19c8',
+    bytes: 23,
+    origin: 'fixed-expo-git',
+    blob: 'transitive-blob',
+    role: 'TRANSITIVE_EXPORT_SOURCE',
+  }]);
+});
+
+test('records relative assets without treating them as TypeScript sources', () => {
+  const contents = new Map([['packages/router/styles.ts', {
+    path: 'packages/router/styles.ts', content: "import styles from './styles.css'; export default styles;", sha256: 'direct', origin: 'fixed-expo-git',
+  }]]);
+  const entries = new Map([
+    ['packages/router/styles.ts', { path: 'packages/router/styles.ts', oid: 'source-blob' }],
+    ['packages/router/styles.css', { path: 'packages/router/styles.css', oid: 'asset-blob' }],
+  ]);
+  const assetRelations = [];
+  const receipts = expandRelativeSourceEvidence({
+    contents,
+    entries,
+    assetRelations,
+    readBlobs: selected => new Map(selected.map(entry => [entry.path, Buffer.from('.root {}')])),
+  });
+  assert.equal(receipts[0].role, 'TRANSITIVE_ASSET_SOURCE');
+  assert.deepEqual(assetRelations, [{
+    from: 'packages/router/styles.ts', request: './styles.css', path: 'packages/router/styles.css',
+    sha256: '77127206b3c436e67278056e007942a0d30dcd615c21579fe089693e14392c1c',
+  }]);
 });

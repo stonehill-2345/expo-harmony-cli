@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import ts from 'typescript';
 import { readSourceTree, readSourceBlobs } from '../source-inventory.mjs';
 import { verifyFixedSource } from '../a-rebuild-source-evidence.mjs';
 import { verifyCandidateManifest } from '../ai-e2e/evidence.mjs';
@@ -10,11 +11,96 @@ import { readPublicSurface } from '../m0-public-surface.mjs';
 import { buildFiniteDeclarations } from '../m0-finite-declarations.mjs';
 import { buildDerivedSourceProvenance } from '../m0-derived-source-provenance.mjs';
 import { buildExportSourceBindings } from '../m0-export-source-bindings.mjs';
+import { projectTemplateSource } from '../m0-template-projection.mjs';
 import { main as rebuildM4Evidence } from '../a-m4-evidence.mjs';
 import { args, read, save, sha256, newOutput, html } from './c-evidence-lib.mjs';
 
 const scopes = new Set(['M4_REQUIRED', 'M7_TRANSFER', 'SOURCE_CONTEXT']);
 const count = (rows, key) => rows.reduce((out, row) => (out[row[key]] = (out[row[key]] ?? 0) + 1, out), {});
+const sourceSuffixes = ['', '.ts', '.tsx', '.d.ts', '.js', '.jsx', '/index.ts', '/index.tsx', '/index.d.ts', '/index.js',
+  '.native.ts', '.native.tsx', '.ios.ts', '.ios.tsx', '.android.ts', '.android.tsx', '.web.ts', '.web.tsx'];
+const sourceCodePattern = /\.(?:[cm]?[jt]s|[jt]sx)$/;
+
+export function relativeSourceTargets(file, content, availablePaths) {
+  if (!sourceCodePattern.test(file)) return [];
+  const projection = projectTemplateSource({ path: file, text: content });
+  const ast = ts.createSourceFile(file, projection.text, ts.ScriptTarget.Latest, true,
+    /[jt]sx$/.test(file) ? ts.ScriptKind.TSX : /\.[cm]?js$/.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS);
+  if (ast.parseDiagnostics.length) throw new Error(`Cannot parse source dependency: ${file}`);
+  const requests = new Set();
+  const add = node => {
+    if (node && ts.isStringLiteralLike(node) && node.text.startsWith('.')) requests.add(node.text);
+  };
+  const visit = node => {
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) add(node.moduleSpecifier);
+    else if (ts.isImportEqualsDeclaration(node) && ts.isExternalModuleReference(node.moduleReference)) add(node.moduleReference.expression);
+    else if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'require' && node.arguments.length === 1) add(node.arguments[0]);
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  const targets = new Set();
+  for (const request of requests) {
+    const base = path.posix.normalize(path.posix.join(path.posix.dirname(file), request));
+    const stems = [base, base.replace(/\.[cm]?jsx?$/, '')];
+    for (const stem of stems) for (const suffix of sourceSuffixes) {
+      const candidate = stem + suffix;
+      if (sourceCodePattern.test(candidate) && availablePaths.has(candidate)) targets.add(candidate);
+    }
+  }
+  return [...targets].sort();
+}
+
+function relativeAssetTargets(file, content, availablePaths) {
+  if (!sourceCodePattern.test(file)) return [];
+  const projection = projectTemplateSource({ path: file, text: content });
+  const ast = ts.createSourceFile(file, projection.text, ts.ScriptTarget.Latest, true,
+    /[jt]sx$/.test(file) ? ts.ScriptKind.TSX : /\.[cm]?js$/.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS);
+  if (ast.parseDiagnostics.length) throw new Error(`Cannot parse source dependency: ${file}`);
+  const requests = new Set();
+  const visit = node => {
+    const add = value => {
+      if (value && ts.isStringLiteralLike(value) && value.text.startsWith('.')) requests.add(value.text);
+    };
+    if (ts.isImportDeclaration(node) || ts.isExportDeclaration(node)) add(node.moduleSpecifier);
+    else if (ts.isCallExpression(node) && ts.isIdentifier(node.expression) && node.expression.text === 'require' && node.arguments.length === 1) add(node.arguments[0]);
+    ts.forEachChild(node, visit);
+  };
+  visit(ast);
+  return [...requests].flatMap(request => {
+    const target = path.posix.normalize(path.posix.join(path.posix.dirname(file), request));
+    return !sourceCodePattern.test(target) && availablePaths.has(target) ? [{ request, path: target }] : [];
+  }).sort((a, b) => a.path.localeCompare(b.path));
+}
+
+export function expandRelativeSourceEvidence({ contents, entries, readBlobs, assetRelations = [] }) {
+  const pending = [...contents.keys()], visited = new Set(), receipts = new Map();
+  while (pending.length) {
+    const file = pending.shift();
+    if (visited.has(file)) continue;
+    visited.add(file);
+    const source = contents.get(file);
+    if (!source) continue;
+    const sourceTargets = relativeSourceTargets(file, source.content, entries);
+    const assets = relativeAssetTargets(file, source.content, entries);
+    const targets = [...sourceTargets, ...assets.map(row => row.path)];
+    const missing = targets.filter(target => !contents.has(target));
+    for (let offset = 0; offset < missing.length; offset += 100) {
+      const batch = missing.slice(offset, offset + 100).map(target => entries.get(target));
+      for (const [target, bytes] of readBlobs(batch)) {
+        const hash = sha256(bytes), entry = entries.get(target);
+        contents.set(target, { path: target, content: bytes.toString(), sha256: hash, origin: 'fixed-expo-git' });
+        receipts.set(target, { path: target, sha256: hash, bytes: bytes.length,
+          origin: 'fixed-expo-git', blob: entry.oid, role: sourceCodePattern.test(target) ? 'TRANSITIVE_EXPORT_SOURCE' : 'TRANSITIVE_ASSET_SOURCE' });
+        if (sourceCodePattern.test(target)) pending.push(target);
+      }
+    }
+    for (const asset of assets) {
+      const target = contents.get(asset.path);
+      if (target) assetRelations.push({ from: file, request: asset.request, path: asset.path, sha256: target.sha256 });
+    }
+  }
+  return [...receipts.values()].sort((a, b) => a.path.localeCompare(b.path));
+}
 
 export function auditScope(document) {
   const errors = [], ids = new Set(), rows = Array.isArray(document?.rows) ? document.rows : [];
@@ -38,7 +124,7 @@ export function auditScope(document) {
     harmonySupportAccepted: false, stageClosable: false };
 }
 
-export function buildSourceClosure({ scope, surface, files }) {
+export function buildSourceClosure({ scope, surface, files, relativeAssetTargets = [] }) {
   const memberRows = scope.rows.filter(row => row.kind === 'public-member-candidate');
   const exportRows = scope.rows.filter(row => row.kind === 'public-export');
   const bindings = memberRows.flatMap(row => {
@@ -61,6 +147,7 @@ export function buildSourceClosure({ scope, surface, files }) {
   });
   const exportBindings = buildExportSourceBindings({
     files,
+    relativeAssetTargets,
     requested: exportRows.filter(row => row.source?.path && row.name).map(row => ({ id: row.id, path: row.source.path, name: row.name })),
   });
   const finiteIds = new Set(finite.bindings.map(row => row.id));
@@ -87,7 +174,7 @@ export function buildSourceClosure({ scope, surface, files }) {
     harmonySupportAccepted: false, stageClosable: false };
 }
 
-function sourceEvidence(scope, sourceGit, sourceRoot) {
+export function sourceEvidence(scope, sourceGit, sourceRoot) {
   const fixed = verifyFixedSource(sourceGit), entries = new Map(fixed.entries.map(row => [row.path, row]));
   const requested = new Set();
   for (const row of scope.rows) {
@@ -121,8 +208,12 @@ function sourceEvidence(scope, sourceGit, sourceRoot) {
     acceptanceId: row.acceptanceId ?? null, batch: row.batch ?? null, source: receipt(row.source, row.id),
     declarations: (row.declarations ?? []).map(ref => receipt(ref, row.id)), relationStatus: 'SOURCE_RELATION_VERIFIED',
     runtimeStatus: 'NOT_RUN', harmonySupportAccepted: false }));
+  const relativeAssetTargets = [];
+  for (const row of expandRelativeSourceEvidence({ contents, entries, assetRelations: relativeAssetTargets,
+    readBlobs: batch => readSourceBlobs(sourceGit, batch) })) receipts.set(`fixed-expo-git:${row.path}`, row);
   return { source: { revision: '5b42e3d21e0ac5e086752361ca8a5cb4de53bec1', tree: fixed.tree }, records,
-    receipts: [...receipts.values()].sort((a, b) => a.path.localeCompare(b.path)), files: [...contents.values()] };
+    receipts: [...receipts.values()].sort((a, b) => a.path.localeCompare(b.path)),
+    files: [...contents.values()].filter(row => sourceCodePattern.test(row.path)), relativeAssetTargets };
 }
 
 function candidateCoverage(candidateFile, scope) {
@@ -153,7 +244,7 @@ export async function main(argv) {
   const output = newOutput(a.output), scope = read(a.scope), audit = auditScope(scope);
   const evidence = sourceEvidence(scope, path.join(a.reconstruction, 'expo-official.git'), a['source-root']);
   const surface = readPublicSurface(path.join(a.reconstruction, 'public-surface.json'));
-  const rebuilt = buildSourceClosure({ scope, surface, files: evidence.files });
+  const rebuilt = buildSourceClosure({ scope, surface, files: evidence.files, relativeAssetTargets: evidence.relativeAssetTargets });
   const sourceErrors = [...audit.errors];
   if (evidence.source.revision !== '5b42e3d21e0ac5e086752361ca8a5cb4de53bec1' || evidence.source.tree !== '5457e824b21d968e55c8f533cdf1751860160a92') sourceErrors.push('Fixed Expo identity mismatch');
   if (!audit.relationClosed) sourceErrors.push('Reviewed scope explicitly remains incomplete');

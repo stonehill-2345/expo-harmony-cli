@@ -67,3 +67,112 @@ test('nested broken reexports and local initialization cycles cannot become fini
   assert.equal(platform.bindings.length, 0);
   assert.ok(platform.blockers.some(row => row.reason === 'MISSING_TARGET'));
 });
+
+test('binds exported const, let and destructured variable declarations to their exact source statement', () => {
+  const result = buildExportSourceBindings({
+    files: [{ path: 'values.ts', content: 'export const DIRECT = 1; export let mutable = 2; export const { nested } = { nested: 3 };' }],
+    requested: [
+      { id: 'DIRECT', path: 'values.ts', name: 'DIRECT' },
+      { id: 'mutable', path: 'values.ts', name: 'mutable' },
+      { id: 'nested', path: 'values.ts', name: 'nested' },
+    ],
+  });
+  assert.deepEqual(result.blockers, []);
+  assert.deepEqual(result.bindings.map(({ id }) => id), ['DIRECT', 'mutable', 'nested']);
+  assert.match(result.bindings[0].steps[0].expression, /^export const DIRECT/);
+  assert.match(result.bindings[2].steps[0].expression, /^export const \{ nested \}/);
+});
+test('retains external star and type-star reexports as explicit consumer boundaries', () => {
+  const result=buildExportSourceBindings({
+    files:[
+      {path:'runtime.ts',content:"export * from 'runtime-package';"},
+      {path:'types.ts',content:"export type * from 'types-package';"},
+    ],
+    requested:[
+      {id:'runtime',path:'runtime.ts',name:'RuntimeValue'},
+      {id:'types',path:'types.ts',name:'ExternalType'},
+    ],
+  });
+  assert.deepEqual(result.blockers,[]);
+  for(const binding of result.bindings) {
+    assert.equal(binding.terminalRole,'EXTERNAL_CONSUMER_RULE');
+    assert.equal(binding.externalRequests.length,1);
+    assert.match(binding.steps[0].expression,/export/);
+  }
+  assert.deepEqual(result.bindings.map(binding=>binding.externalRequests[0].request),['runtime-package','types-package']);
+});
+
+test('resolves a named relative reexport to an existing TypeScript source', () => {
+  const result = buildExportSourceBindings({
+    files: [
+      { path: 'src/index.ts', content: "export * from './unrelated'; export { CodedError } from './errors/CodedError';" },
+      { path: 'src/unrelated.ts', content: 'export const unrelated = true;' },
+      { path: 'src/errors/CodedError.ts', content: 'export class CodedError extends Error {}' },
+    ],
+    requested: [{ id: 'CodedError', path: 'src/index.ts', name: 'CodedError' }],
+  });
+  assert.deepEqual(result.blockers, []);
+  assert.equal(result.bindings[0].routes[0].targetPath, 'src/errors/CodedError.ts');
+});
+
+test('resolves directory reexports through an index declaration file', () => {
+  const result = buildExportSourceBindings({
+    files: [
+      { path: 'ui.d.ts', content: "export { TabsProps } from './build/ui';" },
+      { path: 'build/ui/index.d.ts', content: 'export interface TabsProps { active: boolean }' },
+    ],
+    requested: [{ id: 'TabsProps', path: 'ui.d.ts', name: 'TabsProps' }],
+  });
+  assert.deepEqual(result.blockers, []);
+  assert.equal(result.bindings[0].routes[0].targetPath, 'build/ui/index.d.ts');
+});
+
+test('binds a type from declarations when the parallel runtime file has no type symbol', () => {
+  const result = buildExportSourceBindings({
+    files: [
+      { path: 'ui.d.ts', content: "export { TabsProps } from './build/ui';" },
+      { path: 'build/ui/index.d.ts', content: 'export interface TabsProps { active: boolean }' },
+      { path: 'build/ui/index.js', content: 'exports.Tabs = function Tabs() {};' },
+    ],
+    requested: [{ id: 'TabsProps', path: 'ui.d.ts', name: 'TabsProps' }],
+  });
+  assert.deepEqual(result.blockers, []);
+  assert.equal(result.bindings[0].terminalRole, 'FINITE_SOURCE_DECLARATION');
+  assert.equal(result.bindings[0].platformSupportAccepted, undefined);
+});
+
+test('binds namespace exports, CommonJS objects and generated module markers to source rules', () => {
+  const result = buildExportSourceBindings({
+    files: [
+      { path: 'namespace.ts', content: "export * as SplashScreen from './splash';" },
+      { path: 'splash.ts', content: 'export function hideAsync() {}' },
+      { path: 'commonjs.js', content: "function getManifest() {} module.exports = { getManifest }; Object.defineProperty(module.exports, '__esModule', { value: true });" },
+    ],
+    requested: [
+      { id: 'namespace', path: 'namespace.ts', name: 'SplashScreen' },
+      { id: 'commonjs', path: 'commonjs.js', name: 'getManifest' },
+      { id: 'marker', path: 'commonjs.js', name: '__esModule' },
+    ],
+  });
+  assert.deepEqual(result.blockers, []);
+  assert.deepEqual(result.bindings.map(row => row.id), ['namespace', 'commonjs', 'marker']);
+});
+
+test('retains ambient declarations, runtime globals and verified relative assets as consumer boundaries', () => {
+  const result = buildExportSourceBindings({
+    files: [
+      { path: 'ambient.d.ts', content: "import type { ErrorType } from 'errors'; declare let global: { ErrorType: typeof ErrorType };" },
+      { path: 'fetch.web.ts', content: 'export const fetch = globalThis.fetch;' },
+      { path: 'styles.ts', content: "import styles from './styles.css'; export default styles;" },
+    ],
+    relativeAssetTargets: [{ from: 'styles.ts', request: './styles.css', path: 'styles.css', sha256: 'a'.repeat(64) }],
+    requested: [
+      { id: 'ambient', path: 'ambient.d.ts', name: 'global' },
+      { id: 'global', path: 'fetch.web.ts', name: 'fetch' },
+      { id: 'asset', path: 'styles.ts', name: 'default' },
+    ],
+  });
+  assert.deepEqual(result.blockers, []);
+  assert.equal(result.bindings.find(row => row.id === 'global').externalRequests[0].request, 'globalThis');
+  assert.equal(result.bindings.find(row => row.id === 'asset').routes[0].role, 'RELATIVE_ASSET_CONSUMER');
+});

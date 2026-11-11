@@ -51,3 +51,40 @@ test('accessors and open call/index/construct members are explicit deletable fin
   const actual = structuredClone(value); actual.declarations[0].members = actual.declarations[0].members.filter(row => row.name !== 'needsUpdate');
   assert.equal(validateFiniteDeclarations(actual, value).valid, false);
 });
+
+test('parses JSX emitted in fixed Expo JavaScript sources without weakening TypeScript syntax checks', () => {
+  const value = buildFiniteDeclarations({
+    files: [{ path: 'ExpoRoot.js', content: 'export function ExpoRoot() { return <Provider><View /></Provider>; }' }],
+    bindings: [{ id: 'EXPORT:ExpoRoot', path: 'ExpoRoot.js', name: 'ExpoRoot' }],
+  });
+  assert.equal(value.bindings.length, 1);
+  assert.ok(value.declarations.some(row => row.name === 'ExpoRoot'));
+});
+
+test('binds anonymous default functions to their exact finite source range', () => {
+  const content = 'export default function (name: string) { const generated = name; return generated; }';
+  const start = content.indexOf('name: string');
+  const value = buildFiniteDeclarations({
+    files: [{ path: 'factory.ts', content }],
+    bindings: [{ id: 'CALL:default', path: 'factory.ts', start, end: start + 'name: string'.length }],
+  });
+  const declaration = value.declarations.find(row => value.bindings[0].declarationIds.includes(row.id));
+  assert.equal(declaration.name, '<default>');
+  assert.equal(declaration.nodeType, 'FunctionDeclaration');
+});
+
+test('binds exported object expressions and static property assignments as finite source rules', () => {
+  const content = 'function Head() {}\nHead.Provider = Fragment;\nexport default Object.assign((props: Props) => props, { Screen, Protected });';
+  const providerStart = content.indexOf('Fragment');
+  const screenStart = content.indexOf('Screen');
+  const value = buildFiniteDeclarations({
+    files: [{ path: 'components.ts', content }],
+    bindings: [
+      { id: 'PROPERTY:provider', path: 'components.ts', start: providerStart, end: providerStart + 'Fragment'.length },
+      { id: 'PROPERTY:screen', path: 'components.ts', start: screenStart, end: screenStart + 'Screen'.length },
+    ],
+  });
+  const declarations = value.declarations.filter(row => value.bindings.flatMap(binding => binding.declarationIds).includes(row.id));
+  assert.ok(declarations.some(row => row.name === 'Head.Provider' && row.nodeType === 'ExpressionStatement'));
+  assert.ok(declarations.some(row => row.name === '<default>' && row.nodeType === 'ExportAssignment'));
+});

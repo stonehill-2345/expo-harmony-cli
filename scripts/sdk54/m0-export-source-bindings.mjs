@@ -8,7 +8,7 @@ const canonical = value => JSON.stringify(value, (_key, row) => row && typeof ro
   ? Object.fromEntries(Object.entries(row).sort(([a], [b]) => a.localeCompare(b))) : row);
 const projectedPath = value => projectTemplateSource({ path: value, text: value.replaceAll('{%-', '<%-').replaceAll('%}', '%>') }).text;
 
-export function buildExportSourceBindings({ files, requested, ambientBindings = [], packageTargets = [] }) {
+export function buildExportSourceBindings({ files, requested, ambientBindings = [], packageTargets = [], relativeAssetTargets = [] }) {
   const sources = new Map(), projected = new Map(), parsed = new Map();
   for (const file of files) {
     if (sources.has(file.path)) throw new Error(`Duplicate export source: ${file.path}`);
@@ -38,7 +38,7 @@ export function buildExportSourceBindings({ files, requested, ambientBindings = 
     const base = path.posix.normalize(path.posix.join(path.posix.dirname(projectedPath(from)), request));
     const stems = [base, base.replace(/\.[cm]?jsx?$/, '')];
     const found = new Set();
-    for (const stem of stems) for (const suffix of ['', '.ts', '.tsx', '.d.ts', '.js', '.jsx', '/index.ts', '/index.tsx', '/index.js',
+    for (const stem of stems) for (const suffix of ['', '.ts', '.tsx', '.d.ts', '.js', '.jsx', '/index.ts', '/index.tsx', '/index.d.ts', '/index.js',
       '.native.ts', '.native.tsx', '.ios.ts', '.ios.tsx', '.android.ts', '.android.tsx', '.web.ts', '.web.tsx']) {
       if (projected.has(stem + suffix)) found.add(projected.get(stem + suffix));
     }
@@ -60,7 +60,15 @@ export function buildExportSourceBindings({ files, requested, ambientBindings = 
         return next ? { ...next, routes: [{ from: file, request, targetPath, targetName }, ...next.routes] }
           : { steps: [], routes: [{ from: file, request, targetPath, targetName }], externalRequests: [], terminalRole: 'MISSING_TARGET' };
       });
+      const resolved = children.filter(child => child.terminalRole !== 'MISSING_TARGET');
+      const requiresPlatformClosure = found.some(targetPath => /\.(?:native|ios|android|web)\.[^.]+$/.test(targetPath));
+      if (!requiresPlatformClosure && resolved.length) return merge(node, resolved);
       if (children.length) return merge(node, children);
+      const assets = relativeAssetTargets.filter(row => row.from === file && row.request === request);
+      if (assets.length) return { steps: [anchor(node)],
+        routes: assets.map(row => ({ from: file, request, targetPath: row.path, targetName, role: 'RELATIVE_ASSET_CONSUMER' })),
+        externalRequests: assets.map(row => ({ from: file, request, symbol: targetName, targetPath: row.path, sha256: row.sha256 })),
+        terminalRole: 'EXTERNAL_CONSUMER_RULE' };
       if (request.startsWith('.') || found.length) return { steps: [anchor(node)], routes: [], externalRequests: [], terminalRole: 'MISSING_TARGET' };
       const bindings = ambientBindings.filter(r => r.request === request && r.name === targetName);
       const declarations = bindings.map(binding => {
@@ -93,6 +101,10 @@ export function buildExportSourceBindings({ files, requested, ambientBindings = 
     const expression = (node, value) => {
       if (!value) return { steps: [anchor(node)], routes: [], externalRequests: [], terminalRole: 'LOCAL_EXPRESSION_RULE' };
       const root = ts.isPropertyAccessExpression(value) ? value.expression : value;
+      if (ts.isIdentifier(root) && ['globalThis', 'window', 'document', 'process'].includes(root.text)) {
+        return { steps: [anchor(node)], routes: [], externalRequests: [{ from: file, request: root.text, symbol: value.getText(ast) }],
+          terminalRole: 'EXTERNAL_CONSUMER_RULE' };
+      }
       if (ts.isIdentifier(root)) return local(node, root.text);
       const requires = [];
       const visit = child => {
@@ -102,34 +114,72 @@ export function buildExportSourceBindings({ files, requested, ambientBindings = 
       visit(value);
       return merge(node, requires);
     };
+    const bindingNames = node => ts.isIdentifier(node) ? [node.text]
+      : ts.isObjectBindingPattern(node) || ts.isArrayBindingPattern(node)
+        ? node.elements.flatMap(element => ts.isBindingElement(element) ? bindingNames(element.name) : []) : [];
+    let exportFallback;
     for (const statement of ast.statements) {
       if (ts.isExportDeclaration(statement)) {
-        if (statement.exportClause && ts.isNamedExports(statement.exportClause)) {
+        if (statement.exportClause && ts.isNamespaceExport(statement.exportClause) && statement.exportClause.name.text === name) {
+          const request = statement.moduleSpecifier?.text;
+          if (!request) continue;
+          const found = targets(file, request);
+          if (found.length) return { steps: [anchor(statement)],
+            routes: found.map(targetPath => ({ from: file, request, targetPath, targetName: '*', role: 'NAMESPACE_EXPORT_SOURCE' })),
+            externalRequests: [], terminalRole: 'LOCAL_EXPRESSION_RULE' };
+          if (!request.startsWith('.')) return { steps: [anchor(statement)], routes: [],
+            externalRequests: [{ from: file, request, symbol: '*' }], terminalRole: 'EXTERNAL_CONSUMER_RULE' };
+          return { steps: [anchor(statement)], routes: [], externalRequests: [], terminalRole: 'MISSING_TARGET' };
+        } else if (statement.exportClause && ts.isNamedExports(statement.exportClause)) {
           const element = statement.exportClause.elements.find(r => r.name.text === name);
           if (element) return statement.moduleSpecifier ? forward(statement, statement.moduleSpecifier.text, element.propertyName?.text ?? element.name.text)
             : local(statement, element.propertyName?.text ?? element.name.text);
         } else if (!statement.exportClause && statement.moduleSpecifier) {
           for (const target of targets(file, statement.moduleSpecifier.text)) {
             const result = trace(target, name, seen);
-            if (result) return { ...merge(statement, [result]), routes: [{ from: file, request: statement.moduleSpecifier.text, targetPath: target, targetName: name }, ...result.routes] };
+            if (result) {
+              const candidate = { ...merge(statement, [result]), routes: [{ from: file, request: statement.moduleSpecifier.text, targetPath: target, targetName: name }, ...result.routes] };
+              if (candidate.terminalRole !== 'MISSING_TARGET') return candidate;
+              exportFallback ??= candidate;
+            }
           }
+          exportFallback ??= forward(statement, statement.moduleSpecifier.text, name);
         }
       }
       if (name === 'default' && ts.isExportAssignment(statement)) return expression(statement, statement.expression);
       const modifiers = ts.getModifiers(statement) ?? [];
+      if (modifiers.some(r => r.kind === ts.SyntaxKind.ExportKeyword) && ts.isVariableStatement(statement)) {
+        const declaration = statement.declarationList.declarations.find(row => bindingNames(row.name).includes(name));
+        if (declaration) return merge(statement, [expression(declaration, declaration.initializer)]);
+      }
+      if (file.endsWith('.d.ts') && modifiers.some(r => r.kind === ts.SyntaxKind.DeclareKeyword) && ts.isVariableStatement(statement)) {
+        const declaration = statement.declarationList.declarations.find(row => bindingNames(row.name).includes(name));
+        if (declaration) return merge(statement, [expression(declaration, declaration.initializer)]);
+      }
       if (modifiers.some(r => r.kind === ts.SyntaxKind.ExportKeyword) && (statement.name?.getText(ast) === name || name === 'default' && modifiers.some(r => r.kind === ts.SyntaxKind.DefaultKeyword)))
         return { steps: [anchor(statement)], routes: [], externalRequests: [], terminalRole: 'FINITE_SOURCE_DECLARATION' };
     }
-    let commonjs;
+    let commonjs, commonjsRule;
     const visit = node => {
       if (ts.isBinaryExpression(node) && node.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
         const left = node.left.getText(ast);
-        if (left === `exports.${name}` || left === `module.exports.${name}` || left === 'module.exports' && ['default', 'prototype'].includes(name)) commonjs = node;
+        if (left === `exports.${name}` || left === `module.exports.${name}` || left === 'module.exports' && ['default', 'prototype'].includes(name)) {
+          commonjs = { node, value: node.right };
+        } else if (left === 'module.exports' && ts.isObjectLiteralExpression(node.right)) {
+          const property = node.right.properties.find(row => row.name?.getText(ast).replace(/^['"]|['"]$/g, '') === name);
+          if (property && ts.isPropertyAssignment(property)) commonjs = { node, value: property.initializer };
+          else if (property && ts.isShorthandPropertyAssignment(property)) commonjs = { node, value: property.name };
+        }
+      } else if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)
+        && node.expression.name.text === 'defineProperty' && node.arguments.length >= 2
+        && ['exports', 'module.exports'].includes(node.arguments[0].getText(ast))
+        && ts.isStringLiteralLike(node.arguments[1]) && node.arguments[1].text === name) {
+        commonjsRule = { steps: [anchor(node)], routes: [], externalRequests: [], terminalRole: 'LOCAL_EXPRESSION_RULE' };
       }
       ts.forEachChild(node, visit);
     };
     visit(ast);
-    return commonjs ? expression(commonjs, commonjs.right) : null;
+    return commonjs ? expression(commonjs.node, commonjs.value) : commonjsRule ?? exportFallback ?? null;
   };
   const bindings = [], blockers = [], ids = new Set();
   for (const item of requested) {

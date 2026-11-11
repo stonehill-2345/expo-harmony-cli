@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { sha256, resolveMapped, safeFile, verifyReceipts, newOutput } from '../abc/c-evidence-lib.mjs';
+import { html, sha256, resolveMapped, safeFile, verifyReceipts, newOutput } from '../abc/c-evidence-lib.mjs';
 
 function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'c-portable-'));
@@ -31,4 +31,10 @@ test('rejects traversal, symlink escape, missing file and reused output', t => {
   for (const p of ['../x','/etc/passwd','escape/nope','missing']) assert.throws(() => safeFile(root,p));
   assert.throws(() => newOutput(root), /exist/i);
   assert.throws(() => resolveMapped('/old/../escape', [{from:'/old',to:root}]), /escape|unsafe/i);
+});
+test('HTML report renders safe relative evidence links as clickable navigation', () => {
+  const report=html('report',{links:['input-audit/report.html','../escape.html','https://example.com']});
+  assert.match(report,/<a href="input-audit\/report\.html">input-audit\/report\.html<\/a>/);
+  assert.doesNotMatch(report,/href="\.\.\/escape\.html"/);
+  assert.doesNotMatch(report,/href="https:\/\//);
 });
