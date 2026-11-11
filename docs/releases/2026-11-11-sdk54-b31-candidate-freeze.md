@@ -30,3 +30,28 @@
 ## 边界
 
 冻结记录中的 `source.dirty=true`，原因是本轮 B-32 代码/测试和用户提供的输入 tar 尚未提交。该候选可以审计和供 C 做包审查，但不能进入正式 B02 runner：preflight 要求 `source.dirty=false`。本报告不把安装矩阵等同于设备运行、ExpoImage/default 或 M4/M5 阶段通过。
+
+## 合并 A/C 后重冻结
+
+2026-11-11 合并 `origin/feat/sdk54-a-modules` 后 HEAD 为 `a9d7e512834b4bf0264a1d013e94271b0bcfef32`。A 修改使四个包 hash 变化：`expo-font`、`expo-modules-autolinking`、`expo-modules-core`、`@react-native-ohos/react-native-screens`，旧候选设备结果因此不能直接沿用。
+
+新候选目录：`outputs/sdk54-abc/20261111-153839-B-post-a-3038/frozen-candidate/`：
+
+- runner candidate SHA-256：`9aa71586069dfbf90a0a79ac6bb65c7dfc8b2462a45192ff24c9f1a0f0d2f061`；
+- B candidate SHA-256：`b78242d77e87ab234b0dc179d798b516ca74f06bd5450358ffac64da37fd22d4`；
+- release SHA-256：`0902fd9d71f05c0060ba045b3ece91851ab53b938c0a749f33fe6219d5f4a2ab`；
+- blank/default × npm/pnpm 首次安装与锁重装仍全部 0/0，`runtimeFailures=[]`；
+- fresh blank/npm Release HAP 构建、安装、启动通过，HAP SHA-256 `b090dfc016f843007036a0de6a6fdf811a444a62bdd06091492d4395d33e3951`，hilog 使用 `bundle.harmony.js` 并 `Running "main"`，截图文案正确。
+
+随后补齐新 candidate 的 blank 四组合设备自测：
+
+| 包管理器 | 配置 | HAP SHA-256 | 结果 |
+| --- | --- | --- | --- |
+| npm | Debug | `fe13129bf69ccdce5b4103e8d098ee210bda1c09f680b65d884ec2282b0f36dc` | PASS，Metro 8094，`Running "main"` |
+| npm | Release | `b090dfc016f843007036a0de6a6fdf811a444a62bdd06091492d4395d33e3951` | PASS，内嵌 bundle |
+| pnpm | Debug | `6155cdd96aa02736b08840679d9570719ef9ec63c857aacdd7ea8593000d073d` | PASS，Metro 8094，`Running "main"` |
+| pnpm | Release | `ace03326e3b00fb541e471e29ee812a973bd85c817ba83550d182fefbf464c60` | PASS，内嵌 bundle |
+
+机器汇总：`outputs/sdk54-abc/20261111-153839-B-post-a-3038/blank-four-matrix.json`，SHA-256 `1cfed35ac7ba70ddf68d2bcf4d81bda6fb0eaf311ed3216a43d9381cd87aec10`。四格均绑定 candidate `9aa715...`；测试应用、8094 和 reverse 均已清理。
+
+新冻结记录仍如实为 `source.dirty=true`，正式 B02 preflight 继续等待 clean source。
