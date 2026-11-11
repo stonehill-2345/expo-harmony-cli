@@ -58,7 +58,6 @@ export function commitTextFileTransaction(changes: readonly TextFileChange[]): v
       committed.push(change);
     }
 
-    for (const change of backedUp) fs.rmSync(change.backupPath, { force: true });
   } catch (error) {
     for (const change of [...committed].reverse()) fs.rmSync(change.path, { force: true });
     for (const change of [...backedUp].reverse()) {
@@ -68,7 +67,9 @@ export function commitTextFileTransaction(changes: readonly TextFileChange[]): v
   } finally {
     for (const change of prepared) {
       fs.rmSync(change.tempPath, { force: true });
-      fs.rmSync(change.backupPath, { force: true });
     }
   }
+
+  // All targets are committed. Cleanup failure must not roll back using deleted backups.
+  for (const change of backedUp) fs.rmSync(change.backupPath, { force: true });
 }

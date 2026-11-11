@@ -237,6 +237,31 @@ if (process.argv[2] === '--child') {
       assert.equal(fs.readFileSync(path.join(project, 'harmony/current.txt'), 'utf8'), 'concurrent');
     } finally { fs.rmSync(project, { recursive: true, force: true }); }
   });
+  for (const point of ['after-backup', 'after-install']) {
+    test(`managed patch rejects a parent symlink during ${point} without writing outside`, async () => {
+      const project = root(); seed(project);
+      put(project, 'harmony/entry/config.json', 'old');
+      put(project, 'outside/config.json', point === 'after-install' ? 'new' : 'old');
+      const externalBefore = tree(path.join(project, 'outside'));
+      try {
+        await assert.rejects(run({ projectRoot: project, generate: async (stage, hash) => {
+          put(stage, 'entry/config.json', 'new');
+          hash.applyManagedPatch({ writes: ['entry/config.json'], deletes: [], entries: {
+            'entry/config.json': { before: fingerprint(path.join(project, 'harmony/entry/config.json')),
+              after: fingerprint(path.join(stage, 'entry/config.json')) },
+          } });
+        }, fault: async current => {
+          if (current !== point) return;
+          fs.renameSync(path.join(project, 'harmony/entry'), path.join(project, 'entry-saved'));
+          fs.symlinkSync(path.join(project, 'outside'), path.join(project, 'harmony/entry'));
+          if (point === 'after-install') throw new Error('trigger recovery');
+        } }), /symlink/i);
+        assert.deepEqual(tree(path.join(project, 'outside')), externalBefore);
+        assert.equal(fs.existsSync(path.join(project, '.expo-harmony-generation/lock.json')), true,
+          'keep recovery journal and backups until the conflicting path is repaired');
+      } finally { fs.rmSync(project, { recursive: true, force: true }); }
+    });
+  }
   test('invalid or symlinked file hash caches fall back without touching external files', async () => {
     for (const mode of ['invalid', 'symlink']) {
       const project = root(), external = root(); seed(project);

@@ -116,3 +116,31 @@ root screen in its modal-back handler, matching the released compatibility artif
 The Screens JS/native `fullScreenSwipeEnabled` types
 still disagree; it did not block this matrix, but gesture-specific acceptance
 remains open.
+
+## Step 3 navigation fixture (2026-11-11)
+
+`step3-app/` is a separate Release fixture for native Sheet detents, route-driven
+orientation and Drawer. Copy its contents to an isolated host's `app/` and keep
+`RouterProbe.tsx` at the host root. Add `@react-navigation/drawer@7.5.0` and
+`react-native-drawer-layout@4.1.11`; keep the other pinned navigation dependencies.
+Use the current SDK Metro integration, Screens JS overlay and the deterministic
+`screens-4.9.0-navigation-sheet-v7` HAR, installed through normal OHPM overrides.
+The example and production Screens transformers must be byte-identical.
+
+The Drawer route disables its parent Stack's back gesture, so it does not compete
+with the drawer pan. `swipeEdgeWidth: 48` allows starting inside the emulator's OS
+edge dock. The SDK Metro resolver selects Drawer layout's existing native gesture
+bridge on Harmony; the upstream fallback exports `Gesture = undefined`.
+
+Replay in Release without Metro: open Drawer, swipe open/closed, select Second,
+reload to Home; open Sheet, drag 0 → 1 → 0, close by button, reopen and system-back;
+open landscape and return to portrait. Verify UI/layout and probe events together,
+including unchanged process ID and changed runtime UUID on reload. Route-driven
+orientation does not prove physical sensor auto-rotation. Sheet `fitToContents`,
+custom corner/elevation, outside interaction, dismissal prevention and orientation
+while a sheet is open are not accepted by this fixture. This is local implementation
+evidence, not the unified npm/pnpm × Debug/Release acceptance matrix.
+
+Current local evidence and candidate identities are in
+`outputs/m4-step3-20261110/report.html`. Earlier failure captures remain available;
+only the explicitly named final captures support the current results.

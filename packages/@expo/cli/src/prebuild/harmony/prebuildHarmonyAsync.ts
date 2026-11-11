@@ -105,6 +105,7 @@ export async function prebuildHarmonyAsync(
     appConfig: snapshot.expoConfig,
     userInterfaceStyle: snapshot.harmony.userInterfaceStyle,
     nativeConfig: plan.nativeConfig,
+    resources: plan.resources,
     modules,
     inputHarPath: path.join(rnohRoot, 'react_native_openharmony.har'),
     corePackageRoot: core.packageRoot,

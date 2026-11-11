@@ -40,7 +40,7 @@ export function evaluateA07Entry({ stageProgress, stageEvidenceValid = true, sta
   }]));
   const expoImage = releaseManifest.packages.find(item => item.installName === 'expo-image') ?? null;
   if (expoImage) assert.equal(expoImage.upstreamVersion, '3.0.11', 'Release catalog has the wrong expo-image version');
-  const implementationReady = a06Ready && stageEvidenceValid && stages.M6.closed;
+  const implementationReady = a06Ready && stageEvidenceValid && REQUIRED_STAGES.every(name => stages[name].closed);
   const integrationReady = implementationReady && Boolean(expoImage);
   const blockers = [];
   if (!a06Ready) blockers.push({ id: 'A06_PREPARATION_INVALID', owner: 'A' });
@@ -74,7 +74,7 @@ export function buildA07EntryAudit(root = repository) {
   }
   const gate = evaluateA07Entry({
     stageProgress: calculated ?? frozen,
-    stageEvidenceValid: Boolean(calculated),
+    stageEvidenceValid: calculated !== null && stageEvidenceError === null,
     stageEvidenceError,
     a06Contract: read(path.join(root, a06File)),
     releaseManifest: createReleaseManifest(),

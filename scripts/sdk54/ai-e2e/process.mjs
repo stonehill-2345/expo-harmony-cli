@@ -45,13 +45,20 @@ export async function runCommand({ id, argv, cwd, outputDirectory, timeoutMs, si
   child.stdout.pipe(stdoutFile);
   child.stderr.pipe(stderrFile);
 
+  let killTimer;
+  const stop = () => {
+    if (killTimer) return;
+    terminate(child, 'SIGTERM');
+    killTimer = setTimeout(() => terminate(child, 'SIGKILL'), 1000);
+  };
   const timeout = setTimeout(() => {
     timedOut = true;
-    terminate(child, 'SIGTERM');
+    stop();
   }, timeoutMs);
   const abort = () => {
     interrupted = true;
-    terminate(child, 'SIGTERM');
+    clearTimeout(timeout);
+    stop();
   };
   signal?.addEventListener('abort', abort, { once: true });
   if (signal?.aborted) abort();
@@ -61,6 +68,7 @@ export async function runCommand({ id, argv, cwd, outputDirectory, timeoutMs, si
     child.once('close', (exitCode, childSignal) => resolve({ code: exitCode, closeSignal: childSignal }));
   }).finally(() => {
     clearTimeout(timeout);
+    clearTimeout(killTimer);
     signal?.removeEventListener('abort', abort);
   });
   await Promise.all([finished(stdoutFile), finished(stderrFile)]);

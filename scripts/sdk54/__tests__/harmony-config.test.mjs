@@ -244,12 +244,23 @@ test('public declarations accept Harmony authors and reject invalid literal cont
   const fixture = path.join(directory, 'contract.ts');
   fs.writeFileSync(
     fixture,
-    `import { HarmonyExpoConfig, resolveHarmonyConfig, withHarmonyApp, defineHarmonyPlugin } from ${JSON.stringify(
+    `import { HarmonyExpoConfig, HarmonyResourceContribution, resolveHarmonyConfig, withHarmonyApp, withHarmonyResources, defineHarmonyPlugin } from ${JSON.stringify(
       publicModule
     )};
 const exp: HarmonyExpoConfig = { name: 'App', slug: 'app', harmony: { scheme: ['demo'], permissions: [{ name: 'p', usedScene: { when: 'inuse' } }], extensions: { module: { nested: [true, null] } } } };
 const plugin = defineHarmonyPlugin((c: HarmonyExpoConfig) => withHarmonyApp(c, async mod => { mod.modResults.custom = true; return mod; }));
 const name: string = resolveHarmonyConfig(exp).harmony.bundleName;
+const identity = { owner: 'example', packageName: 'example', packageVersion: '1.0.0', target: 'data.json', sha256: 'hash' };
+withHarmonyResources(exp, async mod => {
+  mod.modResults.push({ ...identity, source: 'data.json' }, { ...identity, contents: '{}' });
+  return mod.modRequest.nextMod ? await mod.modRequest.nextMod(mod) : mod;
+});
+// @ts-expect-error must supply bytes by one mechanism
+const missingBytes: HarmonyResourceContribution = identity;
+// @ts-expect-error source and inline content are mutually exclusive
+const ambiguousBytes: HarmonyResourceContribution = { ...identity, source: 'data.json', contents: '{}' };
+// @ts-expect-error resources mod requires an array
+withHarmonyResources(exp, mod => ({ ...mod, modResults: {} }));
 // @ts-expect-error invalid orientation
 const badOrientation: HarmonyExpoConfig = { name: 'App', slug: 'app', harmony: { orientation: 'up' } };
 // @ts-expect-error unknown Harmony key

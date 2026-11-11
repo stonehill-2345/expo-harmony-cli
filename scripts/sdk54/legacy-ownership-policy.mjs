@@ -129,6 +129,8 @@ export const splitAnchors = [
 ];
 
 export const dynamicReviews = [
+  { source: `${toolTests}screens-harmony-boolean.test.mjs`, expression: "require(path.join(root, 'utils.cjs'))",
+    conclusion: '测试只加载从固定 Screens overlay 复制到隔离目录的 utils.cjs；临时 react-native 替身用于验证平台布尔值，不是仓库相对依赖。', task: 'M6-04' },
   ...['harmony/config', 'prebuild/harmony/configPlugins', 'prebuild/harmony/prebuildHarmonyAsync'].map(module => ({
     source: 'scripts/sdk54/test-m2-generation.mjs', expression: `cliRequest(path.join(cliRoot, 'build/src/${module}.js'))`,
     conclusion: 'M2真实消费故障执行器从消费项目实际解析的CLI发行包加载生成接口；候选先经完整逐字节检查，不读取仓库构建或独立CLI。', task: 'M6-04' })),

@@ -29,3 +29,14 @@ test('consumption rejects unknown HAR without creating output or executing a too
     assert.throws(() => verifyReleasedCompatibility(root));
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
+
+
+test('release Screens transformer includes the same tested navigation registrations as the example', () => {
+  const production = fs.readFileSync('packages/expo-modules-autolinking/scripts/harmony/prepare-screens.py', 'utf8');
+  const example = fs.readFileSync('packages/expo-modules-core/harmony/example/router/prepare-screens.py', 'utf8');
+  assert.equal(production, example, 'Published HAR must use the complete device-tested transformer');
+  for (const name of ['BOTTOM_TABS_TOUCH_AFTER', 'CPP_DESCRIPTOR_AFTER', 'CPP_BINDER_AFTER', 'ETS_BUILDER_AFTER']) {
+    const line = example.split('\n').find(line => line.startsWith(name + ' ='));
+    assert.ok(line && production.includes(line), `Missing tested navigation transform ${name}`);
+  }
+});

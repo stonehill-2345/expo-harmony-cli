@@ -2,6 +2,7 @@ import { type ConfigPlugin, createRunOncePlugin } from 'expo/config-plugins';
 
 import { withFontsAndroid } from './withFontsAndroid';
 import { withFontsIos } from './withFontsIos';
+import { withFontsHarmony } from './withFontsHarmony';
 
 const pkg = require('expo-font/package.json');
 
@@ -27,6 +28,7 @@ export type FontProps = {
 };
 
 const withFonts: ConfigPlugin<FontProps> = (config, props) => {
+  config = withFontsHarmony(config, props?.fonts ?? []);
   if (!props) {
     return config;
   }
@@ -46,4 +48,6 @@ const withFonts: ConfigPlugin<FontProps> = (config, props) => {
   return config;
 };
 
-export default createRunOncePlugin(withFonts, pkg.name, pkg.version);
+export default Object.assign(createRunOncePlugin(withFonts, pkg.name, pkg.version), {
+  harmony: { platforms: ['harmony', 'ios', 'android'] },
+});

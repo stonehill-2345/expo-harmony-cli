@@ -41,9 +41,9 @@ function ScreenStackItem({
   }, [headerConfig?.hidden, stackPresentation]);
   const content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(_reactNative.View, {
     collapsable: false,
-    style: [stackPresentation === 'formSheet' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container]
+    style: [stackPresentation === 'formSheet' && _reactNative.Platform.OS !== 'harmony' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container]
   }, /*#__PURE__*/React.createElement(_reactNative.View, {
-    style: [stackPresentation === 'formSheet' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container, contentStyle]
+    style: [stackPresentation === 'formSheet' && _reactNative.Platform.OS !== 'harmony' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container, contentStyle]
   }, children)), /*#__PURE__*/React.createElement(_ScreenStackHeaderConfig.ScreenStackHeaderConfig, headerConfig), stackPresentation === 'formSheet' && unstable_sheetFooter && /*#__PURE__*/React.createElement(_ScreenFooter.FooterComponent, null, unstable_sheetFooter()));
 
   // We take backgroundColor from contentStyle and apply it on Screen.

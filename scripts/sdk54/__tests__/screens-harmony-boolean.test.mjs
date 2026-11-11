@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { createRequire } from 'node:module';
+import vm from 'node:vm';
 import test from 'node:test';
 
 const overlay = path.resolve(
@@ -26,7 +27,7 @@ test('Screens uses native booleans for Harmony optional boolean props', (t) => {
 
   const require = createRequire(path.join(root, 'entry.cjs'));
   const reactNative = require('react-native');
-  const { parseBooleanToOptionalBooleanNativeProp: parse } = require('./utils.cjs');
+  const { parseBooleanToOptionalBooleanNativeProp: parse } = require(path.join(root, 'utils.cjs'));
 
   assert.equal(parse(undefined), undefined);
   assert.equal(parse(true), true);
@@ -42,4 +43,23 @@ test('Screens uses native booleans for Harmony optional boolean props', (t) => {
     assert.match(source, /Platform\.OS === 'harmony'/);
     assert.match(source, /return prop/);
   }
+});
+
+
+test('Harmony form-sheet children receive a layout container for backgrounds and touch hit testing', () => {
+  const React = { createElement: (type, props, ...children) => ({ type, props, children }), Fragment: 'Fragment',
+    useRef: value => ({current: value}), useContext: () => null, useImperativeHandle() {}, useEffect() {}, forwardRef: fn => fn };
+  const reactNative = { Platform: { OS: 'harmony' }, View: 'View', StyleSheet: {create: value => value, flatten: value => value} };
+  const exported = {};
+  vm.runInNewContext(fs.readFileSync(path.join(overlay, 'lib/commonjs/components/ScreenStackItem.js'), 'utf8'), {
+    exports: exported,
+    require: name => name === 'react' ? React : name === 'react-native' ? reactNative : name === 'warn-once' ? () => {} : {},
+  });
+  const view = () => exported.default({stackPresentation: 'formSheet', children: 'content', headerConfig: {hidden: true}}, null).children[0].children[0];
+  assert.equal(view().props.style[0].flex, 1);
+  assert.equal(view().children[0].props.style[0].flex, 1);
+  reactNative.Platform.OS = 'android';
+  assert.equal(view().props.style[0], null);
+  reactNative.Platform.OS = 'ios';
+  assert.equal(view().props.style[0].position, 'absolute');
 });

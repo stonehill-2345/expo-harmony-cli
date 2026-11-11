@@ -5,6 +5,7 @@ import os from 'node:os';
 import path from 'node:path';
 import test from 'node:test';
 
+import { candidateBytes } from './ai-e2e-fixtures.mjs';
 import { preflightRun } from '../ai-e2e/preflight.mjs';
 
 const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -16,7 +17,7 @@ function fixture(t) {
   const runDirectory = path.join(repositoryRoot, 'outputs/sdk54/ai-e2e/run');
   const consumerRoot = path.join(base, 'consumer');
   fs.mkdirSync(runDirectory, { recursive: true });
-  const candidate = Buffer.from('{"packages":[]}\n');
+  const candidate = candidateBytes(runDirectory);
   const caseSet = Buffer.from('{"schemaVersion":1,"registryVersion":"2026-10-30","registrySha256":"' + 'a'.repeat(64) + '","cases":[{"id":"V01-DEVICE-PREFLIGHT","required":true,"requiresDevice":true,"requiredEvidence":["device-assertion","screenshot"]}]}\n');
   fs.writeFileSync(path.join(runDirectory, 'candidate.json'), candidate);
   fs.writeFileSync(path.join(runDirectory, 'case-set.json'), caseSet);
@@ -58,4 +59,15 @@ test('blocks dirty source, stale candidate, missing tool, in-repository consumer
   assert.match(result.errors.join('\n'), /tools\.npm is not an executable file/);
   assert.match(result.errors.join('\n'), /consumerRoot must be outside repositoryRoot/);
   assert.match(result.errors.join('\n'), /stage V-01 requires an explicit device/);
+});
+
+test('rejects hash-valid empty candidates before execution', t => {
+  const { manifest, manifestFile, runDirectory } = fixture(t);
+  const bytes = Buffer.from(JSON.stringify({ packages: [], failures: [] }));
+  fs.writeFileSync(path.join(runDirectory, 'candidate.json'), bytes);
+  manifest.candidate.sha256 = sha256(bytes);
+  fs.writeFileSync(manifestFile, JSON.stringify(manifest));
+  const result = preflightRun(manifestFile, 'V-01');
+  assert.equal(result.ready, false);
+  assert.match(result.errors.join('\n'), /Candidate manifest invalid/);
 });

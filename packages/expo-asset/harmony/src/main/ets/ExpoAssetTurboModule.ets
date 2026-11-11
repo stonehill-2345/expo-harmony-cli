@@ -32,17 +32,25 @@ export class ExpoAssetTurboModule extends AnyThreadTurboModule {
     }
 
     try {
+      const embedded = url.startsWith('asset://') || url.startsWith('rawfile://') || !this.hasScheme(url);
+      const embeddedBytes = embedded ? await this.readSource(url) : undefined;
+      this.assertActive();
+      const embeddedHash = embeddedBytes === undefined ? null : this.md5Bytes(embeddedBytes);
+      if (embeddedHash !== null && md5Hash !== null && embeddedHash !== md5Hash.toLowerCase()) {
+        throw new Error(`Asset MD5 mismatch: expected ${md5Hash}, received ${embeddedHash}`);
+      }
       const cacheKey = md5Hash ?? this.md5String(url);
       const cachePath = createCacheFilePath(this.ctx.uiAbilityContext.cacheDir, cacheKey, type);
-      const cached = await this.isValidCachedFile(cachePath, md5Hash);
+      const expectedHash = embeddedHash ?? md5Hash;
+      const cached = await this.isValidCachedFile(cachePath, expectedHash);
       this.assertActive();
       if (cached) {
         return toFileUri(cachePath);
       }
 
-      const bytes = await this.readSource(url);
+      const bytes = embeddedBytes ?? await this.readSource(url);
       this.assertActive();
-      await this.writeAtomically(cachePath, bytes, md5Hash);
+      await this.writeAtomically(cachePath, bytes, expectedHash);
       this.assertActive();
       return toFileUri(cachePath);
     } catch (error) {
@@ -201,8 +209,12 @@ export class ExpoAssetTurboModule extends AnyThreadTurboModule {
   }
 
   private md5String(value: string): string {
+    return this.md5Bytes(util.TextEncoder.create('utf-8').encodeInto(value));
+  }
+
+  private md5Bytes(value: Uint8Array): string {
     const digest = cryptoFramework.createMd('MD5');
-    digest.updateSync({ data: util.TextEncoder.create('utf-8').encodeInto(value) });
+    digest.updateSync({ data: value });
     const bytes = digest.digestSync().data;
     let result = '';
     for (let index = 0; index < bytes.length; index += 1) {

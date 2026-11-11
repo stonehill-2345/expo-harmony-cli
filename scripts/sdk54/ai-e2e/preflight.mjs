@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { verifyCandidateManifest } from './evidence.mjs';
 import { validateCaseSet, validateRunManifest } from './schema.mjs';
 
 const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -20,6 +21,10 @@ function referencedFile(runDirectory, reference, label, errors) {
   }
   if (!fs.existsSync(file) || !fs.statSync(file).isFile()) {
     errors.push(`${label} is not a file`);
+    return null;
+  }
+  if (!inside(runDirectory, fs.realpathSync(file))) {
+    errors.push(`${label} resolves outside run directory`);
     return null;
   }
   const actual = sha256(fs.readFileSync(file));
@@ -41,7 +46,8 @@ export function preflightRun(manifestFile, stage) {
   if (inside(repositoryRoot, consumerRoot)) errors.push('consumerRoot must be outside repositoryRoot');
 
   const caseSetFile = referencedFile(runDirectory, manifest.caseSet, 'case-set', errors);
-  referencedFile(runDirectory, manifest.candidate, 'candidate', errors);
+  const candidateFile = referencedFile(runDirectory, manifest.candidate, 'candidate', errors);
+  if (candidateFile) errors.push(...verifyCandidateManifest(candidateFile));
   for (const tool of ['node', 'npm', 'pnpm']) {
     const toolPath = manifest.tools?.[tool];
     try {

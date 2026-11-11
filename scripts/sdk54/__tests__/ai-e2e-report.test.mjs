@@ -7,6 +7,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { candidateBytes, commandResult, deviceAssertion, png, jpeg } from './ai-e2e-fixtures.mjs';
 import { verifyRunReport } from '../ai-e2e/report.mjs';
 
 const sha256 = (value) => crypto.createHash('sha256').update(value).digest('hex');
@@ -22,9 +23,9 @@ function createRun(t) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-ai-e2e-report-')));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
 
-  const candidate = Buffer.from('{"packages":[]}\n');
+  const candidate = candidateBytes(root);
   const commandLog = Buffer.from('command completed\n');
-  const screenshot = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x01]);
+  const screenshot = png;
   fs.mkdirSync(path.join(root, 'evidence'), { recursive: true });
   fs.writeFileSync(path.join(root, 'candidate.json'), candidate);
   fs.writeFileSync(path.join(root, 'evidence/command.log'), commandLog);
@@ -100,6 +101,14 @@ function createRun(t) {
       },
     ],
   };
+  for (const result of results.results) {
+    result.command = commandResult(root, result.caseId);
+    result.evidence = result.evidence.filter(item => !['command-log', 'device-assertion'].includes(item.type));
+    result.evidence.push(...[result.command.stdout, result.command.stderr].map(ref => ({ type: 'command-log', ...ref })));
+  }
+  const assertion = Buffer.from(JSON.stringify(deviceAssertion(root, '127.0.0.1:5555')));
+  fs.writeFileSync(path.join(root, 'evidence/device.json'), assertion);
+  results.results[1].evidence.push({ type: 'device-assertion', path: 'evidence/device.json', sha256: sha256(assertion) });
   writeJson(path.join(root, 'results.json'), results);
   return { root, results };
 }
@@ -168,7 +177,7 @@ test('returns schema errors instead of throwing on malformed persisted results',
 
 test('accepts a non-empty JPEG screenshot evidence file', (t) => {
   const { root } = createRun(t);
-  const screenshot = Buffer.from([0xff, 0xd8, 0xff, 0xe0, 0x00, 0x10, 0x4a, 0x46, 0x49, 0x46, 0xff, 0xd9]);
+  const screenshot = jpeg;
   fs.writeFileSync(path.join(root, 'evidence/screen.png'), screenshot);
   rewriteResults(root, ({ results }) => {
     results[1].evidence.find(({ type }) => type === 'screenshot').sha256 = sha256(screenshot);
@@ -203,6 +212,76 @@ test('rejects incomplete, duplicated, stale or unverifiable PASS results', async
 
       assert.equal(report.canClose, false);
       assert.match(report.errors.join('\n'), expected);
+    });
+  }
+});
+
+test('rejects contradictory or missing persisted command results', async t => {
+  for (const mutate of [r => { r.command.exitCode = 17; }, r => { delete r.command; },
+    r => { r.command.timedOut = true; }, r => { r.command.interrupted = true; },
+    r => { r.command.signal = 'SIGTERM'; }, r => { r.command.stdout.sha256 = '0'.repeat(64); },
+    r => { r.evidence = {}; }]) {
+    await t.test(String(mutate), t => {
+      const { root } = createRun(t);
+      rewriteResults(root, ({ results }) => mutate(results[0]));
+      const report = verifyRunReport(root);
+      assert.equal(report.canClose, false);
+      assert.match(report.errors.join('\n'), /command|Command/);
+    });
+  }
+});
+
+test('rejects truncated or corrupt images even with matching evidence hashes', async t => {
+  for (const bytes of [png.subarray(0, 9), jpeg.subarray(0, 12), Buffer.from([255,216,255,217]),
+    Buffer.from(png.map((value, i) => i === 45 ? value ^ 1 : value))]) {
+    await t.test(bytes.toString('hex').slice(0, 24), t => {
+      const { root } = createRun(t);
+      fs.writeFileSync(path.join(root, 'evidence/screen.png'), bytes);
+      rewriteResults(root, ({ results }) => { results[1].evidence.find(e => e.type === 'screenshot').sha256 = sha256(bytes); });
+      const report = verifyRunReport(root);
+      assert.equal(report.canClose, false);
+      assert.match(report.errors.join('\n'), /Screenshot/);
+    });
+  }
+});
+
+test('rejects empty candidates, failed packaging, missing archives and changed archive bytes', async t => {
+  for (const mode of ['empty', 'failed', 'missing', 'changed']) {
+    await t.test(mode, t => {
+      const { root } = createRun(t);
+      const candidateFile = path.join(root, 'candidate.json');
+      const candidate = JSON.parse(fs.readFileSync(candidateFile));
+      if (mode === 'empty') candidate.packages = [];
+      if (mode === 'failed') candidate.failures.push('packing failed');
+      if (mode === 'missing') fs.unlinkSync(path.join(root, 'fixture.tgz'));
+      if (mode === 'changed') fs.writeFileSync(path.join(root, 'fixture.tgz'), 'drift');
+      writeJson(candidateFile, candidate);
+      const manifest = JSON.parse(fs.readFileSync(path.join(root, 'run-manifest.json')));
+      manifest.candidate.sha256 = sha256(fs.readFileSync(candidateFile));
+      writeJson(path.join(root, 'run-manifest.json'), manifest);
+      rewriteResults(root, ({ results }) => results.forEach(r => { r.candidateSha256 = manifest.candidate.sha256; }));
+      const report = verifyRunReport(root);
+      assert.equal(report.canClose, false);
+      assert.match(report.errors.join('\n'), /Candidate/);
+    });
+  }
+});
+
+test('rejects arbitrary, mismatched or failed device assertions', async t => {
+  for (const mode of ['text', 'target', 'pid', 'failed-command', 'empty-log']) {
+    await t.test(mode, t => {
+      const { root } = createRun(t);
+      const assertion = deviceAssertion(root, '127.0.0.1:5555');
+      if (mode === 'target') assertion.target = 'wrong-device';
+      if (mode === 'pid') assertion.pid = '99';
+      if (mode === 'failed-command') assertion.pidCommand.exitCode = 1;
+      if (mode === 'empty-log') assertion.logCommand = commandResult(root, 'hilog', '', assertion.logCommand.argv);
+      const bytes = Buffer.from(mode === 'text' ? 'command completed' : JSON.stringify(assertion));
+      fs.writeFileSync(path.join(root, 'evidence/device.json'), bytes);
+      rewriteResults(root, ({ results }) => { results[1].evidence.find(e => e.type === 'device-assertion').sha256 = sha256(bytes); });
+      const report = verifyRunReport(root);
+      assert.equal(report.canClose, false);
+      assert.match(report.errors.join('\n'), /Device|device/);
     });
   }
 });

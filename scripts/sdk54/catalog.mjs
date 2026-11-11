@@ -206,6 +206,16 @@ const SDK54_RUNTIME_PATCH_EXACT = Object.freeze({
     'build/withHarmony.js',
   ]),
   expo: Object.freeze(['bundledNativeModules.json', 'harmony-config.js', 'harmony-config.d.ts', 'harmony-config.schema.json']),
+  'expo-asset': Object.freeze([
+    'plugin/src/withAssets.ts', 'plugin/src/withAssetsHarmony.ts',
+    'plugin/build/withAssets.js', 'plugin/build/withAssets.d.ts',
+    'plugin/build/withAssetsHarmony.js', 'plugin/build/withAssetsHarmony.d.ts',
+  ]),
+  'expo-font': Object.freeze([
+    'plugin/src/withFonts.ts', 'plugin/src/withFontsHarmony.ts',
+    'plugin/build/withFonts.js', 'plugin/build/withFonts.d.ts',
+    'plugin/build/withFontsHarmony.js', 'plugin/build/withFontsHarmony.d.ts',
+  ]),
   'expo-linking': Object.freeze(['build/Linking.js', 'src/Linking.ts']),
   'expo-modules-core': Object.freeze([
     'ios/JSI/EXJSIUtils.h',

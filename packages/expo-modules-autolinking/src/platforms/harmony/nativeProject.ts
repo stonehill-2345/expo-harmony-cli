@@ -8,6 +8,8 @@ import type {
   ModuleDescriptorHarmony,
 } from '../../types';
 import { generatePackageListAsync } from './harmony';
+import { stageHarmonyResourcesAsync } from './resourceContributions';
+import type { HarmonyResourceContribution } from './resourceContributions';
 import { mergeHarmonyGenerationStateAsync } from './generationState';
 import { runHarmonyGenerationTransactionAsync } from './generationTransaction';
 import type { HarmonyGenerationFaultPoint } from './generationTransaction';
@@ -52,6 +54,7 @@ export interface HarmonyNativeProjectOptions {
     app?: Record<string, any>;
     module?: Record<string, any>;
   };
+  resources?: HarmonyResourceContribution[];
   modules: ModuleDescriptorHarmony[];
   inputHarPath: string;
   corePackageRoot: string;
@@ -266,12 +269,15 @@ async function generateHarmonyNativeProjectAsync(
       await writeHarmonyAppIdentityAsync(stageRoot, options.appName, options.bundleName, options.nativeConfig);
       const modules = [...options.modules].sort((a, b) => a.packageName.localeCompare(b.packageName));
       const generated = await assembleHarmonyGeneratedAreasAsync({ ...options, modules, harmonyRoot: stageRoot });
+      const owners = await stageHarmonyResourcesAsync({ projectRoot: options.projectRoot, stageRoot, currentRoot,
+        resources: options.resources, clean: options.clean });
       await options.finalize?.(stageRoot);
       const merge = await mergeHarmonyGenerationStateAsync({
         stageRoot,
         currentRoot,
         clean: options.clean,
         detectUnchanged: true,
+        owners,
       });
       if (merge.unchanged) hash.reuseCurrentTree();
       else if (merge.managedPatch) hash.applyManagedPatch(merge.managedPatch);

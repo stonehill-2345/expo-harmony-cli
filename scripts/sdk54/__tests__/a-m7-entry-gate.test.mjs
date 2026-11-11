@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 
-import { evaluateA07Entry } from '../a-m7-entry-gate.mjs';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { createHash } from 'node:crypto';
+import { readStageProgress } from '../stage-progress.mjs';
+
+import { buildA07EntryAudit, evaluateA07Entry } from '../a-m7-entry-gate.mjs';
 
 const unit = (name, isClosed) => ({
   closed: isClosed,
@@ -75,4 +81,40 @@ test('changed A-06 status, stage denominator, or expo-image version fails closed
   assert.throws(() => evaluateA07Entry(changedStage), /Invalid M6 denominator/);
   const changedVersion = fixture(); changedVersion.releaseManifest.packages[0].upstreamVersion = '3.0.12';
   assert.throws(() => evaluateA07Entry(changedVersion), /wrong expo-image version/);
+});
+
+for (const name of ['m4', 'm5', 'validation']) {
+  test(`open ${name} blocks entry even when M6 is closed`, () => {
+    const result = evaluateA07Entry(fixture({ [name]: false }));
+    assert.equal(result.decision, 'BLOCKED');
+    assert.equal(result.implementationReady, false);
+    assert.equal(result.integrationReady, false);
+  });
+}
+
+test('a frozen progress mismatch invalidates otherwise replayable evidence', (t) => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-a07-mismatch-'));
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const files = ['docs/releases/2026-11-02-sdk54-a06-expo-image-contract.json',
+    'docs/releases/sdk54-stage-progress-definition.json', 'scripts/sdk54/catalog.mjs',
+    'scripts/sdk54/release-catalog.mjs', 'apps/cli/content/patches/sdk-54/manifest.json'];
+  for (const file of files) {
+    fs.mkdirSync(path.dirname(path.join(root, file)), { recursive: true });
+    fs.copyFileSync(file, path.join(root, file));
+  }
+  const sha = bytes => createHash('sha256').update(bytes).digest('hex');
+  const definitionBytes = fs.readFileSync(path.join(root, files[1]));
+  const definition = JSON.parse(definitionBytes);
+  fs.writeFileSync(path.join(root, 'evidence.txt'), 'fixture');
+  const evidence = [{ path: 'evidence.txt', sha256: sha('fixture') }];
+  const acceptance = { schemaVersion: 1, definitionSha256: sha(definitionBytes),
+    units: Object.values(definition.stages).flat().map(id => ({ id, status: 'PASS', evidence })),
+    closures: Object.keys(definition.stages).map(stage => ({ stage, status: 'PASS', evidence })) };
+  fs.writeFileSync(path.join(root, 'docs/releases/sdk54-stage-acceptance.json'), JSON.stringify(acceptance));
+  const frozen = readStageProgress(root);
+  frozen.stages.M6.closed = false;
+  fs.writeFileSync(path.join(root, 'docs/releases/sdk54-stage-progress.json'), JSON.stringify(frozen));
+  const result = buildA07EntryAudit(root).gate;
+  assert.equal(result.decision, 'BLOCKED');
+  assert.ok(result.blockers.some(row => row.id === 'STAGE_EVIDENCE_INVALID'));
 });

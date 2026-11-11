@@ -6,6 +6,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { candidateBytes, deviceAssertion, png } from './ai-e2e-fixtures.mjs';
 import { runValidation } from '../ai-e2e/run.mjs';
 
 const REGISTRY_FILE = fileURLToPath(new URL('../ai-e2e/cases/registry.json', import.meta.url));
@@ -25,7 +26,7 @@ function fixture(t) {
   fs.mkdirSync(runDirectory, { recursive: true });
   fs.mkdirSync(consumerRoot);
 
-  const candidate = Buffer.from('{"packages":[]}\n');
+  const candidate = candidateBytes(runDirectory);
   fs.writeFileSync(path.join(runDirectory, 'candidate.json'), candidate);
   const caseSet = {
     schemaVersion: 1,
@@ -38,6 +39,7 @@ function fixture(t) {
   };
   writeJson(path.join(runDirectory, 'case-set.json'), caseSet);
   const caseSetSha256 = sha256(fs.readFileSync(path.join(runDirectory, 'case-set.json')));
+  const assertion = deviceAssertion(runDirectory);
   const manifest = {
     schemaVersion: 1,
     runId: 'run-test',
@@ -59,8 +61,8 @@ function fixture(t) {
         argv: [process.execPath, '-e', [
           'const fs=require("fs")',
           'fs.mkdirSync("evidence",{recursive:true})',
-          'fs.writeFileSync("evidence/device.txt","device ok\\n")',
-          'fs.writeFileSync("evidence/screen.png",Buffer.from([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a,1]))',
+          `fs.writeFileSync("evidence/device.txt",${JSON.stringify(JSON.stringify(assertion))})`,
+          `fs.writeFileSync("evidence/screen.png",Buffer.from("${png.toString('base64')}","base64"))`,
         ].join(';')],
         cwd: runDirectory,
         timeoutMs: 5_000,

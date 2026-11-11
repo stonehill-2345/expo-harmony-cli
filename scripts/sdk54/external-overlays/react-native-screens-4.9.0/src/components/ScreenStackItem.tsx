@@ -69,14 +69,14 @@ function ScreenStackItem(
       <View
         collapsable={false}
         style={[
-          stackPresentation === 'formSheet'
+          stackPresentation === 'formSheet' && Platform.OS !== 'harmony'
             ? Platform.OS === 'ios'
               ? styles.absolute
               : null
             : styles.container, 
         ]}>
         <View style={[
-          stackPresentation === 'formSheet'
+          stackPresentation === 'formSheet' && Platform.OS !== 'harmony'
             ? Platform.OS === 'ios'
               ? styles.absolute
               : null

@@ -125,10 +125,10 @@ export async function compileHarmonyConfigAsync(
     );
   }
   for (const mod of mods) {
-    if (!['app', 'module'].includes(mod)) {
+    if (!['app', 'module', 'resources'].includes(mod)) {
       throw new CommandError(
         'HARMONY_PLUGIN_MOD',
-        `Unsupported Harmony mod: ${mod}; expected app or module`
+        `Unsupported Harmony mod: ${mod}; expected app, module or resources`
       );
     }
   }
@@ -192,6 +192,7 @@ export async function compileHarmonyConfigAsync(
       h.extensions.module ?? {}
     ),
   };
+  let resources: any[] = [];
   const providers = Object.fromEntries(
     ['app', 'module'].map((mod) => [
       mod,
@@ -207,6 +208,15 @@ export async function compileHarmonyConfigAsync(
       },
     ])
   );
+  providers.resources = {
+    getFilePath: () => '',
+    read: () => [],
+    write: (_file: string, config: any) => {
+      assertJSON(config.modResults, 'harmony.resources');
+      if (!Array.isArray(config.modResults)) throw new Error('Harmony resources must be an array');
+      resources = config.modResults;
+    },
+  };
   try {
     const planned = BaseMods.withGeneratedBaseMods(exp as any, {
       platform: 'harmony' as any,
@@ -287,7 +297,7 @@ export async function compileHarmonyConfigAsync(
         permissions: nativeConfig.module.requestPermissions,
       },
     });
-    return { snapshot, nativeConfig };
+    return { snapshot, nativeConfig, resources };
   } catch (error: any) {
     throw new CommandError(
       'HARMONY_PLUGIN_FAILED',

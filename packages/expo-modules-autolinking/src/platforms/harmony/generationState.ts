@@ -184,7 +184,7 @@ async function mergeManagedFiles(
       if (!after) result.set(file, present);
       else if (!previous) {
         // Legacy projects have no proof of ownership. Keep overlapping user values.
-        if (/\.json5?$/.test(file)) {
+        if (state.files[file].json !== undefined) {
           const existing = JSON5.parse((await contents(present)).toString('utf8'));
           const legacyMerge = (generated: JsonValue, user: JsonValue): JsonValue => {
             if (isObject(generated) && isObject(user)) {
@@ -197,7 +197,7 @@ async function mergeManagedFiles(
           result.set(file, generated(legacyMerge(state.files[file].json, existing)));
         } else result.set(file, present);
       } else if (await hash(present) === await hash(after)) result.set(file, after);
-      else if (/\.json5?$/.test(file)) result.set(file, generated(mergeJson(ABSENT, JSON5.parse((await contents(present)).toString('utf8')), state.files[file].json, file)));
+      else if (state.files[file].json !== undefined) result.set(file, generated(mergeJson(ABSENT, JSON5.parse((await contents(present)).toString('utf8')), state.files[file].json, file)));
       else conflict(file);
       continue;
     }
@@ -329,7 +329,7 @@ export async function mergeHarmonyGenerationStateAsync({
   for (const file of [...desired.keys()].sort()) {
     assertRelative(file);
     const content = desired.get(file)!;
-    const json = /\.json5?$/.test(file) ? JSON5.parse((await contents(content)).toString('utf8')) : undefined;
+    const json = /\.json5?$/.test(file) && !file.startsWith('entry/src/main/resources/rawfile/') ? JSON5.parse((await contents(content)).toString('utf8')) : undefined;
     const canonical = json === undefined ? content : generated(json);
     desired.set(file, canonical);
     const owner = Object.prototype.hasOwnProperty.call(owners, file) ? owners[file] : 'expo-harmony';

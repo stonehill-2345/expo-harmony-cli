@@ -94,7 +94,28 @@ export function resolveHarmonyConfig(
 ): HarmonyConfigSnapshot;
 export function withHarmonyApp(config: HarmonyExpoConfig, action: HarmonyMod): HarmonyExpoConfig;
 export function withHarmonyModule(config: HarmonyExpoConfig, action: HarmonyMod): HarmonyExpoConfig;
-/** Registers app/module mods synchronously; asynchronous work belongs inside a mod callback. */
+export type HarmonyResourceContribution = {
+  owner: string;
+  packageName: string;
+  packageVersion: string;
+  /** Relative to entry/src/main/resources/rawfile/<owner>/. */
+  target: string;
+  sha256: string;
+} & ({ source: string; contents?: never } | { contents: string; source?: never });
+export interface HarmonyResourceModConfig extends Omit<HarmonyModConfig, 'modResults' | 'modRequest'> {
+  modResults: HarmonyResourceContribution[];
+  modRequest: Omit<HarmonyModConfig['modRequest'], 'nextMod'> & {
+    nextMod?: HarmonyResourceMod;
+  };
+}
+export type HarmonyResourceMod = (
+  config: HarmonyResourceModConfig
+) => HarmonyResourceModConfig | Promise<HarmonyResourceModConfig>;
+export function withHarmonyResources(
+  config: HarmonyExpoConfig,
+  action: HarmonyResourceMod
+): HarmonyExpoConfig;
+/** Registers app/module/resources mods synchronously; asynchronous work belongs inside a mod callback. */
 export function defineHarmonyPlugin<T extends (...args: any[]) => HarmonyExpoConfig>(
   plugin: T,
   options?: { platforms?: HarmonyPlatform[] }

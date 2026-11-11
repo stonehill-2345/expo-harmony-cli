@@ -3,6 +3,7 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const crypto = require('node:crypto');
 const { createRequire } = require('node:module');
 const tooling = process.env.EXPO_HARMONY_TOOLING_ROOT;
 assert.ok(tooling, 'EXPO_HARMONY_TOOLING_ROOT must provide TypeScript');
@@ -16,8 +17,14 @@ function loadModule(options = {}) {
       return options.decodeResult === undefined ? {} : options.decodeResult;
     } } },
     '@rnoh/react-native-openharmony': { UITurboModule },
+    '@ohos.util': { TextDecoder: { create: () => new TextDecoder('utf-8', { fatal: true }) } },
+    '@ohos.security.cryptoFramework': { createMd: algorithm => {
+      const digest = crypto.createHash(algorithm.toLowerCase());
+      return { updateSync: ({ data }) => digest.update(data), digestSync: () => ({ data: digest.digest() }) };
+    } },
     '@ohos.file.fs': {
-      OpenMode: { READ_ONLY: 0 }, accessSync: file => options.exists !== false,
+      OpenMode: { READ_ONLY: 0, CREATE: 1, WRITE_ONLY: 2, TRUNC: 4 },
+      writeSync(fd, buffer) { options.onWrite?.(new Uint8Array(buffer)); return options.shortWrite ? 0 : buffer.byteLength; }, accessSync: file => options.exists !== false,
       statSync: file => ({ size: options.size ?? 32 }), openSync: file => ({ fd: 7 }), closeSync() {},
       readSync(fd, buffer) {
         const bytes = options.fontBytes ?? (() => {
@@ -44,7 +51,17 @@ function loadModule(options = {}) {
       } }, { filename: name });
     return exports;
   }
-  const ctx = { rnInstance: { registerFont: (family, file) => {
+  const ctx = { uiAbilityContext: { cacheDir: '/data/cache', resourceManager: {
+    getRawFileContentSync(name) {
+      if (name === 'expo-font/fonts.json') {
+        if (options.manifestError) throw options.manifestError;
+        if (options.manifest === undefined) throw Object.assign(new Error('rawfile absent'), { code: 9001005 });
+        return Buffer.from(JSON.stringify(options.manifest));
+      }
+      if (options.missingEmbeddedFont) throw Object.assign(new Error('embedded font absent'), { code: 9001005 });
+      return options.fontBytes;
+    },
+  } }, rnInstance: { registerFont: (family, file) => {
     registerCalls++;
     if (options.registerError) throw options.registerError;
     options.onRegister?.(family, file);
@@ -103,4 +120,40 @@ test('a bounded sfnt that the native decoder rejects is not registered or marked
     assert.deepEqual(Array.from(f.module.getLoadedFonts()), []);
     assert.equal(f.module.getFontPath('Malformed'), undefined);
   }
+});
+
+function embeddedFixture() {
+  const fontBytes = new Uint8Array(32); fontBytes.set([0,1,0,0,0,1]);
+  fontBytes.set([0x68,0x65,0x61,0x64],12); fontBytes.set([0,0,0,28,0,0,0,4],20);
+  const sha256 = crypto.createHash('sha256').update(fontBytes).digest('hex');
+  return { fontBytes, manifest: [{ family: 'Embedded', resource: 'expo-font/fonts/Embedded.ttf', sha256 }] };
+}
+
+test('embedded fonts are registered synchronously without a JS load or network and reloaded per instance', () => {
+  const options = embeddedFixture();let writes = 0;
+  for (let i=0;i<2;i++) {
+    const f = loadModule({ ...options, onWrite: bytes => { writes++;assert.deepEqual(Buffer.from(bytes),Buffer.from(options.fontBytes)); } });
+    assert.deepEqual(Array.from(f.module.getLoadedFonts()), ['Embedded']);assert.equal(f.registerCalls(),1);
+    assert.match(f.module.getFontPath('Embedded'), /ExpoEmbeddedFont-[a-f0-9]{64}\.ttf$/);
+    f.module.__onDestroy__();assert.deepEqual(Array.from(f.module.getLoadedFonts()), []);
+  }
+  assert.equal(writes,2);
+  assert.deepEqual(Array.from(loadModule({ manifest: [] }).module.getLoadedFonts()), []);
+  assert.deepEqual(Array.from(loadModule().module.getLoadedFonts()), []);
+});
+
+test('corrupt manifests, changed or missing bytes and short writes cannot report embedded fonts loaded', () => {
+  const options = embeddedFixture();
+  for (const invalid of [
+    { ...options, manifest: {} },
+    { ...options, manifest: [{ ...options.manifest[0], resource: '../font.ttf' }] },
+    { ...options, manifest: [{ ...options.manifest[0], sha256: '0'.repeat(64) }] },
+    { ...options, missingEmbeddedFont: true }, { ...options, shortWrite: true },
+  ]) assert.throws(() => loadModule(invalid), /embedded|Embedded|Incomplete|Invalid/);
+});
+
+test('plugin removal accepts the device string missing-resource code but propagates other failures', () => {
+  const absent = loadModule({ manifestError: { code: '9001005', message: 'Invalid relative path' } });
+  assert.deepEqual(Array.from(absent.module.getLoadedFonts()), []);
+  assert.throws(() => loadModule({ manifestError: { code: '401', message: 'Invalid parameter' } }), /Cannot read embedded/);
 });

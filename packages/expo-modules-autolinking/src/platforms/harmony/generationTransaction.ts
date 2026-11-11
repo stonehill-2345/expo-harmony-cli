@@ -327,7 +327,21 @@ function validFingerprint(value: ManagedFingerprint): boolean {
       && Number.isInteger(value.mode) && value.mode >= 0 && value.mode <= 0o7777);
 }
 
+// lstat on a leaf still follows symlinks in its ancestors. Check the whole managed path
+// again at commit/recovery time, not just while the generator prepares its patch.
+async function assertManagedParents(root: string, relative: string): Promise<void> {
+  const parent = path.dirname(managedPath(root, relative));
+  await assertDirectory(root);
+  let current = root;
+  for (const part of path.relative(root, parent).split(path.sep).filter(Boolean)) {
+    current = path.join(current, part);
+    try { await assertDirectory(current); }
+    catch (error: any) { if (error.code === 'ENOENT') return; throw error; }
+  }
+}
+
 async function currentFingerprint(root: string, relative: string): Promise<ManagedFingerprint | { kind: 'other' }> {
+  await assertManagedParents(root, relative);
   const target = managedPath(root, relative);
   let stat: fs.Stats;
   try { stat = await fs.promises.lstat(target); }
@@ -374,8 +388,9 @@ function normalizedPatchEntries(patch: ManagedPatchPlan): ManagedPatchEntry[] {
   return paths.map(relative => ({ path: relative, ...patch.entries[relative] }));
 }
 
-async function cloneFileWithMetadata(source: string, target: string): Promise<void> {
-  await fs.promises.mkdir(path.dirname(target), { recursive: true });
+async function cloneFileWithMetadata(source: string, target: string, root: string): Promise<void> {
+  await assertDirectory(root);
+  await mkdirSafe(path.dirname(target), root);
   if (process.platform === 'darwin') await execFileAsync('/bin/cp', ['-c', '-p', source, target]);
   else {
     await fs.promises.copyFile(source, target, fs.constants.COPYFILE_FICLONE);
@@ -402,7 +417,10 @@ async function restoreManagedPatch(projectRoot: string, workspace: string, entri
     else {
       const temporary = `${target}.expo-harmony-restore-${process.pid}`;
       await fs.promises.rm(temporary, { force: true });
-      await cloneFileWithMetadata(managedPath(backupRoot, entry.path), temporary);
+      if (!sameFingerprint(await currentFingerprint(backupRoot, entry.path), entry.before)) {
+        throw new Error(`Harmony managed patch backup changed at ${entry.path}`);
+      }
+      await cloneFileWithMetadata(managedPath(backupRoot, entry.path), temporary, harmonyRoot);
       await fs.promises.rename(temporary, target);
     }
   }
@@ -433,7 +451,7 @@ async function commitManagedPatch({
     const actual = await currentFingerprint(harmonyRoot, entry.path);
     if (!sameFingerprint(actual, entry.before)) throw new Error(`Harmony managed patch conflict at ${entry.path}`);
     if (entry.before.kind === 'file') {
-      await cloneFileWithMetadata(managedPath(harmonyRoot, entry.path), managedPath(backupRoot, entry.path));
+      await cloneFileWithMetadata(managedPath(harmonyRoot, entry.path), managedPath(backupRoot, entry.path), workspace);
     }
     if (entry.after.kind === 'file') {
       const prepared = await currentFingerprint(stage, entry.path);
@@ -454,7 +472,7 @@ async function commitManagedPatch({
     else {
       const temporary = `${target}.expo-harmony-install-${process.pid}`;
       await fs.promises.rm(temporary, { force: true });
-      await cloneFileWithMetadata(managedPath(stage, entry.path), temporary);
+      await cloneFileWithMetadata(managedPath(stage, entry.path), temporary, harmonyRoot);
       await fs.promises.rename(temporary, target);
     }
   }

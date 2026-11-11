@@ -35,6 +35,94 @@ CPP_BINDER_BEFORE = b'            {"RNSSearchBar", std::make_shared<RNSSearchBar
 CPP_BINDER_AFTER = CPP_BINDER_BEFORE + b'\n            {"RNSBottomTabs", std::make_shared<RNSBottomTabsJSIBinder>()},\n            {"RNSBottomTabsScreen", std::make_shared<RNSBottomTabsScreenJSIBinder>()},'
 
 
+
+def patch_sheet(data):
+    text = data.decode()
+    text = text.replace("import { window } from '@kit.ArkUI';", "import { window } from '@kit.ArkUI';\nimport display from '@ohos.display';")
+    marker = '  @State sheetAllowedDetents: number[] = [];'
+    text = text.replace(marker, '''
+  @State sheetVisible: boolean = false;
+  @State sheetDetentIndex: number = 0;
+  @State sheetGrabberVisible: boolean = false;
+'''+marker)
+    start = text.index('        RNViewBase({ ctx: this.ctx, tag: this.tag }) {', text.index('  build() {'))
+    end = text.index('\n      }\n      .onAreaChange', start)
+    content = text[start:end].replace('          .onAreaChange', "          .onTouch((event: TouchEvent) => {\n            if (this.isFormSheet()) this.ctx.rnInstance.postTouchEventMessageToCpp(this.tag, event);\n          })\n          .onAreaChange", 1)
+    text = text[:start] + '''
+        if (!this.isFormSheet()) {
+          this.screenContent()
+        } else {
+          Stack() {}.width('100%').height('100%')
+        }'''+text[end:]
+    methods = '''
+  private isFormSheet(): boolean {
+    return this.stackPresentationMode === 'formSheet' || this.stackPresentationMode === 'pageSheet';
+  }
+
+  private readSheetProps(): void {
+    const detents: number[] = this.descriptor.rawProps['sheetAllowedDetents'] ?? [1];
+    if (detents.length < 1 || detents.length > 3 || detents.some((n: number) => !Number.isFinite(n) || (n !== -1 && (n <= 0 || n > 1)))) {
+      throw new Error('Harmony sheets require one to three finite detents in (0, 1], or fitToContents');
+    }
+    const initial: number = this.descriptor.rawProps['sheetInitialDetent'] ?? 0;
+    if (!Number.isInteger(initial) || initial < 0 || initial >= detents.length) {
+      throw new Error('Invalid Harmony sheetInitialDetent');
+    }
+    this.sheetAllowedDetents = detents;
+    this.sheetInitialDetent = initial;
+    if (!this.sheetVisible) this.sheetDetentIndex = initial;
+    this.sheetGrabberVisible = this.descriptor.rawProps['sheetGrabberVisible'] ?? false;
+    this.sheetLargestUndimmedDetent = this.descriptor.rawProps['sheetLargestUndimmedDetent'] ?? -1;
+  }
+
+  private sheetHeight(index: number): SheetSize | Length {
+    const value = this.sheetAllowedDetents[index] ?? 1;
+    return value === -1 ? SheetSize.FIT_CONTENT : `${value * 100}%`;
+  }
+
+  private sheetOptions(): SheetOptions {
+    const heights: [SheetSize | Length, (SheetSize | Length)?, (SheetSize | Length)?] = [this.sheetHeight(this.sheetInitialDetent)];
+    for (let index = 0; index < this.sheetAllowedDetents.length; index++) {
+      if (index !== this.sheetInitialDetent) heights.push(this.sheetHeight(index));
+    }
+    return {
+      detents: heights,
+      dragBar: this.sheetGrabberVisible,
+      showClose: false,
+      preferType: SheetType.BOTTOM,
+      backgroundColor: this.backgroundColorValue ?? '#ffffff',
+      enableOutsideInteractive: this.sheetDetentIndex <= this.sheetLargestUndimmedDetent,
+      onDetentsDidChange: (height: number) => {
+        const screenHeight = display.getDefaultDisplaySync().height;
+        let nearest = 0;
+        for (let index = 1; index < this.sheetAllowedDetents.length; index++) {
+          if (Math.abs(height - screenHeight * this.sheetAllowedDetents[index]) < Math.abs(height - screenHeight * this.sheetAllowedDetents[nearest])) nearest = index;
+        }
+        this.sheetDetentIndex = nearest;
+        this.eventEmitter?.emit('sheetDetentChanged', { index: nearest, isStable: true });
+      },
+      shouldDismiss: (action: SheetDismiss) => {
+        if (this.preventNativeDismiss || !this.gestureEnabled) return;
+        action.dismiss();
+        this.sheetVisible = false;
+        this.backBtnPressed(true);
+      },
+    };
+  }
+
+  @Builder
+  screenContent() {
+'''+content+'\n  }\n'
+    text = text.replace('  build() {', methods+'\n  build() {',1)
+    text = text.replace('    this.stackPresentationMode = presentation;', '    this.stackPresentationMode = presentation;\n    if (this.isFormSheet()) this.readSheetProps();')
+    text = text.replace('      .hideTitleBar(true)', '      .hideTitleBar(true)\n      .bindSheet($$this.sheetVisible, this.screenContent(), this.sheetOptions())',1)
+    text = text.replace('        await this.updateState(true);', '        await this.updateState(true);\n        if (this.isFormSheet()) this.sheetVisible = true;',1)
+    text = text.replace('      .onWillDisappear(() => {', '      .onWillDisappear(() => {\n        this.sheetVisible = false;',1)
+    text = text.replace('      .backgroundColor(this.backgroundColorValue)', "      .backgroundColor(this.isFormSheet() ? '#00000000' : this.backgroundColorValue)",1)
+    text = text.replace('        if (this.gestureEnabled && this.fullScreenSwipeEnabled && !this.isRootStackGesturePopDisallowed()) {', '        if (!this.isFormSheet() && this.gestureEnabled && this.fullScreenSwipeEnabled && !this.isRootStackGesturePopDisallowed()) {',1)
+    return text.encode()
+
+
 def sha(data):
     return hashlib.sha256(data).hexdigest()
 
@@ -59,7 +147,7 @@ def prepare(source, target):
             raise ValueError('Screens RNSScreen source SHA256 mismatch')
         if screen_data.count(BACK_BEFORE) != 1 or BACK_AFTER in screen_data:
             raise ValueError('Screens modal-back source mismatch')
-        patched_screen = screen_data.replace(BACK_BEFORE, BACK_AFTER)
+        patched_screen = patch_sheet(screen_data.replace(BACK_BEFORE, BACK_AFTER))
         bottom_tabs_screen_data = archive.extractfile(BOTTOM_TABS_SCREEN_SOURCE).read()
         if sha(bottom_tabs_screen_data) != BOTTOM_TABS_SCREEN_SOURCE_SHA:
             raise ValueError('Screens RNSBottomTabsScreen source SHA256 mismatch')
@@ -100,7 +188,7 @@ def prepare(source, target):
                     result.addfile(member, payload)
     result_bytes = output.getvalue()
     manifest = {
-        'profile': 'screens-4.9.0-navigation-components-v6',
+        'profile': 'screens-4.9.0-navigation-sheet-v7',
         'inputSHA256': INPUT_SHA,
         'outputSHA256': sha(result_bytes),
         'source': SOURCE,

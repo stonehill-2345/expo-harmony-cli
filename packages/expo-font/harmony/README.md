@@ -31,10 +31,17 @@ collection under a private alias, then unloads it after rendering. Public family
 names containing spaces or quotes are preserved in `getLoadedFonts()`.
 Native ink bounds and font cleanup require Harmony API 20 or later.
 
-Declarative font embedding and its resource removal are not implemented yet.
-The current Harmony plugin interface only supplies app/module JSON mods, so the
-resource generation transaction requires a separate tooling handoff. Web-only
-unload methods remain outside this runtime implementation. Native registration
+The `expo-font` config plugin contributes shared `fonts` TTF/OTF files through
+`expo/harmony-config`'s `withHarmonyResources` transaction. A font's basename
+without its extension is its public family name; duplicate families reject.
+The generated `expo-font/fonts.json` rawfile binds each resource to its SHA-256.
+On module construction, the backend validates, caches and registers these fonts
+before `getLoadedFonts()` returns. Removing or changing plugin inputs removes
+obsolete owned resources on the next prebuild; edited or unowned files conflict
+instead of being overwritten. Plugin removal takes effect in a rebuilt HAP.
+Host tests cover this contract; native and device acceptance must use the new
+candidate, and historical explicit-load results do not certify embedding.
+Web-only unload methods remain outside this runtime implementation. Native registration
 metadata is declared in `expo-module.config.json`; the standalone example does
 not prove the production prebuild/autolinking path.
 
@@ -59,3 +66,12 @@ python3 harmony/example/check-pixels.py release-PHASE /absolute/MaterialIcons.tt
 It requires the capture JSON and five PNGs; rejects blank custom glyphs, wrong
 colors/alpha/dimensions and glyph shapes differing from the real font reference.
 The output is a new `release-PHASE-pixels.json`; existing evidence is never overwritten.
+
+`harmony/example/EmbeddedResourcesApp.tsx` and `RemovedResourcesApp.tsx` are
+Release acceptance fixtures for this plugin contract. Configure a real
+MaterialIcons font as `assets/EmbeddedIcons.ttf` with `expo-font`, and configure
+`assets/data.json` with `expo-asset`. The updated fixture expects the exact bytes
+`{ "embedded": "updated" }\n`; first install the original `step3` value, then
+update without clearing the application cache. The removal fixture checks that
+`EmbeddedIcons` is no longer registered and the removed asset rejects despite
+its previous cache. Both fixtures require the Core example's LaneBAssetOracle.

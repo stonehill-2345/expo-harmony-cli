@@ -3,12 +3,11 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { decodeScreenshot, verifyCandidateManifest, verifyDeviceAssertion, verifySuccessfulCommand } from './evidence.mjs';
 import { validateCaseSet, validateResults, validateRunManifest } from './schema.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const STATUSES = new Set(['PASS', 'FAIL', 'BLOCKED', 'NOT_RUN']);
-const PNG_MAGIC = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
-const JPEG_MAGIC = Buffer.from([0xff, 0xd8, 0xff]);
 const REGISTRY_FILE = fileURLToPath(new URL('./cases/registry.json', import.meta.url));
 
 function readJson(file) {
@@ -56,7 +55,7 @@ function verifyReferencedFile(runDirectory, reference, label, errors) {
   return { file, bytes, actual };
 }
 
-function verifyEvidence(runDirectory, result, errors) {
+function verifyEvidence(runDirectory, result, manifest, errors) {
   if (!Array.isArray(result.evidence) || result.evidence.length === 0) {
     if (result.status === 'PASS') errors.push(`PASS result has no evidence: ${result.caseId}/${result.attemptId}`);
     return new Set();
@@ -72,15 +71,12 @@ function verifyEvidence(runDirectory, result, errors) {
     const verified = verifyReferencedFile(runDirectory, evidence, label, errors);
     if (!verified) continue;
     if (evidence.type === 'screenshot') {
-      if (verified.bytes.length === 0) errors.push(`Screenshot is empty: ${evidence.path}`);
-      else {
-        const png = verified.bytes.length >= PNG_MAGIC.length
-          && verified.bytes.subarray(0, PNG_MAGIC.length).equals(PNG_MAGIC);
-        const jpeg = verified.bytes.length >= 5
-          && verified.bytes.subarray(0, JPEG_MAGIC.length).equals(JPEG_MAGIC)
-          && verified.bytes.subarray(-2).equals(Buffer.from([0xff, 0xd9]));
-        if (!png && !jpeg) errors.push(`Screenshot is not PNG or JPEG: ${evidence.path}`);
-      }
+      try { decodeScreenshot(verified.bytes); }
+      catch (error) { errors.push(`${error.message}: ${evidence.path}`); }
+    }
+    if (evidence.type === 'device-assertion') {
+      verifyDeviceAssertion(verified.bytes, manifest,
+        (reference, label) => verifyReferencedFile(runDirectory, reference, label, errors), errors);
     }
   }
   return types;
@@ -134,7 +130,8 @@ export function verifyRunReport(runDirectory) {
   errors.push(...validateRunManifest(manifest), ...validateResults(resultsDocument));
 
   const caseSetFile = verifyReferencedFile(root, manifest.caseSet, 'Case set', errors)?.file;
-  verifyReferencedFile(root, manifest.candidate, 'Candidate manifest', errors);
+  const candidate = verifyReferencedFile(root, manifest.candidate, 'Candidate manifest', errors);
+  if (candidate) errors.push(...verifyCandidateManifest(candidate.file));
   const caseSet = caseSetFile ? readJson(caseSetFile) : { cases: [] };
   errors.push(...validateCaseSet(caseSet));
   verifyCaseSetAgainstRegistry(caseSet, manifest, errors);
@@ -159,7 +156,18 @@ export function verifyRunReport(runDirectory) {
     const definition = definitions.get(result.caseId);
     if (!definition) errors.push(`Unexpected case result: ${result.caseId ?? '<missing>'}`);
     verifyResultIdentity(result, manifest, errors);
-    const evidenceTypes = verifyEvidence(root, result, errors);
+    const evidenceTypes = verifyEvidence(root, result, manifest, errors);
+    if (result.status === 'PASS') {
+      verifySuccessfulCommand(result.command, `Case command ${key}`,
+        (reference, label) => verifyReferencedFile(root, reference, label, errors), errors);
+      if (result.command?.id !== result.caseId) errors.push(`Case command ID mismatch: ${key}`);
+      for (const log of [result.command?.stdout, result.command?.stderr]) {
+        if (!log || !Array.isArray(result.evidence)
+          || !result.evidence.some(e => e?.type === 'command-log' && e.path === log.path && e.sha256 === log.sha256)) {
+          errors.push(`Case command log missing from evidence: ${key}`);
+        }
+      }
+    }
     if (result.status === 'PASS' && definition) {
       if (definition.requiresDevice && (!manifest.device?.target || !manifest.device?.platformVersion)) {
         errors.push(`Case requires a device: ${result.caseId}`);

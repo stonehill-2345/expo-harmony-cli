@@ -74,7 +74,11 @@ function fixture(t, options = {}) {
   }
   const context = {
     uiAbilityContext: { cacheDir: root, resourceManager: {
-      getRawFileContent: async () => { rawReads++; return new Uint8Array([1, 2, 3]); },
+      getRawFileContent: async () => {
+        rawReads++;
+        if (options.rawMissing) throw new Error('Rawfile missing');
+        return options.rawBytes ?? new Uint8Array([1, 2, 3]);
+      },
     } },
     rnInstance: { getAssetsDest: () => 'assets/' },
     httpClient: { sendRequest: () => {
@@ -136,11 +140,11 @@ test('verified embedded cache is reused and corruption is repaired from the sour
   const uri = await f.module.downloadAsync('rawfile://fixture.bin', hash, 'bin');
   assert.deepEqual(fs.readFileSync(new URL(uri)), bytes);
   assert.equal(await f.module.downloadAsync('rawfile://fixture.bin', hash, 'bin'), uri);
-  assert.equal(f.rawReads(), 1);
+  assert.equal(f.rawReads(), 2);
   fs.writeFileSync(new URL(uri), 'corrupt');
   assert.equal(await f.module.downloadAsync('rawfile://fixture.bin', hash, 'bin'), uri);
   assert.deepEqual(fs.readFileSync(new URL(uri)), bytes);
-  assert.equal(f.rawReads(), 2);
+  assert.equal(f.rawReads(), 3);
   assert.equal(f.descriptors.size, 0);
   assert.equal(fs.readdirSync(f.root).length, 1);
 });
@@ -181,4 +185,16 @@ test('concurrent embedded downloads publish complete bytes without temporary lea
   assert.deepEqual(fs.readFileSync(new URL(uris[0])), Buffer.from([1, 2, 3]));
   assert.equal(fs.readdirSync(f.root).length, 1);
   assert.equal(f.descriptors.size, 0);
+});
+
+test('embedded replacement and removal cannot reuse an old URI cache after an app update', async t => {
+  const options = { rawBytes: new Uint8Array([1, 2, 3]) };
+  const f = fixture(t, options);
+  const uri = await f.module.downloadAsync('rawfile://expo-asset/data.json', null, 'json');
+  options.rawBytes = new Uint8Array([4, 5, 6]);
+  const updated = await f.module.downloadAsync('rawfile://expo-asset/data.json', null, 'json');
+  assert.equal(updated, uri);
+  assert.deepEqual([...fs.readFileSync(decodeURIComponent(uri.slice(7)))], [4, 5, 6]);
+  options.rawMissing = true;
+  await assert.rejects(f.module.downloadAsync('rawfile://expo-asset/data.json', null, 'json'), /Rawfile missing/);
 });

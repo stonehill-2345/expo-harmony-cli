@@ -2,6 +2,7 @@ import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
+import { decodeScreenshot } from './evidence.mjs';
 import { runCommand } from './process.mjs';
 
 let sequence = 0;
@@ -107,15 +108,17 @@ export async function collectDeviceEvidence({
     }).catch(() => undefined);
   }
   const screenshot = fs.readFileSync(localScreenshot);
-  if (screenshot.length < 5 || !screenshot.subarray(0, 3).equals(Buffer.from([0xff, 0xd8, 0xff]))
-    || !screenshot.subarray(-2).equals(Buffer.from([0xff, 0xd9]))) {
-    throw new Error('Device screenshot is empty or not JPEG');
-  }
+  if (decodeScreenshot(screenshot) !== 'JPEG') throw new Error('Device screenshot must be JPEG');
+  const assertionPath = `device/${screenshotName}.json`;
+  const assertion = Buffer.from(JSON.stringify({ schemaVersion: 1, kind: 'device-preflight',
+    target, bundleName, pid, pidCommand: pidOutput.result, logCommand: log.result }) + '\n');
+  fs.writeFileSync(path.join(root, assertionPath), assertion);
+
   return {
     target,
     pid,
     evidence: [
-      { type: 'device-assertion', path: log.result.stdout.path, sha256: sha256(fs.readFileSync(path.join(root, log.result.stdout.path))) },
+      { type: 'device-assertion', path: assertionPath, sha256: sha256(assertion) },
       { type: 'screenshot', path: relativeScreenshot, sha256: sha256(screenshot) },
     ],
   };

@@ -64,3 +64,30 @@ test('records an explicit abort as interruption', async (t) => {
   assert.equal(result.interrupted, true);
   assert.notEqual(result.exitCode, 0);
 });
+
+for (const interrupt of [false, true]) {
+  test(`escalates ${interrupt ? 'abort' : 'timeout'} when a child ignores SIGTERM`, async (t) => {
+    const output = outputDirectory(t);
+    const controller = new AbortController();
+    const pidFile = path.join(output, 'pid');
+    let forcedByTest = false;
+    const watchdog = setTimeout(() => {
+      forcedByTest = true;
+      if (fs.existsSync(pidFile)) process.kill(-Number(fs.readFileSync(pidFile)), 'SIGKILL');
+    }, 4000);
+    t.after(() => clearTimeout(watchdog));
+    const pending = runCommand({ id: 'ignore-term', cwd: output, outputDirectory: output,
+      argv: [process.execPath, '-e', 'process.on("SIGTERM",()=>{});require("fs").writeFileSync(process.argv[1],String(process.pid));process.stdout.write("ready\\n");setInterval(()=>{},100)', pidFile],
+      timeoutMs: interrupt ? 10000 : 500, signal: controller.signal });
+    if (interrupt) {
+      while (!fs.existsSync(pidFile) && !forcedByTest) await new Promise(resolve => setTimeout(resolve, 10));
+      controller.abort();
+    }
+    const result = await pending;
+    assert.equal(forcedByTest, false, 'runCommand must terminate without the test watchdog');
+    assert.equal(result.interrupted, interrupt);
+    assert.equal(result.timedOut, !interrupt);
+    assert.equal(result.signal, 'SIGKILL');
+    assert.match(fs.readFileSync(path.join(output, result.stdout.path), 'utf8'), /ready/);
+  });
+}

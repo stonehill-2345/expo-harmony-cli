@@ -33,9 +33,9 @@ function ScreenStackItem({
   }, [headerConfig?.hidden, stackPresentation]);
   const content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(View, {
     collapsable: false,
-    style: [stackPresentation === 'formSheet' ? Platform.OS === 'ios' ? styles.absolute : null : styles.container]
+    style: [stackPresentation === 'formSheet' && Platform.OS !== 'harmony' ? Platform.OS === 'ios' ? styles.absolute : null : styles.container]
   }, /*#__PURE__*/React.createElement(View, {
-    style: [stackPresentation === 'formSheet' ? Platform.OS === 'ios' ? styles.absolute : null : styles.container, contentStyle]
+    style: [stackPresentation === 'formSheet' && Platform.OS !== 'harmony' ? Platform.OS === 'ios' ? styles.absolute : null : styles.container, contentStyle]
   }, children)), /*#__PURE__*/React.createElement(ScreenStackHeaderConfig, headerConfig), stackPresentation === 'formSheet' && unstable_sheetFooter && /*#__PURE__*/React.createElement(FooterComponent, null, unstable_sheetFooter()));
 
   // We take backgroundColor from contentStyle and apply it on Screen.

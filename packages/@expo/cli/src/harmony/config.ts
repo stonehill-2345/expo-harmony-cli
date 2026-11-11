@@ -111,6 +111,10 @@ export function withHarmonyModule(config: Config, action: HarmonyAction): Config
   });
 }
 
+export function withHarmonyResources(config: Config, action: HarmonyAction): Config {
+  return withMod(config as any, { platform: 'harmony' as any, mod: 'resources', action });
+}
+
 export function defineHarmonyPlugin<T extends (...args: any[]) => any>(
   plugin: T,
   options: { platforms?: HarmonyPlatform[] } = {}
@@ -133,6 +137,7 @@ export function defineHarmonyPlugin<T extends (...args: any[]) => any>(
     const before = args[0]?.mods?.harmony;
     const app = before?.app;
     const module = before?.module;
+    const resources = before?.resources;
     const result = plugin.apply(this, args);
     if (result && typeof result.then === 'function') {
       // A rejected async export must not leak an unhandled rejection after this diagnostic.
@@ -145,9 +150,10 @@ export function defineHarmonyPlugin<T extends (...args: any[]) => any>(
       const after = result?.mods?.harmony;
       const appChanged = typeof after?.app === 'function' && after.app !== app;
       const moduleChanged = typeof after?.module === 'function' && after.module !== module;
-      if (!appChanged && !moduleChanged) {
+      const resourcesChanged = typeof after?.resources === 'function' && after.resources !== resources;
+      if (!appChanged && !moduleChanged && !resourcesChanged) {
         throw new Error(
-          `Harmony plugin has an empty Harmony implementation: register an app or module mod (${definitionSource})`
+          `Harmony plugin has an empty Harmony implementation: register an app, module or resources mod (${definitionSource})`
         );
       }
     }
