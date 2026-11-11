@@ -2,6 +2,11 @@
   "schemaVersion": 1,
   "reviewer": "C",
   "status": "BLOCKED_MISSING_B_CASE_SET_AND_A_CONTRACT",
+  "contractRequirements": {
+    "aContract": ["unique scenario ID", "explicit input", "explicit expected", "fixtureFiles with SHA-256", "assertionFiles with SHA-256", "nativeCapabilityBoundaries"],
+    "bHandoff": ["clean source commit", "candidate manifest and archive hashes", "release.json", "raw run-manifest/results", "required case-set families"]
+  },
+  "requiredCaseFamilies": ["resource lifecycle", "Sheet", "Drawer", "orientation", "CLI/M4"],
   "requiredCases": [
     { "id": "C-RESOURCE-FIRST", "input": "fresh install", "expected": "first load renders embedded Asset and Font", "evidence": ["command-log", "device-log", "layout", "screenshot", "hap-members"] },
     { "id": "C-RESOURCE-UPDATE", "input": "changed asset/font", "expected": "updated bytes render after rebuild/reload", "evidence": ["command-log", "device-log", "layout", "screenshot", "hap-members"] },
