@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "reviewer": "C",
+  "status": "BLOCKED_MISSING_B_CASE_SET_AND_A_CONTRACT",
+  "requiredCases": [
+    { "id": "C-RESOURCE-FIRST", "input": "fresh install", "expected": "first load renders embedded Asset and Font", "evidence": ["command-log", "device-log", "layout", "screenshot", "hap-members"] },
+    { "id": "C-RESOURCE-UPDATE", "input": "changed asset/font", "expected": "updated bytes render after rebuild/reload", "evidence": ["command-log", "device-log", "layout", "screenshot", "hap-members"] },
+    { "id": "C-RESOURCE-REMOVE", "input": "removed asset/font", "expected": "owned rawfiles and manifests are removed", "evidence": ["command-log", "device-log", "hap-members"] },
+    { "id": "C-SHEET-CONTRACT", "input": "all A contract combinations", "expected": "initial index, detents, fitToContents, corner/elevation, outside interaction, preventNativeDismiss and orientation satisfy exact assertions", "evidence": ["command-log", "device-log", "layout", "screenshot", "semantic-assertion"] },
+    { "id": "C-DRAWER-GESTURE", "input": "real edge gesture open and close", "expected": "drawer state and route change are caused by gesture", "evidence": ["command-log", "device-log", "layout", "screenshot", "gesture-trace"] },
+    { "id": "C-ORIENTATION", "input": "physical orientation change during navigation and sheet", "expected": "system orientation and viewport assertions agree", "evidence": ["command-log", "device-log", "layout", "screenshot", "orientation-state"] },
+    { "id": "C-CLI-M4", "input": "fresh npm/pnpm consumers in Debug/Release", "expected": "all original M4 required cases pass against one candidate hash", "evidence": ["command-log", "candidate", "consumer-lock", "device-log"] }
+  ],
+  "negativeRequirements": [
+    "system dock is not Drawer evidence",
+    "non-empty image is not proof of correct rendering",
+    "route dimension changes are not physical sensor rotation",
+    "preflight success is not full matrix acceptance",
+    "a PASS summary without raw commands is rejected"
+  ],
+  "coverageGaps": [
+    "A a-contract.json absent",
+    "B case-set absent",
+    "current registry contains only V01 preflight cases"
+  ]
+}

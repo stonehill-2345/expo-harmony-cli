@@ -216,6 +216,19 @@ test('rejects incomplete, duplicated, stale or unverifiable PASS results', async
   }
 });
 
+test('rejects dirty or non-commit source identities before acceptance', t => {
+  for (const mutate of [
+    manifest => { manifest.source.dirty = true; },
+    manifest => { manifest.source.revision = 'working-tree'; },
+  ]) {
+    const { root } = createRun(t);
+    const file = path.join(root, 'run-manifest.json');
+    const manifest = JSON.parse(fs.readFileSync(file));
+    mutate(manifest); writeJson(file, manifest);
+    assert.ok(verifyRunReport(root).errors.some(error => /source/i.test(error)));
+  }
+});
+
 test('rejects contradictory or missing persisted command results', async t => {
   for (const mutate of [r => { r.command.exitCode = 17; }, r => { delete r.command; },
     r => { r.command.timedOut = true; }, r => { r.command.interrupted = true; },
