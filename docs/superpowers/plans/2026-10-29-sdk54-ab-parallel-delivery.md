@@ -230,10 +230,10 @@ ExpoImage 的最小解阻验收必须包含：原来的 `ExpoImage/default` 注�
 | A-06 | A | ExpoImage 来源、公开契约和失败基线已冻结；无 Harmony 实现 | PREPARATION PASS；IMPLEMENTATION NOT_STARTED | B 待复核 | `2026-11-02-sdk54-a06-expo-image-contract.json` |
 | A-07 / A-08 | A | A-07 入口仍有 6 项阻塞；A-08 未开始 | BLOCKED / NOT_STARTED | B | 本轮 `validation/a07-gate.json`；M4/M5/V/M6 未关闭 |
 | B-01 | B | Debug/Release、配置、模块增删、clean、首次/no-op、后续构建、跨卷与设备全矩阵完成 | PASS（B） | A | `docs/releases/2026-10-30-sdk54-b01-ninja-diagnostics.md`；专项 61/61；Autolinking `e9ea310c...2698`；summary `8ef5c887...e0bf` |
-| B-02 | B | 工具、负例和既有 blank smoke 已有；本机现已提供源码、夹具与候选，待接统一 runner | PARTIAL；集成待验 | A | 本轮交接单；旧“无 A 输入”仅适用于历史远端快照 |
+| B-02 | B | B02 runner、registry 与参数化入口完成；V-01/V-02/V-03 完整场景待 A/C handoff | PARTIAL；正式 run BLOCKED | A/C | `docs/releases/2026-11-11-sdk54-b32-runner.md`；新入口测试 4/4；AI-E2E 61/61 |
 | B-03 | B | pnpm/npm Harmony/all export、install/check/fix/config、自定义 resolver/serializer 全矩阵完成 | PASS（B） | A | `docs/releases/2026-11-02-sdk54-b03-export-harmony.md`；validation `bd1d2a73...d9b1a`；CLI `2474adcd...5e9e` |
 | B-04 | B | blank×npm/pnpm Debug/Release、离线、Fast Refresh、空格路径、端口/设备/HDC 失败矩阵完成；default 等待 ExpoImage 实现和正式设备复验 | PASS（B）；default BLOCKED（A） | A | `docs/releases/2026-11-10-sdk54-b04-harmony-run.md`；validation `7c650aa6...47d1`；CLI 39/39、SDK54 工具 1090 pass/20 skip |
-| B-05 | B | 本机 A 已提交且与 B 合并；15 个候选及便携证据已交本地目录，待 B 接入与交叉复核 | READY_FOR_INTEGRATION；非阶段 PASS | A/B | 本轮交接单；未发送、未推送，不推断远端已同步 |
+| B-05 | B | 15 包统一候选与独立 CLI 已重新生成、校验并完成 npm/pnpm blank/default 锁重装；待 C 审查及 clean source 后正式接入 | READY_FOR_INTEGRATION；非阶段 PASS | A/C | `docs/releases/2026-11-11-sdk54-b31-candidate-freeze.md`；B-31 candidate；四组合 install/reinstall 0/0 |
 | B-06 / B-07 / B-08 | B | 分别等待 G1、M6/G6、G2 与最终组合候选；当前上游前置未产生 | BLOCKED（阶段前置） | A | 同 B-05 预检；不得越级关闭 |
 
 ### 每轮追加记录格式
@@ -245,6 +245,7 @@ ExpoImage 的最小解阻验收必须包含：原来的 `ExpoImage/default` 注�
 | B-01-final / 2026-11-10 | B-01 / 全性能、安全、Debug/Release 与设备矩阵 | B / A 待复核 | Autolinking `e9ea310c2ae3f043cf3c9420df26b43065ae8c6f4b3b3a334e33e031d5212698`；CLI `2474adcd5bc8c9a52819d6763a44f733328b284291207f69eba40b58555b5e9e` | Debug/Release no-op、配置、模块、clean、首次/重复、后续构建、跨卷、设备全部达到第 8 节门槛 | `PASS（B）`；Debug 1.54 s、Release 1.76 s、配置 5.92 s；61/61；Debug/Release 页面通过 | `outputs/sdk54/b01-final-validation-20261110/validation-summary.json`；B-01 报告 | A 交叉复核；B 继续 B-03/B-04 |
 | B-03-final / 2026-11-10 | B-03 / M5-01/02/04 | B / A 待复核 | CLI `2474adcd5bc8c9a52819d6763a44f733328b284291207f69eba40b58555b5e9e`；pnpm/npm 锁文件见证据目录 | 两包管理器 Harmony/all export；config、install check/fix；自定义 resolver/serializer 不丢失且三平台隔离 | `PASS（B）`；八项机器断言全 true | `outputs/sdk54/b03-export-final-20261110/validation.json`；B-03 报告 | A 交叉复核；B-05 接入 A 候选后重跑受影响项 |
 | B-04-final / 2026-11-10 | B-04 / M5-03/05、V-03 blank/CLI 范围 | B / A 待复核 | CLI `2474adcd...5e9e`；Autolinking `e9ea310c...2698`；四个 HAP hash 见报告 | blank×npm/pnpm Debug/Release；离线、刷新、空格路径、端口、设备和 HDC 假成功失败关闭；只清理本次资源 | `PASS（B）`；十二项机器断言全 true；default `BLOCKED（A）` | `outputs/sdk54/b04-final-20261110/validation.json`；B-04 报告；CLI 39/39；SDK54 工具 1090 pass/20 skip | A 交付 default/M4 夹具与候选；B 接入 B-02/B-05，不以 blank 替代 default |
+| B-31/B-32 / 2026-11-11 | 新三方任务包：候选冻结、B02 registry/prepare-run | B / A、C 待交接 | source `3b16a31fc58b1fcbc92978cf93d1bfb3cb64abb7`；candidate `outputs/sdk54-abc/20261111-113600-B-83243/frozen-candidate-final/candidate.json` | 15 runtime + CLI、四组合 install/reinstall、registry 全集、参数化 run、负例 | B-31 `PASS`；B-32 入口/测试 `PASS`，正式 run `BLOCKED`（A/C handoff 缺失、source dirty） | `docs/releases/2026-11-11-sdk54-b31-candidate-freeze.md`；`docs/releases/2026-11-11-sdk54-b32-runner.md`；本轮 `b31-result.json`/`b32-result.json` | A 提供 a-contract、C 提供 c-case-review；协调者提供 clean source 后运行正式 B02 |
 
 | A/B 本机交接 / 2026-11-10 | A01～A06 成果、B02/B05 集成输入与历史证据 | 本机整合 / A、B 待交叉复核 | `0fcde72` + 工作区 7 项修复；完整身份见 `outputs/handoff-20261110/candidate-identity.json` | 提供可消费源码、生成物、断言、候选身份和便携原件；如实更新进度 | 15 包生成/校验、产品 CLI、111/111 主机测试通过；2875 条旧证据核验；安装矩阵见交接报告；阶段未关闭 | `docs/releases/2026-11-10-sdk54-integrated-handoff.md`；独立 HTML 与便携归档 | B 接入新候选；补三组 B 原件与 57 份未恢复历史文件；新候选设备/性能复验 |
 

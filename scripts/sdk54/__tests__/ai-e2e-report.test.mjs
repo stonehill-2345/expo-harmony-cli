@@ -33,7 +33,7 @@ function createRun(t) {
 
   const caseSet = {
     schemaVersion: 1,
-    registryVersion: '2026-10-30',
+    registryVersion: '2026-11-11',
     registrySha256: sha256(fs.readFileSync(REGISTRY_FILE)),
     cases: [
       {
