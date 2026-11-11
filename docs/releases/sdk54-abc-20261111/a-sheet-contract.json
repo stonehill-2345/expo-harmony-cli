@@ -1,0 +1,867 @@
+{
+  "schemaVersion": 1,
+  "role": "A",
+  "scope": "M4 required; no unilateral deferral",
+  "history": "上轮两档和 Drawer 为历史 LOCAL 专项，不能外推扩展参数通过",
+  "reviewStatus": "PENDING_C_REVIEW",
+  "sources": [
+    {
+      "id": "harmony-transformer",
+      "path": "packages/expo-modules-autolinking/scripts/harmony/prepare-screens.py",
+      "sha256": "9ef85f449500ff62927d8e992263e4aab4dd102fb3541e777e52adcf2090d8f5"
+    },
+    {
+      "id": "screens-overlay",
+      "path": "scripts/sdk54/external-overlays/react-native-screens-4.9.0/src/components/ScreenStackItem.tsx",
+      "sha256": "6ffaa0502fa1a950d0e3a42b71be4bdea59d1492fea5d1ccc00b7d5c3f6dba0d"
+    },
+    {
+      "id": "screens-types",
+      "url": "https://unpkg.com/react-native-screens@4.17.1/src/types.tsx",
+      "sha256": "61c4f9dee9e57a42644261459c7f2370446b1aa77b1f20537ef3376892db2f25",
+      "evidencePath": "sources/screens-types",
+      "origin": "已安装固定版本源码快照；不作为本轮安装成功证据"
+    },
+    {
+      "id": "screens-helper",
+      "url": "https://unpkg.com/react-native-screens@4.17.1/src/components/helpers/sheet.tsx",
+      "sha256": "2a0f3bd6cc6a4f9fb4e4976c858aee7eb2fb9e77d7da594e5708b15a98547b11",
+      "evidencePath": "sources/screens-helper",
+      "origin": "已安装固定版本源码快照；不作为本轮安装成功证据"
+    },
+    {
+      "id": "screens-component",
+      "url": "https://unpkg.com/react-native-screens@4.17.1/src/components/Screen.tsx",
+      "sha256": "06ee9a75d9ab9a307f1f10cd28921adb986d6956541b4117272d5c4d5857cb94",
+      "evidencePath": "sources/screens-component",
+      "origin": "已安装固定版本源码快照；不作为本轮安装成功证据"
+    },
+    {
+      "id": "native-stack",
+      "url": "https://unpkg.com/@react-navigation/native-stack@7.3.16/src/views/NativeStackView.native.tsx",
+      "sha256": "1cb1982ad14e012f21cd3c95b0a7d80b65b5c2ba1be0b24cb116843e9a9591c3",
+      "evidencePath": "sources/native-stack",
+      "origin": "已安装固定版本源码快照；不作为本轮安装成功证据"
+    },
+    {
+      "id": "harmony-helper",
+      "archive": "sdk54-abc-inputs/inputs/screens-4.9.0-upstream.tgz",
+      "archiveSHA256": "e7ff0e51db375e69a1b15340c5edd7bbfc005dbedb53a6957605e50f63fa948c",
+      "member": "package/src/components/helpers/sheet.tsx",
+      "sha256": "a5d051f9e4db624844a653cdeff4b56411a6ecfc7d46b35441b6c9a4e43b9665",
+      "evidencePath": "sources/harmony-helper"
+    },
+    {
+      "id": "harmony-component",
+      "archive": "sdk54-abc-inputs/inputs/screens-4.9.0-upstream.tgz",
+      "archiveSHA256": "e7ff0e51db375e69a1b15340c5edd7bbfc005dbedb53a6957605e50f63fa948c",
+      "member": "package/src/components/Screen.tsx",
+      "sha256": "606e85a27cd8a746e4b755f8415292fbb667bfc772d846d03377cd9822dfb828",
+      "evidencePath": "sources/harmony-component"
+    },
+    {
+      "id": "arkui-sdk",
+      "path": "<DEVECO_SDK_HOME>/default/openharmony/ets/component/common.d.ts",
+      "sha256": "a664a47d3210a9ae929b19cede76f943de58e53762dc2fa527a4c43540097d71",
+      "evidencePath": "sources/arkui-common.d.ts",
+      "anchors": [
+        "SheetOptions.detents: first element initial; one to three; landscape API12",
+        "onDetentsDidChange: stable height in pixels",
+        "enableOutsideInteractive: true means no mask and parent interactive",
+        "radius: API15 LengthMetrics|BorderRadiuses",
+        "shadow: ShadowOptions|ShadowStyle",
+        "shouldDismiss: drag/back/mask/close interaction"
+      ]
+    }
+  ],
+  "cases": [
+    {
+      "caseId": "S01",
+      "title": "单档",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "sheetAllowedDetents": [
+          0.5
+        ]
+      },
+      "nativeFields": [
+        "sheetAllowedDetents"
+      ],
+      "expected": "SheetPage 高度为 SheetWrapper 可用高度约 50%；内容可见；初始稳定 index=0",
+      "actions": [
+        "打开 Sheet one"
+      ],
+      "captures": [
+        "one"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S02",
+      "title": "双档升降",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "sheetAllowedDetents": [
+          0.35,
+          0.75
+        ]
+      },
+      "nativeFields": [
+        "sheetAllowedDetents",
+        "sheetDetentChanged"
+      ],
+      "expected": "布局高度真实变为 35%→75%→35%，稳定事件 index=0→1→0；内容随 Sheet 可交互",
+      "actions": [
+        "打开 Sheet two",
+        "向上拖动",
+        "向下拖动"
+      ],
+      "captures": [
+        "small",
+        "large",
+        "collapsed"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S03",
+      "title": "三档初始 0",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "sheetAllowedDetents": [
+          0.2,
+          0.5,
+          0.9
+        ],
+        "sheetInitialDetentIndex": 0
+      },
+      "nativeFields": [
+        "sheetAllowedDetents",
+        "sheetInitialDetent"
+      ],
+      "expected": "第一次展示高度为 20.0%；index=0；不能先以 0 展示再伪报初始值",
+      "actions": [
+        "打开 Sheet three-0"
+      ],
+      "captures": [
+        "three-0"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S04",
+      "title": "三档初始 1",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "sheetAllowedDetents": [
+          0.2,
+          0.5,
+          0.9
+        ],
+        "sheetInitialDetentIndex": 1
+      },
+      "nativeFields": [
+        "sheetAllowedDetents",
+        "sheetInitialDetent"
+      ],
+      "expected": "第一次展示高度为 50.0%；index=1；不能先以 0 展示再伪报初始值",
+      "actions": [
+        "打开 Sheet three-1"
+      ],
+      "captures": [
+        "three-1"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S05",
+      "title": "三档初始 2",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "sheetAllowedDetents": [
+          0.2,
+          0.5,
+          0.9
+        ],
+        "sheetInitialDetentIndex": 2
+      },
+      "nativeFields": [
+        "sheetAllowedDetents",
+        "sheetInitialDetent"
+      ],
+      "expected": "第一次展示高度为 90.0%；index=2；不能先以 0 展示再伪报初始值",
+      "actions": [
+        "打开 Sheet three-2"
+      ],
+      "captures": [
+        "three-2"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S06",
+      "title": "非法档位拒绝",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "invalidDetents": [
+          [],
+          [
+            "NaN"
+          ],
+          [
+            0
+          ],
+          [
+            -0.2
+          ],
+          [
+            1.1
+          ],
+          [
+            0.1,
+            0.2,
+            0.3,
+            0.4
+          ],
+          [
+            -1,
+            0.5
+          ],
+          [
+            0.8,
+            0.3
+          ]
+        ]
+      },
+      "nativeFields": [
+        "sheetAllowedDetents"
+      ],
+      "expected": "公开 Harmony 组件在渲染前抛出 Error；原始 native 输入也拒绝；fitToContents 只允许独立 -1 哨兵；iOS/Android 逻辑不变",
+      "actions": [
+        "运行公开 JSX 和转换器实际方法负例"
+      ],
+      "captures": [],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/screens-harmony-boolean.test.mjs + scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S07",
+      "title": "索引边界",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "sheetInitialDetentIndex": [
+          "NaN",
+          -1,
+          0.5,
+          3
+        ],
+        "sheetLargestUndimmedDetentIndex": [
+          "NaN",
+          -2,
+          0.5,
+          3
+        ]
+      },
+      "nativeFields": [
+        "sheetInitialDetent",
+        "sheetLargestUndimmedDetent"
+      ],
+      "expected": "保留上游公开索引 DEV 抛错、production 回退（initial=0/undimmed=-1）；native 原始越界值必须拒绝。last 映射最后索引。不是任意改名",
+      "actions": [
+        "运行来源 helper 与 native 边界测试"
+      ],
+      "captures": [],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-upstream.test.mjs + scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S08",
+      "title": "内容自适应",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "sheetAllowedDetents": "fitToContents"
+      },
+      "nativeFields": [
+        "sheetAllowedDetents=[-1]",
+        "SheetSize.FIT_CONTENT"
+      ],
+      "expected": "夹具内容高度 280vp，Sheet 高度按内容和系统栏计算，不拉满窗口；文字/关闭按钮可见",
+      "actions": [
+        "打开 Sheet fit"
+      ],
+      "captures": [
+        "fit"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S09",
+      "title": "拖动条",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "sheetGrabberVisible": [
+          false,
+          true
+        ]
+      },
+      "nativeFields": [
+        "sheetGrabberVisible",
+        "dragBar"
+      ],
+      "expected": "关闭时无可见拖动条，开启时布局和截图均有可见拖动条",
+      "actions": [
+        "打开 Sheet two（默认无拖动条）",
+        "打开 Sheet grabber"
+      ],
+      "captures": [
+        "hidden",
+        "shown"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S10",
+      "title": "最大不遮暗档位",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "sheetAllowedDetents": [
+          0.35,
+          0.75
+        ],
+        "sheetLargestUndimmedDetentIndex": 0
+      },
+      "nativeFields": [
+        "sheetLargestUndimmedDetent",
+        "enableOutsideInteractive"
+      ],
+      "expected": "index0 无遮罩且父页面按钮可操作；index1 有遮罩且不能将点击穿透给父页面。ArkUI outsideInteractive 同时控制遮罩/交互 遮罩点击允许关闭 Sheet，但不得穿透增加父计数。",
+      "actions": [
+        "打开 Sheet undimmed",
+        "点击上方 Parent probe",
+        "拖至大档",
+        "点击被遮罩的 Parent probe 位置；Sheet 关闭，父计数不得增加"
+      ],
+      "captures": [
+        "before",
+        "interactive",
+        "dimmed",
+        "masked-closed"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S11",
+      "title": "禁止原生关闭",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "usePreventRemove": true
+      },
+      "nativeFields": [
+        "preventNativeDismiss",
+        "getPreventFlag"
+      ],
+      "expected": "拖下、系统返回、点击遮罩均不能隐藏 Sheet 或弹出路由；解除 guard 后关闭；guard 来自公开 usePreventRemove",
+      "actions": [
+        "打开 Sheet prevent",
+        "依次拖下/系统返回/点遮罩",
+        "Allow sheet close 后 Close sheet"
+      ],
+      "captures": [
+        "before",
+        "drag-blocked",
+        "back-blocked",
+        "mask-blocked",
+        "closed"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S12",
+      "title": "关闭手势禁用",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "gestureEnabled": false
+      },
+      "nativeFields": [
+        "gestureEnabled"
+      ],
+      "expected": "拖下/遮罩/系统原生 sheet dismiss 均不隐藏；程序按钮仍可关闭。Harmony 本轮此语义须 C 审查",
+      "actions": [
+        "打开 Sheet guarded",
+        "拖下",
+        "系统返回",
+        "Close sheet"
+      ],
+      "captures": [
+        "before",
+        "drag-blocked",
+        "back-blocked",
+        "closed"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S13",
+      "title": "圆角与阴影",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "sheetCornerRadius": [
+          0,
+          32,
+          -1
+        ],
+        "sheetElevation": [
+          0,
+          24
+        ]
+      },
+      "nativeFields": [
+        "sheetCornerRadius",
+        "sheetElevation",
+        "radius",
+        "shadow"
+      ],
+      "expected": "0 为方角无阴影；32vp 为顶部圆角、底部0；24 映射 ArkUI 阴影半径24vp/颜色#33000000/偏移0，不声称等同 Android 光照模型；负圆角使用系统默认；无效非有限值/负阴影拒绝",
+      "actions": [
+        "对照 Sheet square 与 radius",
+        "检查 SDK API15 radius 能力及截图边缘"
+      ],
+      "captures": [
+        "square",
+        "round"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S14",
+      "title": "展示中方向变化",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "orientation": [
+          "portrait",
+          "landscape",
+          "portrait"
+        ]
+      },
+      "nativeFields": [
+        "screenOrientation",
+        "windowRect.height",
+        "onDetentsDidChange"
+      ],
+      "expected": "保持 Sheet 可见和原路由，窗口宽高切换；档位按当前窗口计算，不能用显示屏静态尺寸",
+      "actions": [
+        "Sheet two 展示时 Toggle sheet orientation 两次"
+      ],
+      "captures": [
+        "portrait",
+        "landscape",
+        "restored"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S15",
+      "title": "按钮关闭",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "router.back": true
+      },
+      "nativeFields": [
+        "willDisappear",
+        "disappear"
+      ],
+      "expected": "Sheet 与导航路由一起移除，返回原主页，不能只让 sheetVisible=false",
+      "actions": [
+        "打开 Sheet two",
+        "Close sheet"
+      ],
+      "captures": [
+        "before",
+        "closed"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S16",
+      "title": "系统返回关闭",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "systemBack": true
+      },
+      "nativeFields": [
+        "shouldDismiss",
+        "backBtnPressed"
+      ],
+      "expected": "原生交互关闭后只 pop 一次，首页可交互",
+      "actions": [
+        "打开 Sheet two",
+        "系统返回"
+      ],
+      "captures": [
+        "before",
+        "closed"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "S17",
+      "title": "reload",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "reloadAppAsync": true
+      },
+      "nativeFields": [
+        "Core reload",
+        "RouterProbe boot"
+      ],
+      "expected": "同设备同 PID 同 HAP，boot UUID 改变；路由与可见主页重建，无旧 Sheet 留存",
+      "actions": [
+        "打开 Sheet two",
+        "点击 Sheet 内 Reload sheet"
+      ],
+      "captures": [
+        "before",
+        "reloaded"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "N01",
+      "title": "Drawer 与父 Stack",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {
+        "swipeEnabled": true,
+        "parentGestureEnabled": false
+      },
+      "nativeFields": [
+        "GestureHandlerNative",
+        "Stack gesture guard"
+      ],
+      "expected": "按钮/边缘手势打开；关闭后仍在 Drawer；选 Second 显示对应页；内部划动不能 pop 父 Stack；系统返回后主页",
+      "actions": [
+        "Open Drawer",
+        "边缘拖开/关",
+        "按钮打开",
+        "选 Second",
+        "内部边缘划动",
+        "系统返回 Drawer Home，再点击 Leave Drawer 回主页"
+      ],
+      "captures": [
+        "home",
+        "gesture-open",
+        "gesture-closed",
+        "button-open",
+        "second",
+        "interior",
+        "back"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/harmony-drawer-resolution.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "N02",
+      "title": "前后台",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {},
+      "nativeFields": [
+        "Ability lifecycle"
+      ],
+      "expected": "恢复后同 PID/boot/路由、同布局内容，非启动即成功",
+      "actions": [
+        "Sheet two 展示",
+        "后台",
+        "返回前台"
+      ],
+      "captures": [
+        "before",
+        "foreground"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    },
+    {
+      "caseId": "N03",
+      "title": "原主页和 Native Tabs",
+      "publicEntry": "expo-router Stack.Screen.options → native-stack NativeStackView → Screens ScreenStackItem/Screen",
+      "props": {},
+      "nativeFields": [
+        "RNSBottomTabs",
+        "touch forwarding"
+      ],
+      "expected": "保留 Home/Settings 原夹具页面，点击真实切换；不等于 default/ExpoImage 通过",
+      "actions": [
+        "Home",
+        "点 Settings",
+        "点 Home"
+      ],
+      "captures": [
+        "home",
+        "settings",
+        "home-again"
+      ],
+      "requirement": "M4_REQUIRED",
+      "deferredToM7": false,
+      "hostTest": "packages/expo-router/harmony/tests/*.test.cjs",
+      "deviceStatus": "NOT_RUN",
+      "sourceIds": [
+        "screens-types",
+        "screens-helper",
+        "harmony-helper",
+        "screens-component",
+        "harmony-component",
+        "native-stack",
+        "harmony-transformer",
+        "arkui-sdk"
+      ]
+    }
+  ],
+  "limitations": [
+    "ArkUI 阴影为显式 Harmony 映射，非 Android elevation 光照等价，需 C 审核",
+    "SDK radius 需 API15；当前编译 host compatible API20；旧系统能力不作无依据承诺",
+    "百分比高度以 SheetWrapper 可用区域验证；windowRect 为事件索引近邻参考，实际窗口/insets 需设备复验",
+    "fitToContents 的原生 RNViewBase/布局仍须实测；主机布局树不证明真实触摸成功"
+  ]
+}

@@ -55,10 +55,18 @@ test('Harmony form-sheet children receive a layout container for backgrounds and
     exports: exported,
     require: name => name === 'react' ? React : name === 'react-native' ? reactNative : name === 'warn-once' ? () => {} : {},
   });
-  const view = () => exported.default({stackPresentation: 'formSheet', children: 'content', headerConfig: {hidden: true}}, null).children[0].children[0];
+  const view = (props = {}) => exported.default({stackPresentation: 'formSheet', ...props, children: 'content', headerConfig: {hidden: true}}, null).children[0].children[0];
   assert.equal(view().props.style[0].flex, 1);
   assert.equal(view().children[0].props.style[0].flex, 1);
+  assert.equal(view({sheetAllowedDetents: 'fitToContents'}).props.style[0], null);
+  assert.equal(view({sheetAllowedDetents: 'fitToContents'}).children[0].props.style[0], null);
+  assert.equal(view({stackPresentation: 'push'}).props.style[0].flex, 1);
+  for (const detents of [[], [0], [NaN], [-1], [0.7, 0.2], [0.1, 0.2, 0.3, 0.4]]) {
+    assert.throws(() => view({sheetAllowedDetents: detents}), /Harmony sheet/);
+  }
+  assert.throws(() => view({sheetElevation: -1}), /Harmony sheet/);
   reactNative.Platform.OS = 'android';
+  assert.doesNotThrow(() => view({sheetAllowedDetents: [0]}));
   assert.equal(view().props.style[0], null);
   reactNative.Platform.OS = 'ios';
   assert.equal(view().props.style[0].position, 'absolute');

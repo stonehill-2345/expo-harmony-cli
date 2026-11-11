@@ -18,7 +18,7 @@ function fixture(t) {
   const consumerRoot = path.join(base, 'consumer');
   fs.mkdirSync(runDirectory, { recursive: true });
   const candidate = candidateBytes(runDirectory);
-  const caseSet = Buffer.from('{"schemaVersion":1,"registryVersion":"2026-10-30","registrySha256":"' + 'a'.repeat(64) + '","cases":[{"id":"V01-DEVICE-PREFLIGHT","required":true,"requiresDevice":true,"requiredEvidence":["device-assertion","screenshot"]}]}\n');
+  const caseSet = Buffer.from('{"schemaVersion":1,"registryVersion":"2026-11-11","registrySha256":"' + 'a'.repeat(64) + '","cases":[{"id":"V01-DEVICE-PREFLIGHT","required":true,"requiresDevice":true,"requiredEvidence":["device-assertion","screenshot"]}]}\n');
   fs.writeFileSync(path.join(runDirectory, 'candidate.json'), candidate);
   fs.writeFileSync(path.join(runDirectory, 'case-set.json'), caseSet);
   const manifest = {

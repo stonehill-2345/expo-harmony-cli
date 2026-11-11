@@ -64,19 +64,32 @@ function ScreenStackItem(
     headerHiddenPreviousRef.current = headerConfig?.hidden;
   }, [headerConfig?.hidden, stackPresentation]);
 
+  if (Platform.OS === 'harmony' && stackPresentation === 'formSheet') {
+    const detents = rest.sheetAllowedDetents;
+    if (Array.isArray(detents) && (detents.length < 1 || detents.length > 3 ||
+        detents.some((value, index) => !Number.isFinite(value) || value <= 0 || value > 1 ||
+          (index > 0 && value < detents[index - 1])))) {
+      throw new Error('Harmony sheetAllowedDetents requires one to three ascending fractions in (0, 1], or fitToContents');
+    }
+    if ((rest.sheetCornerRadius != null && !Number.isFinite(rest.sheetCornerRadius)) ||
+        (rest.sheetElevation != null && (!Number.isInteger(rest.sheetElevation) || rest.sheetElevation < 0))) {
+      throw new Error('Invalid Harmony sheetCornerRadius or sheetElevation');
+    }
+  }
+
   const content = (
     <>
       <View
         collapsable={false}
         style={[
-          stackPresentation === 'formSheet' && Platform.OS !== 'harmony'
+          stackPresentation === 'formSheet' && (Platform.OS !== 'harmony' || rest.sheetAllowedDetents === 'fitToContents')
             ? Platform.OS === 'ios'
               ? styles.absolute
               : null
             : styles.container, 
         ]}>
         <View style={[
-          stackPresentation === 'formSheet' && Platform.OS !== 'harmony'
+          stackPresentation === 'formSheet' && (Platform.OS !== 'harmony' || rest.sheetAllowedDetents === 'fitToContents')
             ? Platform.OS === 'ios'
               ? styles.absolute
               : null

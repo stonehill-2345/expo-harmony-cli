@@ -30,7 +30,7 @@ test('validates a complete run manifest and reports malformed fields without thr
 test('validates unique case definitions and evidence requirements', () => {
   const valid = {
     schemaVersion: 1,
-    registryVersion: '2026-10-30',
+    registryVersion: '2026-11-11',
     registrySha256: hash,
     cases: [{ id: 'V01-ONE', required: true, requiresDevice: false, requiredEvidence: ['command-log'] }],
   };
