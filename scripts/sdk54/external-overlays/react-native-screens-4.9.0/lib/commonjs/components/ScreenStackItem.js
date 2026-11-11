@@ -39,11 +39,24 @@ function ScreenStackItem({
     (0, _warnOnce.default)(_reactNative.Platform.OS !== 'android' && stackPresentation !== 'push' && headerHiddenPreviousRef.current !== headerConfig?.hidden, `Dynamically changing header's visibility in modals will result in remounting the screen and losing all local state.`);
     headerHiddenPreviousRef.current = headerConfig?.hidden;
   }, [headerConfig?.hidden, stackPresentation]);
+  if (_reactNative.Platform.OS === 'harmony' && stackPresentation === 'formSheet') {
+    const detents = rest.sheetAllowedDetents;
+    if (Array.isArray(detents) && (detents.length < 1 || detents.length > 3 ||
+        detents.some((value, index) => !Number.isFinite(value) || value <= 0 || value > 1 ||
+          (index > 0 && value < detents[index - 1])))) {
+      throw new Error('Harmony sheetAllowedDetents requires one to three ascending fractions in (0, 1], or fitToContents');
+    }
+    if ((rest.sheetCornerRadius != null && !Number.isFinite(rest.sheetCornerRadius)) ||
+        (rest.sheetElevation != null && (!Number.isInteger(rest.sheetElevation) || rest.sheetElevation < 0))) {
+      throw new Error('Invalid Harmony sheetCornerRadius or sheetElevation');
+    }
+  }
+
   const content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(_reactNative.View, {
     collapsable: false,
-    style: [stackPresentation === 'formSheet' && _reactNative.Platform.OS !== 'harmony' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container]
+    style: [stackPresentation === 'formSheet' && (_reactNative.Platform.OS !== 'harmony' || rest.sheetAllowedDetents === 'fitToContents') ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container]
   }, /*#__PURE__*/React.createElement(_reactNative.View, {
-    style: [stackPresentation === 'formSheet' && _reactNative.Platform.OS !== 'harmony' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container, contentStyle]
+    style: [stackPresentation === 'formSheet' && (_reactNative.Platform.OS !== 'harmony' || rest.sheetAllowedDetents === 'fitToContents') ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container, contentStyle]
   }, children)), /*#__PURE__*/React.createElement(_ScreenStackHeaderConfig.ScreenStackHeaderConfig, headerConfig), stackPresentation === 'formSheet' && unstable_sheetFooter && /*#__PURE__*/React.createElement(_ScreenFooter.FooterComponent, null, unstable_sheetFooter()));
 
   // We take backgroundColor from contentStyle and apply it on Screen.

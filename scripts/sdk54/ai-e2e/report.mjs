@@ -128,6 +128,8 @@ export function verifyRunReport(runDirectory) {
   const resultsDocument = readJson(resultsFile);
 
   errors.push(...validateRunManifest(manifest), ...validateResults(resultsDocument));
+  if (manifest.source?.dirty !== false) errors.push('Run source must be clean');
+  if (!/^[a-f0-9]{40}$/.test(manifest.source?.revision ?? '')) errors.push('Run source revision must be a Git commit');
 
   const caseSetFile = verifyReferencedFile(root, manifest.caseSet, 'Case set', errors)?.file;
   const candidate = verifyReferencedFile(root, manifest.candidate, 'Candidate manifest', errors);

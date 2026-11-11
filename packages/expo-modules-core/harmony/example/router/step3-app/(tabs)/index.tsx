@@ -10,6 +10,7 @@ export default function Home() {
       <Text testID="router-home">Native Tabs Home</Text>
       <Button title="Open Drawer" onPress={() => router.push('/drawer')} />
       <Button title="Open landscape" onPress={() => router.push('/landscape')} />
+      <Button title="Sheet contract cases" onPress={() => router.push('/sheet-cases')} />
       <Button title="Open form sheet" onPress={() => router.push('/sheet')} />
       <Link href={{ pathname: '/details/[id]', params: { id: '42', query: '资源 space' } }}>
         Open details 42

@@ -38,16 +38,17 @@ CPP_BINDER_AFTER = CPP_BINDER_BEFORE + b'\n            {"RNSBottomTabs", std::ma
 
 def patch_sheet(data):
     text = data.decode()
-    text = text.replace("import { window } from '@kit.ArkUI';", "import { window } from '@kit.ArkUI';\nimport display from '@ohos.display';")
     marker = '  @State sheetAllowedDetents: number[] = [];'
     text = text.replace(marker, '''
   @State sheetVisible: boolean = false;
   @State sheetDetentIndex: number = 0;
   @State sheetGrabberVisible: boolean = false;
+  @State sheetCornerRadius: number = -1;
 '''+marker)
     start = text.index('        RNViewBase({ ctx: this.ctx, tag: this.tag }) {', text.index('  build() {'))
     end = text.index('\n      }\n      .onAreaChange', start)
     content = text[start:end].replace('          .onAreaChange', "          .onTouch((event: TouchEvent) => {\n            if (this.isFormSheet()) this.ctx.rnInstance.postTouchEventMessageToCpp(this.tag, event);\n          })\n          .onAreaChange", 1)
+    content = content.replace(".height('100%')", ".height(this.isFormSheet() && this.sheetAllowedDetents[0] === -1 ? undefined : '100%')")
     text = text[:start] + '''
         if (!this.isFormSheet()) {
           this.screenContent()
@@ -61,18 +62,29 @@ def patch_sheet(data):
 
   private readSheetProps(): void {
     const detents: number[] = this.descriptor.rawProps['sheetAllowedDetents'] ?? [1];
-    if (detents.length < 1 || detents.length > 3 || detents.some((n: number) => !Number.isFinite(n) || (n !== -1 && (n <= 0 || n > 1)))) {
+    if (detents.length < 1 || detents.length > 3 || detents.some((n: number, index: number) => !Number.isFinite(n) || (n === -1 ? detents.length !== 1 : n <= 0 || n > 1) || (index > 0 && n < detents[index - 1]))) {
       throw new Error('Harmony sheets require one to three finite detents in (0, 1], or fitToContents');
     }
     const initial: number = this.descriptor.rawProps['sheetInitialDetent'] ?? 0;
     if (!Number.isInteger(initial) || initial < 0 || initial >= detents.length) {
       throw new Error('Invalid Harmony sheetInitialDetent');
     }
+    const undimmed: number = this.descriptor.rawProps['sheetLargestUndimmedDetent'] ?? -1;
+    if (!Number.isInteger(undimmed) || undimmed < -1 || undimmed >= detents.length) {
+      throw new Error('Invalid Harmony sheetLargestUndimmedDetent');
+    }
+    const radius: number = this.descriptor.rawProps['sheetCornerRadius'] ?? -1;
+    const elevation: number = this.descriptor.rawProps['sheetElevation'] ?? 24;
+    if (!Number.isFinite(radius) || !Number.isInteger(elevation) || elevation < 0) {
+      throw new Error('Invalid Harmony sheetCornerRadius or sheetElevation');
+    }
+    this.sheetCornerRadius = radius;
+    this.sheetElevation = elevation;
     this.sheetAllowedDetents = detents;
     this.sheetInitialDetent = initial;
     if (!this.sheetVisible) this.sheetDetentIndex = initial;
     this.sheetGrabberVisible = this.descriptor.rawProps['sheetGrabberVisible'] ?? false;
-    this.sheetLargestUndimmedDetent = this.descriptor.rawProps['sheetLargestUndimmedDetent'] ?? -1;
+    this.sheetLargestUndimmedDetent = undimmed;
   }
 
   private sheetHeight(index: number): SheetSize | Length {
@@ -89,11 +101,19 @@ def patch_sheet(data):
       detents: heights,
       dragBar: this.sheetGrabberVisible,
       showClose: false,
+      radius: this.sheetCornerRadius < 0 ? undefined : {
+        topLeft: this.sheetCornerRadius, topRight: this.sheetCornerRadius,
+        bottomLeft: 0, bottomRight: 0,
+      },
+      shadow: { radius: this.sheetElevation, color: '#33000000', offsetX: 0, offsetY: 0 },
       preferType: SheetType.BOTTOM,
       backgroundColor: this.backgroundColorValue ?? '#ffffff',
       enableOutsideInteractive: this.sheetDetentIndex <= this.sheetLargestUndimmedDetent,
-      onDetentsDidChange: (height: number) => {
-        const screenHeight = display.getDefaultDisplaySync().height;
+      onDetentsDidChange: async (height: number) => {
+        if (!this.sheetVisible) return;
+        const currentWindow = await window.getLastWindow(this.ctx.uiAbilityContext);
+        if (!this.sheetVisible) return;
+        const screenHeight = currentWindow.getWindowProperties().windowRect.height;
         let nearest = 0;
         for (let index = 1; index < this.sheetAllowedDetents.length; index++) {
           if (Math.abs(height - screenHeight * this.sheetAllowedDetents[index]) < Math.abs(height - screenHeight * this.sheetAllowedDetents[nearest])) nearest = index;
@@ -102,7 +122,12 @@ def patch_sheet(data):
         this.eventEmitter?.emit('sheetDetentChanged', { index: nearest, isStable: true });
       },
       shouldDismiss: (action: SheetDismiss) => {
-        if (this.preventNativeDismiss || !this.gestureEnabled) return;
+        if (!this.sheetVisible) return;
+        if (this.preventNativeDismiss || this.getPreventFlag()) {
+          this.eventEmitter?.emit('nativeDismissCancelled', { dismissCount: this.dismissCount });
+          return;
+        }
+        if (!this.gestureEnabled) return;
         action.dismiss();
         this.sheetVisible = false;
         this.backBtnPressed(true);
@@ -188,7 +213,7 @@ def prepare(source, target):
                     result.addfile(member, payload)
     result_bytes = output.getvalue()
     manifest = {
-        'profile': 'screens-4.9.0-navigation-sheet-v7',
+        'profile': 'screens-4.9.0-navigation-sheet-v8',
         'inputSHA256': INPUT_SHA,
         'outputSHA256': sha(result_bytes),
         'source': SOURCE,

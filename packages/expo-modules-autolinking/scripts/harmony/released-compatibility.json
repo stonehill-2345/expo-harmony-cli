@@ -12,11 +12,11 @@
     },
     {
       "transform": "screens-content-wrapper-v1",
-      "compatibilityId": "screens-4.9.0-navigation-sheet-v7",
+      "compatibilityId": "screens-4.9.0-navigation-sheet-v8",
       "packageName": "@react-native-ohos/react-native-screens",
       "packageVersion": "4.9.0",
       "inputSHA256": "133a75df8e05117c79c30b492aa0137c076801f2f82367696eeb8101afce11dd",
-      "outputSHA256": "2e55f40ed355b094b4b19ac38b3a351fe5b32eabe96a626c72f0ed5560db7933",
+      "outputSHA256": "fe1c74ff9e111740b39956e4e987666490fc14a57d229328b2ae91a86b8f2114",
       "file": "screens-content-wrapper-v1.har"
     },
     {
