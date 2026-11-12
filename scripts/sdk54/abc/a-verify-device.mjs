@@ -128,6 +128,9 @@ function verifyResources(root,run,samples) {
       assert.ok(!files['resources/rawfile/expo-asset/data.json']);assert.ok(!files['resources/rawfile/expo-font/fonts/EmbeddedIcons.ttf']);
       if(files['resources/rawfile/expo-font/fonts.json'])assert.deepEqual(JSON.parse(files['resources/rawfile/expo-font/fonts.json'].text),[]);
     }else{
+      assert.ok(typeof probe.cacheUri==='string'&&probe.cacheUri.startsWith('file:///')&&probe.cacheUri.trim()===probe.cacheUri,'Missing local cache URI');
+      const cache=new URL(probe.cacheUri);
+      assert.ok(cache.protocol==='file:'&&!cache.host&&cache.pathname.length>1&&!cache.search&&!cache.hash,'Invalid local cache URI');
       const expected=`{ "embedded": "${phase}" }\n`;assert.equal(probe.text,expected);assert.equal(probe.rejected,false);assert.ok(probe.fonts.includes('EmbeddedIcons'));
       assert.equal(files['resources/rawfile/expo-asset/data.json']?.text,expected,'HAP rawfile bytes differ');
       const glyph=PNG.sync.read(readRef(root,s.glyph),{checkCRC:true});
@@ -150,8 +153,12 @@ function verifyResources(root,run,samples) {
   for(const phase of ['updated','removed']){
     const sample=phase==='updated'?updated:removed;const install=JSON.parse(readRef(root,run.builds.find(b=>b.id===sample.buildId).install));
     assert.equal(install.hapSha256,sample.hapSha256);assert.equal(install.target,run.device.target);assert.equal(install.exitCode,0);
-    assert.equal(install.argv?.[install.argv.indexOf('-t')+1],run.device.target,'Install targeted wrong device');
-    assert.ok(Array.isArray(install.argv)&&install.argv.includes('install')&&install.argv.includes('-r')&&!install.argv.includes('uninstall'),'Update must preserve app data');
+    assert.ok(Array.isArray(install.argv)&&install.argv.length===6&&install.argv.every(arg=>typeof arg==='string'&&arg.length>0),'Invalid HDC install argv');
+    assert.equal(path.basename(install.argv[0]),'hdc','Install executable must be hdc');
+    assert.deepEqual(install.argv.slice(1,5),['-t',run.device.target,'install','-r'],'Install must target this device and preserve app data');
+    assert.ok(install.cwd===undefined||typeof install.cwd==='string','Invalid install cwd');
+    const installedHap=path.resolve(root,install.cwd??'.',install.argv[5]);
+    readRef(root,{path:path.relative(path.resolve(root),installedHap),sha256:sample.hapSha256});
   }
 }
 

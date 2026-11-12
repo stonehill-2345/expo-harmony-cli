@@ -47,7 +47,7 @@ test('verifier refuses complete-looking manifests with missing mandatory cases',
 });
 
 // This is an oracle unit fixture, explicitly synthetic. It is never written as a device run result.
-test('complete synthetic resource evidence passes and a cached update cannot pass',async t=>{
+async function resourceFixture(t) {
   const {verifyDevice}=await import('../abc/a-verify-device.mjs');
   const {createReleaseManifest}=await import('../release-catalog.mjs');
   const {execFileSync,spawnSync}=await import('node:child_process');
@@ -86,7 +86,51 @@ print(json.dumps({'width':w,'height':h,'scale':1,'uri':'file:///cache/glyph.png'
     samples.push({id,buildId:phase,at:`2026-11-11T01:00:0${i/10+1}Z`,...identity,screenshot:fileRef(phase+'.png'),glyph:fileRef('glyph.png'),layout:f.ref(id+'-layout.json',layout),identity:f.ref(id+'-identity.json',identity),hilog:f.ref(id+'-hilog.txt',`11-11 09:00:01.000 ${pid} 456 I ReactNative: A_RESOURCE_PROBE=${JSON.stringify(probe)}\n`)});
   }
   run.cases={R01:{initial:samples[0],reload:samples[1]},R02:{updated:samples[2]},R03:{removed:samples[3]}};
+  return {...f,run,verifyDevice};
+}
+test('complete synthetic resource evidence passes and a cached update cannot pass',async t=>{
+  const f=await resourceFixture(t);if(!f)return;const {run,verifyDevice}=f;
   f.ref('a-device-evidence.json',run);assert.deepEqual(verifyDevice('resources',f.root).verifiedCaseIds,['R01','R02','R03']);
   const stale=fs.readFileSync(path.join(f.root,'capture-2-hilog.txt'),'utf8').replace('updated\\"','initial\\"');
   run.cases.R02.updated.hilog=f.ref('stale-update.txt',stale);f.ref('a-device-evidence.json',run);assert.throws(()=>verifyDevice('resources',f.root));
+});
+
+for(const fault of ['null cache URI','missing cache URI','remote cache URI','wrong HAP argument','missing HAP argument','extra install command','wrong executable','HAP symlink escape'])test(`resource evidence rejects ${fault}`,async t=>{
+  const f=await resourceFixture(t);if(!f)return;const {run,verifyDevice}=f;
+  if(fault.includes('cache URI'))for(const sample of [run.cases.R01.initial,run.cases.R01.reload,run.cases.R02.updated]){
+    const file=path.join(f.root,sample.hilog.path),line=fs.readFileSync(file,'utf8'),prefix=line.slice(0,line.indexOf('A_RESOURCE_PROBE=')+'A_RESOURCE_PROBE='.length),probe=JSON.parse(line.slice(prefix.length));
+    if(fault==='null cache URI')probe.cacheUri=null;
+    if(fault==='missing cache URI')delete probe.cacheUri;
+    if(fault==='remote cache URI')probe.cacheUri='https://example.invalid/data.json';
+    sample.hilog=f.ref(sample.hilog.path,prefix+JSON.stringify(probe)+'\n');
+  }else{
+    const build=run.builds.find(b=>b.id==='updated'),install=JSON.parse(fs.readFileSync(path.join(f.root,build.install.path)));
+    if(fault==='wrong HAP argument')install.argv[5]='initial.hap';
+    if(fault==='missing HAP argument')install.argv.pop();
+    if(fault==='extra install command')install.argv.push('shell','bm','clean');
+    if(fault==='wrong executable')install.argv[0]='echo';
+    if(fault==='HAP symlink escape'){
+      const outside=fs.mkdtempSync(path.join(os.tmpdir(),'abc-a-outside-'));t.after(()=>fs.rmSync(outside,{recursive:true,force:true}));
+      fs.copyFileSync(path.join(f.root,'updated.hap'),path.join(outside,'updated.hap'));
+      fs.symlinkSync(path.join(outside,'updated.hap'),path.join(f.root,'linked.hap'));install.argv[5]='linked.hap';
+    }
+    build.install=f.ref(build.install.path,install);
+  }
+  f.ref('a-device-evidence.json',run);
+  assert.throws(()=>verifyDevice('resources',f.root),fault.includes('cache URI')?/cache URI/:/install|HAP|hdc|Evidence/i);
+});
+
+test('resource evidence resolves install cwd after relocation and leaves raw evidence unchanged',async t=>{
+  const f=await resourceFixture(t);if(!f)return;const {run,verifyDevice}=f;
+  fs.mkdirSync(path.join(f.root,'builds'));
+  for(const phase of ['updated','removed']){
+    fs.copyFileSync(path.join(f.root,phase+'.hap'),path.join(f.root,'builds',phase+'.hap'));
+    const build=run.builds.find(b=>b.id===phase),install=JSON.parse(fs.readFileSync(path.join(f.root,build.install.path)));
+    install.cwd='builds';build.install=f.ref(build.install.path,install);
+  }
+  f.ref('a-device-evidence.json',run);
+  const moved=fs.mkdtempSync(path.join(os.tmpdir(),'abc-a-moved-'));t.after(()=>fs.rmSync(moved,{recursive:true,force:true}));
+  fs.cpSync(f.root,moved,{recursive:true});
+  const snapshot=()=>fs.readdirSync(moved,{recursive:true}).filter(name=>fs.statSync(path.join(moved,name)).isFile()).sort().map(name=>[name,createHash('sha256').update(fs.readFileSync(path.join(moved,name))).digest('hex')]);
+  const before=snapshot();assert.deepEqual(verifyDevice('resources',moved).verifiedCaseIds,['R01','R02','R03']);assert.deepEqual(snapshot(),before);
 });

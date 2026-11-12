@@ -126,7 +126,9 @@ run-dir 内必须有 `a-device-evidence.json`。此文件是 A 的语义输入�
 
 `layout.json` 为 HDC 原始树 `{attributes:{bounds:"[x,y][r,b]",...},children:[...]}`。PNG 截图尺寸与根 bounds 一致，节点 bundle 对应真实 App。hilog 保留原始 PID 前缀和完整 JSON 行，不改写历史时间、PID 或 UUID。
 
-资源更新/移除的 `install` 引用文件包含 `{argv:["hdc","-t",target,"install","-r",hapPath],target,hapSha256,exitCode:0}`，另保存原始 stdout/stderr 供 C 审查。marker、同 URI、真实更新字节共同校验缓存保留；仅一条“install 成功”不够。
+资源更新/移除的 `install` 引用文件包含 `{argv:["hdc","-t",target,"install","-r",hapPath],target,hapSha256,exitCode:0}`，另保存原始 stdout/stderr 供 C 审查。命令必须恰为这 6 个参数（可使用实际 hdc 绝对路径），不能把 echo、缺少 HAP 或附加 shell 命令当安装记录。可选 `cwd` 相对 run-dir，缺省为 run-dir；`hapPath` 相对此 cwd。验证器读取命令指向的实际 HAP，核对其 SHA256 与 capture/build；该文件须随 run 归档，不能通过 symlink 越界。B 应在本轮目录执行并保存相对路径记录，以支持搬移重放；原始完整命令和日志仍保留，不改旧日志来适配格式。
+
+首次、reload、更新的 `cacheUri` 必须是非空 `file:///` 本地文件 URI，不含远程主机、query 或 fragment，再比较三次 URI 是否相同。null/缺字段/网络地址不能证明缓存保持。marker、同 URI、真实更新字节共同校验缓存保留；仅一条“install 成功”不够。
 
 ## 5. 导航动作与断言
 
@@ -141,3 +143,51 @@ run-dir 内必须有 `a-device-evidence.json`。此文件是 A 的语义输入�
 - N01：Drawer 打开/关闭/选页/内部划动/返回全部保留；关闭与返回是两个动作。N02 是前后台恢复。N03 是 Native Tabs Home→Settings→Home。
 
 `a-verify-device` 不读任何 `passed:true` 来决定成功，也不写回原始证据。退出 0 仅表示这份材料满足 A 的语义断言；仍需 C 独立复验和 B 的统一矩阵。拿不到设备、候选或 C case review 时记录明确 BLOCKED，不填空截图、不移除必达用例。
+
+## 6. 聚合契约与 B runner 绑定
+
+先导出可搬移的审查快照；`--evidence-root` 可选，指向含 `sources/` 的原始证据目录。提供的源文件必须匹配 Sheet 契约固定 hash；缺少外部源字节会明确列为 blocker，不会自动下载或编造。
+
+```sh
+node scripts/sdk54/abc/a-export-contract.mjs --source-root "$SDK54_REPO" \
+  --evidence-root "$A_SOURCE_EVIDENCE" --output "$SDK54_OUT/a-handoff"
+```
+
+`a-handoff/a-contract.json` 的 `cases` 是 C 审查用的 23 个语义场景：原 S01～S17、N01～N03 加 R01～R03。原 actions/captures 保留，所有设备状态仍为 NOT_RUN；`files` 记录夹具、断言、固定源文件和 B/C schema 快照的字节数与 SHA256，其中包含设备验证器调用的 `a-check-font.py` 字体像素检查脚本，并将其列为资源场景的 sourceIds。此包是审查快照，不是完整独立项目；执行入口须在新 checkout 安装固定依赖后运行。
+
+`runnerCases` 映射当前 V-02 的 19 个注册用例，包含 capture 选择和补充要求，不附带占位命令。R01 分别提供 initial/reload；R02 是 Asset JSON 同 URI 更新、字体保持加载，不能替代 FONT-UPDATE 的字体字节更新证据。S14 是应用请求横竖屏，不能替代 C 要求的物理旋转证据。CORE-M4/OTHER-M4 及六项资源事务需要独立完整命令。SHEET-CONTRACT 同时携带 N02/N03 回归。B 负责采集/进程管理，A 的验证器只支持完整 navigation 或 resources 输入，不提供单 case 验证参数。
+
+B 提供 `commands.json`，要求 `schemaVersion:1`、`stage:"V-02"`、`cases` 恰好覆盖 `runnerCases` 的 19 个 ID。每项格式如下（示意字段不可直接执行）：
+
+```json
+{
+  "id": "V02-SHEET-CONTRACT",
+  "semanticCaseIds": ["按 runnerCases 对应项原序列完整填写"],
+  "command": {
+    "argv": ["实际可执行文件", "实际采集与断言入口", "实际参数"],
+    "cwd": "navigation",
+    "timeoutMs": 300000,
+    "evidence": [
+      {"type":"device-assertion","path":"captures/navigation/assertions.json"},
+      {"type":"screenshot","path":"captures/navigation/final.png"}
+    ]
+  }
+}
+```
+
+`cwd` 相对 consumer-root，或绝对指向 consumer-root / 计划 run-dir 内；证据路径相对计划 run-dir。`command-log` 由 runner 生成，其余 requiredEvidence 必须显式提供。禁止 shell 属性、路径逃逸、重复/未知 ID、遗漏语义或缺失命令。绑定仅校验结构与输入完整性，不证明命令实际覆盖语义；命令内容及新增补充证据仍需 C 复核。
+
+```sh
+node scripts/sdk54/abc/a-bind-runner.mjs \
+  --contract "$SDK54_OUT/a-handoff/a-contract.json" --commands "$B_COMMANDS" \
+  --consumer-root "$SDK54_CONSUMERS" --run-dir "$SDK54_OUT/v02-run" \
+  --output "$SDK54_OUT/a-runner-binding"
+# 以下仅在干净源提交、真实设备与 B 冻结候选齐备后执行，不传 source-dirty 覆盖值。
+node scripts/sdk54/abc/b-prepare-run.mjs --candidate "$SDK54_CANDIDATE" \
+  --a-contract "$SDK54_OUT/a-runner-binding/a-contract.json" \
+  --case-review "$SDK54_OUT/a-runner-binding/c-case-review.json" \
+  --consumer-root "$SDK54_CONSUMERS" --target "$SDK54_TARGET" \
+  --platform-version "$SDK54_PLATFORM_VERSION" --stage V-02 --output "$SDK54_OUT/v02-run"
+```
+
+绑定产物的根 `a-contract.json` 是 B command schema，完整语义快照在 `semantic/a-contract.json`，C 应审查后者。`c-case-review.json` 从 C 原文件逐字节复制，A 不改 C 的 BLOCKED 状态或批准声明。registry/review 漂移、快照 hash 不符会拒绝绑定，需重新导出。输出目录拒绝覆盖。`BOUND_NOT_EXECUTED` 只表示命令已绑定；A-34 和阶段门仍需同候选真实运行及 C 独立复验。
