@@ -142,6 +142,10 @@ run-dir 内必须有 `a-device-evidence.json`。此文件是 A 的语义输入�
 - S17：Sheet 内点击 `Reload sheet` 重载，同 PID/HAP、不同 boot、主页可见。
 - N01：Drawer 打开/关闭/选页/内部划动/返回全部保留；关闭与返回是两个动作。N02 是前后台恢复。N03 是 Native Tabs Home→Settings→Home。
 
+N02 必须从 Sheet two 的 35% 档位开始采集 `before`，实际切到后台再返回，采集 `foreground`。后者的原始 hilog 必须覆盖这次完整切换，含由 RouterProbe 的原生 AppState change 订阅产生的 `A_ROUTER_APP_STATE={boot,from,to,at}`；挂载组件不会自动生成“已切后台”事件，卸载时移除订阅。事件链须从 active 连续进入 background，再回到 active，允许经过 inactive；只切 inactive（如短暂遮挡）不算进入后台。
+
+事件须来自同一 PID/boot，时间按记录顺序不倒退，且位于 `(before.at, foreground.at]`。B 的 capture.at 与事件 at 须采用同一设备时钟基准，保留原始设备时间和采集命令供 C 复核。旧切换日志、另一 runtime、断开的状态链或两张没有切换日志的前台截图均拒绝。原有截图、Sheet 高度、路由、PID/HAP 一致性要求继续生效；AppState 观测不能代替 B 的实际设备操作和 C 的独立证据审查。
+
 `a-verify-device` 不读任何 `passed:true` 来决定成功，也不写回原始证据。退出 0 仅表示这份材料满足 A 的语义断言；仍需 C 独立复验和 B 的统一矩阵。拿不到设备、候选或 C case review 时记录明确 BLOCKED，不填空截图、不移除必达用例。
 
 ## 6. 聚合契约与 B runner 绑定

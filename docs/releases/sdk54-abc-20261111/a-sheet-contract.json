@@ -72,6 +72,16 @@
         "shadow: ShadowOptions|ShadowStyle",
         "shouldDismiss: drag/back/mask/close interaction"
       ]
+    },
+    {
+      "id": "router-lifecycle-probe",
+      "path": "packages/expo-modules-core/harmony/example/router/RouterProbe.tsx",
+      "sha256": "5e2043c4fe46b7de4870c878bcb7bb906e0ffb7df8b299cde011fb5b4532f71e"
+    },
+    {
+      "id": "navigation-device-verifier",
+      "path": "scripts/sdk54/abc/a-verify-device.mjs",
+      "sha256": "474d10da404d219a3e15ab9310c7a03247df08748a3e2e4be6975834fc6322e3"
     }
   ],
   "cases": [
@@ -797,7 +807,7 @@
       "nativeFields": [
         "Ability lifecycle"
       ],
-      "expected": "恢复后同 PID/boot/路由、同布局内容，非启动即成功",
+      "expected": "恢复后同 PID/boot/路由、同布局内容；同一 runtime 的 AppState 真实记录 active→background→active（允许 inactive 中间态），不能仅用两张前台截图证明",
       "actions": [
         "Sheet two 展示",
         "后台",
@@ -809,7 +819,7 @@
       ],
       "requirement": "M4_REQUIRED",
       "deferredToM7": false,
-      "hostTest": "scripts/sdk54/__tests__/abc-a-sheet.test.mjs",
+      "hostTest": "scripts/sdk54/__tests__/abc-a-lifecycle.test.mjs + scripts/sdk54/__tests__/abc-a-device.test.mjs",
       "deviceStatus": "NOT_RUN",
       "sourceIds": [
         "screens-types",
@@ -819,7 +829,9 @@
         "harmony-component",
         "native-stack",
         "harmony-transformer",
-        "arkui-sdk"
+        "arkui-sdk",
+        "router-lifecycle-probe",
+        "navigation-device-verifier"
       ]
     },
     {

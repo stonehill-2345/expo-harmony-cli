@@ -17,12 +17,13 @@ function bounds(node) {
 }
 function find(sample,predicate) {return sample.nodes.find(n=>n.visible!=='false'&&n.opacity!=='0.000000'&&predicate(n));}
 function visibleText(sample,text) {const n=find(sample,n=>(n.text??'').includes(text));assert.ok(n,`Missing visible ${text}`);bounds(n);return n;}
-function event(sample,marker) {
+function eventLines(sample,marker) {
   const prefix=marker+'=';
   const lines=sample.log.split(/\r?\n/).filter(line=>line.includes(prefix)&&new RegExp(`(?:^|\\s)${sample.pid}(?:\\s|$)`).test(line.slice(0,line.indexOf(prefix))));
   assert.ok(lines.length,`Missing PID ${sample.pid} event ${marker}`);
-  return JSON.parse(lines.at(-1).slice(lines.at(-1).indexOf(prefix)+prefix.length));
+  return lines.map(line=>line.slice(line.indexOf(prefix)+prefix.length));
 }
+function event(sample,marker) {return JSON.parse(eventLines(sample,marker).at(-1));}
 function route(sample) {const value=event(sample,'A_ROUTER_PROBE');assert.equal(value.boot,sample.boot,'Old runtime boot');assert.ok(Array.isArray(value.state?.routes),'Missing actual route state');return value;}
 function pixel(sample,x,y) {
   assert.ok(x>=0&&y>=0&&x<sample.image.width&&y<sample.image.height,'Pixel outside screenshot');
@@ -104,7 +105,22 @@ export function verifyNavigationCase(id,s) {
     for(const key of ['gesture-open','button-open']){visibleText(s[key],'Drawer Second');assert.equal(event(s[key],'STEP3_DRAWER').status,'open');}
     for(const key of ['second','interior']){visibleText(s[key],'Drawer Second Content');assert.equal(route(s[key]).pathname,'/drawer/second');assert.equal(event(s[key],'STEP3_DRAWER').status,'closed');}
     assert.notEqual(s['gesture-open'].screenshot.sha256,s.home.screenshot.sha256);closed(s.back);
-  }else if(id==='N02'){unchanged([s.before,s.foreground]);assert.ok(Math.abs(sheet(s.before).height-sheet(s.foreground).height)<8);}
+  }else if(id==='N02'){
+    unchanged([s.before,s.foreground]);assert.ok(Math.abs(sheet(s.before,.35,'two').height-sheet(s.foreground,.35,'two').height)<8);
+    const start=Date.parse(s.before.at),end=Date.parse(s.foreground.at);
+    const transitions=eventLines(s.foreground,'A_ROUTER_APP_STATE').map(line=>JSON.parse(line)).filter(e=>Date.parse(e.at)>start&&Date.parse(e.at)<=end);
+    assert.ok(transitions.length>=2,'Missing AppState background/active lifecycle');
+    let previous='active',at=start,background=false;
+    for(const e of transitions){
+      assert.equal(e.boot,s.before.boot,'Old AppState runtime boot');
+      assert.ok(Date.parse(e.at)>=at,'AppState lifecycle order reversed');at=Date.parse(e.at);
+      assert.equal(e.from,previous,'Broken AppState lifecycle chain');
+      assert.ok(['active','inactive','background'].includes(e.to),'Unknown AppState lifecycle state');
+      if(e.to==='background')background=true;
+      previous=e.to;
+    }
+    assert.ok(background&&previous==='active','AppState must enter background and return active');
+  }
   else if(id==='N03'){visibleText(s.home,'Native Tabs Home');visibleText(s.settings,'Native Tabs Settings');visibleText(s['home-again'],'Native Tabs Home');assert.equal(route(s.settings).pathname,'/settings');assert.equal(route(s['home-again']).pathname,'/');}
   else throw new Error(`Unknown navigation case ${id}`);
 }

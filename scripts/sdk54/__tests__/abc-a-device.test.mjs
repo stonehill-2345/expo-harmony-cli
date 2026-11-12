@@ -134,3 +134,36 @@ test('resource evidence resolves install cwd after relocation and leaves raw evi
   const snapshot=()=>fs.readdirSync(moved,{recursive:true}).filter(name=>fs.statSync(path.join(moved,name)).isFile()).sort().map(name=>[name,createHash('sha256').update(fs.readFileSync(path.join(moved,name))).digest('hex')]);
   const before=snapshot();assert.deepEqual(verifyDevice('resources',moved).verifiedCaseIds,['R01','R02','R03']);assert.deepEqual(snapshot(),before);
 });
+
+function lifecycleFixture(t,states=['background','active']) {
+  const f=captureFixture(t);
+  f.layout.children.find(n=>n.attributes.type==='SheetPage').attributes.bounds='[0,130][100,200]';
+  f.layout.children.at(-1).attributes.text='Harmony Form Sheet: two';
+  f.layout.children.at(-1).attributes.bounds='[10,140][90,160]';
+  f.sample.layout=f.ref('two-layout.json',f.layout);
+  const before={...f.sample,id:'before',at:'2026-11-11T01:00:00.100Z'};
+  const foreground={...f.sample,id:'foreground',at:'2026-11-11T01:00:01.900Z'};
+  const events=states.map((to,i)=>({boot:f.sample.boot,from:i?states[i-1]:'active',to,at:new Date(Date.parse('2026-11-11T01:00:00Z')+(i+1)*300).toISOString()}));
+  const saveEvents=(pid=123)=>{
+    const log=fs.readFileSync(path.join(f.root,f.sample.hilog.path),'utf8')+events.map(e=>`11-11 09:00:01.000 ${pid} 456 I ReactNative: A_ROUTER_APP_STATE=${JSON.stringify(e)}\n`).join('');
+    foreground.hilog=f.ref('foreground-hilog.txt',log);
+  };
+  saveEvents();return {...f,before,foreground,events,saveEvents};
+}
+for(const states of [['background','active'],['inactive','background','inactive','active']])test(`N02 accepts observed lifecycle ${states.join(' → ')}`,async t=>{
+  const {readCapture,verifyNavigationCase}=await import('../abc/a-verify-device.mjs');const f=lifecycleFixture(t,states);
+  assert.doesNotThrow(()=>verifyNavigationCase('N02',{before:readCapture(f.root,f.run,f.before),foreground:readCapture(f.root,f.run,f.foreground)}));
+});
+for(const fault of ['missing events','inactive only','old cycle','future event','wrong boot','wrong PID','reversed events','broken chain','no return'])test(`N02 rejects ${fault}`,async t=>{
+  const {readCapture,verifyNavigationCase}=await import('../abc/a-verify-device.mjs');const f=lifecycleFixture(t);
+  if(fault==='missing events')f.events.length=0;
+  if(fault==='inactive only'){f.events[0].to='inactive';f.events[1].from='inactive';}
+  if(fault==='old cycle')f.events.forEach(e=>{e.at='2026-11-10T01:00:01Z';});
+  if(fault==='future event')f.events[1].at='2026-11-11T01:00:02Z';
+  if(fault==='wrong boot')f.events.forEach(e=>{e.boot='stale-boot';});
+  if(fault==='reversed events')f.events.reverse();
+  if(fault==='broken chain')f.events[1].from='inactive';
+  if(fault==='no return')f.events.pop();
+  f.saveEvents(fault==='wrong PID'?999:123);
+  assert.throws(()=>verifyNavigationCase('N02',{before:readCapture(f.root,f.run,f.before),foreground:readCapture(f.root,f.run,f.foreground)}),/AppState|APP_STATE|lifecycle|background|active|boot/i);
+});
