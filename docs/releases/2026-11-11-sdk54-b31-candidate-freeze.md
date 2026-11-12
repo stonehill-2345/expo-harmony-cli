@@ -55,3 +55,21 @@
 机器汇总：`outputs/sdk54-abc/20261111-153839-B-post-a-3038/blank-four-matrix.json`，SHA-256 `1cfed35ac7ba70ddf68d2bcf4d81bda6fb0eaf311ed3216a43d9381cd87aec10`。四格均绑定 candidate `9aa715...`；测试应用、8094 和 reverse 均已清理。
 
 新冻结记录仍如实为 `source.dirty=true`，正式 B02 preflight 继续等待 clean source。
+
+## 2026-11-12 合并 A `037844c` 后重冻结
+
+当前分支 fast-forward 合入 A 的契约导出/runner 绑定与 Router AppState 观测提交，HEAD 为
+`037844c4c44353cd216d96762cb77e3ec01e934e`。重新从固定输入生成 15 个 runtime 包并执行
+`verify-npm-release.mjs`，结果 `failures=[]`；独立 CLI 仍为 `expo-harmony-cli@1.6.0`，SHA-256
+`fa4867f5616cf0d08254a1d4b2ce793770458b8c5fb3d1399b0c52f531b0d2d0`。
+
+新冻结目录：`outputs/sdk54-abc/20261112-112755-B-post-a-037844c/frozen-candidate/`：
+
+- `candidate.json` SHA-256：`ffc8edaded548367d56b1e07b8f127f99372b7319bed15ddf2d2e398160317a3`；
+- `b-candidate.json` SHA-256：`30e40765406f7e735c7ed1d7e61c534ed1bbc36e871ce293f842992a8e53c9f7`；
+- `release.json` SHA-256：`be8d824e8742d1ad4ef21bf1f2bd128a390bc9e5a172637a64fc88c7776862e6`；
+- blank/default × npm/pnpm 四格首次安装和锁重装全部 `0/0`，`runtimeFailures=[]`；
+- 机器矩阵 `install-matrix.json` SHA-256：`6983f3f0e3a81052715340a8d25b623706255b4c8d9fa3a12cee5ce49e0d5776`。
+
+冻结记录只因用户输入 `sdk54-abc-inputs-20261111.tar` 未跟踪而 `source.dirty=true`。不得传入
+`sourceDirty=false` 绕过；清洁提交后还需按新 revision 再冻结正式候选。
