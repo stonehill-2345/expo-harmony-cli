@@ -108,20 +108,28 @@ A/协调者需提供完整 current-candidate argv/cwd/evidence producer；A 的 
 
 ## C 需要处理
 
-- C 远端 `1a63207` 已实现 installName/publishName 双向候选核验；B 尚未合入和针对新 clean candidate
-  重跑。旧的“publishName 映射未实现”请求可视为代码侧已响应，仍需集成结果。
+- C 远端 `1a63207` 已实现 installName/publishName 双向候选核验。该实现属于 C 的独立验收工具，
+  应保留在 C 分支运行，**不要求 B 合入统一候选**。旧的“publishName 映射未实现”请求可视为
+  C 代码侧已响应；待 B 提供真实冻结候选后，由 C 独立执行 candidate public-surface 核验。
 - 复核上述真实设备 verifier 规则，确认修复没有放宽证据门禁。
 - 复核 B-34 旧基线来源和临时历史 verifier bypass 边界。
 - capability/use relations 和完整 membership ledger 未在便携输入包中恢复；需补充准确输入 hash，或在
   C 最终意见中保留不可关闭边界。
 - default/ExpoImage 和四个 Sheet 产品失败未修复前，不得用公开面核验覆盖运行时 FAIL。
 
+C 当前应暂停继续扩展校验器，避免把验收工具做成新的实现线。下一阶段输入和顺序为：
+
+1. B 交付 clean source 绑定的冻结统一候选及安装/CLI/性能材料。
+2. A 交付修复后的设备语义证据。
+3. C 分别执行候选公开面核验和独立设备验收。
+4. C 汇总两条验收线，再判断是否关闭阶段。
+
 ## 协调与停止边界
 
 - A/C/协调者完成上述依赖前，B-32、B-33、B-35 和正式 V-02/V-03 保持 BLOCKED/PARTIAL。
 - 当前工作树只有输入 tar 未跟踪；正式 run 前需明确 tar 的仓库策略，形成 clean source revision。
-- A/C 改动导致产品包 hash 变化时，B 重新生成并冻结 candidate，重跑受影响的 resources、navigation、
-  default 和统一矩阵。
+- A 的产品改动或 B 的集成改动导致包 hash 变化时，B 重新生成并冻结 candidate，重跑受影响的
+  resources、navigation、default 和统一矩阵。C 的独立验收工具提交不进入候选，不单独触发 B 重冻结。
 - 本轮未执行 publish、tag、registry 写入或阶段关闭。
 
 ## 验证
