@@ -1,8 +1,10 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { extract, list } from 'tar';
 import ts from 'typescript';
 import { readSourceTree, readSourceBlobs } from '../source-inventory.mjs';
 import { verifyFixedSource } from '../a-rebuild-source-evidence.mjs';
@@ -12,6 +14,8 @@ import { buildFiniteDeclarations } from '../m0-finite-declarations.mjs';
 import { buildDerivedSourceProvenance } from '../m0-derived-source-provenance.mjs';
 import { buildExportSourceBindings } from '../m0-export-source-bindings.mjs';
 import { projectTemplateSource } from '../m0-template-projection.mjs';
+import { RELEASE_ID, RELEASE_PACKAGES } from '../release-catalog.mjs';
+import { validateExports } from '../audit-packages.mjs';
 import { main as rebuildM4Evidence } from '../a-m4-evidence.mjs';
 import { args, read, save, sha256, newOutput, html } from './c-evidence-lib.mjs';
 
@@ -216,24 +220,553 @@ export function sourceEvidence(scope, sourceGit, sourceRoot) {
     files: [...contents.values()].filter(row => sourceCodePattern.test(row.path)), relativeAssetTargets };
 }
 
-function candidateCoverage(candidateFile, scope) {
-  const errors = verifyCandidateManifest(candidateFile), manifest = read(candidateFile), root = path.dirname(candidateFile);
-  const packages = (manifest.packages ?? [...(manifest.expoPackages ?? []), ...(manifest.externalPackages ?? [])]);
+const manifestEntryFields = new Set(['main', 'module', 'types', 'exports']);
+export const DEFAULT_ARCHIVE_LIMITS = Object.freeze({
+  maxMembers: 100_000,
+  maxFileBytes: 256 * 1024 * 1024,
+  maxTotalBytes: 1024 * 1024 * 1024,
+});
+
+function pointerEscape(value) {
+  return value.replaceAll('~', '~0').replaceAll('/', '~1');
+}
+
+function manifestLeaves(value, pointer, entries) {
+  if (typeof value === 'string') entries.push({ pointer, target: value });
+  else if (Array.isArray(value)) value.forEach((item, index) => manifestLeaves(item, `${pointer}/${index}`, entries));
+  else if (value && typeof value === 'object') {
+    for (const [key, item] of Object.entries(value)) manifestLeaves(item, `${pointer}/${pointerEscape(key)}`, entries);
+  }
+}
+
+function scopeManifestPointer(row) {
+  if (row.kind === 'public-entry') {
+    const encoded = row.id?.split(':')[3];
+    if (encoded) return decodeURIComponent(encoded);
+  }
+  if (typeof row.entryId === 'string') {
+    const hash = row.entryId.indexOf('#'), condition = row.entryId.lastIndexOf(':');
+    if (hash >= 0 && condition > hash) return decodeURIComponent(row.entryId.slice(hash + 1, condition));
+  }
+  return null;
+}
+
+function archiveMemberForTarget(target) {
+  if (typeof target !== 'string' || !target || target.includes('\\') || path.posix.isAbsolute(target)) return null;
+  const normalized = path.posix.normalize(target.replace(/^\.\//, ''));
+  if (!normalized || normalized === '..' || normalized.startsWith('../')) return null;
+  return `package/${normalized}`;
+}
+
+function resolvedArchiveMember(target, field, memberSet) {
+  const exact = archiveMemberForTarget(target);
+  if (!exact) return null;
+  const candidates = [exact];
+  if (field === 'types' && !target.endsWith('.d.ts')) {
+    candidates.push(`${exact}.d.ts`, `${exact}/index.d.ts`);
+  } else if (field !== 'exports' && !path.posix.extname(exact)) {
+    for (const extension of ['.js', '.mjs', '.cjs', '.json', '.node', '.ts', '.tsx', '.d.ts']) candidates.push(`${exact}${extension}`);
+    for (const extension of ['.js', '.mjs', '.cjs', '.json', '.node', '.ts', '.tsx', '.d.ts']) candidates.push(`${exact}/index${extension}`);
+  }
+  return candidates.find(candidate => memberSet.has(candidate)) ?? null;
+}
+
+function publicManifestEntries(manifest) {
   const entries = [];
-  for (const item of packages) {
-    const archive = path.resolve(root, item.file);
-    const result = spawnSync('tar', ['-tzf', archive], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 });
-    if (result.status !== 0) errors.push(`Cannot list archive ${item.file}: ${result.stderr.trim()}`);
-    entries.push({ name: item.name, version: item.version, file: item.file, sha256: item.sha256,
-      members: result.status === 0 ? result.stdout.trim().split('\n').filter(Boolean).sort() : [] });
+  for (const field of manifestEntryFields) {
+    if (Object.hasOwn(manifest, field)) manifestLeaves(manifest[field], `/${field}`, entries);
   }
-  const packageNames = new Set(entries.map(row => row.name));
-  for (const row of scope.rows.filter(row => row.packageId?.startsWith('PKG:'))) {
+  return entries;
+}
+
+function bindingNames(name, output) {
+  if (ts.isIdentifier(name)) output.add(name.text);
+  else if (ts.isObjectBindingPattern(name) || ts.isArrayBindingPattern(name)) {
+    for (const element of name.elements) if (ts.isBindingElement(element)) bindingNames(element.name, output);
+  }
+}
+
+function relativeCodeCandidates(from, request) {
+  const base = path.posix.normalize(path.posix.join(path.posix.dirname(from), request));
+  const candidates = [base];
+  if (!path.posix.extname(base)) {
+    for (const extension of ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.d.ts']) candidates.push(`${base}${extension}`);
+    for (const extension of ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.d.ts']) candidates.push(`${base}/index${extension}`);
+  }
+  return [...new Set(candidates)];
+}
+
+function staticEntrySurface(entryFile, readRelative) {
+  const cache = new Map(), files = new Map(), memo = new Map(), active = new Set();
+  const read = file => {
+    if (!cache.has(file)) cache.set(file, readRelative(file));
+    return cache.get(file);
+  };
+  const resolve = (from, request) => relativeCodeCandidates(from, request).find(candidate => read(candidate)) ?? null;
+  const scan = file => {
+    if (memo.has(file)) return memo.get(file);
+    if (active.has(file)) return { names: [], reexports: [], complete: false };
+    active.add(file);
+    const names = new Set(), reexports = new Set();
+    let complete = true;
+    const bytes = read(file);
+    if (!bytes) {
+      active.delete(file);
+      return { names: [], reexports: [], complete: false };
+    }
+    files.set(file, sha256(bytes));
+    const source = ts.createSourceFile(file, bytes.toString(), ts.ScriptTarget.Latest, true,
+      /[jt]sx$/.test(file) ? ts.ScriptKind.TSX : /\.[cm]?js$/.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS);
+    if (source.parseDiagnostics.length) complete = false;
+    const containsExportsReference = node => {
+      if (ts.isIdentifier(node) && node.text === 'exports') return true;
+      if (ts.isPropertyAccessExpression(node) && ts.isIdentifier(node.expression)
+        && node.expression.text === 'module' && node.name.text === 'exports') return true;
+      let found = false;
+      ts.forEachChild(node, child => { if (!found && containsExportsReference(child)) found = true; });
+      return found;
+    };
+    const taintedFunctions = new Set(), functionAliases = [], taintedExportObjects = new Set(), exportObjectAliases = [];
+    for (const statement of source.statements) {
+      if (ts.isFunctionDeclaration(statement) && statement.name && statement.body && containsExportsReference(statement.body)) {
+        taintedFunctions.add(statement.name.text);
+      }
+      if (!ts.isVariableStatement(statement)) continue;
+      for (const declaration of statement.declarationList.declarations) {
+        if (!ts.isIdentifier(declaration.name) || !declaration.initializer) continue;
+        if ((ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))
+          && containsExportsReference(declaration.initializer.body)) taintedFunctions.add(declaration.name.text);
+        else if (ts.isIdentifier(declaration.initializer)) {
+          functionAliases.push([declaration.name.text, declaration.initializer.text]);
+          if (declaration.initializer.text === 'exports') taintedExportObjects.add(declaration.name.text);
+          else exportObjectAliases.push([declaration.name.text, declaration.initializer.text]);
+        } else if (ts.isPropertyAccessExpression(declaration.initializer) && ts.isIdentifier(declaration.initializer.expression)
+          && declaration.initializer.expression.text === 'module' && declaration.initializer.name.text === 'exports') {
+          taintedExportObjects.add(declaration.name.text);
+        }
+      }
+    }
+    let changed = true;
+    while (changed) {
+      changed = false;
+      for (const [alias, target] of functionAliases) if (taintedFunctions.has(target) && !taintedFunctions.has(alias)) {
+        taintedFunctions.add(alias); changed = true;
+      }
+      for (const [alias, target] of exportObjectAliases) if (taintedExportObjects.has(target) && !taintedExportObjects.has(alias)) {
+        taintedExportObjects.add(alias); changed = true;
+      }
+    }
+    const containsExportObjectReference = node => {
+      if (containsExportsReference(node) || ts.isIdentifier(node) && taintedExportObjects.has(node.text)) return true;
+      let found = false;
+      ts.forEachChild(node, child => { if (!found && containsExportObjectReference(child)) found = true; });
+      return found;
+    };
+    const follow = (request, mode = 'star', expected = []) => {
+      if (!request.startsWith('.')) { reexports.add(request); complete = false; return; }
+      const target = resolve(file, request);
+      if (!target) { reexports.add(`${request}:missing`); complete = false; return; }
+      const child = scan(target);
+      for (const boundary of child.reexports) reexports.add(boundary);
+      if (!child.complete) complete = false;
+      if (mode === 'star') for (const name of child.names) if (name !== 'default') names.add(name);
+      if (mode === 'named') for (const name of expected) if (!child.names.includes(name)) complete = false;
+    };
+    for (const statement of source.statements) {
+      const exported = statement.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.ExportKeyword);
+      if (exported && (ts.isClassDeclaration(statement) || ts.isFunctionDeclaration(statement)
+        || ts.isInterfaceDeclaration(statement) || ts.isTypeAliasDeclaration(statement)
+        || ts.isEnumDeclaration(statement) || ts.isModuleDeclaration(statement))) {
+        const isDefault = statement.modifiers?.some(modifier => modifier.kind === ts.SyntaxKind.DefaultKeyword);
+        names.add(isDefault ? 'default' : statement.name?.text ?? 'default');
+      } else if (exported && ts.isVariableStatement(statement)) {
+        for (const declaration of statement.declarationList.declarations) bindingNames(declaration.name, names);
+      }
+      if (ts.isExportAssignment(statement)) names.add('default');
+      if (ts.isExportDeclaration(statement)) {
+        if (statement.exportClause && ts.isNamedExports(statement.exportClause)) {
+          for (const element of statement.exportClause.elements) names.add(element.name.text);
+          if (statement.moduleSpecifier && ts.isStringLiteralLike(statement.moduleSpecifier)) {
+            follow(statement.moduleSpecifier.text, 'named', statement.exportClause.elements.map(element => element.propertyName?.text ?? element.name.text));
+          }
+        } else if (statement.exportClause && ts.isNamespaceExport(statement.exportClause)) {
+          names.add(statement.exportClause.name.text);
+          if (statement.moduleSpecifier && ts.isStringLiteralLike(statement.moduleSpecifier)) follow(statement.moduleSpecifier.text, 'named');
+        } else if (statement.moduleSpecifier && ts.isStringLiteralLike(statement.moduleSpecifier)) follow(statement.moduleSpecifier.text);
+      }
+      if (!ts.isExpressionStatement(statement)) continue;
+      const expression = statement.expression;
+      if (ts.isBinaryExpression(expression) && expression.operatorToken.kind === ts.SyntaxKind.EqualsToken) {
+        const left = expression.left;
+        if (ts.isPropertyAccessExpression(left)
+          && (ts.isIdentifier(left.expression) && left.expression.text === 'exports'
+            || ts.isIdentifier(left.expression) && taintedExportObjects.has(left.expression.text)
+            || ts.isPropertyAccessExpression(left.expression) && ts.isIdentifier(left.expression.expression)
+              && left.expression.expression.text === 'module' && left.expression.name.text === 'exports')) names.add(left.name.text);
+        else if (ts.isPropertyAccessExpression(left) && ts.isIdentifier(left.expression)
+          && left.expression.text === 'module' && left.name.text === 'exports' && ts.isObjectLiteralExpression(expression.right)) {
+          for (const property of expression.right.properties) {
+            if ((ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property) || ts.isMethodDeclaration(property))
+              && property.name) names.add(property.name.getText(source).replace(/^['"]|['"]$/g, ''));
+          }
+        } else if (ts.isPropertyAccessExpression(left) && ts.isIdentifier(left.expression)
+          && left.expression.text === 'module' && left.name.text === 'exports'
+          && ts.isCallExpression(expression.right) && ts.isIdentifier(expression.right.expression) && expression.right.expression.text === 'require'
+          && expression.right.arguments.length === 1 && ts.isStringLiteralLike(expression.right.arguments[0])) {
+          follow(expression.right.arguments[0].text);
+        } else if (ts.isPropertyAccessExpression(left) && ts.isIdentifier(left.expression)
+          && left.expression.text === 'module' && left.name.text === 'exports') {
+          names.add('default');
+          complete = false;
+        } else if (ts.isElementAccessExpression(left)
+          && (ts.isIdentifier(left.expression) && left.expression.text === 'exports'
+            || ts.isIdentifier(left.expression) && taintedExportObjects.has(left.expression.text)
+            || ts.isPropertyAccessExpression(left.expression) && ts.isIdentifier(left.expression.expression)
+              && left.expression.expression.text === 'module' && left.expression.name.text === 'exports')) {
+          if (left.argumentExpression && ts.isStringLiteralLike(left.argumentExpression)) names.add(left.argumentExpression.text);
+          else complete = false;
+        }
+      }
+      if (!ts.isCallExpression(expression)) continue;
+      let recognizedExportCall = false;
+      if (ts.isPropertyAccessExpression(expression.expression) && ts.isIdentifier(expression.expression.expression)
+        && expression.expression.expression.text === 'Object' && expression.expression.name.text === 'defineProperty'
+        && expression.arguments.length >= 2 && ts.isIdentifier(expression.arguments[0])
+        && (expression.arguments[0].text === 'exports' || taintedExportObjects.has(expression.arguments[0].text))
+        && ts.isStringLiteralLike(expression.arguments[1]) && expression.arguments[1].text !== '__esModule') {
+        names.add(expression.arguments[1].text);
+        recognizedExportCall = true;
+      } else if (ts.isIdentifier(expression.expression) && expression.expression.text === '__exportStar'
+        && expression.arguments.length >= 1 && ts.isCallExpression(expression.arguments[0])
+        && ts.isIdentifier(expression.arguments[0].expression) && expression.arguments[0].expression.text === 'require'
+        && expression.arguments[0].arguments.length === 1 && ts.isStringLiteralLike(expression.arguments[0].arguments[0])) {
+        follow(expression.arguments[0].arguments[0].text);
+        recognizedExportCall = true;
+      } else if (ts.isIdentifier(expression.expression) && expression.expression.text === '__createBinding'
+        && expression.arguments.length >= 3 && ts.isIdentifier(expression.arguments[0]) && expression.arguments[0].text === 'exports'
+        && ts.isStringLiteralLike(expression.arguments[2])) {
+        const exportedName = expression.arguments[3];
+        names.add(exportedName && ts.isStringLiteralLike(exportedName) ? exportedName.text : expression.arguments[2].text);
+        recognizedExportCall = true;
+      } else if (ts.isPropertyAccessExpression(expression.expression) && ts.isIdentifier(expression.expression.expression)
+        && expression.expression.expression.text === 'Object' && expression.expression.name.text === 'assign'
+        && expression.arguments.length >= 2 && ts.isIdentifier(expression.arguments[0])
+        && (expression.arguments[0].text === 'exports' || taintedExportObjects.has(expression.arguments[0].text))) {
+        for (const argument of expression.arguments.slice(1)) {
+          if (ts.isCallExpression(argument) && ts.isIdentifier(argument.expression) && argument.expression.text === 'require'
+            && argument.arguments.length === 1 && ts.isStringLiteralLike(argument.arguments[0])) follow(argument.arguments[0].text);
+          else complete = false;
+        }
+        recognizedExportCall = true;
+      }
+      if (!recognizedExportCall && (expression.arguments.some(containsExportObjectReference)
+        || ts.isIdentifier(expression.expression) && taintedFunctions.has(expression.expression.text))) complete = false;
+    }
+    active.delete(file);
+    const surface = { names: [...names].filter(name => name !== '__esModule').sort(), reexports: [...reexports].sort(), complete };
+    memo.set(file, surface);
+    return surface;
+  };
+  const surface = scan(entryFile);
+  return { ...surface,
+    files: [...files].sort(([a], [b]) => a.localeCompare(b)).map(([file, hash]) => ({ path: file, sha256: hash })) };
+}
+
+const surfaceShape = surface => surface && ({ names: surface.names, reexports: surface.reexports, complete: surface.complete });
+
+function frozenGitReader(sourceRoot, revision) {
+  return relative => {
+    if (typeof relative !== 'string' || path.posix.isAbsolute(relative) || relative.includes('\\') || relative.split('/').includes('..')) return null;
+    const result = spawnSync('git', ['-C', sourceRoot, 'show', `${revision}:${relative}`], { encoding: null, maxBuffer: 64 * 1024 * 1024 });
+    return result.status === 0 ? result.stdout : null;
+  };
+}
+
+async function inspectCandidateArchive(file, limits = DEFAULT_ARCHIVE_LIMITS) {
+  const members = [], memberPaths = new Set();
+  let entryError = null, memberCount = 0, totalBytes = 0;
+  await list({
+    file,
+    strict: true,
+    onentry(entry) {
+      if (entryError) return;
+      memberCount += 1;
+      if (memberCount > limits.maxMembers) entryError = new Error(`archive member count limit exceeded: ${memberCount} > ${limits.maxMembers}`);
+      if (!['File', 'Directory'].includes(entry.type)) entryError = new Error(`unsupported archive member type: ${entry.path}`);
+      if (!entry.path.startsWith('package/') || entry.path.includes('\\') || entry.path.split('/').includes('..')) {
+        entryError ??= new Error(`unsafe archive member: ${entry.path}`);
+      }
+      const normalized = path.posix.normalize(entry.path);
+      if (normalized !== entry.path) entryError ??= new Error(`non-canonical archive member: ${entry.path}`);
+      if (memberPaths.has(normalized)) entryError ??= new Error(`duplicate archive member: ${entry.path}`);
+      memberPaths.add(normalized);
+      if (entry.type === 'File') {
+        if (!Number.isSafeInteger(entry.size) || entry.size < 0) entryError ??= new Error(`invalid archive member size: ${entry.path}`);
+        else {
+          if (entry.size > limits.maxFileBytes) entryError ??= new Error(`archive file size limit exceeded: ${entry.path}/${entry.size} > ${limits.maxFileBytes}`);
+          totalBytes += entry.size;
+          if (!Number.isSafeInteger(totalBytes) || totalBytes > limits.maxTotalBytes) {
+            entryError ??= new Error(`archive expanded bytes limit exceeded: ${totalBytes} > ${limits.maxTotalBytes}`);
+          }
+        }
+        members.push(normalized);
+      }
+    },
+  });
+  if (entryError) throw entryError;
+  const temporary = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-c-candidate-'));
+  try {
+    await extract({ file, cwd: temporary, strict: true });
+    const manifestFile = path.join(temporary, 'package/package.json');
+    if (!fs.existsSync(manifestFile)) throw new Error('archive omits package/package.json');
+    const manifestBytes = fs.readFileSync(manifestFile), manifest = JSON.parse(manifestBytes), memberSet = new Set(members);
+    const entryFiles = {}, entrySurfaces = {};
+    const readRelative = relative => {
+      const member = `package/${relative}`;
+      if (!memberSet.has(member)) return null;
+      const target = path.join(temporary, member);
+      return fs.statSync(target).isFile() ? fs.readFileSync(target) : null;
+    };
+    for (const entry of publicManifestEntries(manifest)) {
+      const member = resolvedArchiveMember(entry.target, entry.pointer.split('/')[1], memberSet);
+      if (!member) continue;
+      const bytes = fs.readFileSync(path.join(temporary, member)), relative = member.slice('package/'.length);
+      entryFiles[entry.pointer] = { member, relative, bytes, sha256: sha256(bytes) };
+      if (sourceCodePattern.test(relative)) entrySurfaces[entry.pointer] = staticEntrySurface(relative, readRelative);
+    }
+    return { manifest, manifestSha256: sha256(manifestBytes), members: members.sort(), entryFiles, entrySurfaces };
+  } finally {
+    fs.rmSync(temporary, { recursive: true, force: true });
+  }
+}
+
+export async function loadExternalManifestBaselines({ sourceRoot, scopeFile }) {
+  const baselines = new Map(), errors = [], inputsRoot = path.resolve(path.dirname(scopeFile), '..');
+  let taskInputs;
+  try { taskInputs = read(path.join(sourceRoot, 'docs/releases/sdk54-abc-20261111/inputs.json')); }
+  catch (error) { return { baselines, errors: [`External public baseline manifest invalid: ${error.message}`] }; }
+  const filesByPath = new Map((Array.isArray(taskInputs.files) ? taskInputs.files : []).map(row => [row.path, row]));
+  const inputsByPackage = new Map([['@react-native-ohos/react-native-screens', 'inputs/screens-4.9.0-upstream.tgz']]);
+  for (const descriptor of RELEASE_PACKAGES.filter(row => !row.relativePath)) {
+    const relative = inputsByPackage.get(descriptor.installName), receipt = filesByPath.get(relative);
+    try {
+      if (!relative || !receipt) throw new Error('fixed input receipt is missing');
+      const archive = path.resolve(inputsRoot, relative), relation = path.relative(inputsRoot, archive);
+      if (relation === '..' || relation.startsWith(`..${path.sep}`)) throw new Error('fixed input path escapes the input root');
+      const bytes = fs.readFileSync(archive);
+      if (bytes.length !== receipt.bytes || sha256(bytes) !== receipt.sha256) throw new Error('fixed input bytes differ from inputs.json');
+      const inspected = await inspectCandidateArchive(archive);
+      if (inspected.manifest.name !== descriptor.installName || inspected.manifest.version !== descriptor.upstreamVersion) {
+        throw new Error('fixed input package identity differs from the release catalog');
+      }
+      baselines.set(descriptor.installName, { entries: publicManifestEntries(inspected.manifest), entrySurfaces: inspected.entrySurfaces,
+        path: relative, sha256: receipt.sha256, manifestSha256: inspected.manifestSha256 });
+    } catch (error) {
+      errors.push(`External public baseline invalid: ${descriptor.installName}/${error.message}`);
+    }
+  }
+  return { baselines, errors };
+}
+
+export async function verifyCandidatePublicSurface({ candidateFile, scope, sourceRevision, sourceRoot,
+  packageCatalog = RELEASE_PACKAGES, releaseId = RELEASE_ID, externalManifestBaselines = new Map(), baselineErrors = [],
+  archiveLimits = DEFAULT_ARCHIVE_LIMITS, readFrozenSource = null }) {
+  const manifestErrors = verifyCandidateManifest(candidateFile), errors = [...manifestErrors, ...baselineErrors], packages = [], root = path.dirname(candidateFile);
+  let candidate, handoff;
+  try {
+    candidate = read(candidateFile);
+    handoff = read(path.join(root, 'b-candidate.json'));
+  } catch (error) {
+    errors.push(`Candidate handoff invalid: ${error.message}`);
+    return { valid: false, candidateSha256: null, bCandidateSha256: null, source: null, packages, errors,
+      harmonySupportAccepted: false, boundary: 'Candidate files do not establish device/runtime support.' };
+  }
+  const result = () => {
+    const candidateSha256 = sha256(fs.readFileSync(candidateFile));
+    return { valid: errors.length === 0, candidate: { path: path.resolve(candidateFile), sha256: candidateSha256 }, candidateSha256,
+    bCandidateSha256: sha256(fs.readFileSync(path.join(root, 'b-candidate.json'))), source: handoff?.source ?? null, packages, errors,
+    harmonySupportAccepted: false,
+    boundary: 'Candidate identity, manifests and archive membership are verified here; device/runtime support remains independently unaccepted.' };
+  };
+  if (!handoff || typeof handoff !== 'object' || Array.isArray(handoff)) {
+    errors.push('B candidate handoff invalid: expected an object');
+    return result();
+  }
+  if (handoff?.source?.revision !== sourceRevision) {
+    errors.push(`Source revision mismatch: candidate=${handoff?.source?.revision ?? '<missing>'} current=${sourceRevision ?? '<missing>'}`);
+  }
+  if (handoff?.source?.dirty !== false || !Array.isArray(handoff?.source?.changes) || handoff.source.changes.length) {
+    errors.push('B candidate source must be clean and contain no recorded changes');
+  }
+  if (!Array.isArray(handoff?.failures) || handoff.failures.length) errors.push('B candidate handoff contains failures');
+
+  if (manifestErrors.length) return result();
+
+  const candidateRows = Array.isArray(candidate.packages) ? candidate.packages
+    : [...(Array.isArray(candidate.expoPackages) ? candidate.expoPackages : []),
+      ...(Array.isArray(candidate.externalPackages) ? candidate.externalPackages : [])];
+  const runtimeRows = Array.isArray(handoff.runtimePackages) ? handoff.runtimePackages : [];
+  const validRuntimeRows = Array.isArray(handoff.runtimePackages) && runtimeRows.every(row => row && typeof row === 'object'
+    && typeof row.name === 'string' && row.name
+    && typeof row.installName === 'string' && row.installName
+    && typeof row.version === 'string' && row.version
+    && typeof row.file === 'string' && row.file
+    && Number.isSafeInteger(row.bytes) && row.bytes > 0
+    && /^[a-f0-9]{64}$/.test(row.sha256 ?? '')
+    && Array.isArray(row.members) && row.members.every(member => typeof member === 'string' && member));
+  if (handoff?.schemaVersion !== 1 || !validRuntimeRows) {
+    errors.push('B candidate handoff invalid: runtimePackages contains a malformed package row');
+    return result();
+  }
+  const catalogByPublishedName = new Map(packageCatalog.map(row => [row.publishName, row]));
+  const catalogByInstallName = new Map(packageCatalog.map(row => [row.installName, row]));
+  const runtimeByPublishedName = new Map(runtimeRows.map(row => [row.name, row]));
+  const runtimeByInstallName = new Map(runtimeRows.map(row => [row.installName, row]));
+  if (candidate.release !== releaseId) errors.push(`Candidate release mismatch: ${candidate.release ?? '<missing>'}`);
+  if (candidateRows.length !== packageCatalog.length || runtimeRows.length !== packageCatalog.length
+    || runtimeByPublishedName.size !== runtimeRows.length || runtimeByInstallName.size !== runtimeRows.length) {
+    errors.push('Candidate package set differs from the release catalog');
+  }
+  for (const descriptor of packageCatalog) {
+    if (!candidateRows.some(row => row?.name === descriptor.publishName)) errors.push(`Catalog package absent from candidate: ${descriptor.publishName}`);
+  }
+  const scopeRowsByPackage = new Map();
+  for (const row of Array.isArray(scope?.rows) ? scope.rows : []) {
+    if (!row.packageId?.startsWith('PKG:')) continue;
     const name = row.packageId.slice(4);
-    if (!packageNames.has(name)) errors.push(`Scope package absent from candidate: ${row.id}/${name}`);
+    if (!scopeRowsByPackage.has(name)) scopeRowsByPackage.set(name, []);
+    scopeRowsByPackage.get(name).push(row);
   }
-  return { valid: errors.length === 0, candidateSha256: sha256(fs.readFileSync(candidateFile)), packages: entries, errors,
-    boundary: 'Archive membership is verified here; device/runtime support remains independently unaccepted.' };
+  for (const name of scopeRowsByPackage.keys()) {
+    if (!runtimeByInstallName.has(name)) errors.push(`Scope package absent from candidate: ${name}`);
+  }
+  if (runtimeRows.length !== candidateRows.length) errors.push('B candidate package count differs from candidate.json');
+  const readSource = readFrozenSource ?? frozenGitReader(sourceRoot, sourceRevision);
+
+  for (const item of candidateRows) {
+    const descriptor = catalogByPublishedName.get(item.name);
+    const runtime = runtimeByPublishedName.get(item.name);
+    if (!runtime) {
+      errors.push(`Candidate package absent from b-candidate.json: ${item.name}`);
+      continue;
+    }
+    if (!descriptor || runtime.installName !== descriptor.installName || runtime.name !== descriptor.publishName
+      || runtime.version !== descriptor.publishVersion || catalogByInstallName.get(runtime.installName) !== descriptor) {
+      errors.push(`Release catalog mapping mismatch: ${runtime.installName ?? '<missing>'}/${item.name}`);
+    }
+    for (const key of ['name', 'version', 'file', 'bytes', 'sha256']) {
+      if (runtime[key] !== item[key]) errors.push(`B candidate package identity mismatch: ${item.name}/${key}`);
+    }
+    let inspected;
+    try {
+      inspected = await inspectCandidateArchive(path.resolve(root, item.file), archiveLimits);
+    } catch (error) {
+      errors.push(`Cannot inspect candidate archive ${item.file}: ${error.message}`);
+      continue;
+    }
+    if (inspected.manifest.name !== item.name || inspected.manifest.version !== item.version) {
+      errors.push(`Archive manifest identity mismatch: ${item.file}`);
+    }
+    if (!Array.isArray(runtime.members) || JSON.stringify(runtime.members) !== JSON.stringify(inspected.members)) {
+      errors.push(`B candidate member list mismatch: ${item.file}`);
+    }
+    const memberSet = new Set(inspected.members), manifestEntries = publicManifestEntries(inspected.manifest);
+    if (Object.hasOwn(inspected.manifest, 'exports')) {
+      errors.push(...validateExports(inspected.manifest.exports).failures.map(failure => `${runtime.installName}: ${failure}`));
+    }
+    for (const entry of manifestEntries) {
+      const member = resolvedArchiveMember(entry.target, entry.pointer.split('/')[1], memberSet);
+      if (!member || !memberSet.has(member)) errors.push(`Manifest entry member absent: ${runtime.installName}/${entry.pointer}/${entry.target}`);
+      const surface = inspected.entrySurfaces[entry.pointer];
+      if (surface && surface.complete !== true) errors.push(`Candidate public entry export analysis incomplete: ${runtime.installName}/${entry.pointer}`);
+    }
+
+    const trackedRows = scopeRowsByPackage.get(runtime.installName) ?? [];
+    const scopedPointers = new Set();
+    for (const row of trackedRows) {
+      let pointer;
+      try { pointer = scopeManifestPointer(row); }
+      catch (error) { errors.push(`Invalid scope manifest pointer: ${row.id}/${error.message}`); continue; }
+      if (pointer && manifestEntryFields.has(pointer.split('/')[1])) scopedPointers.add(pointer);
+    }
+    for (const pointer of scopedPointers) {
+      const entry = manifestEntries.find(value => value.pointer === pointer);
+      if (!entry) errors.push(`Scope manifest entry absent from candidate: ${runtime.installName}/${pointer}`);
+    }
+
+    let baselineEntries = null, baselineSurfaces = null, baselineKind = null;
+    if (descriptor?.relativePath && sourceRoot) {
+      try {
+        const sourceManifestBytes = readSource(`${descriptor.relativePath}/package.json`);
+        if (!sourceManifestBytes) throw new Error('manifest is absent from the frozen source revision');
+        const sourceManifest = JSON.parse(sourceManifestBytes);
+        baselineEntries = publicManifestEntries(sourceManifest);
+        baselineSurfaces = {};
+        const readPackageFile = relative => readSource(`${descriptor.relativePath}/${relative}`);
+        for (const entry of baselineEntries) {
+          const candidateEntry = inspected.entryFiles[entry.pointer];
+          if (!candidateEntry || !sourceCodePattern.test(candidateEntry.relative)) continue;
+          const frozenBytes = readPackageFile(candidateEntry.relative);
+          if (!frozenBytes) errors.push(`Frozen source public entry absent: ${runtime.installName}/${entry.pointer}/${candidateEntry.relative}`);
+          else {
+            if (sha256(frozenBytes) !== candidateEntry.sha256) errors.push(`Frozen source public entry bytes mismatch: ${runtime.installName}/${entry.pointer}`);
+            baselineSurfaces[entry.pointer] = staticEntrySurface(candidateEntry.relative, readPackageFile);
+          }
+        }
+        baselineKind = { kind: 'frozen-source-commit', revision: sourceRevision, path: `${descriptor.relativePath}/package.json`,
+          sha256: sha256(sourceManifestBytes) };
+      } catch (error) {
+        errors.push(`Public entry baseline invalid: ${runtime.installName}/${error.message}`);
+      }
+    }
+    const externalBaseline = externalManifestBaselines.get(runtime.installName);
+    if (!baselineEntries && externalBaseline) {
+      baselineEntries = Array.isArray(externalBaseline) ? externalBaseline : externalBaseline.entries;
+      baselineSurfaces = Array.isArray(externalBaseline) ? null : externalBaseline.entrySurfaces;
+      baselineKind = { kind: 'verified-portable-input', path: externalBaseline.path ?? null, sha256: externalBaseline.sha256 ?? null };
+    }
+    if (!baselineEntries && scopedPointers.size) baselineEntries = manifestEntries.filter(entry => scopedPointers.has(entry.pointer));
+    if (!baselineEntries) errors.push(`Public entry baseline missing: ${runtime.installName}`);
+    else {
+      const baselineByPointer = new Map(baselineEntries.map(entry => [entry.pointer, entry]));
+      const candidateByPointer = new Map(manifestEntries.map(entry => [entry.pointer, entry]));
+      for (const baseline of baselineEntries) {
+        const entry = candidateByPointer.get(baseline.pointer);
+        if (!entry) errors.push(`Source manifest public entry absent from candidate: ${runtime.installName}/${baseline.pointer}`);
+        else if (entry.target !== baseline.target) errors.push(`Source manifest public entry target mismatch: ${runtime.installName}/${baseline.pointer}`);
+      }
+      for (const entry of manifestEntries) if (!baselineByPointer.has(entry.pointer)) {
+        errors.push(`Manifest public entry absent from scope or source baseline: ${runtime.installName}/${entry.pointer}`);
+      }
+      if (!baselineSurfaces) errors.push(`Public entry export baseline missing: ${runtime.installName}`);
+      else for (const [pointer, baselineSurface] of Object.entries(baselineSurfaces)) {
+        const candidateSurface = inspected.entrySurfaces[pointer];
+        const expected = descriptor?.relativePath ? baselineSurface : surfaceShape(baselineSurface);
+        const actual = descriptor?.relativePath ? candidateSurface : surfaceShape(candidateSurface);
+        if (!candidateSurface || JSON.stringify(actual) !== JSON.stringify(expected)) {
+          errors.push(`Public entry exports mismatch: ${runtime.installName}/${pointer}`);
+        }
+      }
+      if (baselineSurfaces) for (const pointer of Object.keys(inspected.entrySurfaces)) {
+        if (!Object.hasOwn(baselineSurfaces, pointer)) errors.push(`Candidate public entry exports absent from baseline: ${runtime.installName}/${pointer}`);
+      }
+    }
+    for (const row of trackedRows.filter(value => value.kind === 'public-entry')) {
+      let pointer;
+      try { pointer = scopeManifestPointer(row); } catch { continue; }
+      if (pointer && manifestEntryFields.has(pointer.split('/')[1])) continue;
+      const prefix = `${runtime.installName}/`;
+      if (typeof row.name === 'string' && row.name.startsWith(prefix)) {
+        const member = archiveMemberForTarget(row.name.slice(prefix.length));
+        if (!member || !memberSet.has(member)) errors.push(`Scope public entry member absent: ${row.id}/${member ?? '<invalid>'}`);
+      }
+    }
+    packages.push({ installName: runtime.installName, name: item.name, version: item.version, file: item.file, sha256: item.sha256,
+      manifestSha256: inspected.manifestSha256, members: inspected.members,
+      manifestEntries, entrySurfaces: inspected.entrySurfaces, scopeTracked: trackedRows.length > 0,
+      publicEntryBaseline: baselineKind });
+  }
+  return result();
 }
 
 export async function main(argv) {
@@ -251,8 +784,12 @@ export async function main(argv) {
   const publicClosure = { schemaVersion: 1, format: 'sdk54-c-public-closure-orchestration-v1', mode: a.mode, source: evidence.source, records: evidence.records,
     sourceReceipts: evidence.receipts, summary: audit.summary, blockers: sourceErrors, relationClosed: sourceErrors.length === 0,
     finalClosure: rebuilt.finalClosure, intermediateSummary: rebuilt.summary, harmonySupportAccepted: false, stageClosable: false };
-  const coverage = a.mode === 'candidate' ? candidateCoverage(a.candidate, scope)
-    : { valid: false, candidateSha256: null, packages: [], errors: ['Candidate not supplied in source mode'], boundary: 'Source mode cannot accept candidate coverage.' };
+  const sourceRevision = spawnSync('git', ['-C', a['source-root'], 'rev-parse', 'HEAD'], { encoding: 'utf8' }).stdout.trim();
+  const external = a.mode === 'candidate' ? await loadExternalManifestBaselines({ sourceRoot: a['source-root'], scopeFile: a.scope }) : null;
+  const coverage = a.mode === 'candidate' ? await verifyCandidatePublicSurface({ candidateFile: a.candidate, scope, sourceRevision,
+    sourceRoot: a['source-root'], externalManifestBaselines: external.baselines, baselineErrors: external.errors })
+    : { valid: false, candidate: null, candidateSha256: null, packages: [], errors: ['Candidate not supplied in source mode'], harmonySupportAccepted: false,
+      boundary: 'Source mode cannot accept candidate coverage.' };
   let pluginReplay;
   try {
     const typeContracts = path.join(path.dirname(a.scope), 'plugin-type-contracts.json');

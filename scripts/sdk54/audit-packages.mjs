@@ -213,7 +213,7 @@ function isIntegerConditionKey(key) {
   return /^(?:0|[1-9]\d*)$/.test(key);
 }
 
-function validateExports(exportsValue) {
+export function validateExports(exportsValue) {
   const failures = [];
   const concrete = [];
   const visitTarget = (value, subpath, patternCount, location) => {
