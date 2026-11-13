@@ -44,16 +44,35 @@ def patch_sheet(data):
   @State sheetDetentIndex: number = 0;
   @State sheetGrabberVisible: boolean = false;
   @State sheetCornerRadius: number = -1;
+  private sheetClosing: boolean = false;
+  private sheetDismissed: boolean = false;
+  private sheetNativeDismiss: boolean = false;
 '''+marker)
     start = text.index('        RNViewBase({ ctx: this.ctx, tag: this.tag }) {', text.index('  build() {'))
     end = text.index('\n      }\n      .onAreaChange', start)
     content = text[start:end].replace('          .onAreaChange', "          .onTouch((event: TouchEvent) => {\n            if (this.isFormSheet()) this.ctx.rnInstance.postTouchEventMessageToCpp(this.tag, event);\n          })\n          .onAreaChange", 1)
     content = content.replace(".height('100%')", ".height(this.isFormSheet() && this.sheetAllowedDetents[0] === -1 ? undefined : '100%')")
+    # RNViewBase applies the screen's full-window Yoga height. Only the normal
+    # destination uses it; FIT_CONTENT must measure the sheet's actual children.
+    body = content[content.index('\n          Stack() {'):content.rindex('\n        }')]
+    content = '''
+    if (this.isFormSheet()) {
+      this.sheetContentBody()
+    } else {
+      RNViewBase({ ctx: this.ctx, tag: this.tag }) {
+        this.sheetContentBody()
+      }
+    }
+  }
+
+  @Builder
+  sheetContentBody() {
+'''+body
     text = text[:start] + '''
         if (!this.isFormSheet()) {
           this.screenContent()
         } else {
-          Stack() {}.width('100%').height('100%')
+          Stack() {}.width('100%').height('100%').hitTestBehavior(HitTestMode.None)
         }'''+text[end:]
     methods = '''
   private isFormSheet(): boolean {
@@ -92,6 +111,26 @@ def patch_sheet(data):
     return value === -1 ? SheetSize.FIT_CONTENT : `${value * 100}%`;
   }
 
+  private dismissSheet(native: boolean): boolean {
+    if (!this.sheetVisible || this.sheetClosing) return false;
+    if (this.preventNativeDismiss || this.getPreventFlag()) {
+      this.eventEmitter?.emit('nativeDismissCancelled', { dismissCount: this.dismissCount });
+      return false;
+    }
+    if (native && !this.gestureEnabled) return false;
+    this.sheetClosing = true;
+    this.sheetNativeDismiss = native;
+    this.eventEmitter?.emit('willDisappear', {});
+    this.sheetVisible = false;
+    return true;
+  }
+
+  private handleSheetBack(): boolean {
+    if (!this.isFormSheet()) return false;
+    this.dismissSheet(true);
+    return true;
+  }
+
   private sheetOptions(): SheetOptions {
     const heights: [SheetSize | Length, (SheetSize | Length)?, (SheetSize | Length)?] = [this.sheetHeight(this.sheetInitialDetent)];
     for (let index = 0; index < this.sheetAllowedDetents.length; index++) {
@@ -122,15 +161,15 @@ def patch_sheet(data):
         this.eventEmitter?.emit('sheetDetentChanged', { index: nearest, isStable: true });
       },
       shouldDismiss: (action: SheetDismiss) => {
-        if (!this.sheetVisible) return;
-        if (this.preventNativeDismiss || this.getPreventFlag()) {
-          this.eventEmitter?.emit('nativeDismissCancelled', { dismissCount: this.dismissCount });
-          return;
-        }
-        if (!this.gestureEnabled) return;
-        action.dismiss();
-        this.sheetVisible = false;
-        this.backBtnPressed(true);
+        if (this.dismissSheet(true)) action.dismiss();
+      },
+      onDisappear: () => {
+        if (!this.sheetClosing) return;
+        this.sheetClosing = false;
+        this.sheetDismissed = true;
+        // Deliver the native completion while the JS route/listeners still exist.
+        this.eventEmitter?.emit('disappear', {});
+        this.backBtnPressed(this.sheetNativeDismiss);
       },
     };
   }
@@ -141,8 +180,13 @@ def patch_sheet(data):
     text = text.replace('  build() {', methods+'\n  build() {',1)
     text = text.replace('    this.stackPresentationMode = presentation;', '    this.stackPresentationMode = presentation;\n    if (this.isFormSheet()) this.readSheetProps();')
     text = text.replace('      .hideTitleBar(true)', '      .hideTitleBar(true)\n      .bindSheet($$this.sheetVisible, this.screenContent(), this.sheetOptions())',1)
-    text = text.replace('        await this.updateState(true);', '        await this.updateState(true);\n        if (this.isFormSheet()) this.sheetVisible = true;',1)
+    text = text.replace('        await this.updateState(true);', '        await this.updateState(true);\n        if (this.isFormSheet()) {\n          this.sheetDismissed = false;\n          this.sheetVisible = true;\n        }',1)
+    text = text.replace('  private backBtnPressed(f: boolean) {', '  private backBtnPressed(f: boolean) {\n    if (this.isFormSheet() && this.sheetVisible) {\n      this.dismissSheet(f);\n      return;\n    }',1)
+    text = text.replace('      .onBackPressed(() => {', '      .onBackPressed(() => {\n        if (this.handleSheetBack()) return true;',1)
     text = text.replace('      .onWillDisappear(() => {', '      .onWillDisappear(() => {\n        this.sheetVisible = false;',1)
+    text = text.replace('this.eventEmitter!.emit("willDisappear", {})', 'if (!this.isFormSheet() || (!this.sheetClosing && !this.sheetDismissed)) this.eventEmitter!.emit("willDisappear", {})')
+    text = text.replace('this.eventEmitter!.emit("disappear", {})', 'if (!this.isFormSheet() || (!this.sheetClosing && !this.sheetDismissed)) this.eventEmitter!.emit("disappear", {})')
+    text = text.replace('      .mode(this.presentationMode)', '      .mode(this.presentationMode)\n      .hitTestBehavior(this.isFormSheet() ? HitTestMode.Transparent : HitTestMode.Default)',1)
     text = text.replace('      .backgroundColor(this.backgroundColorValue)', "      .backgroundColor(this.isFormSheet() ? '#00000000' : this.backgroundColorValue)",1)
     text = text.replace('        if (this.gestureEnabled && this.fullScreenSwipeEnabled && !this.isRootStackGesturePopDisallowed()) {', '        if (!this.isFormSheet() && this.gestureEnabled && this.fullScreenSwipeEnabled && !this.isRootStackGesturePopDisallowed()) {',1)
     return text.encode()
@@ -213,7 +257,7 @@ def prepare(source, target):
                     result.addfile(member, payload)
     result_bytes = output.getvalue()
     manifest = {
-        'profile': 'screens-4.9.0-navigation-sheet-v8',
+        'profile': 'screens-4.9.0-navigation-sheet-v9',
         'inputSHA256': INPUT_SHA,
         'outputSHA256': sha(result_bytes),
         'source': SOURCE,

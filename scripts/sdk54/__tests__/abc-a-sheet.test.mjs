@@ -18,7 +18,7 @@ function screen(props = {}) {
   vm.runInNewContext(code, context);
   const s = new context.Screen();
   Object.assign(s, {descriptor:{rawProps:props}, stackPresentationMode:'formSheet', sheetVisible:false, gestureEnabled:true,
-    ctx:{uiAbilityContext:{}}, eventEmitter:{emit:(...args)=>events.push(args)}, getPreventFlag:()=>false,
+    ctx:{uiAbilityContext:{}}, eventEmitter:{emit:(...args)=>events.push(JSON.parse(JSON.stringify(args)))}, getPreventFlag:()=>false,
     backBtnPressed:()=>events.push(['back']), dismissCount:1, preventNativeDismiss:false });
   return {s, events, resize(value){height=value;}};
 }
@@ -59,4 +59,27 @@ for(const guard of ['preventNativeDismiss','gestureEnabled','parent']) test(`dis
   if(guard==='parent') s.getPreventFlag=()=>true;else s[guard]=guard==='preventNativeDismiss';
   s.sheetOptions().shouldDismiss({dismiss:()=>events.push(['dismiss'])});assert.equal(s.sheetVisible,true);if(guard==='gestureEnabled')assert.equal(events.length,0);else {assert.equal(events[0]?.[0],'nativeDismissCancelled');assert.equal(events[0]?.[1].dismissCount,1);}
 });
-test('allowed native dismissal pops once',()=>{const {s,events}=screen();s.readSheetProps();s.sheetVisible=true;const action={dismiss:()=>events.push(['dismiss'])};s.sheetOptions().shouldDismiss(action);s.sheetOptions().shouldDismiss(action);assert.equal(s.sheetVisible,false);assert.deepEqual(events,[['dismiss'],['back']]);});
+test('native dismissal keeps the route until the actual sheet disappearance and pops once',()=>{
+  const {s,events}=screen();s.readSheetProps();s.sheetVisible=true;
+  const action={dismiss:()=>events.push(['dismiss'])};
+  s.sheetOptions().shouldDismiss(action);s.sheetOptions().shouldDismiss(action);
+  assert.equal(s.sheetVisible,false);
+  assert.deepEqual(events,[['willDisappear',{}],['dismiss']]);
+  s.sheetOptions().onDisappear();s.sheetOptions().onDisappear();
+  assert.deepEqual(events,[['willDisappear',{}],['dismiss'],['disappear',{}],['back']]);
+});
+test('programmatic sheet close ignores the gesture guard but preserves native prevention',()=>{
+  const {s,events}=screen();s.readSheetProps();s.sheetVisible=true;s.gestureEnabled=false;
+  s.dismissSheet(false);assert.equal(s.sheetVisible,false);
+  assert.deepEqual(events,[['willDisappear',{}]]);
+  s.sheetOptions().onDisappear();assert.deepEqual(events,[['willDisappear',{}],['disappear',{}],['back']]);
+  s.sheetVisible=true;s.preventNativeDismiss=true;events.length=0;
+  s.dismissSheet(false);assert.equal(s.sheetVisible,true);assert.equal(events[0][0],'nativeDismissCancelled');
+});
+test('system Back is consumed for a guarded sheet and ordinary screens retain their handler',()=>{
+  const {s,events}=screen();s.readSheetProps();s.sheetVisible=true;s.gestureEnabled=false;
+  assert.equal(s.handleSheetBack(),true);assert.equal(s.sheetVisible,true);assert.equal(events.length,0);
+  s.gestureEnabled=true;assert.equal(s.handleSheetBack(),true);assert.equal(s.sheetVisible,false);
+  s.sheetOptions().onDisappear();assert.equal(events.at(-1)[0],'back');
+  s.stackPresentationMode='push';assert.equal(s.handleSheetBack(),false);
+});

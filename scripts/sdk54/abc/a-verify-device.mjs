@@ -9,7 +9,7 @@ import { isMain, json, options, readRef, repository, scenario, sha256 } from './
 const contract=json(path.join(repository,'docs/releases/sdk54-abc-20261111/a-sheet-contract.json'));
 export const resourceCases={R01:['initial','reload'],R02:['updated'],R03:['removed']};
 const identityFields=['target','systemVersion','bundle','pid','boot','hapSha256','candidateSha256'];
-function nodes(tree) { return [tree.attributes??{},...(tree.children??[]).flatMap(nodes)]; }
+function nodes(tree,bundle) { const attributes={...tree.attributes};attributes.bundleName??=bundle;return [attributes,...(tree.children??[]).flatMap(child=>nodes(child,attributes.bundleName))]; }
 function bounds(node) {
   const match=/^\[(-?\d+),(-?\d+)\]\[(-?\d+),(-?\d+)\]$/.exec(node?.bounds??'');
   assert.ok(match,'Missing actual HDC bounds');const [x,y,right,bottom]=match.slice(1).map(Number);
@@ -53,7 +53,11 @@ function sheet(sample,fraction,caseName) {
   if(fraction!==undefined)assert.ok(Math.abs(area.height/wrapper.height-fraction)<.07,`Sheet actual height ${area.height}/${wrapper.height} != ${fraction}`);
   assert.ok(area.bottom<=sample.image.height&&area.x>=0&&area.right<=sample.image.width,'Sheet outside screenshot');
   // The fixture has a white background. Require pixels inside the measured sheet, not just a button event.
-  assert.ok(pixel(sample,area.x+area.width*.92,area.y+area.height*.65).every(v=>v>240),'Sheet body is absent from screenshot');
+  let white=0;
+  for(let y=0;y<20;y++)for(let x=0;x<20;x++){
+    if(pixel(sample,area.x+area.width*(.05+.9*(x+.5)/20),area.y+area.height*(.05+.9*(y+.5)/20)).every(v=>v>240))white++;
+  }
+  assert.ok(white>=240,'Sheet body is absent from screenshot');
   return area;
 }
 function closed(sample,pathname='/') {
@@ -70,7 +74,7 @@ export function verifyNavigationCase(id,s) {
   if(id==='S01')sheet(s.one,.5,'one');
   else if(id==='S02'){
     const a=sheet(s.small,.35,'two'),b=sheet(s.large,.75,'two'),c=sheet(s.collapsed,.35,'two');assert.ok(b.height>a.height*1.5);assert.ok(Math.abs(a.height-c.height)<8);
-    for(const [key,index] of [['small',0],['large',1],['collapsed',0]]){const e=event(s[key],'A_SHEET_DETENT');assert.equal(e.index,index);assert.equal(e.isStable,true);}
+    for(const [key,index] of [['small',0],['large',1],['collapsed',0]]){const e=event(s[key],'A_SHEET_DETENT');assert.equal(e.index,index);assert.equal(e.stable,true);}
     assert.notEqual(s.small.screenshot.sha256,s.large.screenshot.sha256,'No actual pixel change');unchanged(Object.values(s));
   }else if(['S03','S04','S05'].includes(id)){const index=Number(id.slice(1))-3;sheet(s[`three-${index}`],[.2,.5,.9][index],`three-${index}`);}
   else if(id==='S08'){
@@ -78,10 +82,15 @@ export function verifyNavigationCase(id,s) {
     assert.ok(Math.abs(layout.height-280)<1,'fit content should measure 280vp');const ratio=content.height/layout.height;
     assert.ok(ratio>=1&&ratio<=5);assert.ok(area.height>=content.height&&area.height<content.height+160*ratio,'fit sheet stretches beyond content');
   }else if(id==='S09'){
-    sheet(s.hidden,undefined,'two');sheet(s.shown,undefined,'grabber');assert.ok(!find(s.hidden,n=>n.type==='SheetDragBar'),'Grabber should be hidden');
-    const bar=bounds(find(s.shown,n=>n.type==='SheetDragBar'));let contrast=false;
-    for(let y=bar.y;y<bar.bottom;y++)for(let x=bar.x;x<bar.right;x++){if(pixel(s.shown,x,y).some(v=>v<200))contrast=true;}
-    assert.ok(contrast,'Grabber pixels missing');
+    sheet(s.hidden,undefined,'two');const area=sheet(s.shown,undefined,'grabber');assert.ok(!find(s.hidden,n=>n.type==='SheetDragBar'),'Grabber should be hidden');
+    const bar=bounds(find(s.shown,n=>n.type==='SheetDragBar'));let contrasting=0;
+    assert.ok(bar.x>=area.x&&bar.right<=area.right&&bar.y>=area.y&&bar.bottom+2<area.y+area.height*.25,'Grabber outside sheet header');
+    const background=pixel(s.shown,bar.x+bar.width/2,bar.bottom+2);
+    assert.ok(background.every(v=>v>240),'Grabber background missing');
+    for(let y=bar.y;y<bar.bottom;y++)for(let x=bar.x;x<bar.right;x++){
+      if(pixel(s.shown,x,y).every((v,i)=>background[i]-v>=24))contrasting++;
+    }
+    assert.ok(contrasting>=Math.max(2,bar.width*bar.height*.02),'Grabber pixels missing');
   }else if(id==='S10'){
     sheet(s.before,.35);sheet(s.interactive,.35,'undimmed');sheet(s.dimmed,.75,'undimmed');
     assert.equal(parentPresses(s.interactive),parentPresses(s.before)+1,'Parent did not receive real tap');
@@ -150,7 +159,15 @@ function verifyResources(root,run,samples) {
       const expected=`{ "embedded": "${phase}" }\n`;assert.equal(probe.text,expected);assert.equal(probe.rejected,false);assert.ok(probe.fonts.includes('EmbeddedIcons'));
       assert.equal(files['resources/rawfile/expo-asset/data.json']?.text,expected,'HAP rawfile bytes differ');
       const glyph=PNG.sync.read(readRef(root,s.glyph),{checkCRC:true});
-      const glyphBounds=bounds(find(s,n=>[n.id,n.description].some(value=>value?.includes('embedded-font-glyph'))));
+      // HDC may omit RN accessibilityLabel. Require one app-owned Image with
+      // the oracle's aspect ratio, then verify its actual pixels below.
+      const images=s.nodes.filter(n=>n.type==='Image'&&n.bundleName===s.bundle&&n.visible!=='false'&&n.opacity!=='0.000000');
+      const labeled=images.filter(n=>[n.id,n.description].some(value=>value?.includes('embedded-font-glyph')));
+      const candidates=(labeled.length?labeled:images).filter(n=>{
+        const b=bounds(n);return Math.abs(b.width-b.height*glyph.width/glyph.height)<=2;
+      });
+      assert.equal(candidates.length,1,'Glyph Image must have unique geometry; missing or ambiguous image');
+      const glyphBounds=bounds(candidates[0]);
       let compared=0,matching=0;
       for(let y=0;y<glyph.height;y+=Math.max(1,Math.floor(glyph.height/24)))for(let x=0;x<glyph.width;x+=Math.max(1,Math.floor(glyph.width/24))){
         const offset=(y*glyph.width+x)*4,alpha=glyph.data[offset+3]/255;if(alpha<.5)continue;

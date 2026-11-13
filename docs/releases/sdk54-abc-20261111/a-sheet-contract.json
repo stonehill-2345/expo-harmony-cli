@@ -8,7 +8,7 @@
     {
       "id": "harmony-transformer",
       "path": "packages/expo-modules-autolinking/scripts/harmony/prepare-screens.py",
-      "sha256": "9ef85f449500ff62927d8e992263e4aab4dd102fb3541e777e52adcf2090d8f5"
+      "sha256": "942399f20857252c982dd460bad69fca17e94d5fa0471e760eacc00c5e67f4eb"
     },
     {
       "id": "screens-overlay",
@@ -81,7 +81,7 @@
     {
       "id": "navigation-device-verifier",
       "path": "scripts/sdk54/abc/a-verify-device.mjs",
-      "sha256": "474d10da404d219a3e15ab9310c7a03247df08748a3e2e4be6975834fc6322e3"
+      "sha256": "8c2b4a3cefb321997953423ef658797473566e5b3393e057b14377d5805054d6"
     }
   ],
   "cases": [
