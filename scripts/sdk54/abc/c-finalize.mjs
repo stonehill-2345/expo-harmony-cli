@@ -4,6 +4,8 @@ import crypto from 'node:crypto';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { args, save, sha256, html } from './c-evidence-lib.mjs';
+import { RELEASE_PACKAGES } from '../release-catalog.mjs';
+import { verifyCandidateManifest } from '../ai-e2e/evidence.mjs';
 
 const base = 'f3892fade4e3f93c89420f2580a94f362bb23d2d';
 const owned = [
@@ -24,11 +26,86 @@ const readOptional = file => {
 };
 const commandName = command => (command?.argv??[]).join(' ');
 const commandPassed = command => command?.exitCode===0 && command.signal==null && command.timedOut!==true;
+const argumentValue = (argv, name) => {
+  const index = argv.indexOf(name);
+  return index >= 0 ? argv[index + 1] : null;
+};
+
+export function verifyCommandRecord(root, command) {
+  const errors=[], outputRoot=fs.realpathSync(root), argv=command?.argv??[];
+  if(!commandPassed(command)) errors.push('Recorded command did not pass');
+  for(const stream of ['stdout','stderr']) {
+    const receipt=command?.[stream];
+    if(!receipt||typeof receipt.path!=='string'||!receipt.path||path.isAbsolute(receipt.path)
+      ||receipt.path.includes('\\')||receipt.path.split('/').includes('..')||!/^[a-f0-9]{64}$/.test(receipt.sha256??'')) {
+      errors.push(`Recorded command ${stream} receipt is malformed`); continue;
+    }
+    const file=path.resolve(outputRoot,receipt.path), relative=path.relative(outputRoot,file);
+    let stat;
+    try { stat=fs.lstatSync(file); } catch { errors.push(`Recorded command ${stream} file is missing`); continue; }
+    if(relative==='..'||relative.startsWith(`..${path.sep}`)||path.isAbsolute(relative)||!stat.isFile()||stat.isSymbolicLink()) {
+      errors.push(`Recorded command ${stream} file is unsafe`); continue;
+    }
+    const realFile=fs.realpathSync(file), realRelative=path.relative(outputRoot,realFile);
+    if(realRelative==='..'||realRelative.startsWith(`..${path.sep}`)||path.isAbsolute(realRelative)) {
+      errors.push(`Recorded command ${stream} file escapes the output root`); continue;
+    }
+    if(sha256(fs.readFileSync(file))!==receipt.sha256) errors.push(`Recorded command ${stream} hash mismatch`);
+  }
+  if(!Array.isArray(argv)||argv[0]!=='node'||argv[1]!=='scripts/sdk54/abc/c-public-closure.mjs') {
+    errors.push('Recorded candidate command executable is invalid');
+  }
+  const allowed=new Set(['--source-root','--reconstruction','--scope','--candidate','--mode','--output']), seen=new Set();
+  for(let index=2;index<argv.length;index+=2) {
+    const flag=argv[index], value=argv[index+1];
+    if(!allowed.has(flag)||seen.has(flag)||typeof value!=='string'||!value) errors.push(`Recorded candidate command arguments are invalid: ${flag??'<missing>'}`);
+    seen.add(flag);
+  }
+  for(const flag of allowed) if(!seen.has(flag)) errors.push(`Recorded candidate command argument is missing: ${flag}`);
+  if(typeof command?.cwd!=='string'||path.resolve(command.cwd)!==path.resolve(argumentValue(argv,'--source-root')??'')) {
+    errors.push('Recorded candidate command cwd differs from source root');
+  }
+  return errors;
+}
+
+function candidateCoverageErrors(root, publicOutput, coverage, commandRows) {
+  const errors=[];
+  if(!coverage||coverage.valid!==true) return errors;
+  if(!Array.isArray(coverage.errors)||coverage.errors.length) errors.push('Candidate coverage must contain an empty errors array');
+  const packages=Array.isArray(coverage.packages)?coverage.packages:[];
+  const byInstall=new Map(packages.map(row=>[row?.installName,row]));
+  if(packages.length!==RELEASE_PACKAGES.length||byInstall.size!==packages.length) errors.push('Candidate coverage package set differs from the release catalog');
+  for(const descriptor of RELEASE_PACKAGES) {
+    const row=byInstall.get(descriptor.installName);
+    if(!row||row.name!==descriptor.publishName||row.version!==descriptor.publishVersion) {
+      errors.push(`Candidate coverage package identity mismatch: ${descriptor.installName}`);
+    }
+  }
+  const candidate=coverage.candidate;
+  if(!candidate||typeof candidate.path!=='string'||!/^[a-f0-9]{64}$/.test(candidate.sha256??'')) {
+    errors.push('Candidate coverage identity is missing or malformed');
+    return errors;
+  }
+  const candidateFile=path.resolve(candidate.path);
+  try { errors.push(...verifyCandidateManifest(candidateFile)); }
+  catch(error) { errors.push(`Candidate manifest replay failed: ${error.message}`); }
+  const output=path.resolve(root,publicOutput);
+  const replay=(Array.isArray(commandRows)?commandRows:[]).find(command=>{
+    const argv=command?.argv??[], script=argv.find(value=>typeof value==='string'&&value.endsWith('scripts/sdk54/abc/c-public-closure.mjs'));
+    return Boolean(script)&&argumentValue(argv,'--mode')==='candidate'
+      && path.resolve(argumentValue(argv,'--candidate')??'')===candidateFile
+      && path.resolve(argumentValue(argv,'--output')??'')===output&&commandPassed(command);
+  });
+  if(!replay) errors.push('Successful candidate-mode public closure command is missing');
+  else errors.push(...verifyCommandRecord(root,replay));
+  return errors;
+}
 
 export function evaluateFinalEvidence(root, publicOutput='public-source') {
   const errors=[];
   const audit=readOptional(path.join(root,'input-audit/c-input-audit.json'));
   const closure=readOptional(path.join(root,publicOutput,'public-closure.json'));
+  const coverage=readOptional(path.join(root,publicOutput,'candidate-coverage.json'));
   const blockerFile=readOptional(path.join(root,publicOutput,'blockers.json'));
   const handoff=readOptional(path.join(root,'handoff/handoff-verification.json'));
   const commands=readOptional(path.join(root,'commands.json'));
@@ -50,6 +127,9 @@ export function evaluateFinalEvidence(root, publicOutput='public-source') {
     if(closure.mode!=='candidate') c32Blockers.push('candidate public closure has not run');
     if(closure.relationClosed!==true) c32Blockers.push('public relations are not closed');
     if(closure.stageClosable!==true) c32Blockers.push('public closure is not stage closable');
+    if(!coverage) c32Blockers.push('candidate coverage evidence is missing');
+    else if(coverage.valid!==true) c32Blockers.push(...(Array.isArray(coverage.errors)&&coverage.errors.length?coverage.errors:['candidate coverage is invalid']));
+    else c32Blockers.push(...candidateCoverageErrors(root,publicOutput,coverage,commandRows));
     for(const blocker of Array.isArray(blockerFile)?blockerFile:(closure.blockers??[])) c32Blockers.push(typeof blocker==='string'?blocker:JSON.stringify(blocker));
   }
   const c33Blockers=[];
@@ -60,14 +140,14 @@ export function evaluateFinalEvidence(root, publicOutput='public-source') {
   }
   const tasks=[
     {id:'C-31',status:c31Blockers.length?'FAIL':'PASS',evidence:['input-audit/c-input-audit.json'],blockers:c31Blockers},
-    {id:'C-32',status:closure?'FAIL':'BLOCKED',evidence:[`${publicOutput}/public-closure.json`,`${publicOutput}/scope-review.json`,`${publicOutput}/finite-declarations.json`,`${publicOutput}/derived-source-provenance.json`,`${publicOutput}/export-source-bindings.json`,`${publicOutput}/plugin-contracts.json`],blockers:c32Blockers},
+    {id:'C-32',status:!closure?'BLOCKED':c32Blockers.length?'FAIL':'PASS',evidence:[`${publicOutput}/public-closure.json`,`${publicOutput}/candidate-coverage.json`,`${publicOutput}/scope-review.json`,`${publicOutput}/finite-declarations.json`,`${publicOutput}/derived-source-provenance.json`,`${publicOutput}/export-source-bindings.json`,`${publicOutput}/plugin-contracts.json`],blockers:c32Blockers},
     {id:'C-33',status:c33Blockers.length?'BLOCKED':'PASS',evidence:['handoff/handoff-verification.json','c-case-review.json'],blockers:c33Blockers},
   ];
   const requiredCommandsPass=Boolean(check&&negative&&commandPassed(check)&&commandPassed(negative));
   const priorPass=tasks.every(task=>task.status==='PASS');
   const recommendClose=priorPass&&requiredCommandsPass;
   const commandBlockers=errors.filter(error=>/command|pnpm check|negative test/i.test(error));
-  tasks.push({id:'C-34',status:recommendClose?'PASS':(!commands||!closure||!handoff?'BLOCKED':'FAIL'),evidence:['commands.json','c-acceptance.json'],blockers:[...commandBlockers,...(!priorPass?['C-31～C-33 are not all PASS']:[])]});
+  tasks.push({id:'C-34',status:recommendClose?'PASS':(!commands||!closure||!handoff?'BLOCKED':'FAIL'),evidence:['commands.json'],blockers:[...commandBlockers,...(!priorPass?['C-31～C-33 are not all PASS']:[])]});
   return {tasks,recommendClose,errors};
 }
 
@@ -80,6 +160,50 @@ export function buildRequests(handoff, commands) {
   const failedInstall=(Array.isArray(commands)?commands:[]).find(command=>/^(?:corepack )?pnpm install(?: |$)/.test(commandName(command))&&!commandPassed(command));
   if(failedInstall) requests.push({id:'C-REQ-INSTALL',from:'C',to:'B',blockedTaskId:'C-34-check',files:['dependency/install ownership'],reproduction:`${commandName(failedInstall)} exited ${failedInstall.exitCode}`,expected:'authorized shared dependency/candidate setup that installs without changing acceptance',requiredEvidence:['fresh install log']});
   return requests;
+}
+
+export function resolveCandidateIdentity(root, publicOutput='public-source') {
+  const coverage=readOptional(path.join(root,publicOutput,'candidate-coverage.json'));
+  if(!coverage) return {candidate:null,errors:['Candidate coverage evidence is missing']};
+  if(coverage.valid!==true) return {candidate:null,errors:['Candidate coverage is invalid',...(Array.isArray(coverage.errors)?coverage.errors:[])]};
+  const handoff=readOptional(path.join(root,'handoff/handoff-verification.json'));
+  const candidate=coverage.candidate, errors=[];
+  if(!candidate || typeof candidate.path!=='string' || !candidate.path || !/^[a-f0-9]{64}$/.test(candidate.sha256??'')) {
+    errors.push('Candidate identity is missing or malformed');
+    return {candidate:null,errors};
+  }
+  const file=path.resolve(candidate.path);
+  let stat;
+  try { stat=fs.lstatSync(file); } catch { errors.push(`Candidate path is missing: ${candidate.path}`); }
+  if(stat && (!stat.isFile() || stat.isSymbolicLink())) errors.push(`Candidate path is not a regular file: ${candidate.path}`);
+  if(stat?.isFile() && sha256(fs.readFileSync(file))!==candidate.sha256) errors.push('Candidate file hash differs from candidate coverage');
+  if(coverage.candidateSha256!==candidate.sha256) errors.push('Candidate coverage identity is inconsistent');
+  if(handoff?.candidateSha256!==candidate.sha256) errors.push('Handoff candidate identity differs from candidate coverage');
+  if(!errors.length) errors.push(...candidateCoverageErrors(root,publicOutput,coverage,readOptional(path.join(root,'commands.json'))));
+  return {candidate:errors.length?null:{path:file,sha256:candidate.sha256},errors};
+}
+
+export function verifyEvidenceReferences(root, tasks) {
+  const errors=[], receipts=[], outputRoot=fs.realpathSync(root);
+  for(const task of Array.isArray(tasks)?tasks:[]) for(const reference of Array.isArray(task?.evidence)?task.evidence:[]) {
+    if(typeof reference!=='string'||!reference) { errors.push(`Evidence reference is invalid: ${task?.id??'<unknown>'}`); continue; }
+    if(path.isAbsolute(reference)) { errors.push(`Evidence reference escapes output root: ${task.id}/${reference}`); continue; }
+    const file=path.resolve(outputRoot,reference), relative=path.relative(outputRoot,file);
+    if(relative==='..'||relative.startsWith(`..${path.sep}`)||path.isAbsolute(relative)) {
+      errors.push(`Evidence reference escapes output root: ${task.id}/${reference}`);
+      continue;
+    }
+    let stat;
+    try { stat=fs.lstatSync(file); } catch { errors.push(`Evidence file is missing: ${task.id}/${reference}`); continue; }
+    if(!stat.isFile()||stat.isSymbolicLink()) { errors.push(`Evidence reference is not a regular file: ${task.id}/${reference}`); continue; }
+    const realFile=fs.realpathSync(file), realRelative=path.relative(outputRoot,realFile);
+    if(realRelative==='..'||realRelative.startsWith(`..${path.sep}`)||path.isAbsolute(realRelative)) {
+      errors.push(`Evidence reference escapes output root through a symlink: ${task.id}/${reference}`);
+      continue;
+    }
+    receipts.push({taskId:task.id,path:relative.split(path.sep).join('/'),bytes:stat.size,sha256:sha256(fs.readFileSync(file))});
+  }
+  return {valid:errors.length===0,receipts,errors};
 }
 const walk = root => {
   const rows=[];
@@ -96,6 +220,18 @@ export function main(argv) {
   const publicOutput=a['public-output']??'public-source';
   fs.copyFileSync('docs/releases/sdk54-abc-20261111/c-case-review.json',path.join(root,'c-case-review.json'),fs.constants.COPYFILE_EXCL);
   const evaluation=evaluateFinalEvidence(root,publicOutput);
+  const candidateIdentity=resolveCandidateIdentity(root,publicOutput);
+  const evidenceReview=verifyEvidenceReferences(root,evaluation.tasks);
+  if(candidateIdentity.errors.length||!evidenceReview.valid) {
+    const integrityErrors=[...candidateIdentity.errors,...evidenceReview.errors];
+    evaluation.errors.push(...integrityErrors);
+    evaluation.recommendClose=false;
+    const c34=evaluation.tasks.find(task=>task.id==='C-34');
+    if(c34) {
+      if(c34.status==='PASS') c34.status='FAIL';
+      c34.blockers.push(...integrityErrors);
+    }
+  }
   const acceptance={schemaVersion:1, role:'C', independentlyExecuted:['input byte audit','fixed Git identity','7,732-row source relation replay','verifier negative tests'],
     materialOnlyReviewed:['supplement step3 observations'], stages:{
       step3:{status:'FAIL',reason:'scope-reviewed.json is explicitly incomplete; A device semantics and B unified candidate remain unverified'},
@@ -110,7 +246,9 @@ export function main(argv) {
   const requests=buildRequests(handoff,commands);
   save(path.join(root,'requests.json'),requests);
   const dirty=Boolean(git('status','--porcelain=v1','--untracked-files=all').stdout.trim());
-  const result={schemaVersion:1,role:'C',runId:path.basename(root),baseRevision:base,sourceRevision:revision,dirty,candidate:null,tasks:evaluation.tasks,stageClaims:{step3:false,M4:false,M5:false,V:false,M6:false}};
+  const result={schemaVersion:1,role:'C',runId:path.basename(root),baseRevision:base,sourceRevision:revision,dirty,
+    candidate:candidateIdentity.candidate,evidenceReceipts:evidenceReview.receipts,tasks:evaluation.tasks,
+    stageClaims:{step3:false,M4:false,M5:false,V:false,M6:false}};
   save(path.join(root,'result.json'),result);
   const changes=owned.filter(file=>fs.existsSync(file)).map(file=>({path:file,bytes:fs.statSync(file).size,sha256:sha256(fs.readFileSync(file))}));
   const trackedPatch=git('diff','--binary','--',...owned).stdout;
