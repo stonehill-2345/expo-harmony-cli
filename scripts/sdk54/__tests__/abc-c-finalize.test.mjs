@@ -251,6 +251,9 @@ test('candidate-mode 命令必须有固定 argv/cwd 和可核验日志收据', (
     stderr: { path: 'candidate.stderr', sha256: crypto.createHash('sha256').update(stderr).digest('hex') },
   };
   assert.deepEqual(finalize.verifyCommandRecord(root, command), []);
+  const withRelations = { ...command, argv: [...command.argv, '--relations', path.join(root, 'relations.json')] };
+  assert.deepEqual(finalize.verifyCommandRecord(root, withRelations), []);
+  assert.match(finalize.verifyCommandRecord(root, { ...withRelations, argv: [...withRelations.argv, '--relations', 'other.json'] }).join('\n'), /arguments are invalid/);
   fs.appendFileSync(path.join(root, 'candidate.stdout'), 'tampered');
   assert.match(finalize.verifyCommandRecord(root, command).join('\n'), /stdout hash mismatch/i);
   assert.match(finalize.verifyCommandRecord(root, { ...command, stdout: { path: '../outside', sha256: 'a'.repeat(64) } }).join('\n'), /malformed/i);

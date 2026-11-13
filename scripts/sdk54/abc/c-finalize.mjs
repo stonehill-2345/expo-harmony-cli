@@ -55,13 +55,14 @@ export function verifyCommandRecord(root, command) {
   if(!Array.isArray(argv)||argv[0]!=='node'||argv[1]!=='scripts/sdk54/abc/c-public-closure.mjs') {
     errors.push('Recorded candidate command executable is invalid');
   }
-  const allowed=new Set(['--source-root','--reconstruction','--scope','--candidate','--mode','--output']), seen=new Set();
+  const required=['--source-root','--reconstruction','--scope','--candidate','--mode','--output'];
+  const allowed=new Set([...required,'--relations']), seen=new Set();
   for(let index=2;index<argv.length;index+=2) {
     const flag=argv[index], value=argv[index+1];
     if(!allowed.has(flag)||seen.has(flag)||typeof value!=='string'||!value) errors.push(`Recorded candidate command arguments are invalid: ${flag??'<missing>'}`);
     seen.add(flag);
   }
-  for(const flag of allowed) if(!seen.has(flag)) errors.push(`Recorded candidate command argument is missing: ${flag}`);
+  for(const flag of required) if(!seen.has(flag)) errors.push(`Recorded candidate command argument is missing: ${flag}`);
   if(typeof command?.cwd!=='string'||path.resolve(command.cwd)!==path.resolve(argumentValue(argv,'--source-root')??'')) {
     errors.push('Recorded candidate command cwd differs from source root');
   }

@@ -4,6 +4,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
+import { gunzipSync, gzipSync } from 'node:zlib';
 import { extract, list } from 'tar';
 import ts from 'typescript';
 import { readSourceTree, readSourceBlobs } from '../source-inventory.mjs';
@@ -13,17 +14,93 @@ import { readPublicSurface } from '../m0-public-surface.mjs';
 import { buildFiniteDeclarations } from '../m0-finite-declarations.mjs';
 import { buildDerivedSourceProvenance } from '../m0-derived-source-provenance.mjs';
 import { buildExportSourceBindings } from '../m0-export-source-bindings.mjs';
+import { buildCapabilityMap, writeCapabilityMap } from '../m0-capability-map.mjs';
+import { buildFinalScopeRelations } from '../m0-final-scope-relations.mjs';
+import { buildFinalPublicClosure } from '../m0-final-public-closure.mjs';
 import { projectTemplateSource } from '../m0-template-projection.mjs';
 import { RELEASE_ID, RELEASE_PACKAGES } from '../release-catalog.mjs';
 import { validateExports } from '../audit-packages.mjs';
 import { main as rebuildM4Evidence } from '../a-m4-evidence.mjs';
-import { args, read, save, sha256, newOutput, html } from './c-evidence-lib.mjs';
+import { args, read, save, sha256, newOutput, html, safeFile } from './c-evidence-lib.mjs';
 
 const scopes = new Set(['M4_REQUIRED', 'M7_TRANSFER', 'SOURCE_CONTEXT']);
 const count = (rows, key) => rows.reduce((out, row) => (out[row[key]] = (out[row[key]] ?? 0) + 1, out), {});
 const sourceSuffixes = ['', '.ts', '.tsx', '.d.ts', '.js', '.jsx', '/index.ts', '/index.tsx', '/index.d.ts', '/index.js',
   '.native.ts', '.native.tsx', '.ios.ts', '.ios.tsx', '.android.ts', '.android.tsx', '.web.ts', '.web.tsx'];
 const sourceCodePattern = /\.(?:[cm]?[jt]s|[jt]sx)$/;
+
+export function loadRelationInputs(manifestFile) {
+  const root = path.dirname(path.resolve(manifestFile)), manifest = read(manifestFile), receipts = new Map();
+  assert.equal(manifest.schemaVersion, 1, 'Invalid relation input manifest');
+  const verify = (ref, content = false) => {
+    assert.match(ref?.sha256 ?? '', /^[a-f0-9]{64}$/, 'Missing relation input hash');
+    if (receipts.has(ref.path)) {
+      assert.equal(receipts.get(ref.path).sha256, ref.sha256, 'Conflicting relation receipt');
+      if (!content) return;
+    }
+    const file = safeFile(root, ref.path), bytes = fs.readFileSync(file);
+    assert.equal(sha256(bytes), ref.sha256, `Relation input hash mismatch: ${ref.path}`);
+    receipts.set(ref.path, { path: ref.path, sha256: ref.sha256, bytes: bytes.length });
+    return bytes;
+  };
+  const values = {};
+  for (const key of ['seedFacts', 'sharedReview', 'review', 'census', 'semanticRelations']) {
+    const ref = manifest.inputs?.[key], bytes = verify(ref, true);
+    values[key] = JSON.parse(ref.path.endsWith('.gz') ? gunzipSync(bytes) : bytes);
+    // Like loadCapabilityMapInputs, consume the frozen seed facts themselves.
+    // Their historical planning-document citations are not executable inputs.
+    if (key !== 'seedFacts') for (const receipt of values[key].inputs ?? []) verify(receipt);
+  }
+  const source = values.seedFacts.source;
+  for (const field of ['revision', 'tree']) {
+    assert.ok(typeof source?.[field] === 'string' && source[field], 'Missing relation source identity');
+    for (const value of Object.values(values)) assert.equal(value.source?.[field], source[field], 'Relation input source identity differs');
+  }
+  for (const binding of values.semanticRelations.sourceBindings) {
+    verify({ path: binding.reference, sha256: binding.referenceSha256 });
+    if (binding.publicImpactReview) verify({ path: binding.publicImpactReview.reference, sha256: binding.publicImpactReview.referenceSha256 });
+  }
+  return { ...values, sourceFiles: values.census.files, semanticFiles: values.semanticRelations.sourceBindings,
+    historicalSeedReferencesNotReplayed: values.seedFacts.inputs ?? [],
+    receipts: [...receipts.values()], manifestSha256: sha256(fs.readFileSync(manifestFile)) };
+}
+
+// Rebuild in this graph's namespace. Historical TYPE ordinals and the portable
+// A-M4-REACHABILITY IDs are not keys into a different graph's memberships.
+export function buildCapabilityRelations({ surface, scope, relations }) {
+  for (const field of ['revision', 'tree']) assert.equal(relations.review.source?.[field], surface.source[field], 'Scope review source differs');
+  const capabilityMap = buildCapabilityMap({ surface, seedFacts: relations.seedFacts,
+    sharedReview: relations.sharedReview, pluginContracts: relations.pluginContracts ?? null });
+  const scopeRelations = buildFinalScopeRelations({ ...capabilityMap, review: relations.review,
+    sourceFiles: relations.sourceFiles, semanticFiles: relations.semanticFiles });
+  const memberships = new Map(capabilityMap.memberships.filter(row => row.table === 'members').map(row => [row.recordId, row]));
+  const members = new Map(surface.members.map(row => [row.id, row]));
+  const declarations = new Map(surface.declarations.map(row => [row.id, row]));
+  const blockers = [], memberReview = [];
+  for (const row of scope.rows.filter(row => row.kind === 'public-member-candidate')) {
+    const membership = memberships.get(row.id), member = members.get(row.id);
+    const refs = (member?.declarationIds ?? []).map(id => declarations.get(id));
+    const matches = membership && row.declarations?.length && row.declarations.every(ref => refs.some(actual =>
+      actual && ['path', 'sha256', 'start', 'end'].every(key => ref[key] !== undefined && actual[key] === ref[key])));
+    const valid = Boolean(matches && (row.scope !== 'M4_REQUIRED' || membership.capabilityIds.length));
+    if (!valid) blockers.push({ code: 'MEMBER_RELATION_NOT_PROVEN', recordId: row.id,
+      reason: !membership ? 'MEMBER_NOT_IN_CURRENT_GRAPH' : !matches ? 'DECLARATION_IDENTITY_DIFFERS' : 'REQUIRED_MEMBER_WITHOUT_CAPABILITY' });
+    memberReview.push({ recordId: row.id, originalMembershipId: row.membershipId,
+      membershipId: membership?.id ?? null, capabilityIds: membership?.capabilityIds ?? [],
+      scope: row.scope, status: valid ? 'REBUILT_FROM_CURRENT_GRAPH' : 'BLOCKED' });
+  }
+  return { capabilityMap, scopeRelations, memberReview, blockers,
+    reconstruction: 'NEW_SOURCE_RECONSTRUCTION', harmonySupportAccepted: false, stageClosable: false };
+}
+
+export function completeSourceRelations({ rebuilt, surface, publicDispositions, plugins }) {
+  const requested = rebuilt.capabilityMap.memberships.filter(row =>
+    ['types', 'members'].includes(row.table) && !row.sourceRefs.length);
+  const derived = buildDerivedSourceProvenance({ ...surface, requested });
+  return buildFinalPublicClosure({ ...surface, memberships: rebuilt.capabilityMap.memberships,
+    publicDispositions, scopeRelations: rebuilt.scopeRelations, finite: { artifact: rebuilt.finite },
+    derived, exportBindings: rebuilt.exportBindings, plugins });
+}
 
 export function relativeSourceTargets(file, content, availablePaths) {
   if (!sourceCodePattern.test(file)) return [];
@@ -43,12 +120,20 @@ export function relativeSourceTargets(file, content, availablePaths) {
   };
   visit(ast);
   const targets = new Set();
+  const projectedPaths = new Map();
+  if (projection.projection) for (const raw of availablePaths.keys()) {
+    if (!raw.includes('{%')) continue;
+    const projected = projectTemplateSource({ path: raw, text: raw.replaceAll('{%-', '<%-').replaceAll('%}', '%>') }).text;
+    if (projectedPaths.has(projected)) throw new Error(`Ambiguous template source: ${projected}`);
+    projectedPaths.set(projected, raw);
+  }
   for (const request of requests) {
     const base = path.posix.normalize(path.posix.join(path.posix.dirname(file), request));
     const stems = [base, base.replace(/\.[cm]?jsx?$/, '')];
     for (const stem of stems) for (const suffix of sourceSuffixes) {
       const candidate = stem + suffix;
       if (sourceCodePattern.test(candidate) && availablePaths.has(candidate)) targets.add(candidate);
+      if (sourceCodePattern.test(candidate) && projectedPaths.has(candidate)) targets.add(projectedPaths.get(candidate));
     }
   }
   return [...targets].sort();
@@ -128,14 +213,19 @@ export function auditScope(document) {
     harmonySupportAccepted: false, stageClosable: false };
 }
 
-export function buildSourceClosure({ scope, surface, files, relativeAssetTargets = [] }) {
+export function buildSourceClosure({ scope, surface, files, relativeAssetTargets = [], relations = null,
+  supplementalExports = [], packageTargets = [], ambientBindings = [] }) {
   const memberRows = scope.rows.filter(row => row.kind === 'public-member-candidate');
   const exportRows = scope.rows.filter(row => row.kind === 'public-export');
   const bindings = memberRows.flatMap(row => {
     const declaration = row.declarations?.find(item => item.path && Number.isInteger(item.start) && Number.isInteger(item.end));
     return declaration ? [{ id: row.id, path: declaration.path, start: declaration.start, end: declaration.end }] : [];
   });
-  const finiteInventory = buildFiniteDeclarations({ files, bindings: [] });
+  // Supplemental template exports use the export builder's source projection;
+  // the finite member builder consumes only the declarations requested here.
+  const finitePaths = new Set(bindings.map(row => row.path));
+  const finiteFiles = files.filter(row => finitePaths.has(row.path));
+  const finiteInventory = buildFiniteDeclarations({ files: finiteFiles, bindings: [] });
   const resolvable = [], unresolvedFinite = [];
   for (const binding of bindings) {
     const matches = finiteInventory.declarations.filter(row => row.path === binding.path
@@ -143,21 +233,23 @@ export function buildSourceClosure({ scope, surface, files, relativeAssetTargets
     if (matches.length) resolvable.push(binding);
     else unresolvedFinite.push(binding);
   }
-  const finite = buildFiniteDeclarations({ files, bindings: resolvable });
+  const finite = buildFiniteDeclarations({ files: finiteFiles, bindings: resolvable });
   const derived = buildDerivedSourceProvenance({
     types: surface.types, members: surface.members, typeEdges: surface.typeEdges,
     declarations: surface.declarations, exports: surface.exports,
     requested: memberRows.map(row => ({ table: 'members', recordId: row.id })),
   });
   const exportBindings = buildExportSourceBindings({
-    files,
+    files, packageTargets, ambientBindings,
     relativeAssetTargets,
-    requested: exportRows.filter(row => row.source?.path && row.name).map(row => ({ id: row.id, path: row.source.path, name: row.name })),
+    requested: [...new Map([...exportRows.filter(row => row.source?.path && row.name).map(row => ({ id: row.id, path: row.source.path, name: row.name })),
+      ...supplementalExports].map(row => [row.id, row])).values()],
   });
   const finiteIds = new Set(finite.bindings.map(row => row.id));
   const derivedIds = new Set(derived.records.map(row => row.recordId));
   const exportIds = new Set(exportBindings.bindings.map(row => row.id));
-  const blockers = [
+  const relationResult = relations ? buildCapabilityRelations({ surface, scope, relations }) : null;
+  const blockers = relationResult ? [...relationResult.blockers] : [
     { code: 'MISSING_CAPABILITY_RELATIONS_INPUT', required: ['capabilities', 'dependencies', 'seedDecisions', 'scope review decisions'],
       reason: 'The portable bundle does not contain the historical capability/use relation inputs.' },
     { code: 'MISSING_FULL_MEMBERSHIP_INPUT', required: ['complete memberships for entries, exports, types, members, plugins and candidateDispositions'],
@@ -172,19 +264,21 @@ export function buildSourceClosure({ scope, surface, files, relativeAssetTargets
     blockers.push({ code: 'MISSING_EXPORT_SOURCE_BINDING', table: 'exports', recordId: row.id });
   }
   for (const row of derived.blockers) blockers.push({ code: 'DERIVED_SOURCE_BLOCKER', table: row.table, recordId: row.recordId, reason: row.reason });
-  return { finite, derived, exportBindings, scopeRelations: null, finalClosure: null, blockers,
+  return { finite, derived, exportBindings, scopeRelations: relationResult?.scopeRelations ?? null,
+    capabilityMap: relationResult?.capabilityMap ?? null, memberReview: relationResult?.memberReview ?? [], finalClosure: null, blockers,
     summary: { finiteBindings: finite.bindings.length, derivedRecords: derived.records.length,
       derivedBlockers: derived.blockers.length, exportBindings: exportBindings.bindings.length, exportBlockers: exportBindings.blockers.length },
     harmonySupportAccepted: false, stageClosable: false };
 }
 
-export function sourceEvidence(scope, sourceGit, sourceRoot) {
+export function sourceEvidence(scope, sourceGit, sourceRoot, additionalSources = []) {
   const fixed = verifyFixedSource(sourceGit), entries = new Map(fixed.entries.map(row => [row.path, row]));
   const requested = new Set();
   for (const row of scope.rows) {
     if (row.source?.path && entries.has(row.source.path)) requested.add(row.source.path);
     for (const declaration of row.declarations ?? []) if (declaration.path && entries.has(declaration.path)) requested.add(declaration.path);
   }
+  for (const ref of additionalSources) if (entries.has(ref.path)) requested.add(ref.path);
   const blobs = new Map();
   const selected = [...requested].map(file => entries.get(file));
   for (let offset = 0; offset < selected.length; offset += 100) {
@@ -212,6 +306,7 @@ export function sourceEvidence(scope, sourceGit, sourceRoot) {
     acceptanceId: row.acceptanceId ?? null, batch: row.batch ?? null, source: receipt(row.source, row.id),
     declarations: (row.declarations ?? []).map(ref => receipt(ref, row.id)), relationStatus: 'SOURCE_RELATION_VERIFIED',
     runtimeStatus: 'NOT_RUN', harmonySupportAccepted: false }));
+  for (const ref of additionalSources) receipt(ref, `SUPPLEMENTAL-EXPORT:${ref.path}`);
   const relativeAssetTargets = [];
   for (const row of expandRelativeSourceEvidence({ contents, entries, assetRelations: relativeAssetTargets,
     readBlobs: batch => readSourceBlobs(sourceGit, batch) })) receipts.set(`fixed-expo-git:${row.path}`, row);
@@ -770,14 +865,22 @@ export async function verifyCandidatePublicSurface({ candidateFile, scope, sourc
 }
 
 export async function main(argv) {
-  const a = args(argv, ['source-root', 'reconstruction', 'scope', 'candidate', 'mode', 'output']);
+  const a = args(argv, ['source-root', 'reconstruction', 'scope', 'candidate', 'mode', 'output', 'relations']);
   for (const key of ['source-root', 'reconstruction', 'scope', 'mode', 'output']) assert.ok(a[key], `Missing --${key}`);
   assert.ok(['source', 'candidate'].includes(a.mode), 'Mode must be source or candidate');
   assert.equal(Boolean(a.candidate), a.mode === 'candidate', 'Candidate mode requires --candidate and source mode forbids it');
   const output = newOutput(a.output), scope = read(a.scope), audit = auditScope(scope);
-  const evidence = sourceEvidence(scope, path.join(a.reconstruction, 'expo-official.git'), a['source-root']);
   const surface = readPublicSurface(path.join(a.reconstruction, 'public-surface.json'));
-  const rebuilt = buildSourceClosure({ scope, surface, files: evidence.files, relativeAssetTargets: evidence.relativeAssetTargets });
+  const relations = a.relations ? loadRelationInputs(a.relations) : null;
+  const supplementalExports = relations ? surface.exports.filter(row => !row.declarationIds?.length)
+    .map(row => ({ id: row.id, path: row.moduleId.slice('MODULE:'.length), name: row.name })) : [];
+  const packageTargets = relations ? surface.entries.filter(row => row.request === '@expo/config-plugins').flatMap(row =>
+    (row.target.projectionCandidates ?? []).map(candidate => ({ request: row.request, path: candidate.path, entryId: row.id, config: candidate.config }))) : [];
+  const ambientBindings = relations ? [{ request: 'xcode', name: 'XcodeProject', path: 'packages/@expo/cli/ts-declarations/xcode/index.d.ts' }] : [];
+  const evidence = sourceEvidence(scope, path.join(a.reconstruction, 'expo-official.git'), a['source-root'],
+    [...supplementalExports, ...packageTargets, ...ambientBindings]);
+  const rebuilt = buildSourceClosure({ scope, surface, files: evidence.files, relativeAssetTargets: evidence.relativeAssetTargets,
+    relations, supplementalExports, packageTargets, ambientBindings });
   const sourceErrors = [...audit.errors];
   if (evidence.source.revision !== '5b42e3d21e0ac5e086752361ca8a5cb4de53bec1' || evidence.source.tree !== '5457e824b21d968e55c8f533cdf1751860160a92') sourceErrors.push('Fixed Expo identity mismatch');
   if (!audit.relationClosed) sourceErrors.push('Reviewed scope explicitly remains incomplete');
@@ -802,6 +905,32 @@ export async function main(argv) {
     pluginReplay = { valid: false, error: error.message };
   }
   const pluginBlockers = pluginReplay.valid ? [] : [{ code: 'PLUGIN_CONTRACT_REPLAY_FAILED', reason: pluginReplay.error }];
+  if (relations) {
+    save(path.join(output, 'relation-input-audit.json'), { manifestSha256: relations.manifestSha256, receipts: relations.receipts,
+      historicalSeedReferencesNotReplayed: relations.historicalSeedReferencesNotReplayed,
+      reconstruction: 'NEW_SOURCE_RECONSTRUCTION', historicalAcceptanceRestored: false });
+    writeCapabilityMap(path.join(output, 'capability-map.json'), rebuilt.capabilityMap);
+    save(path.join(output, 'member-relations.json'), rebuilt.memberReview);
+    if (pluginReplay.valid) {
+      const dispositionFile = path.join(a.reconstruction, 'public-dispositions.json');
+      const receipt = read(path.join(a.reconstruction, 'reconstruction-manifest.json')).files.find(row => row.path === 'public-dispositions.json');
+      assert.equal(sha256(fs.readFileSync(dispositionFile)), receipt?.sha256, 'Reconstructed dispositions changed');
+      const full = completeSourceRelations({ rebuilt, surface, publicDispositions: read(dispositionFile),
+        plugins: read(path.join(output, 'plugin-contracts.json')) });
+      // Use the existing final-closure shard format; avoid a single huge JSON string.
+      const parts = path.join(output, 'final-public-closure.json.parts'); fs.mkdirSync(parts);
+      const recordShards = [];
+      for (let at = 0; at < full.records.length; at += 256) {
+        const rows = full.records.slice(at, at + 256), bytes = gzipSync(JSON.stringify(rows)), hash = sha256(bytes), file = `${hash}.json.gz`;
+        fs.writeFileSync(path.join(parts, file), bytes, { flag: 'wx' });
+        recordShards.push({ path: file, sha256: hash, count: rows.length, firstId: rows[0].id, lastId: rows.at(-1).id });
+      }
+      const { records, ...metadata } = full;
+      save(path.join(output, 'final-public-closure.json'), { ...metadata, recordCount: records.length, recordShards });
+      publicClosure.finalClosure = { path: 'final-public-closure.json', summary: full.summary };
+      rebuilt.blockers.push(...full.blockers.map(row => ({ ...row, code: 'FINAL_SOURCE_RELATION_BLOCKER' })));
+    }
+  }
   const blockers = [...sourceErrors, ...rebuilt.blockers, ...pluginBlockers, ...coverage.errors];
   publicClosure.blockers = blockers;
   publicClosure.relationClosed = blockers.length === 0;
@@ -815,7 +944,7 @@ export async function main(argv) {
   save(path.join(output, 'finite-declarations.json'), rebuilt.finite);
   save(path.join(output, 'derived-source-provenance.json'), rebuilt.derived);
   save(path.join(output, 'export-source-bindings.json'), rebuilt.exportBindings);
-  save(path.join(output, 'scope-relations.json'), { status: 'BLOCKED_MISSING_INPUTS', value: rebuilt.scopeRelations,
+  save(path.join(output, 'scope-relations.json'), { status: rebuilt.scopeRelations ? 'NEW_SOURCE_RECONSTRUCTION' : 'BLOCKED_MISSING_INPUTS', value: rebuilt.scopeRelations,
     blocker: rebuilt.blockers.find(row => row.code === 'MISSING_CAPABILITY_RELATIONS_INPUT') });
   save(path.join(output, 'plugin-contract-verification.json'), pluginReplay);
   save(path.join(output, 'candidate-coverage.json'), coverage);

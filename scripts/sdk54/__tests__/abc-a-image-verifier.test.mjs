@@ -44,6 +44,15 @@ test('fit and unmount quiet window rejects any additional native callbacks',()=>
   assert.equal(verifyImageEvents(success(),'quiet',4,'1',null,null),4);
   assert.throws(()=>verifyImageEvents([...success(),{boot:'1',sequence:5,name:'loadEnd'}],'quiet',4,'1',null,null));
 });
+test('quiet windows reject malformed, duplicated and reversed event sequences instead of filtering them away',()=>{
+  for(const sequence of [undefined,null,0,-1,NaN,Infinity,1.5,'5',Number.MAX_SAFE_INTEGER+1]){
+    const events=[...success(),{boot:'1',sequence,name:'loadEnd'}];
+    assert.throws(()=>verifyImageEvents(events,'quiet',4,'1',null,null),/event sequence/i);
+  }
+  for(const sequence of [4,3]){
+    assert.throws(()=>verifyImageEvents([...success(),{boot:'1',sequence,name:'loadEnd'}],'quiet',4,'1',null,null),/event sequence/i);
+  }
+});
 test('native failures end once and unsupported static methods reject their code',()=>{
   const events=[{boot:'1',sequence:1,name:'loadStart'},{boot:'1',sequence:2,name:'error',payload:{error:'ERR_IMAGE_LOAD: 401'}},{boot:'1',sequence:3,name:'loadEnd'}];
   assert.equal(verifyImageEvents(events,'loadError',0,'1',null,null),3);

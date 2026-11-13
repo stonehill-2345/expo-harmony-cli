@@ -38,3 +38,20 @@ test('HTML report renders safe relative evidence links as clickable navigation',
   assert.doesNotMatch(report,/href="\.\.\/escape\.html"/);
   assert.doesNotMatch(report,/href="https:\/\//);
 });
+
+test('relation input bundle verifies dependency receipts and can move without rewriting originals',async t=>{
+  const {loadRelationInputs}=await import('../abc/c-public-closure.mjs');
+  assert.equal(typeof loadRelationInputs,'function');
+  const root=fixture(t), source={revision:'fixed',tree:'tree'};
+  const write=(name,value)=>{const bytes=JSON.stringify(value);fs.writeFileSync(path.join(root,name),bytes);return {path:name,sha256:sha256(bytes)};};
+  const dependency=write('witness.json',{value:'fixed witness'});
+  const inputs={seedFacts:write('seeds.json',{source,inputs:[{kind:'plan',path:'unavailable-historical-plan.md',sha256:'f'.repeat(64)}]}),sharedReview:write('shared.json',{source:{...source,sourceDir:'/old/machine'},inputs:[dependency]}),review:write('review.json',{source}),
+    census:write('census.json',{source,files:[]}),semanticRelations:write('semantic.json',{source,sourceBindings:[]})};
+  const file=path.join(root,'relations.json');fs.writeFileSync(file,JSON.stringify({schemaVersion:1,inputs}));
+  assert.deepEqual(loadRelationInputs(file).sourceFiles,[]);
+  const moved=path.join(root,'moved');fs.mkdirSync(moved);
+  for(const name of ['relations.json',...Object.values(inputs).map(r=>r.path),'witness.json'])fs.copyFileSync(path.join(root,name),path.join(moved,name));
+  assert.deepEqual(loadRelationInputs(path.join(moved,'relations.json')).seedFacts.source,source);
+  fs.writeFileSync(path.join(moved,'witness.json'),'{}');assert.throws(()=>loadRelationInputs(path.join(moved,'relations.json')),/hash/i);
+  inputs.review.path='../review.json';fs.writeFileSync(file,JSON.stringify({schemaVersion:1,inputs}));assert.throws(()=>loadRelationInputs(file),/Unsafe/);
+});

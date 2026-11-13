@@ -45,6 +45,15 @@ export function compareImagePixels(screen,source,bounds,fit) {
   return {checked,matched,ratio};
 }
 export function verifyImageEvents(events,kind,after,boot,sourceName,source) {
+  // Validate before filtering: malformed or repeated callbacks must not vanish
+  // from the quiet window used to detect callbacks after unmount.
+  assert.ok(Number.isSafeInteger(after)&&after>=0,'Invalid event sequence cursor');
+  assert.ok(Array.isArray(events),'Invalid image events');
+  let previous=0;
+  for(const event of events){
+    assert.ok(Number.isSafeInteger(event?.sequence)&&event.sequence>previous,'Invalid event sequence');
+    previous=event.sequence;
+  }
   const current=events.filter(e=>e.sequence>after);
   current.forEach((e,i)=>{assert.equal(e.boot,boot,'Old runtime event');assert.equal(e.sequence,after+i+1,'Missing or duplicate event');});
   const names=kind==='load'?['loadStart','load','loadEnd','display']:['loadError','unsupported'].includes(kind)?['loadStart','error','loadEnd']:kind==='prefetch'?['prefetchRejected']:[];
