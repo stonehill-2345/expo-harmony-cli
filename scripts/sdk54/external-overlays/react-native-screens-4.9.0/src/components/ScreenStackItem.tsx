@@ -45,6 +45,10 @@ function ScreenStackItem(
   const currentScreenRef = React.useRef<View | null>(null);
   const willDisappearEmitted = React.useRef(false);
   const disappearEmitted = React.useRef(false);
+  const onWillDisappearRef = React.useRef(onWillDisappear);
+  const onDisappearRef = React.useRef(onDisappear);
+  onWillDisappearRef.current = onWillDisappear;
+  onDisappearRef.current = onDisappear;
   const screenRefs = React.useContext(RNSScreensRefContext);
 
   React.useImperativeHandle(ref, () => currentScreenRef.current!);
@@ -70,14 +74,14 @@ function ScreenStackItem(
   const emitWillDisappear = React.useCallback((event: any) => {
     if (willDisappearEmitted.current) return;
     willDisappearEmitted.current = true;
-    onWillDisappear?.(event);
-  }, [onWillDisappear]);
+    onWillDisappearRef.current?.(event);
+  }, []);
   const emitDisappear = React.useCallback((event: any) => {
     emitWillDisappear(event);
     if (disappearEmitted.current) return;
     disappearEmitted.current = true;
-    onDisappear?.(event);
-  }, [emitWillDisappear, onDisappear]);
+    onDisappearRef.current?.(event);
+  }, [emitWillDisappear]);
   React.useEffect(() => {
     if (Platform.OS !== 'harmony' || stackPresentation !== 'formSheet') return;
     return () => {

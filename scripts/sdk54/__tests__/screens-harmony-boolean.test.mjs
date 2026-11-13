@@ -72,11 +72,17 @@ test('Harmony form-sheet children receive a layout container for backgrounds and
   assert.equal(view().props.style[0].position, 'absolute');
 });
 
-test('Harmony form-sheet cleanup emits closing lifecycle once when native callbacks are absent', () => {
-  const cleanups = [];
+test('Harmony form-sheet handler rerenders do not emit closing before the actual unmount', () => {
+  const slots = [];
+  let cursor = 0;
+  const same = (left, right) => left?.length === right?.length && left.every((value, index) => Object.is(value, right[index]));
   const React = { createElement: (type, props, ...children) => ({ type, props, children }), Fragment: 'Fragment',
-    useRef: value => ({current: value}), useContext: () => null, useImperativeHandle() {},
-    useEffect: fn => { const cleanup = fn(); if (cleanup) cleanups.push(cleanup); }, useCallback: fn => fn, forwardRef: fn => fn };
+    useRef(value) { const index = cursor++; slots[index] ??= { value: { current: value } }; return slots[index].value; },
+    useContext() { cursor++; return null; }, useImperativeHandle() { cursor++; },
+    useCallback(fn, deps) { const index = cursor++, previous = slots[index]; if (previous && same(previous.deps, deps)) return previous.value;
+      slots[index] = { deps: [...deps], value: fn }; return fn; },
+    useEffect(fn, deps) { const index = cursor++, previous = slots[index]; if (previous && same(previous.deps, deps)) return;
+      previous?.cleanup?.(); slots[index] = { deps: [...deps], cleanup: fn() }; }, forwardRef: fn => fn };
   const reactNative = { Platform: { OS: 'harmony' }, View: 'View', StyleSheet: {create: value => value, flatten: value => value} };
   const exported = {};
   vm.runInNewContext(fs.readFileSync(path.join(overlay, 'lib/commonjs/components/ScreenStackItem.js'), 'utf8'), {
@@ -84,9 +90,12 @@ test('Harmony form-sheet cleanup emits closing lifecycle once when native callba
     require: name => name === 'react' ? React : name === 'react-native' ? reactNative : name === 'warn-once' ? () => {} : {},
   });
   const calls = [];
-  exported.default({stackPresentation:'formSheet',children:'content',headerConfig:{hidden:true},
-    onWillDisappear:()=>calls.push('will'),onDisappear:()=>calls.push('end')},null);
-  assert.equal(cleanups.length,1);
-  cleanups[0]();cleanups[0]();
-  assert.deepEqual(calls,['will','end']);
+  const render = suffix => { cursor = 0; exported.default({stackPresentation:'formSheet',children:'content',headerConfig:{hidden:true},
+    onWillDisappear:()=>calls.push(`will-${suffix}`),onDisappear:()=>calls.push(`end-${suffix}`)},null); };
+  render('first');
+  render('latest');
+  assert.deepEqual(calls, []);
+  for (const slot of slots) slot?.cleanup?.();
+  for (const slot of slots) slot?.cleanup?.();
+  assert.deepEqual(calls,['will-latest','end-latest']);
 });

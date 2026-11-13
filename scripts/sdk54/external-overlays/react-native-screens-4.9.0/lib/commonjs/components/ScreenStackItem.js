@@ -33,6 +33,10 @@ function ScreenStackItem({
   const currentScreenRef = React.useRef(null);
   const willDisappearEmitted = React.useRef(false);
   const disappearEmitted = React.useRef(false);
+  const onWillDisappearRef = React.useRef(onWillDisappear);
+  const onDisappearRef = React.useRef(onDisappear);
+  onWillDisappearRef.current = onWillDisappear;
+  onDisappearRef.current = onDisappear;
   const screenRefs = React.useContext(_contexts.RNSScreensRefContext);
   React.useImperativeHandle(ref, () => currentScreenRef.current);
   const isHeaderInModal = _reactNative.Platform.OS === 'android' ? false : stackPresentation !== 'push' && headerConfig?.hidden === false;
@@ -46,14 +50,14 @@ function ScreenStackItem({
   const emitWillDisappear = React.useCallback(event => {
     if (willDisappearEmitted.current) return;
     willDisappearEmitted.current = true;
-    onWillDisappear?.(event);
-  }, [onWillDisappear]);
+    onWillDisappearRef.current?.(event);
+  }, []);
   const emitDisappear = React.useCallback(event => {
     emitWillDisappear(event);
     if (disappearEmitted.current) return;
     disappearEmitted.current = true;
-    onDisappear?.(event);
-  }, [emitWillDisappear, onDisappear]);
+    onDisappearRef.current?.(event);
+  }, [emitWillDisappear]);
   React.useEffect(() => {
     if (_reactNative.Platform.OS !== 'harmony' || stackPresentation !== 'formSheet') return;
     return () => {
