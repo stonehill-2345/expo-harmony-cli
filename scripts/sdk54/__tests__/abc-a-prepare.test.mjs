@@ -21,7 +21,7 @@ function fixture(t) {
 test('validates every frozen archive and release identity without altering files',async t=>{
   const {validateCandidate}=await import('../abc/a-prepare.mjs'); const root=fixture(t);
   const before=fs.readdirSync(root).map(f=>[f,fs.readFileSync(path.join(root,f))]);
-  assert.equal(validateCandidate(root).packages.length,15);
+  assert.equal(validateCandidate(root).packages.length,16);
   for(const [file,bytes] of before) assert.deepEqual(fs.readFileSync(path.join(root,file)),bytes);
 });
 for(const fault of ['hash','release','duplicate','empty','path']) test(`rejects candidate ${fault}`,async t=>{
@@ -48,19 +48,23 @@ test('resource phase changes bytes at the same URI then disables plugins without
   assert.throws(()=>advanceResources(root,'updated'));
 });
 
-test('both scenarios include required icon/config and preserve original navigation pages',async t=>{
+test('all prepare scenarios preserve their fixture sources without replacing the package plan',async t=>{
   const {writeScenarioFixtures}=await import('../abc/a-prepare.mjs');const root=fixture(t);
-  for(const kind of ['resources','navigation']){
+  for(const kind of ['resources','navigation','default']){
     const project=path.join(root,kind);fs.mkdirSync(project);
+    fs.writeFileSync(path.join(project,'package.json'),JSON.stringify({name:`prepared-${kind}`}));
     if(kind==='resources'){
       const fonts=path.join(project,'node_modules/@expo/vector-icons/build/vendor/react-native-vector-icons/Fonts');fs.mkdirSync(fonts,{recursive:true});fs.copyFileSync('packages/expo-font/harmony/example/fixtures/a-oracle-test.ttf',path.join(fonts,'MaterialIcons.ttf'));
     }
-    writeScenarioFixtures(project,kind);assert.ok(fs.statSync(path.join(project,'icon.png')).size>0);
+    writeScenarioFixtures(project,kind);assert.equal(JSON.parse(fs.readFileSync(path.join(project,'package.json'))).name,`prepared-${kind}`);
+    assert.ok(fs.statSync(path.join(project,kind==='default'?'assets/images/react-logo.png':'icon.png')).size>0);
     if(kind==='navigation'){
       assert.equal(JSON.parse(fs.readFileSync(path.join(project,'app.json'))).expo.icon,'./icon.png');
       for(const file of ['(tabs)/index.tsx','(tabs)/_layout.tsx','details/[id].tsx','drawer/index.tsx','sheet-cases.tsx'])assert.deepEqual(fs.readFileSync(path.join(project,'app',file)),fs.readFileSync(path.join('packages/expo-modules-core/harmony/example/router/step3-app',file)));
-    }else{
+    }else if(kind==='resources'){
       const {createRequire}=await import('node:module');const config=createRequire(path.join(project,'package.json'))('./app.config.js');assert.equal(config.expo.icon,'./icon.png');assert.deepEqual(config.expo.plugins.map(p=>p[0]),['expo-font','expo-asset']);
+    }else{
+      for(const file of ['app/(tabs)/index.tsx','app/(tabs)/explore.tsx','app/modal.tsx','app/_layout.tsx','app.json'])assert.deepEqual(fs.readFileSync(path.join(project,file)),fs.readFileSync(path.join('templates/expo-template-default',file)));
     }
   }
 });

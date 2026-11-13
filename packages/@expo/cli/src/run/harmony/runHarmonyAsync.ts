@@ -86,10 +86,23 @@ export async function runHarmonyAsync(
   return { hap, target, harmonyRoot: native.harmonyRoot };
 }
 async function updateMetroPortAsync(projectRoot: string, port: number) {
-  const p = path.join(projectRoot, 'harmony/entry/src/main/ets/pages/Index.ets');
-  const s = await fs.promises.readFile(p, 'utf8');
+  const indexPath = path.join(projectRoot, 'harmony/entry/src/main/ets/pages/Index.ets');
+  const index = await fs.promises.readFile(indexPath, 'utf8');
   await fs.promises.writeFile(
-    p,
-    s.replace(/127\.0\.0\.1:\d+(?=\/[^'\"]*\.bundle)/g, `127.0.0.1:${port}`)
+    indexPath,
+    index.replace(/127\.0\.0\.1:\d+(?=\/[^'\"]*\.bundle)/g, `127.0.0.1:${port}`)
   );
+  const abilityPath = path.join(
+    projectRoot,
+    'harmony/entry/src/main/ets/entryability/EntryAbility.ets'
+  );
+  const ability = await fs.promises.readFile(abilityPath, 'utf8');
+  const updatedAbility = ability.replace(
+    /(host:\s*'127\.0\.0\.1',\s*port:\s*)\d+/,
+    `$1${port}`
+  );
+  if (updatedAbility === ability) {
+    throw new Error(`Harmony Debug packager port was not found in ${abilityPath}`);
+  }
+  await fs.promises.writeFile(abilityPath, updatedAbility);
 }

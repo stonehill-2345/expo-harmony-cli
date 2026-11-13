@@ -6,15 +6,19 @@ const semver = createRequire(new URL('../../../apps/cli/package.json', import.me
 import { SDK54_PACKAGES, EXPECTED_INTERNAL_EDGES } from '../catalog.mjs';
 import { RELEASE_PACKAGES, rewriteReleaseManifest, createReleaseManifest } from '../release-catalog.mjs';
 
-test('release covers all fourteen Expo packages and screens without the product CLI', () => {
-  assert.equal(RELEASE_PACKAGES.length, 15);
-  assert.equal(new Set(RELEASE_PACKAGES.map(p => p.publishName)).size, 15);
+test('release covers all fourteen workspace packages, screens and ExpoImage without the product CLI', () => {
+  assert.equal(RELEASE_PACKAGES.length, 16);
+  assert.equal(new Set(RELEASE_PACKAGES.map(p => p.publishName)).size, 16);
   assert.ok(!RELEASE_PACKAGES.some(p => p.installName === 'expo-harmony-cli'));
   for (const p of SDK54_PACKAGES) {
     const release = RELEASE_PACKAGES.find(r => r.installName === p.name);
     assert.equal(release.upstreamVersion, p.version);
     assert.equal(release.publishVersion, semver.inc(p.version, 'patch'));
   }
+  const image = RELEASE_PACKAGES.find(p => p.installName === 'expo-image');
+  assert.equal(image.upstreamVersion, '3.0.11');
+  assert.equal(image.publishName, '@expo-oh/expo-image');
+  assert.equal(image.publishVersion, '3.0.12');
 });
 
 test('rewrite preserves dependency keys, optional peers and source manifests', () => {
@@ -38,8 +42,10 @@ test('runtime manifest maps template packages without patch dependencies', () =>
   const manifest = createReleaseManifest();
   assert.equal(manifest.schemaVersion, 1);
   assert.equal(manifest.cliVersion, '1.6.0');
-  assert.equal(manifest.packages.length, 15);
+  assert.equal(manifest.packages.length, 16);
   assert.equal(manifest.packages.find(p => p.installName === 'expo').installSpec, 'npm:@expo-oh/expo@54.0.38');
+  assert.equal(manifest.packages.find(p => p.installName === 'expo-image').installSpec, 'npm:@expo-oh/expo-image@3.0.12');
+  assert.ok(manifest.templates.default.expoPackages.includes('expo-image'));
   assert.ok(!manifest.templates.default.devDependencies['patch-package']);
   assert.ok(manifest.templates.default.externalPackages.includes('@react-native-ohos/react-native-screens'));
 });

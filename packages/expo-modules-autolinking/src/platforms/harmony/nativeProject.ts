@@ -20,18 +20,18 @@ type OwnedLifecycleDependency = HarmonyLifecycleDependency & {
   packageName: string;
 };
 
-export const RNOH_COMPATIBILITY_ID = 'expo-rnoh-0.82.30-core-v1-v3';
+export const RNOH_COMPATIBILITY_ID = 'expo-rnoh-0.82.30-core-v1-v4';
 export const RNOH_INPUT_HAR_SHA256 =
   'cac2b5d1b9ce7d306079218931db12489aaceb240002c9c32e6c13185c577011';
 export const RNOH_OUTPUT_HAR_SHA256 =
-  '0e0cf3dbb5b2e510f49c819ff5db2f43ad5a5918d38e840cc2714055c9f6fd83';
+  'b6f643f3131e89f108f4d96c3ed95ca66c562d71a1dc2b88f57bbcb2a3d1f226';
 
 export interface RunCompatibilityToolOptions {
   pythonExecutable: string;
   scriptPath: string;
   inputHarPath: string;
   outputHarPath: string;
-  profile: 'core-v1-v3';
+  profile: 'core-v1-v4';
 }
 
 export type RunCompatibilityTool = (options: RunCompatibilityToolOptions) => Promise<void>;

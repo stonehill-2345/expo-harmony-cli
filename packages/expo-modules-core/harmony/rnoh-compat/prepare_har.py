@@ -79,6 +79,6 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--input-har', required=True, type=Path)
     parser.add_argument('--output-har', required=True, type=Path)
-    parser.add_argument('--profile', choices=['structured-rejection-v1', 'core-v1-v3'], default='core-v1-v3')
+    parser.add_argument('--profile', choices=['structured-rejection-v1', 'core-v1-v3', 'core-v1-v4'], default='core-v1-v4')
     args = parser.parse_args()
     prepare(args.input_har, args.output_har, args.profile)

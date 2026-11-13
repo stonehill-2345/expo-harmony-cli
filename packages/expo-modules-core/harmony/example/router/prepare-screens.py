@@ -38,6 +38,7 @@ CPP_BINDER_AFTER = CPP_BINDER_BEFORE + b'\n            {"RNSBottomTabs", std::ma
 
 def patch_sheet(data):
     text = data.decode()
+    text = text.replace("import { window } from '@kit.ArkUI';", "import { window, display } from '@kit.ArkUI';", 1)
     marker = '  @State sheetAllowedDetents: number[] = [];'
     text = text.replace(marker, '''
   @State sheetVisible: boolean = false;
@@ -47,6 +48,8 @@ def patch_sheet(data):
   private sheetClosing: boolean = false;
   private sheetDismissed: boolean = false;
   private sheetNativeDismiss: boolean = false;
+  private sheetWillDisappearEmitted: boolean = false;
+  private sheetDisappearEmitted: boolean = false;
 '''+marker)
     start = text.index('        RNViewBase({ ctx: this.ctx, tag: this.tag }) {', text.index('  build() {'))
     end = text.index('\n      }\n      .onAreaChange', start)
@@ -111,6 +114,37 @@ def patch_sheet(data):
     return value === -1 ? SheetSize.FIT_CONTENT : `${value * 100}%`;
   }
 
+  private isUndimmedDetent(): boolean {
+    return this.sheetLargestUndimmedDetent >= 0 &&
+      this.sheetDetentIndex <= this.sheetLargestUndimmedDetent;
+  }
+
+  private forwardUndimmedOutsideTouch(event: TouchEvent): void {
+    if (!this.isUndimmedDetent()) return;
+    const point = event.touches[0] ?? event.changedTouches[0];
+    const detent = this.sheetAllowedDetents[this.sheetDetentIndex] ?? 1;
+    if (!point || detent <= 0 || point.windowY >= display.getDefaultDisplaySync().height * (1 - detent)) return;
+    const current = this.viewTagArr.indexOf(this.tag);
+    const pageIndex = RNSScreen.TOP_PAGEID_ARR.indexOf(this.pageId);
+    const parentTag = current > 0 ? this.viewTagArr[current - 1] :
+      (pageIndex > 0 ? RNSScreen.TOP_PAGE_TAG_MAP.get(RNSScreen.TOP_PAGEID_ARR[pageIndex - 1]) : undefined);
+    if (!parentTag) return;
+    this.ctx.rnInstance.postTouchEventMessageToCpp(parentTag, event);
+  }
+
+  private emitSheetWillDisappear(): void {
+    if (this.sheetWillDisappearEmitted) return;
+    this.sheetWillDisappearEmitted = true;
+    this.eventEmitter?.emit('willDisappear', {});
+  }
+
+  private emitSheetDisappear(): void {
+    this.emitSheetWillDisappear();
+    if (this.sheetDisappearEmitted) return;
+    this.sheetDisappearEmitted = true;
+    this.eventEmitter?.emit('disappear', {});
+  }
+
   private dismissSheet(native: boolean): boolean {
     if (!this.sheetVisible || this.sheetClosing) return false;
     if (this.preventNativeDismiss || this.getPreventFlag()) {
@@ -120,7 +154,7 @@ def patch_sheet(data):
     if (native && !this.gestureEnabled) return false;
     this.sheetClosing = true;
     this.sheetNativeDismiss = native;
-    this.eventEmitter?.emit('willDisappear', {});
+    this.emitSheetWillDisappear();
     this.sheetVisible = false;
     return true;
   }
@@ -160,7 +194,12 @@ def patch_sheet(data):
         this.sheetDetentIndex = nearest;
         this.eventEmitter?.emit('sheetDetentChanged', { index: nearest, isStable: true });
       },
-      shouldDismiss: (action: SheetDismiss) => {
+      onWillDismiss: (action: DismissSheetAction) => {
+        if (action.reason === DismissReason.TOUCH_OUTSIDE && this.isUndimmedDetent()) {
+          this.sheetVisible = true;
+          setTimeout(() => { this.sheetVisible = true; }, 0);
+          return;
+        }
         if (this.dismissSheet(true)) action.dismiss();
       },
       onDisappear: () => {
@@ -168,7 +207,7 @@ def patch_sheet(data):
         this.sheetClosing = false;
         this.sheetDismissed = true;
         // Deliver the native completion while the JS route/listeners still exist.
-        this.eventEmitter?.emit('disappear', {});
+        this.emitSheetDisappear();
         this.backBtnPressed(this.sheetNativeDismiss);
       },
     };
@@ -183,10 +222,11 @@ def patch_sheet(data):
     text = text.replace('        await this.updateState(true);', '        await this.updateState(true);\n        if (this.isFormSheet()) {\n          this.sheetDismissed = false;\n          this.sheetVisible = true;\n        }',1)
     text = text.replace('  private backBtnPressed(f: boolean) {', '  private backBtnPressed(f: boolean) {\n    if (this.isFormSheet() && this.sheetVisible) {\n      this.dismissSheet(f);\n      return;\n    }',1)
     text = text.replace('      .onBackPressed(() => {', '      .onBackPressed(() => {\n        if (this.handleSheetBack()) return true;',1)
+    text = text.replace('  aboutToDisappear() {\n    this.cleanupCommandCallback?.()', '  aboutToDisappear() {\n    if (this.isFormSheet()) {\n      this.emitSheetWillDisappear();\n      this.emitSheetDisappear();\n    }\n    this.cleanupCommandCallback?.()',1)
     text = text.replace('      .onWillDisappear(() => {', '      .onWillDisappear(() => {\n        this.sheetVisible = false;',1)
-    text = text.replace('this.eventEmitter!.emit("willDisappear", {})', 'if (!this.isFormSheet() || (!this.sheetClosing && !this.sheetDismissed)) this.eventEmitter!.emit("willDisappear", {})')
-    text = text.replace('this.eventEmitter!.emit("disappear", {})', 'if (!this.isFormSheet() || (!this.sheetClosing && !this.sheetDismissed)) this.eventEmitter!.emit("disappear", {})')
-    text = text.replace('      .mode(this.presentationMode)', '      .mode(this.presentationMode)\n      .hitTestBehavior(this.isFormSheet() ? HitTestMode.Transparent : HitTestMode.Default)',1)
+    text = text.replace('this.eventEmitter!.emit("willDisappear", {})', 'if (this.isFormSheet()) this.emitSheetWillDisappear(); else this.eventEmitter!.emit("willDisappear", {})')
+    text = text.replace('this.eventEmitter!.emit("disappear", {})', 'if (this.isFormSheet()) this.emitSheetDisappear(); else this.eventEmitter!.emit("disappear", {})')
+    text = text.replace('      .mode(this.presentationMode)', '      .mode(this.presentationMode)\n      .hitTestBehavior(this.isFormSheet() ? HitTestMode.Transparent : HitTestMode.Default)\n      .onTouch((event: TouchEvent) => { this.forwardUndimmedOutsideTouch(event); })',1)
     text = text.replace('      .backgroundColor(this.backgroundColorValue)', "      .backgroundColor(this.isFormSheet() ? '#00000000' : this.backgroundColorValue)",1)
     text = text.replace('        if (this.gestureEnabled && this.fullScreenSwipeEnabled && !this.isRootStackGesturePopDisallowed()) {', '        if (!this.isFormSheet() && this.gestureEnabled && this.fullScreenSwipeEnabled && !this.isRootStackGesturePopDisallowed()) {',1)
     return text.encode()
@@ -257,7 +297,7 @@ def prepare(source, target):
                     result.addfile(member, payload)
     result_bytes = output.getvalue()
     manifest = {
-        'profile': 'screens-4.9.0-navigation-sheet-v9',
+        'profile': 'screens-4.9.0-navigation-sheet-v14',
         'inputSHA256': INPUT_SHA,
         'outputSHA256': sha(result_bytes),
         'source': SOURCE,

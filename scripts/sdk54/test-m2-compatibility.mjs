@@ -38,7 +38,7 @@ try {
   process.env.PATH = '/nonexistent/python-disabled';
   const copies = [];
   for (const artifact of manifest.artifacts) {
-    const inputHarPath = sources[artifact.transform === 'rnoh-core-v1-v3' ? 'rnohHarPath' : artifact.transform === 'screens-content-wrapper-v1' ? 'screensHarPath' : 'workletsHarPath'];
+    const inputHarPath = sources[artifact.transform === 'rnoh-core-v1-v4' ? 'rnohHarPath' : artifact.transform === 'screens-content-wrapper-v1' ? 'screensHarPath' : 'workletsHarPath'];
     const outputHarPath = path.join(consumer, `${artifact.transform}.har`);
     const options = { corePackageRoot, inputHarPath, outputHarPath, transform: artifact.transform };
     await api.copyReleasedHarmonyHarAsync(options);

@@ -19,7 +19,7 @@ test('staging expo adds runtime metadata and license without changing source', a
     assert.equal(output.name, '@expo-oh/expo');
     assert.ok(output.files.includes('harmony-release.json'));
     assert.ok(fs.readFileSync(path.join(directory, 'LICENSE'), 'utf8').includes('MIT'));
-    assert.equal(JSON.parse(fs.readFileSync(path.join(directory, 'harmony-release.json'))).packages.length, 15);
+    assert.equal(JSON.parse(fs.readFileSync(path.join(directory, 'harmony-release.json'))).packages.length, 16);
     assert.equal(output.scripts.prepare, undefined);
     const readme = fs.readFileSync(path.join(directory, 'README.md'), 'utf8');
     assert.equal(readme, readReleaseReadme(RELEASE_PACKAGES.find(p => p.installName === 'expo')));

@@ -48,7 +48,7 @@ test('Screens uses native booleans for Harmony optional boolean props', (t) => {
 
 test('Harmony form-sheet children receive a layout container for backgrounds and touch hit testing', () => {
   const React = { createElement: (type, props, ...children) => ({ type, props, children }), Fragment: 'Fragment',
-    useRef: value => ({current: value}), useContext: () => null, useImperativeHandle() {}, useEffect() {}, forwardRef: fn => fn };
+    useRef: value => ({current: value}), useContext: () => null, useImperativeHandle() {}, useEffect() {}, useCallback: fn => fn, forwardRef: fn => fn };
   const reactNative = { Platform: { OS: 'harmony' }, View: 'View', StyleSheet: {create: value => value, flatten: value => value} };
   const exported = {};
   vm.runInNewContext(fs.readFileSync(path.join(overlay, 'lib/commonjs/components/ScreenStackItem.js'), 'utf8'), {
@@ -56,8 +56,8 @@ test('Harmony form-sheet children receive a layout container for backgrounds and
     require: name => name === 'react' ? React : name === 'react-native' ? reactNative : name === 'warn-once' ? () => {} : {},
   });
   const view = (props = {}) => exported.default({stackPresentation: 'formSheet', ...props, children: 'content', headerConfig: {hidden: true}}, null).children[0].children[0];
-  assert.equal(view().props.style[0].flex, 1);
-  assert.equal(view().children[0].props.style[0].flex, 1);
+  assert.equal(view().props.style[0], null);
+  assert.equal(view().children[0].props.style[0], null);
   assert.equal(view({sheetAllowedDetents: 'fitToContents'}).props.style[0], null);
   assert.equal(view({sheetAllowedDetents: 'fitToContents'}).children[0].props.style[0], null);
   assert.equal(view({stackPresentation: 'push'}).props.style[0].flex, 1);
@@ -70,4 +70,32 @@ test('Harmony form-sheet children receive a layout container for backgrounds and
   assert.equal(view().props.style[0], null);
   reactNative.Platform.OS = 'ios';
   assert.equal(view().props.style[0].position, 'absolute');
+});
+
+test('Harmony form-sheet handler rerenders do not emit closing before the actual unmount', () => {
+  const slots = [];
+  let cursor = 0;
+  const same = (left, right) => left?.length === right?.length && left.every((value, index) => Object.is(value, right[index]));
+  const React = { createElement: (type, props, ...children) => ({ type, props, children }), Fragment: 'Fragment',
+    useRef(value) { const index = cursor++; slots[index] ??= { value: { current: value } }; return slots[index].value; },
+    useContext() { cursor++; return null; }, useImperativeHandle() { cursor++; },
+    useCallback(fn, deps) { const index = cursor++, previous = slots[index]; if (previous && same(previous.deps, deps)) return previous.value;
+      slots[index] = { deps: [...deps], value: fn }; return fn; },
+    useEffect(fn, deps) { const index = cursor++, previous = slots[index]; if (previous && same(previous.deps, deps)) return;
+      previous?.cleanup?.(); slots[index] = { deps: [...deps], cleanup: fn() }; }, forwardRef: fn => fn };
+  const reactNative = { Platform: { OS: 'harmony' }, View: 'View', StyleSheet: {create: value => value, flatten: value => value} };
+  const exported = {};
+  vm.runInNewContext(fs.readFileSync(path.join(overlay, 'lib/commonjs/components/ScreenStackItem.js'), 'utf8'), {
+    exports: exported,
+    require: name => name === 'react' ? React : name === 'react-native' ? reactNative : name === 'warn-once' ? () => {} : {},
+  });
+  const calls = [];
+  const render = suffix => { cursor = 0; exported.default({stackPresentation:'formSheet',children:'content',headerConfig:{hidden:true},
+    onWillDisappear:()=>calls.push(`will-${suffix}`),onDisappear:()=>calls.push(`end-${suffix}`)},null); };
+  render('first');
+  render('latest');
+  assert.deepEqual(calls, []);
+  for (const slot of slots) slot?.cleanup?.();
+  for (const slot of slots) slot?.cleanup?.();
+  assert.deepEqual(calls,['will-latest','end-latest']);
 });

@@ -10,7 +10,7 @@ import { startCandidateRegistry } from '../candidate-registry.mjs';
 import { createReleaseManifest } from '../release-catalog.mjs';
 import { verifyRelease } from '../verify-npm-release.mjs';
 import { assertExternalConsumerWorkspace } from '../creation-workspace.mjs';
-import { isMain, json, repository, scenario, sha256, writeJSON } from './a-common.mjs';
+import { isMain, json, repository, sha256, writeJSON } from './a-common.mjs';
 
 export function validateCandidate(directory) {
   const candidate=json(path.join(directory,'candidate.json')),release=json(path.join(directory,'release.json'));
@@ -66,7 +66,15 @@ export async function oraclePackage(output) {
 }
 
 export function writeScenarioFixtures(project,kind) {
-  scenario(kind);
+  assert.ok(['resources','navigation','default'].includes(kind),'scenario must be resources, navigation or default');
+  if(kind==='default'){
+    const source=path.join(repository,'templates/expo-template-default');
+    for(const entry of fs.readdirSync(source)){
+      if(entry==='package.json')continue;
+      fs.cpSync(path.join(source,entry),path.join(project,entry),{recursive:true});
+    }
+    return;
+  }
   fs.copyFileSync(path.join(repository,'packages/expo-modules-core/harmony/example/host/harmony/AppScope/resources/base/media/app_icon.png'),path.join(project,'icon.png'));
   if(kind==='navigation'){
     const source=path.join(repository,'packages/expo-modules-core/harmony/example/router');
@@ -85,7 +93,7 @@ export function writeScenarioFixtures(project,kind) {
 }
 
 export async function prepare({scenario:kind,candidate,project,output,pm='npm'}) {
-  scenario(kind);assert.ok(['npm','pnpm'].includes(pm),'Invalid package manager');
+  assert.ok(['resources','navigation','default'].includes(kind),'scenario must be resources, navigation or default');assert.ok(['npm','pnpm'].includes(pm),'Invalid package manager');
   for(const dir of [project,output])assert.equal(fs.existsSync(dir),false,`Directory already exists: ${dir}`);
   assertExternalConsumerWorkspace(project,repository);
   for(const [a,b] of [[project,output],[output,project],[output,candidate],[project,candidate]])assert.ok(a!==b&&!b.startsWith(a+path.sep)&&!a.startsWith(b+path.sep),'Overlapping paths');
@@ -94,7 +102,7 @@ export async function prepare({scenario:kind,candidate,project,output,pm='npm'})
   // This is the B-owned package plan; A does not invent a parallel dependency graph.
   const require=createRequire(import.meta.url);
   const {buildReleasePackageJson}=require('../../../apps/cli/dist/sdk54/release-manifest.js');
-  const manifest=buildReleasePackageJson({name:`a-${kind}`,version:'0.0.0',private:true,main:kind==='navigation'?'expo-router/entry':'index.js'},'default',createReleaseManifest());
+  const manifest=buildReleasePackageJson({name:`a-${kind}`,version:'0.0.0',private:true,main:kind==='resources'?'index.js':'expo-router/entry'},'default',createReleaseManifest());
   if(kind==='navigation')manifest.dependencies['@react-navigation/drawer']='7.5.0';
   fs.mkdirSync(output,{recursive:true});fs.mkdirSync(project,{recursive:true});
   const packages=[...validated.packages];
@@ -125,7 +133,7 @@ export async function prepare({scenario:kind,candidate,project,output,pm='npm'})
 if(isMain(import.meta.url)) {
   try{
     const {values}=parseArgs({options:{scenario:{type:'string'},candidate:{type:'string'},project:{type:'string'},output:{type:'string'},pm:{type:'string',default:'npm'},help:{type:'boolean'}}});
-    if(values.help)console.log('a-prepare.mjs --scenario resources|navigation --candidate <B candidate directory> --project <new external directory> --output <new evidence directory> [--pm npm|pnpm]\nRequires Node 22, installed workspace tools and built apps/cli/dist. Uses the B package plan and read-only candidate registry. Does not build, launch, publish or claim acceptance.');
+    if(values.help)console.log('a-prepare.mjs --scenario resources|navigation|default --candidate <B candidate directory> --project <new external directory> --output <new evidence directory> [--pm npm|pnpm]\nRequires Node 22, installed workspace tools and built apps/cli/dist. Uses the B package plan and read-only candidate registry. Does not build, launch, publish or claim acceptance.');
     else{for(const key of ['scenario','candidate','project','output'])assert.ok(values[key],`--${key} is required`);console.log(JSON.stringify(await prepare({...values,candidate:path.resolve(values.candidate),project:path.resolve(values.project),output:path.resolve(values.output)}),null,2));}
   }catch(error){console.error(error.stack);process.exitCode=1;}
 }

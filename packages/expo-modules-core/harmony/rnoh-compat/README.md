@@ -1,6 +1,6 @@
 # SDK-owned RNOH compatibility artifact
 
-`expo-rnoh-0.82.30-core-v1-v3` includes the A-RNOH-001 fix: the published
+`expo-rnoh-0.82.30-core-v1-v4` includes the A-RNOH-001 fix: the published
 RNOH 0.82.30 ArkTS Promise bridge drops native error fields other than `message`.
 This is a **local SDK compatibility artifact**, not an official RNOH release or
 a new Expo business implementation. Do not apply this patch inside an application
@@ -42,10 +42,10 @@ the tool below repackages the HAR but does not claim to precompile all RNOH.
 ```sh
 python3 packages/expo-modules-core/harmony/rnoh-compat/prepare_har.py \
   --input-har /absolute/path/react_native_openharmony.har \
-  --output-har /private/tmp/expo-deps/rnoh-0.82.30-core-v1-v3.har
+  --output-har /private/tmp/expo-deps/rnoh-0.82.30-core-v1-v4.har
 ```
 
-`rnoh-0.82.30-core-v1-v3.json` pins the complete input HAR hash, native package
+`rnoh-0.82.30-core-v1-v4.json` pins the complete input HAR hash, native package
 version, and both original/patch/result source hashes. A mismatch
 fails closed, not a fuzzy apply. Output must not already exist. The output HAR
 and adjacent `.manifest.json` record original/patched identities. They are local
@@ -58,10 +58,10 @@ Use the artifact through the SDK fixture assembler:
 node packages/expo-modules-core/harmony/example/tools/prepare-fixture.cjs \
   --sdk-root "$PWD" --fixture-root /private/tmp/expo-a0-patched \
   --tooling-root /absolute/path/typescript-tooling \
-  --har /private/tmp/expo-deps/rnoh-0.82.30-core-v1-v3.har
+  --har /private/tmp/expo-deps/rnoh-0.82.30-core-v1-v4.har
 ```
 
-The default profile is `core-v1-v3`; the failed v2 candidate is evidence-only. Use `--profile structured-rejection-v1`
+The default profile is `core-v1-v4`; v4 also lets generated abilities bind the Metro control socket to the selected Debug port. The failed v2 candidate is evidence-only. Use `--profile structured-rejection-v1`
 only to reproduce the previous single-file artifact; its original lock and patch
 remain unchanged. A successful v1 interop test is not proof of stable Release
 surface reload.

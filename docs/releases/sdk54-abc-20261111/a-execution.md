@@ -157,7 +157,7 @@ N02 必须从 Sheet two 的 35% 档位开始采集 `before`，实际切到后台
 
 上述规则需由 C 复核，并用 B 的原始 layout/event/screenshot 重放。主机合成负例仅证明校验器行为，不替代本轮真实设备回归；当前没有改写历史证据，也没有关闭 S08/S10/S12/S15。
 
-Screens 转换器 v9 将 Sheet 内容与屏幕全高 RNViewBase 分开，透明宿主页不拦截外部触摸；系统返回使用同一关闭守卫。按钮关闭先隐藏浮层，等 ArkUI `onDisappear` 发送关闭完成事件后再移除路由。普通 Stack 和外部路由移除保留原生命周期。必须使用新包/候选/HAP 重跑这些行为，不能沿用 v8 的 HAP 结果。
+Screens 转换器 v14 将 Sheet 内容与屏幕全高 RNViewBase 分开；Harmony formSheet 的 JS wrapper 不再保留全屏 Fabric hit area。undimmed 外部触摸使用静态页面栈映射找到前一屏 RN tag 并转发原始 TouchEvent，同时保持 sheet 可见。JS wrapper 继续幂等转发生命周期并在程序化卸载时补发 closing transition。系统返回使用同一关闭守卫，普通 Stack 保留原生命周期。必须使用新包/候选/HAP 重跑这些行为，不能沿用 v11 或更早 HAP 结果。
 
 ## 6. 聚合契约与 B runner 绑定
 

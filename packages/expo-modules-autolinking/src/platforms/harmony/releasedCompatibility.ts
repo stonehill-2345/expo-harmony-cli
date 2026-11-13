@@ -89,7 +89,7 @@ async function replaceFile(destination: string, contents: Buffer): Promise<void>
 }
 
 export async function copyReleasedRnohCompatibilityHarAsync(options: CopyOptions): Promise<string> {
-  await copyReleasedHarmonyHarAsync({ ...options, transform: 'rnoh-core-v1-v3' });
+  await copyReleasedHarmonyHarAsync({ ...options, transform: 'rnoh-core-v1-v4' });
   return options.outputHarPath;
 }
 
@@ -100,7 +100,7 @@ export async function copyReleasedHarmonyHarAsync({
   outputHarPath,
   corePackageRoot,
 }: CopyOptions & {
-  transform: NonNullable<HarmonyHarConfig['transform']> | 'rnoh-core-v1-v3';
+  transform: NonNullable<HarmonyHarConfig['transform']> | 'rnoh-core-v1-v4';
 }): Promise<void> {
   const expected = policy.artifacts.find((item) => item.transform === transform);
   if (!expected) throw new Error(`Unsupported released compatibility transform: ${transform}`);

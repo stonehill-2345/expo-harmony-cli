@@ -5,6 +5,7 @@ import { fileURLToPath } from 'node:url';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 
 export function releaseReadmePath(descriptor) {
+  if (descriptor.installName === 'expo-image') return 'docs/harmony/packages/expo-image.md';
   return descriptor.relativePath
     ? `${descriptor.relativePath}/README.md`
     : 'docs/harmony/packages/react-native-screens.md';

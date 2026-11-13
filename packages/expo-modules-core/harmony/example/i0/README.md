@@ -9,8 +9,8 @@ runs module checks **after** the unchanged 50 Core assertions.
 ## Prepare and build
 
 Use Node22, the existing TypeScript5.9.2 tooling environment and the approved
-`expo-rnoh-0.82.30-core-v1-v3` HAR (SHA256
-`0e0cf3dbb5b2e510f49c819ff5db2f43ad5a5918d38e840cc2714055c9f6fd83`).
+`expo-rnoh-0.82.30-core-v1-v4` HAR (SHA256
+`b6f643f3131e89f108f4d96c3ed95ca66c562d71a1dc2b88f57bbcb2a3d1f226`).
 Use a **new** fixture directory. On macOS pass the canonical `/private/tmp` path
 to Metro, not the `/tmp` symlink. Do not edit installed dependencies.
 

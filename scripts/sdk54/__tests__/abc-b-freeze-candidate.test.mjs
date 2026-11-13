@@ -67,6 +67,7 @@ async function fixture(t) {
   await create({ cwd: cliRoot, file: path.join(directory, cliFile), gzip: true, prefix: 'package/' }, fs.readdirSync(cliRoot));
   fs.writeFileSync(path.join(directory, 'release.json'), JSON.stringify({
     release: 'sdk54-expo-oh-harmony.1', packages, failures: [],
+    expoImageUpstreamSha256: 'e17879a4cc6cebdf50efadf3170956b2601363f1525f0426b10859a6154178bb',
   }));
   fs.writeFileSync(path.join(sourceRoot, 'README.md'), 'source');
   execFileSync('git', ['add', '.'], { cwd: sourceRoot });
@@ -74,10 +75,10 @@ async function fixture(t) {
   return { sourceRoot, directory, output, cliFile };
 }
 
-test('freezes fifteen runtime packages and an independent CLI with auditable identities', async (t) => {
+test('freezes sixteen runtime packages and an independent CLI with auditable identities', async (t) => {
   const { sourceRoot, directory, output, cliFile } = await fixture(t);
   const result = await freezeCandidate({ directory, sourceRoot, output });
-  assert.equal(result.runtimePackages.length, 15);
+  assert.equal(result.runtimePackages.length, 16);
   assert.equal(result.cli.file, cliFile);
   assert.equal(result.source.dirty, false);
   assert.deepEqual(result.failures, []);
@@ -87,7 +88,7 @@ test('freezes fifteen runtime packages and an independent CLI with auditable ide
     missingBuild: [],
   });
   const candidate = JSON.parse(fs.readFileSync(path.join(output, 'candidate.json'), 'utf8'));
-  assert.equal(candidate.packages.length, 15);
+  assert.equal(candidate.packages.length, 16);
   assert.deepEqual(candidate.failures, []);
   for (const entry of candidate.packages) {
     const bytes = fs.readFileSync(path.join(output, entry.file));
@@ -111,6 +112,15 @@ test('fails closed on an existing output or stale plugin build declarations', as
   const extra = path.join(second.sourceRoot, 'packages/expo-font/plugin/src/missing.ts');
   fs.mkdirSync(path.dirname(extra), { recursive: true });
   fs.writeFileSync(extra, 'missing');
+  execFileSync('git', ['add', '.'], { cwd: second.sourceRoot });
+  execFileSync('git', ['commit', '-qm', 'stale plugin source'], { cwd: second.sourceRoot });
   await assert.rejects(() => freezeCandidate(second), /missing plugin build outputs/);
   assert.equal(fs.existsSync(second.output), false);
+});
+
+test('fails closed before freezing a dirty source tree', async (t) => {
+  const dirty = await fixture(t);
+  fs.appendFileSync(path.join(dirty.sourceRoot, 'README.md'), '\ndirty\n');
+  await assert.rejects(() => freezeCandidate(dirty), /source must be clean before candidate freeze/);
+  assert.equal(fs.existsSync(dirty.output), false);
 });

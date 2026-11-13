@@ -15,8 +15,8 @@ also imports Gesture Handler and Reanimated, so this candidate needs all five
 native packages even for a basic Stack bundle. Harmony Worklets **1.0.0** is the
 published adapter for upstream Worklets **0.7.1**.
 
-The native host uses the previously accepted `expo-rnoh-0.82.30-core-v1-v3` HAR,
-SHA256 `0e0cf3dbb5b2e510f49c819ff5db2f43ad5a5918d38e840cc2714055c9f6fd83`.
+The native host uses `expo-rnoh-0.82.30-core-v1-v4`, SHA256
+`b6f643f3131e89f108f4d96c3ed95ca66c562d71a1dc2b88f57bbcb2a3d1f226`.
 Normal OHPM root overrides unify adapter RNOH/Worklets dependencies; dependency
 sources and HAR manifests are not edited. Screens' original RNOH 0.82.18
 declaration alone is not a compatibility result.

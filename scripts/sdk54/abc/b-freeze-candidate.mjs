@@ -6,7 +6,7 @@ import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { extract, list } from 'tar';
 
-import { RELEASE_ID, RELEASE_PACKAGES } from '../release-catalog.mjs';
+import { EXPO_IMAGE_UPSTREAM_SHA256, RELEASE_ID, RELEASE_PACKAGES } from '../release-catalog.mjs';
 
 const sha256 = (bytes) => crypto.createHash('sha256').update(bytes).digest('hex');
 const sha512 = (bytes) => `sha512-${crypto.createHash('sha512').update(bytes).digest('base64')}`;
@@ -89,7 +89,16 @@ export async function freezeCandidate({ directory, sourceRoot, output }) {
   const release = JSON.parse(fs.readFileSync(releaseFile, 'utf8'));
   if (release.release !== RELEASE_ID || !Array.isArray(release.packages)
     || release.packages.length !== RELEASE_PACKAGES.length || !Array.isArray(release.failures)
-    || release.failures.length) throw new Error('release must contain the complete successful fifteen-package set');
+    || release.failures.length || release.expoImageUpstreamSha256 !== EXPO_IMAGE_UPSTREAM_SHA256) {
+    throw new Error(`release must contain the complete successful ${RELEASE_PACKAGES.length}-package set and pinned ExpoImage input`);
+  }
+  const sourceStatus = git(source, ['status', '--porcelain=v1', '--untracked-files=all']);
+  const sourceRecord = {
+    revision: git(source, ['rev-parse', 'HEAD']),
+    dirty: Boolean(sourceStatus),
+    changes: sourceStatus ? sourceStatus.split(/\r?\n/) : [],
+  };
+  if (sourceRecord.dirty) throw new Error('source must be clean before candidate freeze');
 
   const expected = new Map(RELEASE_PACKAGES.map((item) => [item.installName, item]));
   const runtimePackages = [];
@@ -144,12 +153,6 @@ export async function freezeCandidate({ directory, sourceRoot, output }) {
     members: cliInspection.members,
   };
 
-  const sourceStatus = git(source, ['status', '--porcelain=v1', '--untracked-files=all']);
-  const sourceRecord = {
-    revision: git(source, ['rev-parse', 'HEAD']),
-    dirty: Boolean(sourceStatus),
-    changes: sourceStatus ? sourceStatus.split(/\r?\n/) : [],
-  };
   const temporary = `${destination}.tmp-${process.pid}`;
   fs.mkdirSync(temporary, { recursive: false });
   try {
@@ -172,6 +175,7 @@ export async function freezeCandidate({ directory, sourceRoot, output }) {
         compatibility: (release.compatibility?.artifacts ?? []).map(({ packageName, packageVersion, inputSHA256, outputSHA256 }) => ({
           packageName, packageVersion, inputSHA256, outputSHA256,
         })),
+        expoImageUpstreamSha256: release.expoImageUpstreamSha256,
       },
       runtimePackages,
       cli,

@@ -27,10 +27,10 @@ export FIXTURE=/private/tmp/expo-core-a0-new
 # SDK-side dependency build; do not patch the application's installed dependencies.
 python3 "$EXAMPLE/../rnoh-compat/prepare_har.py" \
   --input-har /absolute/path/original/react_native_openharmony.har \
-  --output-har /private/tmp/expo-deps/rnoh-0.82.30-core-v1-v3.har
+  --output-har /private/tmp/expo-deps/rnoh-0.82.30-core-v1-v4.har
 node "$EXAMPLE/tools/prepare-fixture.cjs" \
   --sdk-root "$SDK" --fixture-root "$FIXTURE" --tooling-root /tmp/expo-a0-tools \
-  --har /private/tmp/expo-deps/rnoh-0.82.30-core-v1-v3.har
+  --har /private/tmp/expo-deps/rnoh-0.82.30-core-v1-v4.har
 # Omitting --har intentionally uses the original 0.82.30 HAR, which loses error codes.
 node "$EXAMPLE/tools/verify-install.cjs" "$FIXTURE"
 bash "$EXAMPLE/tools/build-hap.sh" "$FIXTURE" debug
