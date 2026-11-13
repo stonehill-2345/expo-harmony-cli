@@ -1,0 +1,39 @@
+--- a/src/main/ets/RNOH/RNAbility.ets
++++ b/src/main/ets/RNOH/RNAbility.ets
+@@ -17,6 +17,7 @@
+ import { HttpClient, DefaultHttpClient } from '../HttpClient';
+ import { deviceInfo } from '@kit.BasicServicesKit';
+ import { OH_API_LEVEL_15 } from '.';
++import type { JSPackagerClientConfig } from './JSPackagerClient';
+ 
+ /**
+  Application developers are expected to extend this class. RNAbility aims to move much of the code to the RNOH side in order to improve stability.
+@@ -74,6 +75,16 @@
+    */
+   protected getRNOHWorkerScriptUrl(): string | undefined {
+     return undefined
++  }
++
++  /**
++   * Override this method when the Metro control socket does not use the default port.
++   */
++  protected getPackagerClientConfig(buildMode: "DEBUG" | "RELEASE"): JSPackagerClientConfig | undefined {
++    return buildMode === "DEBUG" ? {
++      host: "localhost",
++      port: 8081
++    } : undefined
+   }
+ 
+   /**
+@@ -172,10 +183,7 @@
+     }, {
+       disableCleaningRNInstances: this.onShouldDisableCleaningRNInstances(),
+       launchURI: want.uri,
+-      onGetPackagerClientConfig: (buildMode) => buildMode === "DEBUG" ? {
+-        host: "localhost",
+-        port: 8081
+-      } : undefined,
++      onGetPackagerClientConfig: (buildMode) => this.getPackagerClientConfig(buildMode),
+       defaultHttpClient: this.onCreateDefaultHttpClient()
+     })
+     AppStorage.setOrCreate('RNOHCoreContext', this.rnInstancesCoordinator.getRNOHCoreContext())

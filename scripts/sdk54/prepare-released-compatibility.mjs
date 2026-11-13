@@ -63,7 +63,7 @@ export async function prepareReleasedCompatibility({ rootDir, corePackageRoot, r
     for (const [index, item] of RELEASED_COMPATIBILITY_POLICY.artifacts.entries()) {
       const toolDirectory = path.join(bundle, 'tools', item.transform);
       fs.mkdirSync(toolDirectory, { recursive: true });
-      const rnoh = item.transform === 'rnoh-core-v1-v3';
+      const rnoh = item.transform === 'rnoh-core-v1-v4';
       const source = path.join(rootDir, rnoh ? 'packages/expo-modules-core/harmony/rnoh-compat' : 'packages/expo-modules-autolinking/scripts/harmony');
       const names = rnoh ? fs.readdirSync(source).filter(name => /\.(py|json|patch)$/.test(name)).sort() : [item.transform.startsWith('screens') ? 'prepare-screens.py' : 'prepare-worklets.py'];
       const tools = names.map(name => {
@@ -73,7 +73,7 @@ export async function prepareReleasedCompatibility({ rootDir, corePackageRoot, r
       });
       const script = path.join(toolDirectory, rnoh ? 'prepare_har.py' : names[0]);
       const output = path.join(bundle, item.file);
-      execFileSync(pythonExecutable, [script, '--input-har', path.resolve(inputs[index]), '--output-har', output, ...(rnoh ? ['--profile', 'core-v1-v3'] : [])], { stdio: 'pipe', maxBuffer: 4 * 1024 * 1024 });
+      execFileSync(pythonExecutable, [script, '--input-har', path.resolve(inputs[index]), '--output-har', output, ...(rnoh ? ['--profile', 'core-v1-v4'] : [])], { stdio: 'pipe', maxBuffer: 4 * 1024 * 1024 });
       if (digest(output) !== item.outputSHA256) throw new Error(`Released ${item.transform} output SHA256 mismatch`);
       const recordFile = `${output}.manifest.json`;
       const record = JSON.parse(fs.readFileSync(recordFile));

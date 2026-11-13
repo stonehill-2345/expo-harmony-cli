@@ -48,7 +48,7 @@ test('Screens uses native booleans for Harmony optional boolean props', (t) => {
 
 test('Harmony form-sheet children receive a layout container for backgrounds and touch hit testing', () => {
   const React = { createElement: (type, props, ...children) => ({ type, props, children }), Fragment: 'Fragment',
-    useRef: value => ({current: value}), useContext: () => null, useImperativeHandle() {}, useEffect() {}, forwardRef: fn => fn };
+    useRef: value => ({current: value}), useContext: () => null, useImperativeHandle() {}, useEffect() {}, useCallback: fn => fn, forwardRef: fn => fn };
   const reactNative = { Platform: { OS: 'harmony' }, View: 'View', StyleSheet: {create: value => value, flatten: value => value} };
   const exported = {};
   vm.runInNewContext(fs.readFileSync(path.join(overlay, 'lib/commonjs/components/ScreenStackItem.js'), 'utf8'), {
@@ -56,8 +56,8 @@ test('Harmony form-sheet children receive a layout container for backgrounds and
     require: name => name === 'react' ? React : name === 'react-native' ? reactNative : name === 'warn-once' ? () => {} : {},
   });
   const view = (props = {}) => exported.default({stackPresentation: 'formSheet', ...props, children: 'content', headerConfig: {hidden: true}}, null).children[0].children[0];
-  assert.equal(view().props.style[0].flex, 1);
-  assert.equal(view().children[0].props.style[0].flex, 1);
+  assert.equal(view().props.style[0], null);
+  assert.equal(view().children[0].props.style[0], null);
   assert.equal(view({sheetAllowedDetents: 'fitToContents'}).props.style[0], null);
   assert.equal(view({sheetAllowedDetents: 'fitToContents'}).children[0].props.style[0], null);
   assert.equal(view({stackPresentation: 'push'}).props.style[0].flex, 1);
@@ -70,4 +70,23 @@ test('Harmony form-sheet children receive a layout container for backgrounds and
   assert.equal(view().props.style[0], null);
   reactNative.Platform.OS = 'ios';
   assert.equal(view().props.style[0].position, 'absolute');
+});
+
+test('Harmony form-sheet cleanup emits closing lifecycle once when native callbacks are absent', () => {
+  const cleanups = [];
+  const React = { createElement: (type, props, ...children) => ({ type, props, children }), Fragment: 'Fragment',
+    useRef: value => ({current: value}), useContext: () => null, useImperativeHandle() {},
+    useEffect: fn => { const cleanup = fn(); if (cleanup) cleanups.push(cleanup); }, useCallback: fn => fn, forwardRef: fn => fn };
+  const reactNative = { Platform: { OS: 'harmony' }, View: 'View', StyleSheet: {create: value => value, flatten: value => value} };
+  const exported = {};
+  vm.runInNewContext(fs.readFileSync(path.join(overlay, 'lib/commonjs/components/ScreenStackItem.js'), 'utf8'), {
+    exports: exported,
+    require: name => name === 'react' ? React : name === 'react-native' ? reactNative : name === 'warn-once' ? () => {} : {},
+  });
+  const calls = [];
+  exported.default({stackPresentation:'formSheet',children:'content',headerConfig:{hidden:true},
+    onWillDisappear:()=>calls.push('will'),onDisappear:()=>calls.push('end')},null);
+  assert.equal(cleanups.length,1);
+  cleanups[0]();cleanups[0]();
+  assert.deepEqual(calls,['will','end']);
 });

@@ -452,7 +452,7 @@ describe(prepareRnohCompatibilityHarAsync, () => {
       });
       expect(createHash('sha256').update(fs.readFileSync(output)).digest('hex')).toBe(RNOH_OUTPUT_HAR_SHA256);
       expect(fs.existsSync(`${output}.manifest.json`)).toBe(true);
-      fs.appendFileSync(path.join(corePackageRoot, 'harmony/released-compatibility/rnoh-core-v1-v3.har'), 'corrupt');
+      fs.appendFileSync(path.join(corePackageRoot, 'harmony/released-compatibility/rnoh-core-v1-v4.har'), 'corrupt');
       await expect(prepareRnohCompatibilityHarAsync({ harmonyRoot, inputHarPath: lockedInputHar!, corePackageRoot })).rejects.toThrow('SHA256 mismatch');
       expect(createHash('sha256').update(fs.readFileSync(output)).digest('hex')).toBe(RNOH_OUTPUT_HAR_SHA256);
     }

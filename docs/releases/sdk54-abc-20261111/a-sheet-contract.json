@@ -8,12 +8,12 @@
     {
       "id": "harmony-transformer",
       "path": "packages/expo-modules-autolinking/scripts/harmony/prepare-screens.py",
-      "sha256": "942399f20857252c982dd460bad69fca17e94d5fa0471e760eacc00c5e67f4eb"
+      "sha256": "cfd8afb6ab5fbed8b15da981c6de65f92b2f5df1a40eb35497541c84d175cdcd"
     },
     {
       "id": "screens-overlay",
       "path": "scripts/sdk54/external-overlays/react-native-screens-4.9.0/src/components/ScreenStackItem.tsx",
-      "sha256": "6ffaa0502fa1a950d0e3a42b71be4bdea59d1492fea5d1ccc00b7d5c3f6dba0d"
+      "sha256": "8a7877caed4ebb2c3927765b826e92a27dda316497a95830ffafc6f6f519cc50"
     },
     {
       "id": "screens-types",

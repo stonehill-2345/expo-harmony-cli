@@ -24,11 +24,15 @@ function ScreenStackItem({
   contentStyle,
   style,
   screenId,
+  onWillDisappear,
+  onDisappear,
   // eslint-disable-next-line camelcase
   unstable_sheetFooter,
   ...rest
 }, ref) {
   const currentScreenRef = React.useRef(null);
+  const willDisappearEmitted = React.useRef(false);
+  const disappearEmitted = React.useRef(false);
   const screenRefs = React.useContext(_contexts.RNSScreensRefContext);
   React.useImperativeHandle(ref, () => currentScreenRef.current);
   const isHeaderInModal = _reactNative.Platform.OS === 'android' ? false : stackPresentation !== 'push' && headerConfig?.hidden === false;
@@ -39,6 +43,25 @@ function ScreenStackItem({
     (0, _warnOnce.default)(_reactNative.Platform.OS !== 'android' && stackPresentation !== 'push' && headerHiddenPreviousRef.current !== headerConfig?.hidden, `Dynamically changing header's visibility in modals will result in remounting the screen and losing all local state.`);
     headerHiddenPreviousRef.current = headerConfig?.hidden;
   }, [headerConfig?.hidden, stackPresentation]);
+  const emitWillDisappear = React.useCallback(event => {
+    if (willDisappearEmitted.current) return;
+    willDisappearEmitted.current = true;
+    onWillDisappear?.(event);
+  }, [onWillDisappear]);
+  const emitDisappear = React.useCallback(event => {
+    emitWillDisappear(event);
+    if (disappearEmitted.current) return;
+    disappearEmitted.current = true;
+    onDisappear?.(event);
+  }, [emitWillDisappear, onDisappear]);
+  React.useEffect(() => {
+    if (_reactNative.Platform.OS !== 'harmony' || stackPresentation !== 'formSheet') return;
+    return () => {
+      const event = {};
+      emitWillDisappear(event);
+      emitDisappear(event);
+    };
+  }, [emitDisappear, emitWillDisappear, stackPresentation]);
   if (_reactNative.Platform.OS === 'harmony' && stackPresentation === 'formSheet') {
     const detents = rest.sheetAllowedDetents;
     if (Array.isArray(detents) && (detents.length < 1 || detents.length > 3 ||
@@ -54,9 +77,9 @@ function ScreenStackItem({
 
   const content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(_reactNative.View, {
     collapsable: false,
-    style: [stackPresentation === 'formSheet' && (_reactNative.Platform.OS !== 'harmony' || rest.sheetAllowedDetents === 'fitToContents') ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container]
+    style: [stackPresentation === 'formSheet' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container]
   }, /*#__PURE__*/React.createElement(_reactNative.View, {
-    style: [stackPresentation === 'formSheet' && (_reactNative.Platform.OS !== 'harmony' || rest.sheetAllowedDetents === 'fitToContents') ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container, contentStyle]
+    style: [stackPresentation === 'formSheet' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container, contentStyle]
   }, children)), /*#__PURE__*/React.createElement(_ScreenStackHeaderConfig.ScreenStackHeaderConfig, headerConfig), stackPresentation === 'formSheet' && unstable_sheetFooter && /*#__PURE__*/React.createElement(_ScreenFooter.FooterComponent, null, unstable_sheetFooter()));
 
   // We take backgroundColor from contentStyle and apply it on Screen.
@@ -96,7 +119,10 @@ function ScreenStackItem({
     stackPresentation: stackPresentation,
     hasLargeHeader: headerConfig?.largeTitle ?? false,
     style: [style, internalScreenStyle]
-  }, rest), isHeaderInModal ? /*#__PURE__*/React.createElement(_ScreenStack.default, {
+  }, rest, {
+    onWillDisappear: emitWillDisappear,
+    onDisappear: emitDisappear
+  }), isHeaderInModal ? /*#__PURE__*/React.createElement(_ScreenStack.default, {
     style: styles.container
   }, /*#__PURE__*/React.createElement(_Screen.default, {
     enabled: true,

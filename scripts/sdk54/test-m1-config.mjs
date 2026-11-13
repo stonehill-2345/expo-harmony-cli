@@ -322,7 +322,7 @@ try {
     'Runtime candidate verification failed'
   );
   const runtime = readJSON(path.join(runtimeDirectory, 'release.json'));
-  assert.equal(runtime.packages.length, 15);
+  assert.equal(runtime.packages.length, 16);
   const packages = runtime.packages.map((item) => ({
     ...item,
     archive: path.join(runtimeDirectory, item.file),

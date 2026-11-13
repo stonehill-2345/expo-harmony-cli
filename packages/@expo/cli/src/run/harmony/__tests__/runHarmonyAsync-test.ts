@@ -34,6 +34,8 @@ describe(runHarmonyAsync, () => {
       '/app/harmony/AppScope/app.json5': JSON.stringify({ app: { bundleName: 'dev.app' } }),
       '/app/harmony/entry/src/main/ets/pages/Index.ets':
         'http://127.0.0.1:8081/node_modules/expo-router/entry.bundle',
+      '/app/harmony/entry/src/main/ets/entryability/EntryAbility.ets':
+        "return buildMode === 'DEBUG' ? { host: '127.0.0.1', port: 8081 } : undefined;",
       '/app/harmony/entry/src/main/resources/rawfile/bundle.harmony.js': 'release',
     });
     const d = base();
@@ -54,6 +56,9 @@ describe(runHarmonyAsync, () => {
     expect(d.reverseHarmonyPortAsync).toHaveBeenCalledWith('/hdc', 'dev', 9090);
     expect(vol.readFileSync('/app/harmony/entry/src/main/ets/pages/Index.ets', 'utf8')).toContain(
       'http://127.0.0.1:9090/node_modules/expo-router/entry.bundle'
+    );
+    expect(vol.readFileSync('/app/harmony/entry/src/main/ets/entryability/EntryAbility.ets', 'utf8')).toContain(
+      "host: '127.0.0.1', port: 9090"
     );
     expect(d.bundleHarmonyReleaseAsync).not.toHaveBeenCalled();
   });

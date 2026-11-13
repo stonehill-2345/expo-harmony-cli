@@ -75,7 +75,8 @@
         "expo-splash-screen",
         "expo-status-bar",
         "expo-system-ui",
-        "expo-web-browser"
+        "expo-web-browser",
+        "expo-image"
       ],
       "externalPackages": [
         "@react-native-oh/react-native-harmony",
@@ -120,7 +121,8 @@
       "expo-splash-screen": "31.0.13",
       "expo-status-bar": "3.0.9",
       "expo-system-ui": "6.0.9",
-      "expo-web-browser": "15.0.11"
+      "expo-web-browser": "15.0.11",
+      "expo-image": "3.0.11"
     },
     "external": {
       "@react-native-oh/react-native-harmony": "0.82.30",
@@ -361,6 +363,23 @@
       ],
       "requiredFiles": [
         "lib/commonjs/components/ScreenStackItem.js"
+      ],
+      "probes": []
+    },
+    {
+      "installName": "expo-image",
+      "upstreamVersion": "3.0.11",
+      "publishName": "@expo-oh/expo-image",
+      "publishVersion": "3.0.12",
+      "installSpec": "npm:@expo-oh/expo-image@3.0.12",
+      "templates": [
+        "default"
+      ],
+      "requiredFiles": [
+        "src/index.ts",
+        "src/ExpoImage.tsx",
+        "harmony/index.ets",
+        "harmony/src/main/cpp/CMakeLists.txt"
       ],
       "probes": []
     }

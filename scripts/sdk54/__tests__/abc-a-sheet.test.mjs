@@ -12,14 +12,15 @@ function screen(props = {}) {
   let height = 1000;
   const events = [];
   const code = ts.transpileModule(`class Screen { ${methods} }; globalThis.Screen = Screen;`, {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
-  const context = { SheetSize:{ FIT_CONTENT:'fit' }, SheetType:{BOTTOM:'bottom'},
+  const context = { SheetSize:{ FIT_CONTENT:'fit' }, SheetType:{BOTTOM:'bottom'}, DismissReason:{TOUCH_OUTSIDE:1},
     display:{getDefaultDisplaySync:()=>({height:2400})},
-    window:{getLastWindow:async()=>({getWindowProperties:()=>({windowRect:{height}})})} };
-  vm.runInNewContext(code, context);
+    window:{getLastWindow:async()=>({getWindowProperties:()=>({windowRect:{height}})})}, setTimeout:fn=>fn() };
+  vm.runInNewContext(code+'; globalThis.RNSScreen = Screen;', context);
   const s = new context.Screen();
   Object.assign(s, {descriptor:{rawProps:props}, stackPresentationMode:'formSheet', sheetVisible:false, gestureEnabled:true,
-    ctx:{uiAbilityContext:{}}, eventEmitter:{emit:(...args)=>events.push(JSON.parse(JSON.stringify(args)))}, getPreventFlag:()=>false,
+    tag:20,pageId:'sheet',viewTagArr:[],ctx:{uiAbilityContext:{},rnInstance:{postTouchEventMessageToCpp:(...args)=>events.push(['touch',...args])}}, eventEmitter:{emit:(...args)=>events.push(JSON.parse(JSON.stringify(args)))}, getPreventFlag:()=>false,
     backBtnPressed:()=>events.push(['back']), dismissCount:1, preventNativeDismiss:false });
+  context.Screen.TOP_PAGEID_ARR=['parent','sheet'];context.Screen.TOP_PAGE_TAG_MAP=new Map([['parent',10],['sheet',20]]);
   return {s, events, resize(value){height=value;}};
 }
 for (const detents of [[1],[.35,.75],[.2,.5,.9],[-1]]) for (let initial=0; initial<detents.length; initial++) {
@@ -57,16 +58,33 @@ for(const props of [{sheetCornerRadius:NaN},{sheetElevation:-1},{sheetElevation:
 for(const guard of ['preventNativeDismiss','gestureEnabled','parent']) test(`dismiss guard ${guard} preserves route and sheet`,()=>{
   const {s,events}=screen();s.readSheetProps();s.sheetVisible=true;
   if(guard==='parent') s.getPreventFlag=()=>true;else s[guard]=guard==='preventNativeDismiss';
-  s.sheetOptions().shouldDismiss({dismiss:()=>events.push(['dismiss'])});assert.equal(s.sheetVisible,true);if(guard==='gestureEnabled')assert.equal(events.length,0);else {assert.equal(events[0]?.[0],'nativeDismissCancelled');assert.equal(events[0]?.[1].dismissCount,1);}
+  s.sheetOptions().onWillDismiss({reason:0,dismiss:()=>events.push(['dismiss'])});assert.equal(s.sheetVisible,true);if(guard==='gestureEnabled')assert.equal(events.length,0);else {assert.equal(events[0]?.[0],'nativeDismissCancelled');assert.equal(events[0]?.[1].dismissCount,1);}
+});
+test('undimmed outside presses do not dismiss; dimmed outside presses do',()=>{
+  const {s,events}=screen({sheetAllowedDetents:[.35,.75],sheetLargestUndimmedDetent:0});s.readSheetProps();s.sheetVisible=true;
+  s.sheetOptions().onWillDismiss({reason:1,dismiss:()=>events.push(['dismiss'])});assert.equal(s.sheetVisible,true);assert.deepEqual(events,[]);
+  s.sheetDetentIndex=1;s.sheetOptions().onWillDismiss({reason:1,dismiss:()=>events.push(['dismiss'])});assert.equal(s.sheetVisible,false);assert.deepEqual(events,[['willDisappear',{}],['dismiss']]);
+});
+test('undimmed outside touch forwards to the previous navigation screen tag',()=>{
+  const {s,events}=screen({sheetAllowedDetents:[.35,.75],sheetLargestUndimmedDetent:0});s.readSheetProps();s.sheetVisible=true;
+  const outside={touches:[{windowY:500}]};s.forwardUndimmedOutsideTouch(outside);
+  assert.equal(events.length,1);assert.equal(events[0][0],'touch');assert.equal(events[0][1],10);assert.equal(events[0][2],outside);
+  events.length=0;s.forwardUndimmedOutsideTouch({touches:[{windowY:2000}]});assert.deepEqual(events,[]);
+  s.sheetDetentIndex=1;s.forwardUndimmedOutsideTouch(outside);assert.deepEqual(events,[]);
 });
 test('native dismissal keeps the route until the actual sheet disappearance and pops once',()=>{
   const {s,events}=screen();s.readSheetProps();s.sheetVisible=true;
   const action={dismiss:()=>events.push(['dismiss'])};
-  s.sheetOptions().shouldDismiss(action);s.sheetOptions().shouldDismiss(action);
+  s.sheetOptions().onWillDismiss({reason:0,...action});s.sheetOptions().onWillDismiss({reason:0,...action});
   assert.equal(s.sheetVisible,false);
   assert.deepEqual(events,[['willDisappear',{}],['dismiss']]);
   s.sheetOptions().onDisappear();s.sheetOptions().onDisappear();
   assert.deepEqual(events,[['willDisappear',{}],['dismiss'],['disappear',{}],['back']]);
+});
+test('programmatic removal emits closing lifecycle exactly once',()=>{
+  const {s,events}=screen();s.readSheetProps();s.sheetVisible=true;
+  s.emitSheetWillDisappear();s.emitSheetWillDisappear();s.emitSheetDisappear();s.emitSheetDisappear();
+  assert.deepEqual(events,[['willDisappear',{}],['disappear',{}]]);
 });
 test('programmatic sheet close ignores the gesture guard but preserves native prevention',()=>{
   const {s,events}=screen();s.readSheetProps();s.sheetVisible=true;s.gestureEnabled=false;

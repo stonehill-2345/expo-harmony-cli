@@ -41,6 +41,10 @@ describe('Harmony native project template', () => {
     expect(index).not.toContain('AnyJSBundleProvider');
     expect(index.indexOf('ExpoModulesAppOverlays()')).toBeGreaterThan(index.indexOf('RNApp({'));
     expect(entryAbility).toContain('new ExpoModulesLifecycle()');
+    expect(entryAbility).toContain('getPackagerClientConfig');
+    expect(entryAbility).toContain('JSPackagerClientConfig | undefined');
+    expect(entryAbility).toContain("host: '127.0.0.1'");
+    expect(entryAbility).toContain('port: 8081');
     expect(entryAbility).toContain('this.expoModulesLifecycle.onCreate(want)');
     expect(entryAbility).toContain('this.expoModulesLifecycle.onNewWant(want)');
     expect(entryAbility).toContain('this.expoModulesLifecycle.onDestroy()');

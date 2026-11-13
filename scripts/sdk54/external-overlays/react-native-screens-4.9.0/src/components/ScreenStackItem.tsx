@@ -34,6 +34,8 @@ function ScreenStackItem(
     contentStyle,
     style,
     screenId,
+    onWillDisappear,
+    onDisappear,
     // eslint-disable-next-line camelcase
     unstable_sheetFooter,
     ...rest
@@ -41,6 +43,8 @@ function ScreenStackItem(
   ref: React.ForwardedRef<View>,
 ) {
   const currentScreenRef = React.useRef<View | null>(null);
+  const willDisappearEmitted = React.useRef(false);
+  const disappearEmitted = React.useRef(false);
   const screenRefs = React.useContext(RNSScreensRefContext);
 
   React.useImperativeHandle(ref, () => currentScreenRef.current!);
@@ -63,6 +67,25 @@ function ScreenStackItem(
 
     headerHiddenPreviousRef.current = headerConfig?.hidden;
   }, [headerConfig?.hidden, stackPresentation]);
+  const emitWillDisappear = React.useCallback((event: any) => {
+    if (willDisappearEmitted.current) return;
+    willDisappearEmitted.current = true;
+    onWillDisappear?.(event);
+  }, [onWillDisappear]);
+  const emitDisappear = React.useCallback((event: any) => {
+    emitWillDisappear(event);
+    if (disappearEmitted.current) return;
+    disappearEmitted.current = true;
+    onDisappear?.(event);
+  }, [emitWillDisappear, onDisappear]);
+  React.useEffect(() => {
+    if (Platform.OS !== 'harmony' || stackPresentation !== 'formSheet') return;
+    return () => {
+      const event = {} as any;
+      emitWillDisappear(event);
+      emitDisappear(event);
+    };
+  }, [emitDisappear, emitWillDisappear, stackPresentation]);
 
   if (Platform.OS === 'harmony' && stackPresentation === 'formSheet') {
     const detents = rest.sheetAllowedDetents;
@@ -82,14 +105,14 @@ function ScreenStackItem(
       <View
         collapsable={false}
         style={[
-          stackPresentation === 'formSheet' && (Platform.OS !== 'harmony' || rest.sheetAllowedDetents === 'fitToContents')
+          stackPresentation === 'formSheet'
             ? Platform.OS === 'ios'
               ? styles.absolute
               : null
             : styles.container, 
         ]}>
         <View style={[
-          stackPresentation === 'formSheet' && (Platform.OS !== 'harmony' || rest.sheetAllowedDetents === 'fitToContents')
+          stackPresentation === 'formSheet'
             ? Platform.OS === 'ios'
               ? styles.absolute
               : null
@@ -162,7 +185,9 @@ function ScreenStackItem(
       stackPresentation={stackPresentation}
       hasLargeHeader={headerConfig?.largeTitle ?? false}
       style={[style, internalScreenStyle]}
-      {...rest}>
+      {...rest}
+      onWillDisappear={emitWillDisappear}
+      onDisappear={emitDisappear}>
 
       {isHeaderInModal ? (
         <ScreenStack style={styles.container}>
