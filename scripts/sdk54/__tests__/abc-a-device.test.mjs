@@ -21,6 +21,41 @@ test('decodes real PNG, HDC layout and PID-scoped route log for sheet semantics'
   const {readCapture,verifyNavigationCase}=await import('../abc/a-verify-device.mjs');const f=captureFixture(t);const sample=readCapture(f.root,f.run,f.sample);
   assert.doesNotThrow(()=>verifyNavigationCase('S01',{one:sample}));
 });
+test('sheet body sampling tolerates a button at the old point but rejects an absent body',async t=>{
+  const {readCapture,verifyNavigationCase}=await import('../abc/a-verify-device.mjs');const f=captureFixture(t);
+  for(let y=155;y<175;y++)for(let x=10;x<98;x++){const i=(y*100+x)*4;f.png.data[i]=0;f.png.data[i+1]=80;f.png.data[i+2]=200;}
+  f.sample.screenshot=f.ref('button.png',PNG.sync.write(f.png));
+  assert.doesNotThrow(()=>verifyNavigationCase('S01',{one:readCapture(f.root,f.run,f.sample)}));
+  f.png.data.fill(0);f.sample.screenshot=f.ref('absent.png',PNG.sync.write(f.png));
+  assert.throws(()=>verifyNavigationCase('S01',{one:readCapture(f.root,f.run,f.sample)}),/body/);
+});
+test('S02 checks the public stable field and rejects unstable or native-only events',async t=>{
+  const {readCapture,verifyNavigationCase}=await import('../abc/a-verify-device.mjs');const f=captureFixture(t),samples={};
+  for(const [key,index,height] of [['small',0,70],['large',1,150],['collapsed',0,70]]){
+    f.layout.children.find(n=>n.attributes.type==='SheetPage').attributes.bounds=`[0,${200-height}][100,200]`;
+    f.layout.children.at(-1).attributes.text='Harmony Form Sheet: two';
+    f.png.data.fill(255);f.png.data[0]=index;
+    const log=fs.readFileSync(path.join(f.root,f.sample.hilog.path),'utf8')+`11-11 09:00:01.000 123 456 I ReactNative: A_SHEET_DETENT=${JSON.stringify({index,stable:true})}\n`;
+    samples[key]=readCapture(f.root,f.run,{...f.sample,layout:f.ref(key+'.json',f.layout),screenshot:f.ref(key+'.png',PNG.sync.write(f.png)),hilog:f.ref(key+'.log',log)});
+  }
+  assert.doesNotThrow(()=>verifyNavigationCase('S02',samples));
+  const good=samples.small.log;
+  samples.small.log=good.replace('"stable":true','"stable":false');assert.throws(()=>verifyNavigationCase('S02',samples));
+  samples.small.log=good.replace('"stable":true','"isStable":true');assert.throws(()=>verifyNavigationCase('S02',samples));
+});
+test('grabber requires visible contrast against the sheet, including system gray 204',async t=>{
+  const {readCapture,verifyNavigationCase}=await import('../abc/a-verify-device.mjs');const f=captureFixture(t);
+  f.layout.children.at(-1).attributes.text='Harmony Form Sheet: two';
+  const hidden=readCapture(f.root,f.run,{...f.sample,layout:f.ref('hidden.json',f.layout)});
+  f.layout.children.at(-1).attributes.text='Harmony Form Sheet: grabber';
+  f.layout.children.push({attributes:{type:'SheetDragBar',bounds:'[40,104][60,108]',visible:'true'}});
+  const layout=f.ref('grabber.json',f.layout);
+  for(let y=104;y<108;y++)for(let x=40;x<60;x++){const i=(y*100+x)*4;f.png.data[i]=f.png.data[i+1]=f.png.data[i+2]=204;}
+  const shown=readCapture(f.root,f.run,{...f.sample,layout,screenshot:f.ref('gray.png',PNG.sync.write(f.png))});
+  assert.doesNotThrow(()=>verifyNavigationCase('S09',{hidden,shown}));
+  f.png.data.fill(255);shown.image=f.png;
+  assert.throws(()=>verifyNavigationCase('S09',{hidden,shown}),/Grabber/);
+});
 for(const fault of ['old-pid','old-hap','old-time','hash','empty-image','no-layout','event-only','wrong-case']) test(`rejects ${fault} evidence`,async t=>{
   const {readCapture,verifyNavigationCase}=await import('../abc/a-verify-device.mjs');const f=captureFixture(t);
   if(fault==='old-pid')f.sample.pid=999;
@@ -82,7 +117,7 @@ print(json.dumps({'width':w,'height':h,'scale':1,'uri':'file:///cache/glyph.png'
     const id=`capture-${i}`,build=builds.find(b=>b.id===phase),pid=i<2?123:123+i;
     const identity={target:'TEST_ONLY',systemVersion:'fixture',bundle:'dev.fixture',pid,boot:`boot-${i}`,hapSha256:build.hap.sha256,candidateSha256:candidate.sha256};
     const probe={boot:identity.boot,phase,markerBefore:i!==0,fonts:phase==='removed'?[]:['EmbeddedIcons'],text:phase==='removed'?null:`{ "embedded": "${phase}" }\n`,cacheUri:phase==='removed'?null:'file:///cache/data.json',rejected:phase==='removed',png:phase==='removed'?null:metadata};
-    const layout={attributes:{bounds:'[0,0][100,200]'},children:[{attributes:{type:'root',bounds:'[0,0][100,200]',bundleName:'dev.fixture'}},{attributes:{type:'Text',text:`Resource phase: ${phase}`,bounds:'[0,0][100,40]'}},{attributes:{type:'Image',description:'embedded-font-glyph',bounds:`[10,80][${10+metadata.width},${80+metadata.height}]`}}]};
+    const layout={attributes:{bounds:'[0,0][100,200]'},children:[{attributes:{type:'root',bounds:'[0,0][100,200]',bundleName:'dev.fixture'}},{attributes:{type:'Text',text:`Resource phase: ${phase}`,bounds:'[0,0][100,40]'}},{attributes:{type:'Image',bundleName:'dev.fixture',description:'embedded-font-glyph',bounds:`[10,80][${10+metadata.width},${80+metadata.height}]`}}]};
     samples.push({id,buildId:phase,at:`2026-11-11T01:00:0${i/10+1}Z`,...identity,screenshot:fileRef(phase+'.png'),glyph:fileRef('glyph.png'),layout:f.ref(id+'-layout.json',layout),identity:f.ref(id+'-identity.json',identity),hilog:f.ref(id+'-hilog.txt',`11-11 09:00:01.000 ${pid} 456 I ReactNative: A_RESOURCE_PROBE=${JSON.stringify(probe)}\n`)});
   }
   run.cases={R01:{initial:samples[0],reload:samples[1]},R02:{updated:samples[2]},R03:{removed:samples[3]}};
@@ -93,6 +128,22 @@ test('complete synthetic resource evidence passes and a cached update cannot pas
   f.ref('a-device-evidence.json',run);assert.deepEqual(verifyDevice('resources',f.root).verifiedCaseIds,['R01','R02','R03']);
   const stale=fs.readFileSync(path.join(f.root,'capture-2-hilog.txt'),'utf8').replace('updated\\"','initial\\"');
   run.cases.R02.updated.hilog=f.ref('stale-update.txt',stale);f.ref('a-device-evidence.json',run);assert.throws(()=>verifyDevice('resources',f.root));
+});
+test('resource oracle identifies an unlabeled Image by unique geometry and pixels',async t=>{
+  const f=await resourceFixture(t);if(!f)return;
+  for(const sample of [f.run.cases.R01.initial,f.run.cases.R01.reload,f.run.cases.R02.updated]){
+    const layout=JSON.parse(fs.readFileSync(path.join(f.root,sample.layout.path)));
+    const image=layout.children.pop();delete image.attributes.description;delete image.attributes.bundleName;
+    layout.children[0].children=[image];
+    layout.children.push({...structuredClone(image),attributes:{...image.attributes,bundleName:'system.statusbar'}});
+    sample.layout=f.ref(sample.layout.path,layout);
+  }
+  f.ref('a-device-evidence.json',f.run);
+  assert.doesNotThrow(()=>f.verifyDevice('resources',f.root));
+  const sample=f.run.cases.R01.initial,layout=JSON.parse(fs.readFileSync(path.join(f.root,sample.layout.path)));
+  layout.children[0].children.push(structuredClone(layout.children[0].children[0]));
+  sample.layout=f.ref(sample.layout.path,layout);f.ref('a-device-evidence.json',f.run);
+  assert.throws(()=>f.verifyDevice('resources',f.root),/ambiguous|unique/i);
 });
 
 for(const fault of ['null cache URI','missing cache URI','remote cache URI','wrong HAP argument','missing HAP argument','extra install command','wrong executable','HAP symlink escape'])test(`resource evidence rejects ${fault}`,async t=>{

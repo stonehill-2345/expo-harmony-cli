@@ -148,6 +148,17 @@ N02 必须从 Sheet two 的 35% 档位开始采集 `before`，实际切到后台
 
 `a-verify-device` 不读任何 `passed:true` 来决定成功，也不写回原始证据。退出 0 仅表示这份材料满足 A 的语义断言；仍需 C 独立复验和 B 的统一矩阵。拿不到设备、候选或 C case review 时记录明确 BLOCKED，不填空截图、不移除必达用例。
 
+### 2026-11-12 真实输出差异的校验规则
+
+- `A_SHEET_DETENT` 使用 Screens 公开事件的 `stable:true`；原生内部的 `isStable` 不能替代公开字段。
+- 白色 Sheet 实体在实测 bounds 内去掉四周 5%，均匀采样 20×20 点，至少 60% 为 RGB 各通道 >240 的白色。按钮可以覆盖部分背景；黑屏或仅有日志仍失败。
+- Grabber 必须位于 Sheet 顶部 25% 内，节点下方背景为白色；节点内至少 2%（且不少于 2 个）像素各通道比背景暗至少 24。系统灰色 RGB 204 可以通过，全白截图不能通过。
+- 资源 Image 优先使用 `embedded-font-glyph` 标签；HDC 未导出标签时，要求应用所属节点中仅有一个可见 Image 与 oracle PNG 宽高比匹配（投影宽度误差 ≤2px）。所属 bundle 从真实布局祖先继承，系统状态栏节点排除，多个候选拒绝。随后继续执行截图像素比对与 HAP 字体独立重算；几何匹配本身不构成成功。
+
+上述规则需由 C 复核，并用 B 的原始 layout/event/screenshot 重放。主机合成负例仅证明校验器行为，不替代本轮真实设备回归；当前没有改写历史证据，也没有关闭 S08/S10/S12/S15。
+
+Screens 转换器 v9 将 Sheet 内容与屏幕全高 RNViewBase 分开，透明宿主页不拦截外部触摸；系统返回使用同一关闭守卫。按钮关闭先隐藏浮层，等 ArkUI `onDisappear` 发送关闭完成事件后再移除路由。普通 Stack 和外部路由移除保留原生命周期。必须使用新包/候选/HAP 重跑这些行为，不能沿用 v8 的 HAP 结果。
+
 ## 6. 聚合契约与 B runner 绑定
 
 先导出可搬移的审查快照；`--evidence-root` 可选，指向含 `sources/` 的原始证据目录。提供的源文件必须匹配 Sheet 契约固定 hash；缺少外部源字节会明确列为 blocker，不会自动下载或编造。
@@ -195,3 +206,43 @@ node scripts/sdk54/abc/b-prepare-run.mjs --candidate "$SDK54_CANDIDATE" \
 ```
 
 绑定产物的根 `a-contract.json` 是 B command schema，完整语义快照在 `semantic/a-contract.json`，C 应审查后者。`c-case-review.json` 从 C 原文件逐字节复制，A 不改 C 的 BLOCKED 状态或批准声明。registry/review 漂移、快照 hash 不符会拒绝绑定，需重新导出。输出目录拒绝覆盖。`BOUND_NOT_EXECUTED` 只表示命令已绑定；A-34 和阶段门仍需同候选真实运行及 C 独立复验。
+
+## 2026-11-12 ExpoImage 初版 LOCAL 实现
+
+继续开发轮新增固定官方 `expo-image@3.0.11` 的 Harmony 外部 overlay：入口 `scripts/sdk54/abc/a-prepare-expo-image.mjs`，说明与独立夹具见 `scripts/sdk54/external-overlays/expo-image-3.0.11/README.md`。保留官方 JS 字节，只新增原生实现和 Harmony 模块配置；不改 B 的发行目录、根依赖或锁文件。
+
+当前验证限于 PNG URI/请求代数主机测试、官方 JS 终结事件测试、自动链接/CMake 顺序、正常安装和本机原生编译。完整设备像素、首帧 display、缓存信息、原始 default GI 尚未通过；静态缓存/动画/ImageRef 方法明确拒绝。此增量不关闭 A-34、M4、M7。完整命令、失败记录和边界见本轮 `outputs/a-expo-image-20261112/report.html`。
+
+### 后续模拟器复验（2026-11-12）
+
+磁盘清理后在 nova 16 Pro 模拟器 OpenHarmony 6.0.2.130 实际安装、启动并验证。设备暴露两处缺口：Core 在 RNOH 全局 binder 完成前查询视图会抛未注册；Image 将 source 序列化为 JSON 比较导致字段顺序变化时误重载。已分别补同步 lazy install 与结构值比较，保留红测、失败设备日志及修复后的同 HAP 回归。
+
+新增只读入口 `scripts/sdk54/abc/a-verify-expo-image.mjs --run-dir <证据目录>`；12 项 LOCAL 场景同时核对像素/几何、事件增量、HAP 资源字节与 target/PID/runtime boot。依赖真实 ExpoAsset 注册，不能只注册 Core/Image。完整设备记录见 `outputs/a-expo-image-device-20261112/report.html`。本轮只关闭这组基础 PNG 夹具问题，原始 default GI、网络在途取消、完整缓存/显示时序与 A-34/M4/M7 仍开放。
+
+### 原始 default 的 LOCAL Release 复验（2026-11-12）
+
+独立消费者保留 `templates/expo-template-default` 的全部页面、组件和图片，38 个非配置文件逐字节一致。使用 B 的包计划/候选 registry 安装其余依赖；Core、自动链接与 Image 为本地 tgz，经过正常 pnpm 安装、prebuild 自动注册、CLI 的正式 Harmony Release bundle 和原生构建。Core 包必须经 `prepareReleasedCompatibility` 加入兼容 HAR，并配套同策略版本的自动链接包；此前独立 Image 宿主使用的简化 Core tgz 不适用于完整 prebuild。
+
+同一 Release HAP 在 OpenHarmony 6.0.2.130 模拟器通过首次首页、Modal、链接返回、Explore、展开 Images、返回 Home、再次 Modal、系统返回和冷启动共 9 项观测。首次 8 项 PID 相同，冷启动 PID 改变；原模板未加入 runtime boot 探针，因此不据此声称覆盖 JS reload 或过期回调。两张实际 PNG 与 HAP 字节、截图像素匹配，未出现 ExpoImage 未注册错误；RNOH 的窗口初始化告警仍保留。
+
+只读重放入口：`node scripts/sdk54/abc/a-verify-default.mjs --run-dir <证据目录>`。同时校验 HAP/安装记录、截图/布局/原始 hilog 的 hash 和 PID、页面标题的实际渲染、Modal 移除与图片透明背景/实体像素；含白屏、残图、错误透明背景及旧 Modal 负例。报告与完整命令见 `outputs/a-default-20261112/report.html`。这只证明 LOCAL pnpm Release 的原模板基本显示与导航；正式 GI 所需同一 B 候选、Debug/Release × npm/pnpm、错误/卸载/reload 组合与 C 独立复验仍未完成，A-34/M4/M7 不关闭。
+
+### default 证据一致性补强（2026-11-13）
+
+`a-verify-default` 新增 HAP 内 `module.json.app.bundleName` 核对，布局节点按祖先继承所属 bundle；系统或其他应用的同名文字/图片不再参与断言。布局根尺寸须匹配 JPEG。安装必须为 `hdc -t <target> install <hap>`，参数数量固定，并读取 stdout/stderr，拒绝退出码为0却含失败输出的记录。
+
+每项观测要求采集前后两次 `pidof <bundle>` 与记录PID相同；原始hilog行的PID一致，不能用空日志代替。layout和截图各须有成功生成→对应远端路径的file recv，传输字节数匹配归档文件；这些动作位于两次PID查询之间。命令时间及各项观测的时间顺序须连续不倒退；文件引用不得重名，四个必要原件必须齐备。应用hilog中的非致命RNOH告警仍保留，不能将其当成HDC命令执行失败。
+
+新增独立合成证据测试 `abc-a-default-evidence.test.mjs`，包含错误包名、伪装命令、丢失采集步骤、PID变化、失败但exit0、传输路径/字节数不符、时间倒退、错误应用布局/尺寸和重复引用。修复前17个负例被误接受，修复后拒绝；原有2026-11-12的9项真实观测只读复算仍通过，并在新目录按原字节复制后复算。新报告为 `outputs/a-default-evidence-20261113/report.html`，没有生成新的设备运行结论，也未修改旧证据。
+
+此校验仅证明落盘材料的内部一致性，不能鉴别整套人为伪造的HDC工具/输出、同名HAP安装来源或未记录的设备操作；冷启动和动作因果仍需结合原始采集过程由C复核，不代表JS reload与过期回调验收。A-34、正式GI及统一候选矩阵继续等待B/C。
+
+## 2026-11-13：原 default Debug 主机检查与 Metro PNG 修复（LOCAL）
+
+原消费者的 38 个模板文件不变，已安装 Core/自动链接/Image 分别 1048/275/227 个文件与上轮 tgz 匹配。Debug HAP 构建成功，module.json 标记 debug=true，未携带 Release JS bundle 或 default 的 React PNG。独立 Metro 8097 返回完整 Debug bundle；执行其中实际 Harmony AssetSourceResolver 的模块工厂（屏幕 scale=3.5 为主机输入）得到首页/Explore URL，实际 HTTP PNG 字节与模板对应原图一致。
+
+主机复现一个 A 原生缺口：`/assets/?unstable_path=.../logo.png?platform=harmony&hash=...` 在服务端成功返回 PNG，却被旧 resolvePngUri 的路径后缀检查拒绝。新增红测后修复为识别 HTTP(S) `/assets/` 的唯一 `unstable_path` PNG 查询值，保留原 URL；负例覆盖非 PNG、重复参数、错误端点、本地查询 URI 与 fragment。两条实际 URL 分别编译旧/新头文件对照：旧版拒绝，新版原样接受。此证明 URI 入口，不证明设备解码、首帧、网络生命周期或 reload。
+
+模拟器启动日志明确报 `No enough space to start Emulator`。清理 A 自有可重建 C++ 缓存及已归档 Debug 构建中间文件后约 6.2 GiB 可用，重试仍失败，HDC 无目标。Debug 设备/同 PID JS reload 保持 NOT_RUN；不得将命令退出 0 或模拟器 GUI 进程存在当成设备就绪。
+
+证据、主机验证和修复 tgz：`outputs/a-default-debug-20261113/report.html`。其中 `native/default.hap` 是修复前构建，明确不含本轮 URI 修复；`image-pack/expo-image-3.0.11-harmony-local.tgz` 含修复但尚未重建 HAP/设备验收。恢复消费者原 Index 与 Release rawfile，保留历史证据。后续需正常安装修复包、重新 prebuild/build，再做原 default Debug 图片、导航和同进程 reload；A-34/GI/M4/M7 不关闭。

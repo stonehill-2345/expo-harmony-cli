@@ -7,6 +7,7 @@
 import { type Component, type ComponentType, createRef, PureComponent } from 'react';
 import {
   findNodeHandle,
+  TurboModuleRegistry,
   type HostComponent,
   type NativeMethods,
 } from 'react-native';
@@ -103,6 +104,12 @@ export function requireNativeViewManager<P>(
   moduleName: string,
   viewName?: string
 ): ComponentType<P> {
+  if (!globalThis.expo?.getViewConfig(moduleName, viewName)) {
+    // RNOH global binders can run after the first JS imports. Install a lazy
+    // Expo module synchronously before reading its native view registration.
+    (TurboModuleRegistry.get(moduleName) as { installModule?: () => void } | null)
+      ?.installModule?.();
+  }
   if (!globalThis.expo?.getViewConfig(moduleName, viewName)) {
     throw new Error(`Native Harmony view is not registered: ${moduleName}/${viewName ?? 'default'}`);
   }
