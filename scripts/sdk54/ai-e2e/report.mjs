@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
-import { decodeScreenshot, verifyCandidateManifest, verifyDeviceAssertion, verifySuccessfulCommand } from './evidence.mjs';
+import { decodeScreenshot, verifyCandidateManifest, verifyDeviceAssertion, verifyM4DeviceAssertion, verifySuccessfulCommand } from './evidence.mjs';
 import { validateCaseSet, validateResults, validateRunManifest } from './schema.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
@@ -75,7 +75,10 @@ function verifyEvidence(runDirectory, result, manifest, errors) {
       catch (error) { errors.push(`${error.message}: ${evidence.path}`); }
     }
     if (evidence.type === 'device-assertion') {
-      verifyDeviceAssertion(verified.bytes, manifest,
+      let kind = null;
+      try { kind = JSON.parse(verified.bytes).kind; } catch { /* verifier below reports malformed JSON */ }
+      const verifier = kind === 'm4-device-assertion' ? verifyM4DeviceAssertion : verifyDeviceAssertion;
+      verifier(verified.bytes, manifest,
         (reference, label) => verifyReferencedFile(runDirectory, reference, label, errors), errors);
     }
   }

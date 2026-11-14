@@ -13,8 +13,8 @@ const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 function device(root, scope, ids) {
   const evidence = Buffer.from('device evidence'); fs.writeFileSync(path.join(root, 'evidence.txt'), evidence);
   const value = { schemaVersion: 1, scope, candidateSha256: 'a'.repeat(64), target: '127.0.0.1:5555', systemVersion: '6.0.0.112',
-    bundle: 'dev.expo.m4', pid: 42, hapSha256: 'b'.repeat(64), cases: Object.fromEntries(ids.map(id => [id,
-      { status: 'PASS', evidence: [{ path: 'evidence.txt', sha256: sha(evidence) }] }])) };
+    bundle: 'dev.expo.m4', pid: 42, hapSha256: 'b'.repeat(64), runManifest: { candidateSha256: 'a'.repeat(64), target: '127.0.0.1:5555', bundle: 'dev.expo.m4', pid: 42, hapSha256: 'b'.repeat(64) }, cases: Object.fromEntries(ids.map(id => [id,
+      { status: 'PASS', semantic: { oracle: 'fixture-oracle', result: 'PASS' }, evidence: [{ path: 'evidence.txt', sha256: sha(evidence) }] }])) };
   const file = path.join(root, `${scope}.json`); fs.writeFileSync(file, JSON.stringify(value)); return file;
 }
 
@@ -26,6 +26,28 @@ test('validates complete Core and Other device evidence and rejects omissions', 
   assert.equal(validateM4DeviceEvidence(device(root, 'other', otherIds), 'other').status, 'PASS');
   const broken = device(root, 'core-broken', coreIds.slice(1));
   assert.throws(() => validateM4DeviceEvidence(broken, 'core'));
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('rejects M4 identity fields that disagree with run-manifest', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'm4-identity-'));
+  const ids = ['M4-A06-error','M4-A06-async','M4-A06-events','M4-A06-resources','M4-A06-view','M4-A06-reload','M4-A06-runtime-isolation'];
+  const file = device(root, 'core', ids);
+  const forged = JSON.parse(fs.readFileSync(file, 'utf8'));
+  forged.runManifest.pid = 99;
+  fs.writeFileSync(file, JSON.stringify(forged));
+  assert.throws(() => validateM4DeviceEvidence(file, 'core'), /run-manifest|identity/i);
+  fs.rmSync(root, { recursive: true, force: true });
+});
+
+test('rejects self-reported PASS without semantic oracle evidence', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'm4-semantic-'));
+  const ids = ['M4-A06-error','M4-A06-async','M4-A06-events','M4-A06-resources','M4-A06-view','M4-A06-reload','M4-A06-runtime-isolation'];
+  const file = device(root, 'core', ids);
+  const forged = JSON.parse(fs.readFileSync(file, 'utf8'));
+  delete forged.cases[ids[0]].semantic;
+  fs.writeFileSync(file, JSON.stringify(forged));
+  assert.throws(() => validateM4DeviceEvidence(file, 'core'), /semantic|oracle/i);
   fs.rmSync(root, { recursive: true, force: true });
 });
 

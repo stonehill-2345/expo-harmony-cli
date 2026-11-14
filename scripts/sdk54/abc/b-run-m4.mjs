@@ -5,10 +5,11 @@ import { parseArgs } from 'node:util';
 import { runCommand } from '../ai-e2e/process.mjs';
 import { isMain, repository, sha256, writeJSON } from './a-common.mjs';
 
-const CASES = Object.freeze({
+export const M4_CASES = Object.freeze({
   core: ['M4-A06-error', 'M4-A06-async', 'M4-A06-events', 'M4-A06-resources', 'M4-A06-view', 'M4-A06-reload', 'M4-A06-runtime-isolation'],
   other: ['M4-A03-splash', 'M4-A03-system-ui', 'M4-A03-status-bar', 'M4-A04-linking-router', 'M4-A05-browser', 'M4-A07-package-sync'],
 });
+const CASES = M4_CASES;
 
 const CORE_FILES = [
   'packages/expo-modules-core/harmony/example/tests/device-log.test.cjs',
@@ -43,22 +44,39 @@ function safeRef(root, ref) {
 export function validateM4DeviceEvidence(file, scope) {
   const root = path.dirname(path.resolve(file));
   const value = JSON.parse(fs.readFileSync(file, 'utf8'));
+  const assertion = validateM4DeviceValue(value, scope);
+  const cases = {};
+  for (const [id, row] of Object.entries(assertion.cases)) {
+    cases[id] = { status: row.status, semantic: row.semantic, evidence: row.evidence.map(ref => safeRef(root, ref)) };
+  }
+  return { ...assertion, cases };
+}
+
+export function validateM4DeviceValue(value, scope) {
+  if (!M4_CASES[scope]) throw new Error('scope must be core or other');
   if (value.schemaVersion !== 1 || value.scope !== scope || !/^[a-f0-9]{64}$/.test(value.candidateSha256 ?? '')
     || typeof value.target !== 'string' || !value.target || typeof value.systemVersion !== 'string' || !value.systemVersion
     || typeof value.bundle !== 'string' || !value.bundle || !Number.isSafeInteger(value.pid) || value.pid <= 0
     || !/^[a-f0-9]{64}$/.test(value.hapSha256 ?? '') || typeof value.cases !== 'object' || value.cases === null) {
     throw new Error('invalid M4 device identity');
   }
+  const manifest = value.runManifest;
+  if (!manifest || manifest.candidateSha256 !== value.candidateSha256 || manifest.target !== value.target
+    || manifest.bundle !== value.bundle || manifest.pid !== value.pid || manifest.hapSha256 !== value.hapSha256) {
+    throw new Error('M4 identity disagrees with run-manifest');
+  }
   const cases = {};
-  for (const id of CASES[scope]) {
+  for (const id of M4_CASES[scope]) {
     const row = value.cases[id];
-    if (!row || row.status !== 'PASS' || !Array.isArray(row.evidence) || row.evidence.length === 0) {
-      throw new Error(`missing passing device case: ${id}`);
+    if (!row || row.status !== 'PASS' || !row.semantic || typeof row.semantic.oracle !== 'string' || !row.semantic.oracle
+      || row.semantic.result !== 'PASS' || !Array.isArray(row.evidence) || row.evidence.length === 0) {
+      throw new Error(`missing passing device case or semantic oracle: ${id}`);
     }
-    cases[id] = { status: row.status, evidence: row.evidence.map(ref => safeRef(root, ref)) };
+    cases[id] = { status: row.status, semantic: { oracle: row.semantic.oracle, result: row.semantic.result }, evidence: row.evidence };
   }
   return { schemaVersion: 1, kind: 'm4-device-assertion', scope, status: 'PASS', candidateSha256: value.candidateSha256,
-    target: value.target, systemVersion: value.systemVersion, bundle: value.bundle, pid: value.pid, hapSha256: value.hapSha256, cases };
+    target: value.target, systemVersion: value.systemVersion, bundle: value.bundle, pid: value.pid, hapSha256: value.hapSha256,
+    runManifest: manifest, cases };
 }
 
 function definitions(scope) {
