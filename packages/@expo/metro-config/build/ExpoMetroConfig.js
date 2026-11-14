@@ -16,6 +16,8 @@ const path_1 = __importDefault(require("path"));
 const resolve_from_1 = __importDefault(require("resolve-from"));
 const customizeFrame_1 = require("./customizeFrame");
 Object.defineProperty(exports, "INTERNAL_CALLSITES_REGEX", { enumerable: true, get: function () { return customizeFrame_1.INTERNAL_CALLSITES_REGEX; } });
+const withHarmony_1 = require("./withHarmony");
+const harmonyProject_1 = require("./harmonyProject");
 const env_1 = require("./env");
 const file_store_1 = require("./file-store");
 const getModulesPaths_1 = require("./getModulesPaths");
@@ -126,7 +128,7 @@ function createStableModuleIdFactory(root) {
         return memoizedGetModulePath(modulePath, scope);
     };
 }
-function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_beforeAssetSerializationPlugins } = {}) {
+function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, platform, unstable_beforeAssetSerializationPlugins } = {}) {
     const { getDefaultConfig: getDefaultMetroConfig, mergeConfig, } = require('@expo/metro/metro-config');
     if (isCSSEnabled) {
         patchMetroGraphToSupportUncachedModules();
@@ -331,7 +333,14 @@ function getDefaultConfig(projectRoot, { mode, isCSSEnabled = true, unstable_bef
     // nor InputConfigT which is inexact and partial. Instead, we want an exact type combination of
     // the default config and Expo's config
     metroDefaultValues, expoMetroConfig);
-    return (0, withExpoSerializers_1.withExpoSerializers)(metroConfig, { unstable_beforeAssetSerializationPlugins });
+    const harmonyEnabled = (0, harmonyProject_1.shouldEnableHarmonyMetro)(projectRoot, platform);
+    const platformConfig = harmonyEnabled
+        ? (0, withHarmony_1.withHarmony)(metroConfig, projectRoot, { platform })
+        : metroConfig;
+    const serializerConfig = (0, withExpoSerializers_1.withExpoSerializers)(platformConfig, {
+        unstable_beforeAssetSerializationPlugins,
+    });
+    return harmonyEnabled ? (0, withHarmony_1.withHarmonySerializer)(serializerConfig) : serializerConfig;
 }
 /** Use to access the Expo Metro transformer path */
 exports.unstable_transformerPath = require.resolve('./transform-worker/transform-worker');

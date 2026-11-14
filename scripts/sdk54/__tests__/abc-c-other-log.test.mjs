@@ -112,6 +112,40 @@ test('rejects a concurrent open that does not lock the second session', () => {
   assert.match(result.stderr, /locked/);
 });
 
+test('rejects an auth success without the real callback url', () => {
+  const log = completeOtherLog().replace('"type":"success","url":"lanebbrowser://callback?code=123&state=device"', '"type":"success","url":"https://evil.example/cb"');
+  const result = run(log, 'release');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /auth-success.*url/);
+});
+
+test('rejects a programmatic dismiss whose pending session resolves differently', () => {
+  const log = completeOtherLog().replace('"opened":{"type":"dismiss"}', '"opened":{"type":"cancel"}');
+  const result = run(log, 'release');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /programmatic dismiss/i);
+});
+
+test('rejects a browser baseline that runs after user requests', () => {
+  const rows = completeOtherLog().split('\n');
+  const baseline = rows.findIndex(row => row.includes('"kind":"baseline-pass"'));
+  const firstRequest = rows.findIndex(row => row.includes('"kind":"request"'));
+  [rows[baseline], rows[firstRequest]] = [rows[firstRequest], rows[baseline]];
+  const result = run(rows.join('\n'), 'release');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /baseline-pass/);
+});
+
+test('rejects status bar phases recorded before the splash is hidden', () => {
+  const rows = completeOtherLog().split('\n');
+  const hidden = rows.findIndex(row => row.includes('"kind":"hidden"'));
+  const firstStage = rows.findIndex(row => row.includes('"name":"stack-light"'));
+  [rows[hidden], rows[firstStage]] = [rows[firstStage], rows[hidden]];
+  const result = run(rows.join('\n'), 'release');
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /stack-light/);
+});
+
 test('rejects a log without the router probe', () => {
   const log = completeOtherLog().split('\n').filter(row => !row.includes('A_ROUTER_PROBE')).join('\n');
   const result = run(log, 'release');

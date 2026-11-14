@@ -449,7 +449,7 @@ export const internal_supervisingTransformerPath = require.resolve(
 export { MetroConfig, INTERNAL_CALLSITES_REGEX };
 
 // re-export for legacy cases.
-export const EXPO_DEBUG = env.EXPO_DEBUG;
+export const EXPO_DEBUG: boolean = env.EXPO_DEBUG;
 
 function getExpoOptional(projectRoot: string, subModule = 'package.json'): string | undefined {
   return resolveFrom.silent(projectRoot, `expo/${subModule}`);

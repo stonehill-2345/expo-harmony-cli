@@ -193,7 +193,7 @@ class Chunk {
         const dependencies = [...this.deps];
         const jsSplitBundle = (0, baseJSBundle_1.baseJSBundleWithDependencies)(entryFile, preModules, dependencies, {
             ...this.options,
-            runBeforeMainModule: serializerConfig?.getModulesRunBeforeMainModule?.(path_1.default.relative(this.options.projectRoot, entryFile)) ?? [],
+            runBeforeMainModule: serializerConfig?.getModulesRunBeforeMainModule?.(path_1.default.relative(this.options.projectRoot, entryFile), this.getPlatform()) ?? [],
             runModule: this.options.runModule && !this.isVendor && (this.isEntry || !this.isAsync),
             modulesOnly: this.options.modulesOnly || preModules.length === 0,
             platform: this.getPlatform(),

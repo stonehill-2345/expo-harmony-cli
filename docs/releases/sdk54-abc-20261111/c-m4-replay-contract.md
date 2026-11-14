@@ -15,7 +15,10 @@ report 按注册的 case ID 选择 core/other 校验，不能以伪造 kind 或 
 ## 独立清单附加字段
 
 已有 candidate/device/tools/runId 字段保持原义。tools.hdc 必须是实际采集工具路径。
-`m4.core` 或 `m4.other` 是采集计划和实际运行身份，不从待验收断言复制：
+Core 继续使用单一 `m4.core` 身份。Other 多应用消费固定读取 B 的
+`m4.other.caseCaptures` 六项映射；每项包含 bundle、PID、HAP、mode、bootIds、
+captureCwd 以及 `{path,sha256}` capture 引用。命令、截图和 layout 从 capture JSON
+读取，不接受同字段直接内嵌到 run-manifest 的另一套形状。
 
 ```json
 {
@@ -44,7 +47,9 @@ target、systemVersion、bundle、pid、hapSha256、mode 必须匹配独立清�
 - `[hdc, '-t', target, 'install', '-r', hap.path]`：相对于原始 captureCwd 安装；回执必须成功。
 
 三条命令的 cwd 都必须匹配 captureCwd，退出码为零、无超时/中断/信号，stdout/stderr 引用完整且 hash 一致。
-日志中的 EXPO_CORE_BOOT 序列、模式与独立 bootIds/mode 一致。
+Core 日志的 boot 身份取 EXPO_CORE_BOOT；Other 各业务 capture 的 bootIds 分别取
+A04_SPLASH_STATUS、A04_SYSTEM_UI、A_ROUTER_PROBE、A04_WEB_BROWSER 的 boot 字段，
+不要求人为附加 EXPO_CORE_BOOT。marker 中的 dev/mode 继续由固定 checker 校验。
 
 ## 语义重放
 
@@ -56,18 +61,18 @@ runner 生成重放结果，report 再用原件重算，不信任先前的语义
 Other 仍保留完整六项要求。2026-11-14 起 Other 固定调用
 `scripts/sdk54/abc/check-other-log.cjs <log> <mode> --reload`：从设备夹具真实输出的
 结构化标记（A04_SPLASH_STATUS、A04_SYSTEM_UI、A04_WEB_BROWSER、A_ROUTER_*、
-LANE_B_LINKING_PUBLIC_READY、EXPO_CORE_BOOT）独立重放六项事件/状态机语义——
+LANE_B_LINKING_PUBLIC_READY）独立重放六项事件/状态机语义——
 splash held/hide/hidden 顺序、status-bar 六阶段 Oracle 值、SystemUI 五阶段颜色与
 主题图标、browser 八项基线与已知 rejection code、router 探针与 Linking 接线、
 六包入口同步加载。断言值取自冻结夹具源码与 2026-10-30 三份 acceptance 文档；
 合成正反例见 `abc-c-other-log.test.mjs` 与 `abc-b-m4-runner.test.mjs`。
 
-日志语义 PASS 不关闭 Other：像素级渲染证据（ArkWeb 页面、窗口颜色、解码截图）
-仍需历史 `verify-browser-evidence.cjs` 及 system-ui/splash-status 证据原件恢复或
-按实际原件重实现；缺原件期间 runner 将 Other 整体记 BLOCKED 并保留
-`logSemantics: 'PASS'` 明细，不得以日志 PASS 或主机单测替代完整验收。
-多 bundle 采集（六项历史上为不同应用）与单 `m4.other` 身份的契约矛盾尚未决断，
-需 B 采集方案或扩展 manifest 后更新本节。当前不宣称 M4 全部实现或阶段关闭。
+日志语义 PASS 不关闭 Other：C 会重算 candidate/HAP/capture/命令引用、独立
+bundle/PID、boot 序列，并要求 Splash/StatusBar 共享同一 capture 和 HAP；
+package-sync 仅在五个业务 case（包含共享采集的 StatusBar）日志语义均通过后派生。截图必须可解码、layout
+必须可解析，但这只证明原件完整，不证明 ArkWeb 页面、窗口颜色或像素语义。
+在真实视觉 Oracle 接合前，完整输入也只能输出 BLOCKED 并保留
+`logSemantics: 'PASS'`，不得以日志 PASS、图片可解码或主机单测替代完整验收。
 
 StatusBar 六阶段必须在同一 boot 内完整出现，不能把 reload 前后的残缺序列拼接
 作为通过依据。其他 boot 可以仅完成 Splash reload 生命周期；同一 boot 的阶段

@@ -86,22 +86,65 @@ async function run(command, args, cwd, log, env) {
     const child = spawn(command, args, { cwd, env, stdio: ['ignore', fd, fd] });
     return await new Promise((resolve, reject) => {
       child.once('error', reject);
-      child.once('exit', (exitCode, signal) => resolve({ command: [command, ...args], exitCode, signal, seconds: (performance.now() - started) / 1000 }));
+      child.once('exit', (exitCode, signal) => resolve({ command: [command, ...args], pid: child.pid, exitCode, signal, seconds: (performance.now() - started) / 1000 }));
     });
   } finally { fs.closeSync(fd); }
 }
-export async function benchmark({ workspace, output, samples = 5, scenarios = ['built-noop', 'config-change'], label = 'candidate' }) {
+function readMemoryEvidence(output, directory, pid) {
+  const file = path.join(directory, `diagnostics-${pid}.json`);
+  const diagnostics = JSON.parse(fs.readFileSync(file));
+  assert.equal(diagnostics.pid, pid, 'Diagnostics PID must match benchmark child');
+  const peak = {};
+  for (const name of ['rss', 'external', 'arrayBuffers']) {
+    const value = diagnostics.peakMemory?.[name];
+    assert.ok(Number.isSafeInteger(value) && value >= 0, `Diagnostics must report peak ${name} bytes`);
+    peak[name] = value;
+  }
+  return { unit: 'bytes', peak, scope: diagnostics.scope, evidence: path.relative(output, file) };
+}
+const moduleGraphScript = `
+  const fs = require('node:fs');
+  const path = require('node:path');
+  const { createRequire } = require('node:module');
+  const project = process.argv[1];
+  const packageRoot = fs.realpathSync(path.join(project, 'node_modules/expo-modules-autolinking'));
+  const requireFromConsumer = createRequire(path.join(packageRoot, 'package.json'));
+  const { createAutolinkingOptionsLoader } = requireFromConsumer(path.join(packageRoot, 'build/commands/autolinkingOptions.js'));
+  const { findModulesAsync } = requireFromConsumer(path.join(packageRoot, 'build/autolinking/findModules.js'));
+  (async () => {
+    const loader = createAutolinkingOptionsLoader({ projectRoot: project });
+    const [appRoot, autolinkingOptions] = await Promise.all([
+      loader.getAppRoot(),
+      loader.getPlatformOptions('harmony'),
+    ]);
+    const modules = await findModulesAsync({ appRoot, autolinkingOptions });
+    process.stdout.write(JSON.stringify(Object.keys(modules).sort()));
+  })().catch(error => { console.error(error.stack); process.exitCode = 1; });
+`;
+function consumerHarmonyModuleGraph(project) {
+  return new Set(JSON.parse(execFileSync(process.execPath, ['-e', moduleGraphScript, project], { encoding: 'utf8' })));
+}
+export async function benchmark({ workspace, output, samples = 5, scenarios = ['built-noop', 'config-change'], label = 'candidate', moduleName = 'expo-font' }) {
   ({ workspace } = owned(workspace));
   const { project } = owned(workspace);
   assert.ok(Number.isInteger(samples) && samples >= 1 && samples <= 20);
-  assert.ok(scenarios.every(x => ['first', 'generated-noop', 'built-noop', 'config-change', 'module-remove', 'clean'].includes(x)));
+  assert.ok(scenarios.every(x => ['first', 'generated-noop', 'built-noop', 'config-change', 'module-add', 'module-remove', 'clean'].includes(x)));
+  let moduleVersion;
+  if (scenarios.includes('module-add')) {
+    assert.match(moduleName, /^(?:@[a-z0-9][a-z0-9._-]*\/)?[a-z0-9][a-z0-9._-]*$/i, 'Module name must be a package name');
+    const manifest = JSON.parse(fs.readFileSync(path.join(project, 'node_modules', moduleName, 'package.json')));
+    assert.equal(manifest.name, moduleName, 'Added module manifest name must match');
+    assert.equal(typeof manifest.version, 'string', 'Added module must have a version');
+    moduleVersion = manifest.version;
+  }
   output = physical(output);
   assert.ok(!inside(workspace, output) && !inside(output, workspace), 'Evidence must be outside the mutable benchmark workspace');
   assert.ok(!fs.existsSync(output), 'Evidence output must be new');
   fs.mkdirSync(output, { recursive: true });
   const env = { ...process.env, CI: '1', EXPO_NO_TELEMETRY: '1', EXPO_NO_UPDATE_CHECK: '1' };
-  const report = { label, project, node: process.version, platform: process.platform, samples, measuredScope: 'CLI prebuild only; clone/restore and installation excluded', installedAutolinking: digest(path.join(project, 'node_modules/expo-modules-autolinking/build/platforms/harmony/generationState.js')), diagnostics: process.env.SDK54_BENCHMARK_DIAGNOSTICS === '1', snapshot: inventory(path.join(workspace, 'snapshot')), results: [], completed: false };
+  const report = { label, project, node: process.version, platform: process.platform, samples, measuredScope: 'CLI prebuild only; clone/restore, module graph validation and installation excluded', installedAutolinking: digest(path.join(project, 'node_modules/expo-modules-autolinking/build/platforms/harmony/generationState.js')), moduleName: scenarios.some(scenario => scenario.startsWith('module-')) ? moduleName : undefined, diagnostics: process.env.SDK54_BENCHMARK_DIAGNOSTICS === '1', snapshot: inventory(path.join(workspace, 'snapshot')), results: [], completed: false };
   const save = () => fs.writeFileSync(path.join(output, 'benchmark.json'), JSON.stringify(report, null, 2) + '\n');
+  let moduleAddBeforeValidated = false;
   save();
   for (const scenario of scenarios) {
     const row = { scenario, runs: [] }; report.results.push(row);
@@ -118,19 +161,33 @@ export async function benchmark({ workspace, output, samples = 5, scenarios = ['
         app.expo.version = '1.0.1';
         fs.writeFileSync(path.join(project, 'app.json'), JSON.stringify(app, null, 2));
       }
+      if (scenario === 'module-add') {
+        if (!moduleAddBeforeValidated) {
+          const before = consumerHarmonyModuleGraph(project);
+          assert.ok(!before.has(moduleName), `Added module is already present in the Harmony Autolinking graph before module-add: ${moduleName}`);
+          moduleAddBeforeValidated = true;
+        }
+        const app = JSON.parse(fs.readFileSync(path.join(project, 'package.json')));
+        app.dependencies = { ...(app.dependencies ?? {}), [moduleName]: moduleVersion };
+        fs.writeFileSync(path.join(project, 'package.json'), JSON.stringify(app, null, 2));
+        const after = consumerHarmonyModuleGraph(project);
+        assert.ok(after.has(moduleName), `Added module is absent from the Harmony Autolinking graph after module-add: ${moduleName}; found ${[...after].join(', ') || '(none)'}`);
+      }
       if (scenario === 'module-remove') {
         const app = JSON.parse(fs.readFileSync(path.join(project, 'package.json')));
         app.expo = { ...(app.expo ?? {}), autolinking: { harmony: { exclude: ['expo-font'] } } };
         fs.writeFileSync(path.join(project, 'package.json'), JSON.stringify(app, null, 2));
       }
       const runEnv = { ...env };
+      let diagnosticsDirectory;
       if (report.diagnostics) {
-        const directory = path.join(output, `${scenario}-${index}-diagnostics`); fs.mkdirSync(directory);
-        runEnv.SDK54_PREBUILD_DIAGNOSTICS = directory;
+        diagnosticsDirectory = path.join(output, `${scenario}-${index}-diagnostics`); fs.mkdirSync(diagnosticsDirectory);
+        runEnv.SDK54_PREBUILD_DIAGNOSTICS = diagnosticsDirectory;
         runEnv.NODE_OPTIONS = `${env.NODE_OPTIONS ?? ''} --require=${fileURLToPath(new URL('./prebuild-diagnostics.cjs', import.meta.url))}`;
       }
       const beforeInode = fs.existsSync(harmony) ? fs.statSync(harmony).ino : null;
       const result = await run(process.execPath, ['node_modules/expo/bin/cli', 'prebuild', '--platform', 'harmony', '--no-install', ...(scenario === 'clean' ? ['--clean'] : [])], project, path.join(output, `${scenario}-${index}.log`), runEnv);
+      if (diagnosticsDirectory) result.memory = readMemoryEvidence(output, diagnosticsDirectory, result.pid);
       result.beforeInode = beforeInode; result.afterInode = fs.statSync(harmony).ino;
       // clean retains full backups; record and remove only this owned disposable run's backup.
       const backups = path.join(project, '.expo/harmony-backups');
@@ -165,7 +222,8 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
     } else {
       assert.ok(args.includes('--output'), 'Required: --output <new evidence directory>');
       await benchmark({ workspace, output: path.resolve(value('--output')), samples: args.includes('--samples') ? Number(value('--samples')) : 5,
-        scenarios: args.includes('--scenarios') ? value('--scenarios').split(',') : undefined, label: args.includes('--label') ? value('--label') : undefined });
+        scenarios: args.includes('--scenarios') ? value('--scenarios').split(',') : undefined, label: args.includes('--label') ? value('--label') : undefined,
+        moduleName: args.includes('--module') ? value('--module') : undefined });
     }
   } catch (error) { console.error(error.stack); process.exitCode = 1; }
 }

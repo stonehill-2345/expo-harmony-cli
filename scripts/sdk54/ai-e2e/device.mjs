@@ -109,9 +109,14 @@ export async function collectDeviceEvidence({
   }
   const screenshot = fs.readFileSync(localScreenshot);
   if (decodeScreenshot(screenshot) !== 'JPEG') throw new Error('Device screenshot must be JPEG');
+  const pidAfter = await hdc({
+    hdcPath, target, outputDirectory: root, timeoutMs, label: 'pid-after',
+    args: ['shell', 'pidof', bundleName],
+  });
+  if (pidAfter.stdout !== pid) throw new Error(`PID changed during capture for ${bundleName}`);
   const assertionPath = `device/${screenshotName}.json`;
   const assertion = Buffer.from(JSON.stringify({ schemaVersion: 1, kind: 'device-preflight',
-    target, bundleName, pid, pidCommand: pidOutput.result, logCommand: log.result }) + '\n');
+    target, bundleName, pid, pidCommand: pidOutput.result, pidAfterCommand: pidAfter.result, logCommand: log.result }) + '\n');
   fs.writeFileSync(path.join(root, assertionPath), assertion);
 
   return {

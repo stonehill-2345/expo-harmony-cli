@@ -7,7 +7,7 @@ import test from 'node:test';
 import { jpeg } from './ai-e2e-fixtures.mjs';
 import { collectDeviceEvidence, resolveDevice, startTestApp, stopTestApp } from '../ai-e2e/device.mjs';
 
-function fakeHdc(t, targets = ['device-1', 'device-2'], screenshot = jpeg) {
+function fakeHdc(t, targets = ['device-1', 'device-2'], screenshot = jpeg, pids = ['4321', '4321']) {
   const root = fs.realpathSync(fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-ai-e2e-device-')));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const calls = path.join(root, 'calls.jsonl');
@@ -20,7 +20,7 @@ const args=process.argv.slice(2);
 fs.appendFileSync(${JSON.stringify(calls)},JSON.stringify(args)+'\\n');
 if(args.join(' ')==='list targets'){process.stdout.write(${JSON.stringify(targets.join('\n') + '\n')});process.exit(0)}
 const command=args.slice(2);
-if(command[0]==='shell'&&command[1]==='pidof'){process.stdout.write('4321\\n');process.exit(0)}
+if(command[0]==='shell'&&command[1]==='pidof'){const n=fs.readFileSync(${JSON.stringify(calls)},'utf8').trim().split('\\n').map(JSON.parse).filter(a=>a.includes('pidof')).length-1;process.stdout.write((${JSON.stringify(pids)}[n]??'')+'\\n');process.exit(0)}
 if(command[0]==='shell'&&command[1]==='hilog'){process.stdout.write('DEVICE_ASSERTION_PASS\\n');process.exit(0)}
 if(command[0]==='shell'&&command[1]==='snapshot_display'){process.stdout.write('snapshot ok\\n');process.exit(0)}
 if(command[0]==='file'&&command[1]==='recv'){
@@ -67,6 +67,8 @@ test('collects PID-scoped logs and a non-empty screenshot from only the selected
   assert.equal(receipt.target, 'device-2');
   assert.equal(receipt.pidCommand.exitCode, 0);
   assert.equal(receipt.logCommand.exitCode, 0);
+  assert.equal(receipt.pidAfterCommand.exitCode, 0);
+  assert.deepEqual(receipt.pidAfterCommand.argv, [fixture.hdc, '-t', 'device-2', 'shell', 'pidof', 'dev.example.test']);
   assert.deepEqual(result.evidence.map(({ type }) => type), ['device-assertion', 'screenshot']);
   assert.ok(result.evidence.every(({ path: file }) => fs.existsSync(path.join(fixture.outputDirectory, file))));
   assert.deepEqual(fixture.calls(), [
@@ -76,6 +78,7 @@ test('collects PID-scoped logs and a non-empty screenshot from only the selected
     ['-t', 'device-2', 'shell', 'snapshot_display', '-f', '/data/local/tmp/sdk54-first-screen.jpeg'],
     ['-t', 'device-2', 'file', 'recv', '/data/local/tmp/sdk54-first-screen.jpeg', path.join(fixture.outputDirectory, 'device/first-screen.jpeg')],
     ['-t', 'device-2', 'shell', 'rm', '-f', '/data/local/tmp/sdk54-first-screen.jpeg'],
+    ['-t', 'device-2', 'shell', 'pidof', 'dev.example.test'],
   ]);
 });
 
@@ -107,3 +110,14 @@ test('rejects a truncated device screenshot and still cleans its remote file', a
     bundleName: 'dev.example.test', screenshotName: 'invalid', outputDirectory: fixture.outputDirectory }), /Screenshot/);
   assert.deepEqual(fixture.calls().at(-1), ['-t', 'device-2', 'shell', 'rm', '-f', '/data/local/tmp/sdk54-invalid.jpeg']);
 });
+
+for (const after of ['9999', '', '4321 9999']) {
+  test(`rejects a changed or ambiguous process after screenshot: ${JSON.stringify(after)}`, async t => {
+    const fixture = fakeHdc(t, ['device-2'], jpeg, ['4321', after]);
+    await assert.rejects(collectDeviceEvidence({ ...fixture, hdcPath: fixture.hdc,
+      requested: 'device-2', bundleName: 'dev.example.test', screenshotName: 'changed' }),
+      /PID changed during capture/);
+    assert.equal(fs.existsSync(path.join(fixture.outputDirectory, 'device/changed.json')), false);
+    assert.ok(fixture.calls().some(args => args.includes('rm')));
+  });
+}

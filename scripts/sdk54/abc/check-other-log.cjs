@@ -127,6 +127,14 @@ const STATUS_PHASES = [
 ];
 define('M4-A03-status-bar', fail => {
   const stages = splash.filter(row => row.kind === 'stage');
+  // The Next button stays disabled until the splash is hidden; a status phase
+  // recorded before its boot's hidden marker is not a real user-driven phase.
+  for (const stage of stages) {
+    const bootRows = splash.filter(row => row.boot === stage.boot);
+    const hiddenAt = bootRows.findIndex(row => row.kind === 'hidden');
+    const stageAt = bootRows.indexOf(stage);
+    if (hiddenAt >= 0 && stageAt < hiddenAt) fail(`Status phase ${stage.name} recorded before splash hidden`);
+  }
   const phasesByBoot = new Map();
   for (const stage of stages) {
     if (!phasesByBoot.has(stage.boot)) phasesByBoot.set(stage.boot, new Set());
@@ -247,6 +255,12 @@ define('M4-A05-browser', fail => {
       if (JSON.stringify(checks) !== JSON.stringify([...BROWSER_BASELINE_CHECKS].sort())) {
         fail(`baseline checks mismatch: ${JSON.stringify(checks)}`);
       }
+      // The baseline runs in the mount effect before any button handler can
+      // fire; a baseline recorded after a user request is not the mount pass.
+      const baselineAt = rows.indexOf(baseline);
+      if (rows.slice(0, baselineAt).some(row => row.kind === 'request' || row.kind === 'rejection')) {
+        fail(`baseline-pass must precede all user requests (boot ${boot})`);
+      }
     }
     const requests = rows.filter(row => row.kind === 'request').map(row => row.name);
     const settled = rows.filter(row => row.kind === 'result' || row.kind === 'rejection').map(row => row.name);
@@ -268,8 +282,23 @@ define('M4-A05-browser', fail => {
       if (row.kind === 'result' && row.name === 'concurrent' && row.result?.second?.type !== 'locked') {
         fail('Concurrent open must reject the second session with locked');
       }
-      if (row.kind === 'result' && row.name === 'auth-success' && row.result?.type !== 'success') {
-        fail('Auth session must complete with success');
+      if (row.kind === 'result' && row.name === 'concurrent' && row.result?.first?.type !== 'dismiss') {
+        fail('Concurrent open must keep the first session dismissable');
+      }
+      if (row.kind === 'result' && row.name === 'programmatic-dismiss'
+        && (row.result?.dismissed?.type !== 'dismiss' || row.result?.opened?.type !== 'dismiss')) {
+        fail('Programmatic dismiss must return dismiss for both the call and the pending open');
+      }
+      if (row.kind === 'result' && row.name === 'auth-success') {
+        if (row.result?.type !== 'success') fail('Auth session must complete with success');
+        // The fixture's redirect constant is lanebbrowser://callback; a success
+        // result pointing anywhere else is not the fixture's real callback.
+        if (typeof row.result?.url !== 'string' || !row.result.url.startsWith('lanebbrowser://callback')) {
+          fail('auth-success must return the real callback url');
+        }
+      }
+      if (row.kind === 'result' && row.name === 'manual-open' && !['cancel', 'dismiss'].includes(row.result?.type)) {
+        fail('manual-open must end through a close or dismiss path');
       }
     }
     if (reload && rows.some(row => row.kind === 'reload-request')) {
