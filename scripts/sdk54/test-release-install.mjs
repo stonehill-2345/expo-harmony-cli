@@ -47,10 +47,14 @@ const server = http.createServer(async (request, response) => {
     } else if (name.startsWith('@expo-oh/')) { response.writeHead(404).end(); }
     else {
       const upstream = await fetch(`https://registry.npmjs.org${request.url}`, { headers: { accept: 'application/vnd.npm.install-v1+json' } });
+      const bytes = Buffer.from(await upstream.arrayBuffer());
       response.writeHead(upstream.status, { 'Content-Type': upstream.headers.get('content-type') ?? 'application/octet-stream' });
-      response.end(Buffer.from(await upstream.arrayBuffer()));
+      response.end(bytes);
     }
-  } catch (error) { response.writeHead(502).end(String(error)); }
+  } catch (error) {
+    if (response.headersSent) response.destroy(error);
+    else response.writeHead(502).end(String(error));
+  }
 });
 await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
 const registry = `http://127.0.0.1:${server.address().port}/`;

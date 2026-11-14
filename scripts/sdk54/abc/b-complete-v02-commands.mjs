@@ -18,6 +18,11 @@ export function completeCommands({ base, consumer, runDirectory, coreDeviceEvide
   const result = { schemaVersion: 1, stage: 'V-02', status: 'COMPLETE_NOT_EXECUTED', omittedCases: [],
     cases: [...value.cases, add('V02-CORE-M4', 'core', coreDeviceEvidence), add('V02-OTHER-M4', 'other', otherDeviceEvidence)] };
   if (result.cases.length !== 19 || new Set(result.cases.map(row => row.id)).size !== 19) throw new Error('V-02 must contain 19 unique commands');
+  const expected = JSON.parse(fs.readFileSync(new URL('../ai-e2e/cases/registry.json', import.meta.url), 'utf8'))
+    .stages['V-02'].map(row => row.id).sort();
+  if (JSON.stringify(result.cases.map(row => row.id).sort()) !== JSON.stringify(expected)) {
+    throw new Error('commands must match the registered V-02 case set');
+  }
   fs.mkdirSync(path.dirname(path.resolve(output)), { recursive: true });
   writeJSON(output, result);
   return result;

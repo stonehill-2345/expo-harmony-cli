@@ -50,14 +50,17 @@ it('keeps install and fix specs scoped and rejects unsupported explicit versions
   try {
     const root = path.join(dir, 'node_modules/expo');
     fs.mkdirSync(root, { recursive: true });
-    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: '@expo-oh/expo', version: '54.0.37' }));
-    fs.writeFileSync(path.join(root, 'harmony-release.json'), JSON.stringify(loadReleaseManifest()));
+    const manifest = loadReleaseManifest();
+    const expo = manifest.packages.find(item => item.installName === 'expo')!;
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: expo.publishName, version: expo.publishVersion }));
+    fs.writeFileSync(path.join(root, 'harmony-release.json'), JSON.stringify(manifest));
     const release = getHarmonyRelease(dir)!;
-    const expected = 'expo-font@npm:@expo-oh/expo-font@14.0.12';
+    const expected = 'expo-font@npm:@expo-oh/expo-font@14.0.13';
     expect(versionHarmonyPackage(release, 'expo-font')).toBe(expected);
-    expect(versionHarmonyPackage(release, 'expo-font@14.0.12')).toBe(expected);
+    expect(versionHarmonyPackage(release, 'expo-font@14.0.13')).toBe(expected);
     expect(versionHarmonyPackage(release, expected)).toBe(expected);
     expect(harmonyInstallSpec(dir, 'expo-font', '14.0.12')).toBe(expected);
+    expect(versionHarmonyPackage(release, 'expo-font@14.0.12')).toBe(expected);
     expect(() => versionHarmonyPackage(release, 'expo-font@latest')).toThrow(/outside/);
     expect(() => versionHarmonyPackage(release, 'expo-font@13.0.0')).toThrow(/outside/);
     const item = release.packages.find(p => p.installName === 'expo')!;

@@ -34,7 +34,6 @@ export function createTemplateManifest(source, template) {
     dependencies[name] = item?.installSpec ?? release.catalog.external[name];
     assert.ok(dependencies[name], `Missing external template mapping: ${name}`);
   }
-  if (template === 'default') dependencies['expo-image'] = '3.0.11';
   return {
     ...structuredClone(source),
     name: descriptor.name,

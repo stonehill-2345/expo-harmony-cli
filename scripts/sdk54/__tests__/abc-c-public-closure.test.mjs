@@ -413,7 +413,7 @@ test('reports malformed encoded scope pointers instead of throwing', async (t) =
   assert.match(result.errors.join('\n'), /invalid scope manifest pointer/i);
 });
 
-test('accepts the complete fifteen-package catalog with a verified external manifest baseline', async (t) => {
+test('accepts the complete release catalog with verified external manifest baselines', async (t) => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-abc-c-full-candidate-'));
   t.after(() => fs.rmSync(root, { recursive: true, force: true }));
   const sourceRoot = path.join(root, 'source'), packages = [], runtimePackages = [], sourceFiles = new Map();
@@ -445,17 +445,17 @@ test('accepts the complete fifteen-package catalog with a verified external mani
     runtimePackages,
     failures: [],
   }));
-  const external = RELEASE_PACKAGES.find(descriptor => !descriptor.relativePath);
+  const external = RELEASE_PACKAGES.filter(descriptor => !descriptor.relativePath);
   const result = await verifyCandidatePublicSurface({
     candidateFile,
     scope: { rows: [] },
     sourceRevision: 'source-revision',
     sourceRoot,
     readFrozenSource: relative => sourceFiles.get(relative) ?? null,
-    externalManifestBaselines: new Map([[external.installName, {
+    externalManifestBaselines: new Map(external.map(descriptor => [descriptor.installName, {
       entries: [{ pointer: '/main', target: './index.js' }],
       entrySurfaces: { '/main': { names: [], reexports: [], complete: true } },
-    }]]),
+    }])),
   });
   assert.equal(result.valid, true, result.errors.join('\n'));
   assert.equal(result.packages.length, RELEASE_PACKAGES.length);
@@ -476,4 +476,15 @@ test('recomputes identical normalized candidate coverage from another absolute d
   });
   const normalize = value => ({ ...value, candidate: value.candidate ? { ...value.candidate, path: '<candidate>' } : null });
   assert.deepEqual(normalize(second), normalize(first));
+});
+
+test('external Image baseline rejects bytes that differ from its catalog pin', async t => {
+  const { loadExternalManifestBaselines } = await import('../abc/c-public-closure.mjs');
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-image-baseline-'));
+  t.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  fs.mkdirSync(path.join(root,'inputs'));
+  fs.writeFileSync(path.join(root,'inputs/expo-image-3.0.11.tgz'),'not the pinned archive');
+  const result = await loadExternalManifestBaselines({sourceRoot:process.cwd(),scopeFile:path.join(root,'public-scope/scope-reviewed.json')});
+  assert.equal(result.baselines.has('expo-image'),false);
+  assert.ok(result.errors.some(error=>/expo-image\/fixed input bytes differ/.test(error)),result.errors.join('\n'));
 });

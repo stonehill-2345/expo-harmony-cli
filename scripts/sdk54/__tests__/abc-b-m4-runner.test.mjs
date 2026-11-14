@@ -8,6 +8,7 @@ import test from 'node:test';
 import { validateM4DeviceEvidence } from '../abc/b-run-m4.mjs';
 import { completeCommands } from '../abc/b-complete-v02-commands.mjs';
 
+const registry = JSON.parse(fs.readFileSync(new URL('../ai-e2e/cases/registry.json', import.meta.url))).stages['V-02'];
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 function device(root, scope, ids) {
   const evidence = Buffer.from('device evidence'); fs.writeFileSync(path.join(root, 'evidence.txt'), evidence);
@@ -32,11 +33,17 @@ test('adds real Core and Other commands to the complete V-02 case set', () => {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'm4-commands-'));
   const base = path.join(root, 'base.json'), output = path.join(root, 'commands.json'), run = path.join(root, 'run'), consumer = path.join(root, 'consumer');
   fs.mkdirSync(run); fs.mkdirSync(consumer);
-  const cases = Array.from({ length: 17 }, (_, index) => ({ id: `V02-${index}`, semanticCaseIds: [], command: { argv: ['node','x'], cwd: '.', timeoutMs: 1, evidence: [] } }));
+  const cases = registry.filter(row => !['V02-CORE-M4','V02-OTHER-M4'].includes(row.id)).map(row => ({ id: row.id, semanticCaseIds: [], command: { argv: ['node','x'], cwd: '.', timeoutMs: 1, evidence: [] } }));
   fs.writeFileSync(base, JSON.stringify({ schemaVersion: 1, stage: 'V-02', cases }));
   const result = completeCommands({ base, consumer, runDirectory: run, coreDeviceEvidence: path.join(root, 'core.json'),
     otherDeviceEvidence: path.join(root, 'other.json'), output });
   assert.equal(result.cases.length, 19); assert.equal(result.omittedCases.length, 0);
+  assert.deepEqual(result.cases.map(row=>row.id).sort(),registry.map(row=>row.id).sort());
+  const forged = structuredClone(cases); forged[0].id = 'V02-INVENTED';
+  fs.writeFileSync(base, JSON.stringify({schemaVersion:1,stage:'V-02',cases:forged}));
+  assert.throws(()=>completeCommands({base,consumer,runDirectory:run,coreDeviceEvidence:path.join(root,'core.json'),
+    otherDeviceEvidence:path.join(root,'other.json'),output:path.join(root,'forged.json')}),/registered V-02 case set/);
+  assert.equal(fs.existsSync(path.join(root,'forged.json')),false);
   for (const id of ['V02-CORE-M4','V02-OTHER-M4']) {
     const row = result.cases.find(item => item.id === id);
     assert.match(row.command.argv[1], /b-run-m4\.mjs$/); assert.ok(row.command.argv.includes('--device-evidence'));

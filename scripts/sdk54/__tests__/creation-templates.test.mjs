@@ -27,7 +27,7 @@ test('creation templates declare release aliases and target dependencies before 
     assert.equal(manifest.dependencies.react, '19.1.1');
     assert.equal(manifest.dependencies['react-native'], '0.82.1');
     assert.equal(manifest.dependencies['@react-native-oh/react-native-harmony'], '0.82.30');
-    for (const item of RELEASE_PACKAGES.filter(p => template === 'default' || !['expo-router', 'expo-web-browser', '@react-native-ohos/react-native-screens'].includes(p.installName))) {
+    for (const item of RELEASE_PACKAGES.filter(p => template === 'default' || !['expo-router', 'expo-web-browser', 'expo-image', '@react-native-ohos/react-native-screens'].includes(p.installName))) {
       assert.equal(manifest.dependencies[item.installName], item.installSpec);
     }
     assert.equal(manifest.scripts.harmony, 'expo run:harmony');
@@ -38,7 +38,8 @@ test('creation templates declare release aliases and target dependencies before 
 
 test('default keeps expo-image and original entry; unknown source identity is rejected', () => {
   const manifest = createTemplateManifest(upstream('default'), 'default');
-  assert.equal(manifest.dependencies['expo-image'], '3.0.11');
+  assert.equal(manifest.dependencies['expo-image'], 'npm:@expo-oh/expo-image@3.0.12');
+  assert.equal(createTemplateManifest(upstream('blank-typescript'), 'blank-typescript').dependencies['expo-image'], undefined);
   assert.equal(manifest.main, 'expo-router/entry');
   assert.throws(() => createTemplateManifest({ ...upstream('default'), version: '55.0.0' }, 'default'), /identity/i);
   assert.throws(() => createTemplateManifest(upstream('default'), 'unknown'), /template/i);

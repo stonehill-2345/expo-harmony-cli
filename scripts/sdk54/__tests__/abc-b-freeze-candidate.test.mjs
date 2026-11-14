@@ -15,7 +15,9 @@ const sha512 = (bytes) => `sha512-${crypto.createHash('sha512').update(bytes).di
 
 async function fixture(t) {
   const root = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-abc-b-freeze-'));
-  t.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  // Host Git instrumentation can briefly recreate .git/ai while cleanup runs.
+  // Retry transient ENOTEMPTY; persistent failures still fail the test.
+  t.after(() => fs.promises.rm(root, { recursive: true, force: true, maxRetries: 10, retryDelay: 100 }));
   const sourceRoot = path.join(root, 'source');
   const directory = path.join(root, 'candidate');
   const output = path.join(root, 'frozen');

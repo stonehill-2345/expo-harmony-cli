@@ -18,7 +18,7 @@ import { buildCapabilityMap, writeCapabilityMap } from '../m0-capability-map.mjs
 import { buildFinalScopeRelations } from '../m0-final-scope-relations.mjs';
 import { buildFinalPublicClosure } from '../m0-final-public-closure.mjs';
 import { projectTemplateSource } from '../m0-template-projection.mjs';
-import { RELEASE_ID, RELEASE_PACKAGES } from '../release-catalog.mjs';
+import { EXPO_IMAGE_UPSTREAM_SHA256, RELEASE_ID, RELEASE_PACKAGES } from '../release-catalog.mjs';
 import { validateExports } from '../audit-packages.mjs';
 import { main as rebuildM4Evidence } from '../a-m4-evidence.mjs';
 import { args, read, save, sha256, newOutput, html, safeFile } from './c-evidence-lib.mjs';
@@ -641,15 +641,22 @@ export async function loadExternalManifestBaselines({ sourceRoot, scopeFile }) {
   try { taskInputs = read(path.join(sourceRoot, 'docs/releases/sdk54-abc-20261111/inputs.json')); }
   catch (error) { return { baselines, errors: [`External public baseline manifest invalid: ${error.message}`] }; }
   const filesByPath = new Map((Array.isArray(taskInputs.files) ? taskInputs.files : []).map(row => [row.path, row]));
-  const inputsByPackage = new Map([['@react-native-ohos/react-native-screens', 'inputs/screens-4.9.0-upstream.tgz']]);
+  const inputsByPackage = new Map([
+    ['@react-native-ohos/react-native-screens', 'inputs/screens-4.9.0-upstream.tgz'],
+    ['expo-image', 'inputs/expo-image-3.0.11.tgz'],
+  ]);
   for (const descriptor of RELEASE_PACKAGES.filter(row => !row.relativePath)) {
-    const relative = inputsByPackage.get(descriptor.installName), receipt = filesByPath.get(relative);
+    const relative = inputsByPackage.get(descriptor.installName);
+    // Image was added after the historical input bundle. Its release-catalog
+    // pin is authoritative; do not rewrite the old bundle or trust a new hash.
+    const receipt = descriptor.installName === 'expo-image'
+      ? { sha256: EXPO_IMAGE_UPSTREAM_SHA256 } : filesByPath.get(relative);
     try {
       if (!relative || !receipt) throw new Error('fixed input receipt is missing');
       const archive = path.resolve(inputsRoot, relative), relation = path.relative(inputsRoot, archive);
       if (relation === '..' || relation.startsWith(`..${path.sep}`)) throw new Error('fixed input path escapes the input root');
       const bytes = fs.readFileSync(archive);
-      if (bytes.length !== receipt.bytes || sha256(bytes) !== receipt.sha256) throw new Error('fixed input bytes differ from inputs.json');
+      if ((receipt.bytes !== undefined && bytes.length !== receipt.bytes) || sha256(bytes) !== receipt.sha256) throw new Error('fixed input bytes differ from pinned receipt');
       const inspected = await inspectCandidateArchive(archive);
       if (inspected.manifest.name !== descriptor.installName || inspected.manifest.version !== descriptor.upstreamVersion) {
         throw new Error('fixed input package identity differs from the release catalog');

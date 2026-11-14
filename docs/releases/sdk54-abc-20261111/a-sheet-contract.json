@@ -13,7 +13,7 @@
     {
       "id": "screens-overlay",
       "path": "scripts/sdk54/external-overlays/react-native-screens-4.9.0/src/components/ScreenStackItem.tsx",
-      "sha256": "8a7877caed4ebb2c3927765b826e92a27dda316497a95830ffafc6f6f519cc50"
+      "sha256": "b3b2a9a5679f40f84657d1d23f1b247cb7b53026a96bab6560e6d7099a49a6ed"
     },
     {
       "id": "screens-types",
@@ -81,7 +81,7 @@
     {
       "id": "navigation-device-verifier",
       "path": "scripts/sdk54/abc/a-verify-device.mjs",
-      "sha256": "8c2b4a3cefb321997953423ef658797473566e5b3393e057b14377d5805054d6"
+      "sha256": "5fd9a9c2cf08bb1ae177ba5a2e047b529565ae736c2690d22ddc8b5c460b649d"
     }
   ],
   "cases": [

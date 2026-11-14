@@ -200,8 +200,9 @@ export function verifyDevice(kind,root) {
   assert.ok(['LOCAL','CANDIDATE'].includes(run.scope),'Missing explicit evidence scope');assert.ok(run.runId,'Missing run ID');
   assert.ok(Date.parse(run.startedAt)<=Date.parse(run.endedAt),'Invalid run dates');
   for(const key of ['target','systemVersion','bundle'])assert.ok(typeof run.device?.[key]==='string'&&run.device[key],`Missing device ${key}`);
-  const candidate=JSON.parse(readRef(root,run.candidate));assert.deepEqual(candidate.failures,[]);assert.equal(candidate.packages?.length,15,'Incomplete candidate');
-  for(const expected of createReleaseManifest().packages)assert.ok(candidate.packages.some(p=>p.name===expected.publishName&&p.version===expected.publishVersion),'Candidate package identity mismatch');
+  const expectedPackages=createReleaseManifest().packages;
+  const candidate=JSON.parse(readRef(root,run.candidate));assert.deepEqual(candidate.failures,[]);assert.equal(candidate.packages?.length,expectedPackages.length,'Incomplete candidate');
+  for(const expected of expectedPackages)assert.ok(candidate.packages.some(p=>p.name===expected.publishName&&p.version===expected.publishVersion),'Candidate package identity mismatch');
   assert.equal(new Set(candidate.packages.map(p=>p.name)).size,candidate.packages.length,'Duplicate packages');
   for(const p of candidate.packages){const bytes=readRef(path.dirname(path.join(root,run.candidate.path)),{path:p.file,sha256:p.sha256});assert.equal(bytes.length,p.bytes);}
   assert.ok(run.builds?.length>0,'Missing HAP');assert.equal(new Set(run.builds.map(b=>b.id)).size,run.builds.length,'Duplicate HAP ID');
