@@ -3,7 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { PNG } from 'pngjs';
 import jpeg from 'jpeg-js';
-import { M4_CASES, validateM4DeviceValue } from '../abc/b-run-m4.mjs';
+import { validateM4DeviceValue } from '../abc/b-run-m4.mjs';
 
 const SHA256 = /^[a-f0-9]{64}$/;
 const sha256 = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
@@ -100,23 +100,10 @@ export function verifyDeviceAssertion(bytes, manifest, readReference, errors) {
   }
 }
 
-export function verifyM4DeviceAssertion(bytes, manifest, readReference, errors) {
+export function verifyM4DeviceAssertion(bytes, manifest, readReference, errors, scope) {
   try {
-    const parsed = JSON.parse(bytes);
-    const value = validateM4DeviceValue(parsed, valueScope(parsed));
-    if (value.candidateSha256 !== manifest.candidate?.sha256 || value.target !== manifest.device?.target
-      || value.runManifest?.candidateSha256 !== manifest.candidate?.sha256) {
-      throw new Error('M4 assertion does not match run manifest');
-    }
-    for (const [id, row] of Object.entries(value.cases)) {
-      for (const reference of row.evidence) readReference(reference, `M4 ${id} semantic evidence`);
-    }
+    validateM4DeviceValue(JSON.parse(bytes), scope, manifest, readReference);
   } catch (error) {
     errors.push(`M4 device assertion invalid: ${error.message}`);
   }
-}
-
-function valueScope(value) {
-  if (!Object.prototype.hasOwnProperty.call(M4_CASES, value?.scope)) throw new Error('invalid M4 scope');
-  return value.scope;
 }

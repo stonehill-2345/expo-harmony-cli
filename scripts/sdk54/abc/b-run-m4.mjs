@@ -1,4 +1,6 @@
 import fs from 'node:fs';
+import os from 'node:os';
+import { spawnSync } from 'node:child_process';
 import path from 'node:path';
 import { parseArgs } from 'node:util';
 
@@ -41,42 +43,91 @@ function safeRef(root, ref) {
   return { path: ref.path, sha256: ref.sha256, bytes: bytes.length };
 }
 
-export function validateM4DeviceEvidence(file, scope) {
-  const root = path.dirname(path.resolve(file));
-  const value = JSON.parse(fs.readFileSync(file, 'utf8'));
-  const assertion = validateM4DeviceValue(value, scope);
-  const cases = {};
-  for (const [id, row] of Object.entries(assertion.cases)) {
-    cases[id] = { status: row.status, semantic: row.semantic, evidence: row.evidence.map(ref => safeRef(root, ref)) };
-  }
-  return { ...assertion, cases };
+// All references are relative to the independent run manifest, never the assertion.
+export function validateM4DeviceEvidence(file, scope, runManifestFile) {
+  if (!runManifestFile) throw new Error('independent run-manifest is required');
+  const root = path.dirname(path.resolve(runManifestFile));
+  const readReference = ref => {
+    safeRef(root, ref);
+    return { bytes: fs.readFileSync(path.join(root, ref.path)) };
+  };
+  return validateM4DeviceValue(JSON.parse(fs.readFileSync(file, 'utf8')), scope,
+    JSON.parse(fs.readFileSync(runManifestFile, 'utf8')), readReference);
 }
 
-export function validateM4DeviceValue(value, scope) {
-  if (!M4_CASES[scope]) throw new Error('scope must be core or other');
-  if (value.schemaVersion !== 1 || value.scope !== scope || !/^[a-f0-9]{64}$/.test(value.candidateSha256 ?? '')
-    || typeof value.target !== 'string' || !value.target || typeof value.systemVersion !== 'string' || !value.systemVersion
-    || typeof value.bundle !== 'string' || !value.bundle || !Number.isSafeInteger(value.pid) || value.pid <= 0
-    || !/^[a-f0-9]{64}$/.test(value.hapSha256 ?? '') || typeof value.cases !== 'object' || value.cases === null) {
-    throw new Error('invalid M4 device identity');
+export function validateM4DeviceValue(value, scope, manifest, readReference) {
+  if (!Object.hasOwn(M4_CASES, scope)) throw new Error('invalid M4 scope');
+  const expected = manifest?.m4?.[scope];
+  if (!expected || typeof readReference !== 'function') throw new Error('independent run-manifest M4 identity is required');
+  if (value?.schemaVersion !== 1 || value.kind !== 'm4-device-assertion' || value.scope !== scope || value.status !== 'PASS'
+    || !manifest.runId || value.runId !== manifest.runId || !manifest.tools?.hdc
+    || !/^[a-f0-9]{64}$/.test(manifest.candidate?.sha256 ?? '')
+    || value.candidateSha256 !== manifest.candidate.sha256 || !manifest.device?.target
+    || value.target !== manifest.device.target || !manifest.device.platformVersion
+    || value.systemVersion !== manifest.device.platformVersion
+    || !/^[A-Za-z0-9_.-]+$/.test(expected.bundle ?? '') || value.bundle !== expected.bundle
+    || !Number.isSafeInteger(expected.pid) || expected.pid <= 0 || value.pid !== expected.pid
+    || !/^[a-f0-9]{64}$/.test(expected.hap?.sha256 ?? '') || value.hapSha256 !== expected.hap.sha256
+    || typeof expected.captureCwd !== 'string' || !path.isAbsolute(expected.captureCwd)
+    || !['debug', 'release'].includes(expected.mode) || value.mode !== expected.mode
+    || !Array.isArray(expected.bootIds) || expected.bootIds.length < 2
+    || expected.bootIds.some(id => !Number.isSafeInteger(id)) || new Set(expected.bootIds).size !== expected.bootIds.length) {
+    throw new Error('M4 identity differs from independent run-manifest');
   }
-  const manifest = value.runManifest;
-  if (!manifest || manifest.candidateSha256 !== value.candidateSha256 || manifest.target !== value.target
-    || manifest.bundle !== value.bundle || manifest.pid !== value.pid || manifest.hapSha256 !== value.hapSha256) {
-    throw new Error('M4 identity disagrees with run-manifest');
-  }
-  const cases = {};
-  for (const id of M4_CASES[scope]) {
-    const row = value.cases[id];
-    if (!row || row.status !== 'PASS' || !row.semantic || typeof row.semantic.oracle !== 'string' || !row.semantic.oracle
-      || row.semantic.result !== 'PASS' || !Array.isArray(row.evidence) || row.evidence.length === 0) {
-      throw new Error(`missing passing device case or semantic oracle: ${id}`);
+  const read = (ref, label) => {
+    if (!ref || typeof ref.path !== 'string' || path.isAbsolute(ref.path) || ref.path.includes('\\')
+      || ref.path.split('/').includes('..') || !/^[a-f0-9]{64}$/.test(ref.sha256 ?? '')) throw new Error(`invalid ${label} reference`);
+    const bytes = readReference(ref, label)?.bytes;
+    if (!Buffer.isBuffer(bytes) || sha256(bytes) !== ref.sha256) throw new Error(`${label} missing or hash mismatch`);
+    return bytes;
+  };
+  read(manifest.candidate, 'candidate');
+  read(expected.hap, 'HAP');
+  const command = (row, args, label) => {
+    if (!row || row.cwd !== expected.captureCwd || row.exitCode !== 0 || row.signal !== null || row.timedOut !== false || row.interrupted !== false
+      || JSON.stringify(row.argv) !== JSON.stringify([manifest.tools.hdc, '-t', value.target, ...args])) {
+      throw new Error(`${label} command does not match selected device/process`);
     }
-    cases[id] = { status: row.status, semantic: { oracle: row.semantic.oracle, result: row.semantic.result }, evidence: row.evidence };
+    const stdout = read(row.stdout, `${label} stdout`);
+    read(row.stderr, `${label} stderr`);
+    return stdout;
+  };
+  const pid = command(value.pidCommand, ['shell', 'pidof', expected.bundle], 'PID').toString('utf8').trim();
+  if (pid !== String(expected.pid)) throw new Error('PID output differs from independent identity');
+  const log = command(value.logCommand, ['shell', 'hilog', '-x', '-P', String(expected.pid)], 'hilog');
+  const installed = command(value.installCommand, ['install', '-r', expected.hap.path], 'HAP install').toString('utf8');
+  if (!/install bundle successfully/i.test(installed) || /\b(fail(?:ed|ure)?|error)\b/i.test(installed)) throw new Error('HAP install has no successful receipt');
+  const text = log.toString('utf8');
+  const boots = [...text.matchAll(/EXPO_CORE_BOOT=([^\n]*)/g)].map(match => JSON.parse(match[1]));
+  if (JSON.stringify(boots.map(boot => boot.id)) !== JSON.stringify(expected.bootIds)
+    || boots.some(boot => boot.dev !== (expected.mode === 'debug'))) throw new Error('boot sequence/mode differs from independent identity');
+  if (!value.cases || JSON.stringify(Object.keys(value.cases).sort()) !== JSON.stringify([...M4_CASES[scope]].sort())) {
+    throw new Error('M4 case set differs from required scope');
   }
-  return { schemaVersion: 1, kind: 'm4-device-assertion', scope, status: 'PASS', candidateSha256: value.candidateSha256,
-    target: value.target, systemVersion: value.systemVersion, bundle: value.bundle, pid: value.pid, hapSha256: value.hapSha256,
-    runManifest: manifest, cases };
+  for (const [id, row] of Object.entries(value.cases)) {
+    if (row?.status !== 'PASS' || !Array.isArray(row.evidence) || !row.evidence.some(ref =>
+      ref.path === value.logCommand.stdout.path && ref.sha256 === value.logCommand.stdout.sha256)) throw new Error(`missing PID-scoped log for ${id}`);
+    for (const ref of row.evidence) read(ref, id);
+  }
+  // These checkers inspect bytes. An input's semantic.oracle/result is never authority.
+  // No complete existing device oracle covers Other's splash/system-ui/browser/package-sync.
+  if (scope === 'other') throw new Error('BLOCKED: complete Other semantic oracles unavailable; host tests cannot substitute');
+  const checker = 'packages/expo-modules-core/harmony/example/tools/check-i0-log.cjs';
+  const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'm4-oracle-'));
+  let replay;
+  try {
+    const input = path.join(temp, 'device.log'); fs.writeFileSync(input, log);
+    replay = spawnSync(process.execPath, [path.join(repository, checker), input, expected.mode, '--reload'],
+      { encoding: 'utf8', timeout: 30_000, maxBuffer: 4 * 1024 * 1024, env: { PATH: process.env.PATH } });
+    if (replay.error || replay.status !== 0 || replay.signal) throw new Error(`M4 semantic oracle rejected log: ${replay.error?.message ?? replay.stderr}`);
+  } finally { fs.rmSync(temp, { recursive: true, force: true }); }
+  const semantic = { oracle: checker, sha256: sha256(fs.readFileSync(path.join(repository, checker))),
+    result: 'PASS', stdout: replay.stdout, stderr: replay.stderr };
+  return { schemaVersion: 1, kind: 'm4-device-assertion', scope, status: 'PASS', runId: value.runId,
+    candidateSha256: value.candidateSha256, target: value.target, systemVersion: value.systemVersion,
+    bundle: value.bundle, pid: value.pid, hapSha256: value.hapSha256, mode: value.mode,
+    bootIds: expected.bootIds, pidCommand: value.pidCommand, logCommand: value.logCommand, installCommand: value.installCommand,
+    cases: Object.fromEntries(M4_CASES[scope].map(id => [id, { status: 'PASS', semantic, evidence: value.cases[id].evidence }])) };
 }
 
 function definitions(scope) {
@@ -88,7 +139,7 @@ function definitions(scope) {
   return [{ id: 'other-contracts', argv: [process.execPath, '--test', ...OTHER_FILES.map(file => path.join(repository, file))] }];
 }
 
-export async function runM4({ scope, consumer, deviceEvidence, output }) {
+export async function runM4({ scope, consumer, deviceEvidence, runManifest, output }) {
   if (!CASES[scope]) throw new Error('scope must be core or other');
   const destination = path.resolve(output);
   if (fs.existsSync(destination)) throw new Error(`output exists: ${destination}`);
@@ -112,7 +163,7 @@ export async function runM4({ scope, consumer, deviceEvidence, output }) {
   }
   let assertion;
   let deviceError = null;
-  try { assertion = validateM4DeviceEvidence(deviceEvidence, scope); }
+  try { assertion = validateM4DeviceEvidence(deviceEvidence, scope, runManifest); }
   catch (error) { deviceError = error.message; assertion = { schemaVersion: 1, kind: 'm4-device-assertion', scope,
     status: 'BLOCKED', blocker: deviceError, requiredCases: CASES[scope] }; }
   writeJSON(path.join(destination, 'device-assertion.json'), assertion);
@@ -128,11 +179,11 @@ export async function runM4({ scope, consumer, deviceEvidence, output }) {
 
 if (isMain(import.meta.url)) {
   const { values } = parseArgs({ options: { scope: { type: 'string' }, consumer: { type: 'string' },
-    'device-evidence': { type: 'string' }, output: { type: 'string' }, help: { type: 'boolean' } } });
-  if (values.help) console.log('b-run-m4.mjs --scope core|other --consumer <installed consumer> --device-evidence <json> --output <new directory>');
+    'device-evidence': { type: 'string' }, 'run-manifest': { type: 'string' }, output: { type: 'string' }, help: { type: 'boolean' } } });
+  if (values.help) console.log('b-run-m4.mjs --scope core|other --consumer <installed consumer> --device-evidence <json> --run-manifest <independent run json> --output <new directory>');
   else {
     try { console.log(JSON.stringify(await runM4({ scope: values.scope, consumer: values.consumer,
-      deviceEvidence: values['device-evidence'], output: values.output }), null, 2)); }
+      deviceEvidence: values['device-evidence'], runManifest: values['run-manifest'], output: values.output }), null, 2)); }
     catch (error) { console.error(error.message); process.exitCode = 1; }
   }
 }

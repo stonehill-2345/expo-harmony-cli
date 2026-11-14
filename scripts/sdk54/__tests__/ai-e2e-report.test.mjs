@@ -298,3 +298,21 @@ test('rejects arbitrary, mismatched or failed device assertions', async t => {
     });
   }
 });
+
+
+test('M4 cases cannot reuse preflight-only assertions', t => {
+  const { root } = createRun(t);
+  rewriteResults(root, ({ results }) => { results[1].caseId = 'V02-CORE-M4'; });
+  const report = verifyRunReport(root);
+  assert.equal(report.canClose, false);
+  assert.match(report.errors.join('\n'), /M4 device assertion invalid/);
+});
+
+test('non-M4 cases cannot accept a forged M4 kind as device preflight', t => {
+  const { root } = createRun(t);
+  const file = path.join(root, 'evidence/device.json');
+  const value = JSON.parse(fs.readFileSync(file)); value.kind = 'm4-device-assertion';
+  const bytes = Buffer.from(JSON.stringify(value)); fs.writeFileSync(file, bytes);
+  rewriteResults(root, ({ results }) => { results[1].evidence.find(row => row.type === 'device-assertion').sha256 = sha256(bytes); });
+  assert.match(verifyRunReport(root).errors.join('\n'), /invalid device-preflight identity/);
+});

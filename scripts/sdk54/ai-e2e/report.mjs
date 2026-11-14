@@ -75,11 +75,10 @@ function verifyEvidence(runDirectory, result, manifest, errors) {
       catch (error) { errors.push(`${error.message}: ${evidence.path}`); }
     }
     if (evidence.type === 'device-assertion') {
-      let kind = null;
-      try { kind = JSON.parse(verified.bytes).kind; } catch { /* verifier below reports malformed JSON */ }
-      const verifier = kind === 'm4-device-assertion' ? verifyM4DeviceAssertion : verifyDeviceAssertion;
+      const scope = { 'V02-CORE-M4': 'core', 'V02-OTHER-M4': 'other' }[result.caseId];
+      const verifier = scope ? verifyM4DeviceAssertion : verifyDeviceAssertion;
       verifier(verified.bytes, manifest,
-        (reference, label) => verifyReferencedFile(runDirectory, reference, label, errors), errors);
+        (reference, label) => verifyReferencedFile(runDirectory, reference, label, errors), errors, scope);
     }
   }
   return types;

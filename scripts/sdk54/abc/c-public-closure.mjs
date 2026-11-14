@@ -384,7 +384,8 @@ function bindingNames(name, output) {
 function relativeCodeCandidates(from, request) {
   const base = path.posix.normalize(path.posix.join(path.posix.dirname(from), request));
   const candidates = [base];
-  if (!path.posix.extname(base)) {
+  // A dot in a module basename (e.g. NativeModulesProxy.types) is not a code extension.
+  if (!/\.(?:[cm]?[jt]sx?|json|node)$/.test(base)) {
     for (const extension of ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.d.ts']) candidates.push(`${base}${extension}`);
     for (const extension of ['.js', '.mjs', '.cjs', '.ts', '.tsx', '.d.ts']) candidates.push(`${base}/index${extension}`);
   }

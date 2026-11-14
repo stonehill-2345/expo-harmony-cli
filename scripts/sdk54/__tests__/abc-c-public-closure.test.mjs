@@ -59,6 +59,10 @@ async function candidateFixture(t, options = {}) {
     : `export declare const value: number;${options.extraSymbol ? '\nexport declare const extra: number;' : ''}`);
   if (options.extraExport) fs.writeFileSync(path.join(packageRoot, 'build/extra.js'), 'export const extra = 1;');
   if (options.missingNamedReexport) fs.writeFileSync(path.join(packageRoot, 'build/dep.js'), 'export const other = 1;');
+  if (options.dottedTypeRequest) {
+    fs.writeFileSync(path.join(packageRoot, 'build/index.d.ts'), "export * from './Named.types';");
+    if (!options.missingDottedType) fs.writeFileSync(path.join(packageRoot, 'build/Named.types.d.ts'), 'export declare const value: number;');
+  }
   const archive = path.join(root, 'expo-test-1.0.0.tgz');
   const archiveEntries = fs.readdirSync(packageRoot);
   if (options.duplicateManifestMember) archiveEntries.push('package.json');
@@ -69,6 +73,7 @@ async function candidateFixture(t, options = {}) {
   if (!options.missingDeclaredEntry) members.push('package/build/index.js');
   if (options.extraExport) members.push('package/build/extra.js');
   if (options.missingNamedReexport) members.push('package/build/dep.js');
+  if (options.dottedTypeRequest && !options.missingDottedType) members.push('package/build/Named.types.d.ts');
   members.sort();
   const packageRecord = {
     name: publishName,
@@ -108,6 +113,10 @@ async function candidateFixture(t, options = {}) {
     ['packages/expo-test/build/index.js', fs.readFileSync(path.join(sourceRoot, 'packages/expo-test/build/index.js'))],
     ['packages/expo-test/build/index.d.ts', fs.readFileSync(path.join(sourceRoot, 'packages/expo-test/build/index.d.ts'))],
   ]);
+  if (options.dottedTypeRequest) {
+    sourceFiles.set('packages/expo-test/build/index.d.ts', Buffer.from("export * from './Named.types';"));
+    sourceFiles.set('packages/expo-test/build/Named.types.d.ts', Buffer.from('export declare const value: number;'));
+  }
   return {
     root,
     candidateFile,
@@ -487,4 +496,15 @@ test('external Image baseline rejects bytes that differ from its catalog pin', a
   const result = await loadExternalManifestBaselines({sourceRoot:process.cwd(),scopeFile:path.join(root,'public-scope/scope-reviewed.json')});
   assert.equal(result.baselines.has('expo-image'),false);
   assert.ok(result.errors.some(error=>/expo-image\/fixed input bytes differ/.test(error)),result.errors.join('\n'));
+});
+
+
+test('resolves dotted type module basenames without inventing missing files', async t => {
+  const good = await candidateFixture(t, { dottedTypeRequest: true });
+  const result = await verifyCandidatePublicSurface({ ...good, sourceRevision: 'source-revision' });
+  assert.equal(result.valid, true, result.errors.join('\n'));
+  const missing = await candidateFixture(t, { dottedTypeRequest: true, missingDottedType: true });
+  const rejected = await verifyCandidatePublicSurface({ ...missing, sourceRevision: 'source-revision' });
+  assert.equal(rejected.valid, false);
+  assert.match(rejected.errors.join('\n'), /analysis incomplete/);
 });

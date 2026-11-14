@@ -12,7 +12,7 @@ export function completeCommands({ base, consumer, runDirectory, coreDeviceEvide
   for (const id of ['V02-CORE-M4', 'V02-OTHER-M4']) if (ids.has(id)) throw new Error(`command already exists: ${id}`);
   const script = path.join(repository, 'scripts/sdk54/abc/b-run-m4.mjs');
   const add = (id, scope, evidence) => ({ id, semanticCaseIds: [], command: { argv: [process.execPath, script, '--scope', scope,
-    '--consumer', path.resolve(consumer), '--device-evidence', path.resolve(evidence), '--output', path.resolve(runDirectory, `captures/${scope}-m4`)],
+    '--run-manifest', path.resolve(runDirectory, 'run-manifest.json'), '--consumer', path.resolve(consumer), '--device-evidence', path.resolve(evidence), '--output', path.resolve(runDirectory, `captures/${scope}-m4`)],
     cwd: path.resolve(runDirectory), timeoutMs: 600_000,
     evidence: [{ type: 'device-assertion', path: `captures/${scope}-m4/device-assertion.json` }] } });
   const result = { schemaVersion: 1, stage: 'V-02', status: 'COMPLETE_NOT_EXECUTED', omittedCases: [],
