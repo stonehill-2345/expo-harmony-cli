@@ -392,7 +392,23 @@ function relativeCodeCandidates(from, request) {
   return [...new Set(candidates)];
 }
 
-function staticEntrySurface(entryFile, readRelative) {
+function manifestRuntimeDependencies(manifest) {
+  const names = new Set();
+  for (const field of ['dependencies', 'peerDependencies', 'optionalDependencies']) {
+    for (const name of Object.keys(manifest?.[field] ?? {})) names.add(name);
+  }
+  return names;
+}
+
+// "expo-modules-core/types" and "@expo/cli" both resolve to their package name.
+function requestPackageName(request) {
+  const parts = request.split('/');
+  return request.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
+}
+
+export function staticEntrySurface(entryFile, readRelative, options = {}) {
+  const declaredDependencies = options.declaredDependencies ?? new Set();
+  const selfName = typeof options.selfName === 'string' && options.selfName ? options.selfName : null;
   const cache = new Map(), files = new Map(), memo = new Map(), active = new Set();
   const read = file => {
     if (!cache.has(file)) cache.set(file, readRelative(file));
@@ -423,7 +439,10 @@ function staticEntrySurface(entryFile, readRelative) {
       return found;
     };
     const taintedFunctions = new Set(), functionAliases = [], taintedExportObjects = new Set(), exportObjectAliases = [];
+    const functionLikeBindings = new Set();
+    const moduleExportsReplaced = { value: false };
     for (const statement of source.statements) {
+      if (ts.isFunctionDeclaration(statement) && statement.name) functionLikeBindings.add(statement.name.text);
       if (ts.isFunctionDeclaration(statement) && statement.name && statement.body && containsExportsReference(statement.body)) {
         taintedFunctions.add(statement.name.text);
       }
@@ -432,6 +451,8 @@ function staticEntrySurface(entryFile, readRelative) {
         if (!ts.isIdentifier(declaration.name) || !declaration.initializer) continue;
         if ((ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer))
           && containsExportsReference(declaration.initializer.body)) taintedFunctions.add(declaration.name.text);
+        else if ((ts.isArrowFunction(declaration.initializer) || ts.isFunctionExpression(declaration.initializer)
+          || ts.isClassExpression(declaration.initializer))) functionLikeBindings.add(declaration.name.text);
         else if (ts.isIdentifier(declaration.initializer)) {
           functionAliases.push([declaration.name.text, declaration.initializer.text]);
           if (declaration.initializer.text === 'exports') taintedExportObjects.add(declaration.name.text);
@@ -440,6 +461,13 @@ function staticEntrySurface(entryFile, readRelative) {
           && declaration.initializer.expression.text === 'module' && declaration.initializer.name.text === 'exports') {
           taintedExportObjects.add(declaration.name.text);
         }
+      }
+    }
+    let functionAliasesChanged = true;
+    while (functionAliasesChanged) {
+      functionAliasesChanged = false;
+      for (const [alias, target] of functionAliases) if (functionLikeBindings.has(target) && !functionLikeBindings.has(alias)) {
+        functionLikeBindings.add(alias); functionAliasesChanged = true;
       }
     }
     let changed = true;
@@ -459,13 +487,24 @@ function staticEntrySurface(entryFile, readRelative) {
       return found;
     };
     const follow = (request, mode = 'star', expected = []) => {
-      if (!request.startsWith('.')) { reexports.add(request); complete = false; return; }
+      if (!request.startsWith('.')) {
+        reexports.add(request);
+        // A request that the manifest itself declares (or the package's own
+        // self-reference) is part of the intended public surface; only an
+        // unlisted external request is an unresolvable analysis gap.
+        const packageName = requestPackageName(request);
+        if (!declaredDependencies.has(packageName) && packageName !== selfName) complete = false;
+        return;
+      }
       const target = resolve(file, request);
       if (!target) { reexports.add(`${request}:missing`); complete = false; return; }
       const child = scan(target);
       for (const boundary of child.reexports) reexports.add(boundary);
       if (!child.complete) complete = false;
       if (mode === 'star') for (const name of child.names) if (name !== 'default') names.add(name);
+      // `module.exports = require('./x')` replaces the whole exports object,
+      // so the child's default export is forwarded along with everything else.
+      if (mode === 'whole') for (const name of child.names) names.add(name);
       if (mode === 'named') for (const name of expected) if (!child.names.includes(name)) complete = false;
     };
     for (const statement of source.statements) {
@@ -498,9 +537,14 @@ function staticEntrySurface(entryFile, readRelative) {
           && (ts.isIdentifier(left.expression) && left.expression.text === 'exports'
             || ts.isIdentifier(left.expression) && taintedExportObjects.has(left.expression.text)
             || ts.isPropertyAccessExpression(left.expression) && ts.isIdentifier(left.expression.expression)
-              && left.expression.expression.text === 'module' && left.expression.name.text === 'exports')) names.add(left.name.text);
-        else if (ts.isPropertyAccessExpression(left) && ts.isIdentifier(left.expression)
+              && left.expression.expression.text === 'module' && left.expression.name.text === 'exports')) {
+          // After `module.exports = <replacement>` the original exports object is
+          // no longer the public surface, so late writes to it add no names.
+          const replacedBareExports = ts.isIdentifier(left.expression) && left.expression.text === 'exports' && moduleExportsReplaced.value;
+          if (!replacedBareExports) names.add(left.name.text);
+        } else if (ts.isPropertyAccessExpression(left) && ts.isIdentifier(left.expression)
           && left.expression.text === 'module' && left.name.text === 'exports' && ts.isObjectLiteralExpression(expression.right)) {
+          moduleExportsReplaced.value = true;
           for (const property of expression.right.properties) {
             if ((ts.isPropertyAssignment(property) || ts.isShorthandPropertyAssignment(property) || ts.isMethodDeclaration(property))
               && property.name) names.add(property.name.getText(source).replace(/^['"]|['"]$/g, ''));
@@ -509,7 +553,20 @@ function staticEntrySurface(entryFile, readRelative) {
           && left.expression.text === 'module' && left.name.text === 'exports'
           && ts.isCallExpression(expression.right) && ts.isIdentifier(expression.right.expression) && expression.right.expression.text === 'require'
           && expression.right.arguments.length === 1 && ts.isStringLiteralLike(expression.right.arguments[0])) {
-          follow(expression.right.arguments[0].text);
+          moduleExportsReplaced.value = true;
+          follow(expression.right.arguments[0].text, 'whole');
+        } else if (ts.isPropertyAccessExpression(left) && ts.isIdentifier(left.expression)
+          && left.expression.text === 'module' && left.name.text === 'exports'
+          && (ts.isFunctionExpression(expression.right) || ts.isArrowFunction(expression.right) || ts.isClassExpression(expression.right))) {
+          // module.exports = <function | class expression> is a fully
+          // determined default export.
+          names.add('default');
+          moduleExportsReplaced.value = true;
+        } else if (ts.isPropertyAccessExpression(left) && ts.isIdentifier(left.expression)
+          && left.expression.text === 'module' && left.name.text === 'exports' && ts.isIdentifier(expression.right)
+          && functionLikeBindings.has(expression.right.text)) {
+          names.add('default');
+          moduleExportsReplaced.value = true;
         } else if (ts.isPropertyAccessExpression(left) && ts.isIdentifier(left.expression)
           && left.expression.text === 'module' && left.name.text === 'exports') {
           names.add('default');
@@ -526,6 +583,15 @@ function staticEntrySurface(entryFile, readRelative) {
       if (!ts.isCallExpression(expression)) continue;
       let recognizedExportCall = false;
       if (ts.isPropertyAccessExpression(expression.expression) && ts.isIdentifier(expression.expression.expression)
+        && expression.expression.expression.text === 'Object' && expression.expression.name.text === 'defineProperty'
+        && expression.arguments.length >= 2 && ts.isIdentifier(expression.arguments[0])
+        && (expression.arguments[0].text === 'exports' || taintedExportObjects.has(expression.arguments[0].text))
+        && ts.isStringLiteralLike(expression.arguments[1]) && expression.arguments[1].text === '__esModule') {
+        // The TypeScript CommonJS interop marker; it contributes no public
+        // name, and treating it as an unrecognized exports-touching call
+        // would misreport every compiled entry as incomplete.
+        recognizedExportCall = true;
+      } else if (ts.isPropertyAccessExpression(expression.expression) && ts.isIdentifier(expression.expression.expression)
         && expression.expression.expression.text === 'Object' && expression.expression.name.text === 'defineProperty'
         && expression.arguments.length >= 2 && ts.isIdentifier(expression.arguments[0])
         && (expression.arguments[0].text === 'exports' || taintedExportObjects.has(expression.arguments[0].text))
@@ -573,7 +639,11 @@ const surfaceShape = surface => surface && ({ names: surface.names, reexports: s
 function frozenGitReader(sourceRoot, revision) {
   return relative => {
     if (typeof relative !== 'string' || path.posix.isAbsolute(relative) || relative.includes('\\') || relative.split('/').includes('..')) return null;
-    const result = spawnSync('git', ['-C', sourceRoot, 'show', `${revision}:${relative}`], { encoding: null, maxBuffer: 64 * 1024 * 1024 });
+    // `git show <rev>:<dir>` happily returns the raw tree object, which would
+    // masquerade as a parseable file and mark extensionless directory requests
+    // (e.g. `src/uuid`) as resolved; `cat-file blob` rejects anything that is
+    // not a file blob, matching what a package archive reader can supply.
+    const result = spawnSync('git', ['-C', sourceRoot, 'cat-file', 'blob', `${revision}:${relative}`], { encoding: null, maxBuffer: 64 * 1024 * 1024 });
     return result.status === 0 ? result.stdout : null;
   };
 }
@@ -617,6 +687,7 @@ async function inspectCandidateArchive(file, limits = DEFAULT_ARCHIVE_LIMITS) {
     if (!fs.existsSync(manifestFile)) throw new Error('archive omits package/package.json');
     const manifestBytes = fs.readFileSync(manifestFile), manifest = JSON.parse(manifestBytes), memberSet = new Set(members);
     const entryFiles = {}, entrySurfaces = {};
+    const surfaceOptions = { declaredDependencies: manifestRuntimeDependencies(manifest), selfName: manifest.name };
     const readRelative = relative => {
       const member = `package/${relative}`;
       if (!memberSet.has(member)) return null;
@@ -628,7 +699,7 @@ async function inspectCandidateArchive(file, limits = DEFAULT_ARCHIVE_LIMITS) {
       if (!member) continue;
       const bytes = fs.readFileSync(path.join(temporary, member)), relative = member.slice('package/'.length);
       entryFiles[entry.pointer] = { member, relative, bytes, sha256: sha256(bytes) };
-      if (sourceCodePattern.test(relative)) entrySurfaces[entry.pointer] = staticEntrySurface(relative, readRelative);
+      if (sourceCodePattern.test(relative)) entrySurfaces[entry.pointer] = staticEntrySurface(relative, readRelative, surfaceOptions);
     }
     return { manifest, manifestSha256: sha256(manifestBytes), members: members.sort(), entryFiles, entrySurfaces };
   } finally {
@@ -781,7 +852,13 @@ export async function verifyCandidatePublicSurface({ candidateFile, scope, sourc
       const member = resolvedArchiveMember(entry.target, entry.pointer.split('/')[1], memberSet);
       if (!member || !memberSet.has(member)) errors.push(`Manifest entry member absent: ${runtime.installName}/${entry.pointer}/${entry.target}`);
       const surface = inspected.entrySurfaces[entry.pointer];
-      if (surface && surface.complete !== true) errors.push(`Candidate public entry export analysis incomplete: ${runtime.installName}/${entry.pointer}`);
+      // Packages pinned to a verified external input are judged by the exact
+      // surface comparison against that input below; an unresolvable name in the
+      // upstream archive itself is not a candidate defect. Internal packages
+      // must still resolve their entire entry surface.
+      if (surface && surface.complete !== true && descriptor?.relativePath) {
+        errors.push(`Candidate public entry export analysis incomplete: ${runtime.installName}/${entry.pointer}`);
+      }
     }
 
     const trackedRows = scopeRowsByPackage.get(runtime.installName) ?? [];
@@ -806,6 +883,7 @@ export async function verifyCandidatePublicSurface({ candidateFile, scope, sourc
         baselineEntries = publicManifestEntries(sourceManifest);
         baselineSurfaces = {};
         const readPackageFile = relative => readSource(`${descriptor.relativePath}/${relative}`);
+        const baselineSurfaceOptions = { declaredDependencies: manifestRuntimeDependencies(sourceManifest), selfName: sourceManifest.name };
         for (const entry of baselineEntries) {
           const candidateEntry = inspected.entryFiles[entry.pointer];
           if (!candidateEntry || !sourceCodePattern.test(candidateEntry.relative)) continue;
@@ -813,7 +891,7 @@ export async function verifyCandidatePublicSurface({ candidateFile, scope, sourc
           if (!frozenBytes) errors.push(`Frozen source public entry absent: ${runtime.installName}/${entry.pointer}/${candidateEntry.relative}`);
           else {
             if (sha256(frozenBytes) !== candidateEntry.sha256) errors.push(`Frozen source public entry bytes mismatch: ${runtime.installName}/${entry.pointer}`);
-            baselineSurfaces[entry.pointer] = staticEntrySurface(candidateEntry.relative, readPackageFile);
+            baselineSurfaces[entry.pointer] = staticEntrySurface(candidateEntry.relative, readPackageFile, baselineSurfaceOptions);
           }
         }
         baselineKind = { kind: 'frozen-source-commit', revision: sourceRevision, path: `${descriptor.relativePath}/package.json`,

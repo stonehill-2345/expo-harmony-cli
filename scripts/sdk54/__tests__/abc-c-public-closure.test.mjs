@@ -37,13 +37,15 @@ async function candidateFixture(t, options = {}) {
     exports: {
       '.': { types: './build/index.d.ts', default: './build/index.js' },
     },
+    ...(options.declaredDependencies ? { dependencies: Object.fromEntries(options.declaredDependencies.map(name => [name, '^1.0.0'])) } : {}),
   };
   const manifest = structuredClone(baselineManifest);
   manifest.name = publishName;
   if (options.extraExport) manifest.exports['./extra'] = './build/extra.js';
   if (options.invalidExportsLeaf) manifest.exports['.'].default = 42;
+  if (options.declaredDependencies) manifest.dependencies = Object.fromEntries(options.declaredDependencies.map(name => [name, '^1.0.0']));
   fs.writeFileSync(path.join(packageRoot, 'package.json'), JSON.stringify(manifest));
-  if (!options.missingDeclaredEntry) fs.writeFileSync(path.join(packageRoot, 'build/index.js'), options.defaultExport
+  const entrySource = options.entrySource ?? (options.defaultExport
     ? 'export default function Widget() {}'
     : options.dynamicCommonJs ? 'module.exports = getExports();'
     : options.externalStar ? "export * from 'dependency';"
@@ -54,11 +56,17 @@ async function candidateFixture(t, options = {}) {
     : options.assignedExportAlias ? 'let out;\nout = exports;\nout.extra = 1;'
     : options.missingNamedReexport ? "export { missing } from './dep.js';"
     : `export const value = 1;${options.extraSymbol ? '\nexport const extra = 2;' : ''}`);
+  if (!options.missingDeclaredEntry) fs.writeFileSync(path.join(packageRoot, 'build/index.js'), entrySource);
   fs.writeFileSync(path.join(packageRoot, 'build/index.d.ts'), options.defaultExport
     ? 'export default function Widget(): void;'
     : `export declare const value: number;${options.extraSymbol ? '\nexport declare const extra: number;' : ''}`);
   if (options.extraExport) fs.writeFileSync(path.join(packageRoot, 'build/extra.js'), 'export const extra = 1;');
   if (options.missingNamedReexport) fs.writeFileSync(path.join(packageRoot, 'build/dep.js'), 'export const other = 1;');
+  for (const additional of options.additionalFiles ?? []) {
+    const target = path.join(packageRoot, additional.path);
+    fs.mkdirSync(path.dirname(target), { recursive: true });
+    fs.writeFileSync(target, additional.content);
+  }
   if (options.dottedTypeRequest) {
     fs.writeFileSync(path.join(packageRoot, 'build/index.d.ts'), "export * from './Named.types';");
     if (!options.missingDottedType) fs.writeFileSync(path.join(packageRoot, 'build/Named.types.d.ts'), 'export declare const value: number;');
@@ -74,6 +82,7 @@ async function candidateFixture(t, options = {}) {
   if (options.extraExport) members.push('package/build/extra.js');
   if (options.missingNamedReexport) members.push('package/build/dep.js');
   if (options.dottedTypeRequest && !options.missingDottedType) members.push('package/build/Named.types.d.ts');
+  for (const additional of options.additionalFiles ?? []) members.push(`package/${additional.path}`);
   members.sort();
   const packageRecord = {
     name: publishName,
@@ -106,13 +115,20 @@ async function candidateFixture(t, options = {}) {
   fs.mkdirSync(path.dirname(sourceManifest), { recursive: true });
   fs.writeFileSync(sourceManifest, JSON.stringify(baselineManifest));
   fs.mkdirSync(path.join(sourceRoot, 'packages/expo-test/build'), { recursive: true });
-  fs.writeFileSync(path.join(sourceRoot, 'packages/expo-test/build/index.js'), 'export const value = 1;');
-  fs.writeFileSync(path.join(sourceRoot, 'packages/expo-test/build/index.d.ts'), 'export declare const value: number;');
+  const typesSource = options.defaultExport
+    ? 'export default function Widget(): void;'
+    : `export declare const value: number;${options.extraSymbol ? '\nexport declare const extra: number;' : ''}`;
+  fs.writeFileSync(path.join(sourceRoot, 'packages/expo-test/build/index.js'),
+    options.divergeSourceBaseline ? 'export const value = 1;' : entrySource);
+  fs.writeFileSync(path.join(sourceRoot, 'packages/expo-test/build/index.d.ts'), typesSource);
   const sourceFiles = new Map([
     ['packages/expo-test/package.json', fs.readFileSync(sourceManifest)],
     ['packages/expo-test/build/index.js', fs.readFileSync(path.join(sourceRoot, 'packages/expo-test/build/index.js'))],
     ['packages/expo-test/build/index.d.ts', fs.readFileSync(path.join(sourceRoot, 'packages/expo-test/build/index.d.ts'))],
   ]);
+  for (const additional of options.additionalFiles ?? []) {
+    sourceFiles.set(`packages/expo-test/${additional.path}`, Buffer.from(additional.content));
+  }
   if (options.dottedTypeRequest) {
     sourceFiles.set('packages/expo-test/build/index.d.ts', Buffer.from("export * from './Named.types';"));
     sourceFiles.set('packages/expo-test/build/Named.types.d.ts', Buffer.from('export declare const value: number;'));
@@ -198,7 +214,7 @@ test('rejects a package manifest entry whose archive target is absent', async (t
 });
 
 test('rejects candidate public symbols and declarations that differ from the frozen source revision', async (t) => {
-  const fixture = await candidateFixture(t, { extraSymbol: true });
+  const fixture = await candidateFixture(t, { extraSymbol: true, divergeSourceBaseline: true });
   const result = await verifyCandidatePublicSurface({ ...fixture, sourceRevision: 'source-revision' });
   assert.equal(result.valid, false);
   assert.match(result.errors.join('\n'), /public entry (?:bytes|exports).*mismatch/i);
@@ -507,4 +523,87 @@ test('resolves dotted type module basenames without inventing missing files', as
   const rejected = await verifyCandidatePublicSurface({ ...missing, sourceRevision: 'source-revision' });
   assert.equal(rejected.valid, false);
   assert.match(rejected.errors.join('\n'), /analysis incomplete/);
+});
+
+test('treats the TypeScript CommonJS interop marker as fully analyzed', async t => {
+  const fixture = await candidateFixture(t, { entrySource: '"use strict";\nObject.defineProperty(exports, "__esModule", { value: true });\nexports.value = 1;\n' });
+  const result = await verifyCandidatePublicSurface({ ...fixture, sourceRevision: 'source-revision' });
+  assert.equal(result.valid, true, result.errors.join('\n'));
+  const surface = result.packages[0].entrySurfaces['/main'];
+  assert.deepEqual(surface.names, ['value']);
+  assert.deepEqual(surface.reexports, []);
+  assert.equal(surface.complete, true);
+  assert.equal(surface.files.length, 1);
+  assert.equal(surface.files[0].path, 'build/index.js');
+});
+
+test('treats a module.exports function literal as a complete default export', async t => {
+  const fixture = await candidateFixture(t, { entrySource: 'module.exports = function hashAssetFiles(asset) {\n  return asset;\n};\n' });
+  const result = await verifyCandidatePublicSurface({ ...fixture, sourceRevision: 'source-revision' });
+  assert.equal(result.valid, true, result.errors.join('\n'));
+  assert.deepEqual(result.packages[0].entrySurfaces['/main'].names, ['default']);
+  assert.equal(result.packages[0].entrySurfaces['/main'].complete, true);
+});
+
+test('treats a module.exports local function binding as a complete default export', async t => {
+  const fixture = await candidateFixture(t, { entrySource: '"use strict";\nasync function main(args) {\n  return args;\n}\nmodule.exports = main;\n' });
+  const result = await verifyCandidatePublicSurface({ ...fixture, sourceRevision: 'source-revision' });
+  assert.equal(result.valid, true, result.errors.join('\n'));
+  assert.deepEqual(result.packages[0].entrySurfaces['/main'].names, ['default']);
+  assert.equal(result.packages[0].entrySurfaces['/main'].complete, true);
+});
+
+test('forwards the child default export through module.exports = require()', async t => {
+  const fixture = await candidateFixture(t, {
+    entrySource: 'module.exports = require("./widget");\n',
+    additionalFiles: [{ path: 'build/widget.js', content: '"use strict";\nObject.defineProperty(exports, "__esModule", { value: true });\nexports.default = function widget() {};\nexports.extra = 2;\n' }],
+  });
+  const result = await verifyCandidatePublicSurface({ ...fixture, sourceRevision: 'source-revision' });
+  assert.equal(result.valid, true, result.errors.join('\n'));
+  assert.deepEqual(result.packages[0].entrySurfaces['/main'].names, ['default', 'extra']);
+  assert.equal(result.packages[0].entrySurfaces['/main'].complete, true);
+});
+
+test('keeps internal packages incomplete for unlisted external requests', async t => {
+  const fixture = await candidateFixture(t, { entrySource: "export * from 'rogue-dep';\n" });
+  const result = await verifyCandidatePublicSurface({ ...fixture, sourceRevision: 'source-revision' });
+  assert.equal(result.valid, false);
+  assert.match(result.errors.join('\n'), /export analysis incomplete: expo-test\/\/main/);
+});
+
+test('accepts re-exports of manifest-declared runtime dependencies', async t => {
+  const fixture = await candidateFixture(t, {
+    entrySource: "export * from 'declared-dep';\nexport * from 'declared-dep/subpath';\n",
+    declaredDependencies: ['declared-dep'],
+  });
+  const result = await verifyCandidatePublicSurface({ ...fixture, sourceRevision: 'source-revision' });
+  assert.equal(result.valid, true, result.errors.join('\n'));
+  assert.deepEqual(result.packages[0].entrySurfaces['/main'].reexports, ['declared-dep', 'declared-dep/subpath']);
+  assert.equal(result.packages[0].entrySurfaces['/main'].complete, true);
+});
+
+test('judges external-input packages by exact surface equality, not candidate-only completeness', async t => {
+  const entries = [
+    { pointer: '/main', target: './build/index.js' },
+    { pointer: '/types', target: './build/index.d.ts' },
+    { pointer: '/exports/./types', target: './build/index.d.ts' },
+    { pointer: '/exports/./default', target: './build/index.js' },
+  ];
+  const typesShape = { names: ['value'], reexports: [], complete: true };
+  const rogueShape = { names: [], reexports: ['rogue-dep'], complete: false };
+  const buildBaseline = mainShape => new Map([['expo-test', { entries, entrySurfaces: {
+    '/main': structuredClone(mainShape),
+    '/exports/./default': structuredClone(mainShape),
+    '/types': structuredClone(typesShape),
+    '/exports/./types': structuredClone(typesShape),
+  } }]]);
+  const matching = await candidateFixture(t, { entrySource: "export * from 'rogue-dep';\n", untrackedScope: true });
+  matching.packageCatalog[0] = { ...matching.packageCatalog[0], relativePath: undefined };
+  const accepted = await verifyCandidatePublicSurface({ ...matching, sourceRevision: 'source-revision', externalManifestBaselines: buildBaseline(rogueShape) });
+  assert.equal(accepted.valid, true, accepted.errors.join('\n'));
+  const diverged = await candidateFixture(t, { entrySource: "export * from 'other-dep';\n", untrackedScope: true });
+  diverged.packageCatalog[0] = { ...diverged.packageCatalog[0], relativePath: undefined };
+  const rejected = await verifyCandidatePublicSurface({ ...diverged, sourceRevision: 'source-revision', externalManifestBaselines: buildBaseline(rogueShape) });
+  assert.equal(rejected.valid, false);
+  assert.match(rejected.errors.join('\n'), /public entry exports mismatch/i);
 });

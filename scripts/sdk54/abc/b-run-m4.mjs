@@ -110,9 +110,9 @@ export function validateM4DeviceValue(value, scope, manifest, readReference) {
     for (const ref of row.evidence) read(ref, id);
   }
   // These checkers inspect bytes. An input's semantic.oracle/result is never authority.
-  // No complete existing device oracle covers Other's splash/system-ui/browser/package-sync.
-  if (scope === 'other') throw new Error('BLOCKED: complete Other semantic oracles unavailable; host tests cannot substitute');
-  const checker = 'packages/expo-modules-core/harmony/example/tools/check-i0-log.cjs';
+  const checker = scope === 'core'
+    ? 'packages/expo-modules-core/harmony/example/tools/check-i0-log.cjs'
+    : 'scripts/sdk54/abc/check-other-log.cjs';
   const temp = fs.mkdtempSync(path.join(os.tmpdir(), 'm4-oracle-'));
   let replay;
   try {
@@ -166,6 +166,14 @@ export async function runM4({ scope, consumer, deviceEvidence, runManifest, outp
   try { assertion = validateM4DeviceEvidence(deviceEvidence, scope, runManifest); }
   catch (error) { deviceError = error.message; assertion = { schemaVersion: 1, kind: 'm4-device-assertion', scope,
     status: 'BLOCKED', blocker: deviceError, requiredCases: CASES[scope] }; }
+  // The log checker replays event/state-machine semantics for the six Other
+  // cases. Pixel-level rendering evidence (ArkWeb page, window colors, decoded
+  // screenshots) still needs the historical image verifiers, whose originals
+  // are missing; a log PASS alone must not close the Other scope.
+  if (scope === 'other' && !deviceError) {
+    deviceError = 'BLOCKED: Other image/pixel evidence verifiers are missing (verify-browser-evidence.cjs, system-ui and splash-status evidence originals)';
+    assertion = { ...assertion, status: 'BLOCKED', logSemantics: 'PASS', blocker: deviceError };
+  }
   writeJSON(path.join(destination, 'device-assertion.json'), assertion);
   const hostPassed = commands.every(row => row.exitCode === 0 && !row.timedOut && !row.interrupted);
   const status = hostPassed && !deviceError ? 'PASS' : hostPassed ? 'BLOCKED' : 'FAIL';

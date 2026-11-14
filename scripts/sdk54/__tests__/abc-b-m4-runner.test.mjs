@@ -118,11 +118,26 @@ test('report verifier reruns oracle rather than trusting producer PASS', t => {
   assert.ok(errors.length);
 });
 
-test('Other complete case list remains blocked without complete device oracles', t => {
+test('Other complete case list replays the six-case log checker', t => {
   const f = fixture(t); f.value.scope = 'other'; f.manifest.m4.other = f.manifest.m4.core;
   f.value.cases = Object.fromEntries(['M4-A03-splash','M4-A03-system-ui','M4-A03-status-bar','M4-A04-linking-router','M4-A05-browser','M4-A07-package-sync']
     .map(id => [id, { status: 'PASS', semantic: { oracle: 'fake', result: 'PASS' }, evidence: [f.value.logCommand.stdout] }]));
-  f.save(); assert.throws(() => validateM4DeviceEvidence(f.file, 'other', f.run), /complete Other semantic oracles unavailable/);
+  f.save(); assert.throws(() => validateM4DeviceEvidence(f.file, 'other', f.run), /M4 semantic oracle rejected log/);
+});
+
+test('Other log semantics replay as PASS while image evidence stays blocked', async t => {
+  const f = fixture(t);
+  const { completeOtherLog } = await import('./abc-other-log-fixtures.mjs');
+  const otherLog = completeOtherLog();
+  f.value.scope = 'other'; f.manifest.m4.other = f.manifest.m4.core;
+  f.replaceLog(otherLog);
+  f.value.cases = Object.fromEntries(['M4-A03-splash','M4-A03-system-ui','M4-A03-status-bar','M4-A04-linking-router','M4-A05-browser','M4-A07-package-sync']
+    .map(id => [id, { status: 'PASS', evidence: [f.value.logCommand.stdout] }]));
+  f.save();
+  const result = validateM4DeviceEvidence(f.file, 'other', f.run);
+  assert.equal(result.status, 'PASS');
+  assert.match(result.cases['M4-A03-status-bar'].semantic.stdout, /M4-A03-status-bar=PASS/);
+  assert.match(result.cases['M4-A05-browser'].semantic.oracle, /check-other-log\.cjs$/);
 });
 
 test('adds real Core and Other commands to the complete V-02 case set', () => {

@@ -53,7 +53,29 @@ Core 固定调用仓库既有 `check-i0-log.cjs <log> <mode> --reload`，后者�
 reload 各次 boot、晚 native completion 和旧 runtime 回调；失败不生成 PASS。
 runner 生成重放结果，report 再用原件重算，不信任先前的语义结果。
 
-Other 仍保留完整六项要求。仓库 Linking 和 StatusBar checker 不能证明 Splash、SystemUI、
-Browser、Router 组合与 package-sync 全部通过，因此完整 Other 输入仍返回 BLOCKED。
-需恢复历史专用校验脚本及对应原件后按实际语义接入；禁止用主机单测、任意 PASS 字段
-或只有日志存在代替。当前不宣称 M4 全部实现或阶段关闭。
+Other 仍保留完整六项要求。2026-11-14 起 Other 固定调用
+`scripts/sdk54/abc/check-other-log.cjs <log> <mode> --reload`：从设备夹具真实输出的
+结构化标记（A04_SPLASH_STATUS、A04_SYSTEM_UI、A04_WEB_BROWSER、A_ROUTER_*、
+LANE_B_LINKING_PUBLIC_READY、EXPO_CORE_BOOT）独立重放六项事件/状态机语义——
+splash held/hide/hidden 顺序、status-bar 六阶段 Oracle 值、SystemUI 五阶段颜色与
+主题图标、browser 八项基线与已知 rejection code、router 探针与 Linking 接线、
+六包入口同步加载。断言值取自冻结夹具源码与 2026-10-30 三份 acceptance 文档；
+合成正反例见 `abc-c-other-log.test.mjs` 与 `abc-b-m4-runner.test.mjs`。
+
+日志语义 PASS 不关闭 Other：像素级渲染证据（ArkWeb 页面、窗口颜色、解码截图）
+仍需历史 `verify-browser-evidence.cjs` 及 system-ui/splash-status 证据原件恢复或
+按实际原件重实现；缺原件期间 runner 将 Other 整体记 BLOCKED 并保留
+`logSemantics: 'PASS'` 明细，不得以日志 PASS 或主机单测替代完整验收。
+多 bundle 采集（六项历史上为不同应用）与单 `m4.other` 身份的契约矛盾尚未决断，
+需 B 采集方案或扩展 manifest 后更新本节。当前不宣称 M4 全部实现或阶段关闭。
+
+StatusBar 六阶段必须在同一 boot 内完整出现，不能把 reload 前后的残缺序列拼接
+作为通过依据。其他 boot 可以仅完成 Splash reload 生命周期；同一 boot 的阶段
+顺序独立检查，即使日志交错也不能重置顺序。该规则由夹具的运行时 phase 状态
+及跨 boot 拼接负例约束，仅证明日志语义，不替代图像或设备验收。
+
+Browser 启动基线不能替代交互覆盖：必须出现 manual-open、programmatic-dismiss、
+concurrent、auth-success、auth-wrong-redirect、load-failure 请求；启用 reload 时
+另需 pending-reload。并发返回值按公开 API 和真实夹具读取 second.type，
+不是字符串 second。合成输入同步保留 dismissed/opened 的对象形状。
+这些补丁仍不证明 Browser 全部场景、图像证据或多应用身份契约已闭合。
