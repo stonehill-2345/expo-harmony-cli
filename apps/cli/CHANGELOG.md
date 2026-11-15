@@ -1,5 +1,16 @@
 # expo-harmony-cli
 
+## 1.7.0 - 2026-11-15
+
+### Minor Changes
+
+- SDK54 支持完整标准 Expo 开发流程：`create / install --check/--fix / config / prebuild / start / run:harmony / export` 全公开命令真机贯通。
+- `expo install <本地 tgz>` 修复无名包写入 `dependencies.undefined` 的问题：npm 无名 spec 改走 npm 原生解析，写入真实包名，卸载不再残留原生注册。
+- 修复 Font 原生注册顺序导致的 Release 冷启动图标字体错形；修复 expo-router doctor 的 semver 范围误报。
+- 公开加包/移除完整闭环：install tgz → prebuild 注册 → 按真实名卸载 → 无悬空注册 → 冻结锁重装。
+- 首批模块范围在统一候选上完成真机验收：Core/Autolinking、Constants、Asset、Font、SplashScreen、SystemUI、StatusBar、Linking/Router/Screens、WebBrowser、ExpoImage。
+- 文档重构：双语 README、SDK 52 独立使用指南、自动化录制的演示视频、交流社区模块。
+
 ## 1.6.0 - 2026-10-10
 
 ### Minor Changes
