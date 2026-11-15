@@ -1,7 +1,7 @@
 {
   "name": "expo-harmony-cli",
   "version": "1.7.0",
-  "description": "CLI for creating Expo projects with HarmonyOS support",
+  "description": "让 React Native / Expo 项目运行在鸿蒙（HarmonyOS/OpenHarmony）上的命令行工具：一键创建、生成鸿蒙原生工程、真机运行，一套代码三端覆盖",
   "keywords": [
     "expo",
     "react-native",

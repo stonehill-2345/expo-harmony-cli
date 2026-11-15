@@ -1,0 +1,32 @@
+# expo-harmony-cli
+
+> expo-harmony-cli 让 React Native / Expo 项目运行在鸿蒙（HarmonyOS / OpenHarmony）上：一条命令创建项目、一条命令生成鸿蒙原生工程、一条命令真机运行，同一套代码覆盖鸿蒙、iOS、Android 三端。底层基于 RNOH 桥接层，Expo 标准工作流全部保留。支持 Expo SDK 54（推荐，RN 0.82）与 SDK 52（RN 0.77）。
+
+## 快速开始
+
+- SDK 54（推荐）：`npx @expo-oh/create-expo my-app` → `npx expo prebuild --platform harmony` → `npx expo run:harmony`
+- SDK 52（Legacy）：`npx expo-harmony-cli my-app --sdk 52`，完整流程见 SDK 52 指南
+
+## 关键文档
+
+- [README 主文档](README.md)：能力总览、快速开始、演示视频、常见问题
+- [SDK 52 使用指南](docs/sdk52-guide.md)：legacy patch 工作流完整说明
+- [HarmonyOS 快速开始](docs/harmony/getting-started.md)：环境搭建与逐包适配说明
+- [配置插件](docs/harmony-config-plugins.md)：鸿蒙配置插件机制
+- [原生工程生成](docs/harmony-generation.md)：prebuild 生成机制
+- [模块开发](docs/harmony-module-authoring.md)：自定义鸿蒙模块开发
+- [CLI 使用指南](apps/cli/docs/guide.md)：命令详解与排障
+- [更新日志](apps/cli/CHANGELOG.md)：版本历史
+
+## 常见问答
+
+- React Native 怎么跑鸿蒙：用本工具三步（创建→prebuild→run:harmony），底层 RNOH
+- Expo 支持鸿蒙吗：官方不支持，本项目是 Expo 的鸿蒙扩展层（--platform harmony）
+- 支持纯血鸿蒙吗：支持，目标 OpenHarmony/HarmonyOS API 12+
+- 热更新：Metro Fast Refresh 鸿蒙端完整可用
+
+## 相关实体
+
+- RNOH：https://github.com/react-native-oh-library/react-native-harmony
+- Expo：https://expo.dev
+- OpenHarmony：https://www.openharmony.cn
