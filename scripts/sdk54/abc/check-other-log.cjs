@@ -186,6 +186,10 @@ define('M4-A03-system-ui', fail => {
     if (!boots.has(row.boot)) boots.set(row.boot, []);
     boots.get(row.boot).push(row);
   }
+  // Boots iterate in first-seen (log) order; `previous` carries the causal
+  // chain: whether the prior boot requested the public reload and the last
+  // persisted color a restore boot must reproduce.
+  let previous = null;
   for (const [boot, rows] of boots) {
     if (rows.some(row => row.dev !== isDebug)) fail(`dev flag differs from ${mode} (boot ${boot})`);
     if (!rows.some(row => row.kind === 'boot')) fail(`Missing boot marker (boot ${boot})`);
@@ -209,9 +213,36 @@ define('M4-A03-system-ui', fail => {
     }
     const stageNames = rows.filter(row => row.kind === 'stage').map(row => row.name);
     const reloadRequested = rows.some(row => row.kind === 'reload-request');
-    if (!reloadRequested) for (const entry of SYSTEM_UI_STAGES) {
-      if (!stageNames.includes(entry.name)) fail(`Missing SystemUI stage: ${entry.name}`);
+    const hasAllStages = SYSTEM_UI_STAGES.every(entry => stageNames.includes(entry.name));
+    // Fixture README: after persist, verify background/foreground, public
+    // reload and cold start BEFORE any further setter — the post-reload boot
+    // must only restore the persisted color. Only a boot causally preceded by
+    // a reload request may skip the full setter sequence.
+    if (!hasAllStages && previous?.reloadRequested) {
+      if (stageNames.some(name => name !== 'restore')) {
+        fail(`Restore-only SystemUI boot contains setter stages (boot ${boot})`);
+      }
+      const persisted = previous.persistColor;
+      if (!persisted) fail(`Causal restore boot without a prior persist stage (boot ${boot})`);
+      else if (restore && restore.color !== persisted) {
+        fail(`Restore color drifted from the persisted stage (boot ${boot}): ${String(restore.color)} != ${String(persisted)}`);
+      }
+    } else if (!hasAllStages) {
+      for (const entry of SYSTEM_UI_STAGES) {
+        if (!stageNames.includes(entry.name)) fail(`Missing SystemUI stage: ${entry.name} (boot ${boot})`);
+      }
     }
+    // A reload request is only meaningful after the full sequence ran in the
+    // same boot; otherwise the old rule silently excused an incomplete boot.
+    const persistStage = rows.filter(row => row.kind === 'stage' && row.name === 'persist').at(-1);
+    const reloadBeforePersist = rows.some((row, index) => row.kind === 'reload-request' && index <= rows.indexOf(persistStage));
+    if (reloadRequested && (!hasAllStages || reloadBeforePersist)) {
+      fail(`Reload requested before the full SystemUI stage sequence completed (boot ${boot})`);
+    }
+    previous = {
+      reloadRequested,
+      persistColor: persistStage?.color ?? previous?.persistColor ?? null,
+    };
   }
   const states = systemUi.filter(row => row.kind === 'app-state').map(row => row.state);
   for (let index = 0; index < states.length - 1; index++) {

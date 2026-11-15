@@ -9,7 +9,7 @@
 
 const line = (marker, value) => `${marker}=${JSON.stringify(value)}`;
 
-export function completeOtherLog({ splashScenario = 'user', statusBarStages = true, systemUiStages = true, browserCases = true } = {}) {
+export function completeOtherLog({ splashScenario = 'user', statusBarStages = true, systemUiStages = true, browserCases = true, systemUiReloadReplay = false } = {}) {
   const rows = [];
   const splashBoot = 1793344000000, nextSplashBoot = 1793344009000;
   const splash = (kind, extra = {}) => line('A04_SPLASH_STATUS', { boot: splashBoot, dev: false, scenario: splashScenario, kind, ...extra });
@@ -56,6 +56,16 @@ export function completeOtherLog({ splashScenario = 'user', statusBarStages = tr
   rows.push(`${ui('app-state', { state: 'background' })}`);
   rows.push(`${ui('app-state', { state: 'active' })}`);
   rows.push(`${ui('foreground', { color: '#336699', bars: { isStatusBarLightIcon: false } })}`);
+  if (systemUiReloadReplay) {
+    // Mirrors the real capture (outputs/v1.7.0/B/20261114-02-capture): the
+    // full boot requests the public reload, and the new runtime only restores
+    // (fixture README forbids further setters before the restore check).
+    rows.push(`${ui('reload-request')}`);
+    const uiBoot2 = 1793345001000;
+    const ui2 = (kind, extra = {}) => line('A04_SYSTEM_UI', { boot: uiBoot2, dev: false, kind, ...extra });
+    rows.push(`${ui2('boot', { colorScheme: 'light' })}`);
+    rows.push(`${ui2('stage', { name: 'restore', color: '#336699', colorScheme: 'light', bars: { isStatusBarLightIcon: false } })}`);
+  }
 
   const browserBoot = 1793346000000;
   const browser = (kind, extra = {}) => line('A04_WEB_BROWSER', { boot: browserBoot, dev: false, kind, ...extra });

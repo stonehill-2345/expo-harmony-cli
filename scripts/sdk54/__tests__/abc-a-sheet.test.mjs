@@ -101,3 +101,35 @@ test('system Back is consumed for a guarded sheet and ordinary screens retain th
   s.sheetOptions().onDisappear();assert.equal(events.at(-1)[0],'back');
   s.stackPresentationMode='push';assert.equal(s.handleSheetBack(),false);
 });
+
+// Execute the emitted native back callback prefix. A native Stack must not pop
+// before the existing JS BackHandler has offered the event to a nested Drawer.
+const backPrefix = execFileSync('python3', ['-c', `import ast
+p=ast.parse(open('packages/expo-modules-autolinking/scripts/harmony/prepare-screens.py').read())
+print(next(n.args[1].value for n in ast.walk(p) if isinstance(n,ast.Call) and isinstance(n.func,ast.Attribute) and n.func.attr=='replace' and len(n.args)>1 and isinstance(n.args[0],ast.Constant) and n.args[0].value=='      .onBackPressed(() => {'))`], {encoding:'utf8'}).replace('      .onBackPressed(() => {','');
+function pressNativeBack(s, events) {
+  return new Function('RNSScreen','nativePop',backPrefix+'\nnativePop(); return true;').call(s,s.constructor,()=>events.push(['native-pop']));
+}
+test('top native screen offers back to JS so nested Drawer consumes before parent Stack',()=>{
+  const {s,events}=screen();s.stackPresentationMode='push';s.pageId='drawer';s.constructor.TOP_PAGEID='drawer';
+  let route='second';
+  s.ctx.rnInstance.emitDeviceEvent=(name,payload)=>{events.push([name,payload]);route='index';};
+  assert.equal(pressNativeBack(s,events),true);
+  assert.equal(route,'index','Native back must reach the existing nested JS navigator');
+  assert.equal(events.length,1);assert.equal(events[0][0],'hardwareBackPress');
+});
+test('root JS back has a chance to invoke the existing default exit fallback',()=>{
+  const {s,events}=screen();s.stackPresentationMode='push';s.pageId='root';s.constructor.TOP_PAGEID='root';
+  s.ctx.rnInstance.emitDeviceEvent=(name)=>{assert.equal(name,'hardwareBackPress');events.push(['default-exit']);};
+  pressNativeBack(s,events);assert.deepEqual(events,[['default-exit']]);
+});
+test('non-top native screen keeps the original native callback without emitting JS back',()=>{
+  const {s,events}=screen();s.stackPresentationMode='push';s.pageId='covered';s.constructor.TOP_PAGEID='top';
+  s.ctx.rnInstance.emitDeviceEvent=()=>events.push(['unexpected-js-back']);
+  pressNativeBack(s,events);assert.deepEqual(events,[['native-pop']]);
+});
+test('native Sheet guard consumes back without delivering a second JS pop',()=>{
+  const {s,events}=screen();s.readSheetProps();s.sheetVisible=true;s.gestureEnabled=false;s.constructor.TOP_PAGEID=s.pageId;
+  s.ctx.rnInstance.emitDeviceEvent=()=>events.push(['unexpected-js-back']);
+  pressNativeBack(s,events);assert.equal(s.sheetVisible,true);assert.deepEqual(events,[]);
+});

@@ -221,7 +221,7 @@ def patch_sheet(data):
     text = text.replace('      .hideTitleBar(true)', '      .hideTitleBar(true)\n      .bindSheet($$this.sheetVisible, this.screenContent(), this.sheetOptions())',1)
     text = text.replace('        await this.updateState(true);', '        await this.updateState(true);\n        if (this.isFormSheet()) {\n          this.sheetDismissed = false;\n          this.sheetVisible = true;\n        }',1)
     text = text.replace('  private backBtnPressed(f: boolean) {', '  private backBtnPressed(f: boolean) {\n    if (this.isFormSheet() && this.sheetVisible) {\n      this.dismissSheet(f);\n      return;\n    }',1)
-    text = text.replace('      .onBackPressed(() => {', '      .onBackPressed(() => {\n        if (this.handleSheetBack()) return true;',1)
+    text = text.replace('      .onBackPressed(() => {', '      .onBackPressed(() => {\n        if (this.handleSheetBack()) return true;\n        if (this.pageId === RNSScreen.TOP_PAGEID) {\n          // JS BackHandler gives nested navigators first refusal and owns the root exit fallback.\n          this.ctx.rnInstance.emitDeviceEvent(\'hardwareBackPress\', {});\n          return true;\n        }',1)
     text = text.replace('  aboutToDisappear() {\n    this.cleanupCommandCallback?.()', '  aboutToDisappear() {\n    if (this.isFormSheet()) {\n      this.emitSheetWillDisappear();\n      this.emitSheetDisappear();\n    }\n    this.cleanupCommandCallback?.()',1)
     text = text.replace('      .onWillDisappear(() => {', '      .onWillDisappear(() => {\n        this.sheetVisible = false;',1)
     text = text.replace('this.eventEmitter!.emit("willDisappear", {})', 'if (this.isFormSheet()) this.emitSheetWillDisappear(); else this.eventEmitter!.emit("willDisappear", {})')

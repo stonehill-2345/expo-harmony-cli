@@ -12,6 +12,8 @@ import { verifyRelease } from '../verify-npm-release.mjs';
 import { assertExternalConsumerWorkspace } from '../creation-workspace.mjs';
 import { isMain, json, repository, sha256, writeJSON } from './a-common.mjs';
 
+export const candidateInstallTimeoutMs=3600000;
+
 export function validateCandidate(directory) {
   const candidate=json(path.join(directory,'candidate.json')),release=json(path.join(directory,'release.json'));
   assert.deepEqual(candidate.failures,[],'Candidate has failures');assert.deepEqual(release.failures,[],'Release has failures');
@@ -41,9 +43,9 @@ async function runInstall(pm, project, output, registry) {
   const stdout=fs.openSync(path.join(output,'install.stdout.log'),'wx'),stderr=fs.openSync(path.join(output,'install.stderr.log'),'wx');
   const startedAt=new Date().toISOString();
   const result=await new Promise(resolve=>{
-    const child=spawn(pm,argv,{cwd:project,stdio:['ignore',stdout,stderr],detached:true,env:{...process.env,CI:'1',NODE_PATH:'',npm_config_registry:registry,npm_config_cache:path.join(output,'npm-cache'),npm_config_replace_registry_host:'never',npm_config_fetch_retries:'1',npm_config_fetch_timeout:'120000'}});
+    const child=spawn(pm,argv,{cwd:project,stdio:['ignore',stdout,stderr],detached:true,env:{...process.env,CI:'1',NODE_PATH:'',npm_config_registry:registry,npm_config_cache:path.join(output,'npm-cache'),npm_config_replace_registry_host:'never',npm_config_fetch_retries:'1',npm_config_fetch_timeout:'900000'}});
     let timedOut=false;
-    const timer=setTimeout(()=>{timedOut=true;try{process.kill(-child.pid,'SIGKILL');}catch{}},900000);
+    const timer=setTimeout(()=>{timedOut=true;try{process.kill(-child.pid,'SIGKILL');}catch{}},candidateInstallTimeoutMs);
     child.once('error',error=>{clearTimeout(timer);resolve({exitCode:null,error:error.message,timedOut});});
     child.once('exit',(exitCode,signal)=>{clearTimeout(timer);resolve({exitCode,signal,timedOut});});
   });
@@ -108,9 +110,10 @@ export async function prepare({scenario:kind,candidate,project,output,pm='npm'})
   const packages=[...validated.packages];
   if(kind==='resources'){const oracle=await oraclePackage(output);packages.push(oracle);manifest.dependencies[oracle.name]=oracle.version;}
   writeJSON(path.join(project,'package.json'),manifest);
-  const identity={schemaVersion:1,scenario:kind,candidateSha256:validated.manifestSha256,scope:'PREPARED_NOT_ACCEPTED',candidateScope:validated.scope,pm,fixturePackages:packages.slice(validated.packages.length).map(p=>({name:p.name,version:p.version,sha256:sha256(fs.readFileSync(p.archive)),integrity:p.integrity}))};
+  const upstreamRegistry=new URL(execFileSync('npm',['config','get','registry'],{encoding:'utf8'}).trim()).toString();
+  const identity={schemaVersion:1,scenario:kind,candidateSha256:validated.manifestSha256,scope:'PREPARED_NOT_ACCEPTED',candidateScope:validated.scope,pm,upstreamRegistry,fixturePackages:packages.slice(validated.packages.length).map(p=>({name:p.name,version:p.version,sha256:sha256(fs.readFileSync(p.archive)),integrity:p.integrity}))};
   writeJSON(path.join(project,'a-project.json'),identity);
-  const registry=await startCandidateRegistry(packages);
+  const registry=await startCandidateRegistry(packages,{upstreamRegistry});
   try{await runInstall(pm,project,output,registry.registry);}finally{await registry.close();}
   const installed=[];
   for(const item of createReleaseManifest().packages){

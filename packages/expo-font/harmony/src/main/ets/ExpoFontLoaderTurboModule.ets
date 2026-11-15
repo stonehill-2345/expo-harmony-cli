@@ -2,6 +2,7 @@ import type { UITurboModuleContext } from '@rnoh/react-native-openharmony';
 import { UITurboModule } from '@rnoh/react-native-openharmony';
 import fs from '@ohos.file.fs';
 import drawing from '@ohos.graphics.drawing';
+import text from '@ohos.graphics.text';
 import cryptoFramework from '@ohos.security.cryptoFramework';
 import util from '@ohos.util';
 import type { BusinessError } from '@ohos.base';
@@ -64,6 +65,10 @@ export class ExpoFontLoaderTurboModule extends UITurboModule {
     }
     this.ctx.rnInstance.registerFont(request.family, request.path);
     this.assertActive();
+    // Only touch the shared collection after RNOH registration succeeds. Its
+    // aliases have no ownership API, so a failed registration cannot safely
+    // unload one. Complete synchronous loading before advertising readiness.
+    text.FontCollection.getGlobalInstance().loadFontSync(request.family, `file://${request.path}`);
     this.loadedFonts.set(request.family, request.path);
   }
 

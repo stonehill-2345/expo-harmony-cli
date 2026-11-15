@@ -4,10 +4,17 @@ import path from 'node:path';
 import os from 'node:os';
 import http from 'node:http';
 import { createHash } from 'node:crypto';
+import { Readable } from 'node:stream';
+import { pipeline } from 'node:stream/promises';
 import { extract } from 'tar';
 
 // Reuse the read-only candidate registry protocol from test-release-install.mjs.
-export async function startCandidateRegistry(packages, { fetchUpstream = fetch } = {}) {
+export async function startCandidateRegistry(packages, {
+  fetchUpstream = fetch,
+  upstreamRegistry = 'https://registry.npmjs.org/',
+  upstreamTimeoutMs = 120000,
+  upstreamTarballTimeoutMs = 900000,
+} = {}) {
   const stage = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-candidate-registry-'));
   const manifests = new Map();
   try {
@@ -39,18 +46,32 @@ export async function startCandidateRegistry(packages, { fetchUpstream = fetch }
         } else if (manifests.has(name)) {
           const item = manifests.get(name);
           response.setHeader('Content-Type', 'application/json');
-          response.end(JSON.stringify({ name, 'dist-tags': { latest: item.version }, versions: {
+          response.end(JSON.stringify({ name, 'dist-tags': { latest: item.version, harmony: item.version }, versions: {
             [item.version]: { ...item.manifest, dist: { integrity: item.integrity, tarball: `${registry}tarballs/${item.index}.tgz` } },
           } }));
         } else if (name.startsWith('@expo-oh/')) {
           response.writeHead(404).end();
         } else {
-          const upstream = await fetchUpstream(`https://registry.npmjs.org${url.pathname}${url.search}`, {
-            headers: { accept: 'application/vnd.npm.install-v1+json' }, signal: AbortSignal.timeout(30000),
+          const isTarball = url.pathname.endsWith('.tgz');
+          const upstreamUrl = new URL(url.pathname.slice(1), upstreamRegistry.endsWith('/') ? upstreamRegistry : upstreamRegistry + '/');
+          upstreamUrl.search = url.search;
+          const upstream = await fetchUpstream(upstreamUrl.toString(), {
+            method: request.method,
+            headers: { accept: 'application/vnd.npm.install-v1+json' },
+            signal: AbortSignal.timeout(isTarball ? upstreamTarballTimeoutMs : upstreamTimeoutMs),
           });
-          const bytes = Buffer.from(await upstream.arrayBuffer());
-          response.writeHead(upstream.status, { 'Content-Type': upstream.headers.get('content-type') ?? 'application/octet-stream' });
-          response.end(bytes);
+          const headers = { 'Content-Type': upstream.headers.get('content-type') ?? 'application/octet-stream' };
+          if (request.method === 'HEAD') {
+            response.writeHead(upstream.status, headers);
+            response.end();
+          } else if (isTarball && upstream.body) {
+            response.writeHead(upstream.status, headers);
+            await pipeline(Readable.fromWeb(upstream.body), response);
+          } else {
+            const bytes = Buffer.from(await upstream.arrayBuffer());
+            response.writeHead(upstream.status, headers);
+            response.end(bytes);
+          }
         }
       } catch (error) {
         if (response.headersSent) response.destroy(error);

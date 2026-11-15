@@ -10,8 +10,17 @@ assert.ok(tooling, 'EXPO_HARMONY_TOOLING_ROOT must provide TypeScript');
 const ts = createRequire(path.join(tooling, 'package.json'))('typescript');
 function loadModule(options = {}) {
   let registerCalls = 0;
+  const platformFonts = options.platformFonts ?? new Map();
   class UITurboModule { constructor(ctx) { this.ctx = ctx; } __onDestroy__() {} }
   const imports = {
+    '@ohos.graphics.text': { FontCollection: { getGlobalInstance: () => ({
+      loadFontSync(family, uri) {
+        if (options.platformLoadError) throw options.platformLoadError;
+        platformFonts.set(family, uri);
+        options.onPlatformLoad?.(family, uri);
+      },
+      unloadFontSync(family) { platformFonts.delete(family); },
+    }) } },
     '@ohos.graphics.drawing': { Typeface: { makeFromFile: file => {
       if (options.decodeError) throw options.decodeError;
       return options.decodeResult === undefined ? {} : options.decodeResult;
@@ -67,7 +76,7 @@ function loadModule(options = {}) {
     options.onRegister?.(family, file);
   } } };
   const Module = load('ExpoFontLoaderTurboModule.ets').ExpoFontLoaderTurboModule;
-  return { module: new Module(ctx), registerCalls: () => registerCalls };
+  return { module: new Module(ctx), platformFonts, registerCalls: () => registerCalls };
 }
 
 test('registers a real file once and reports the alias loaded', async () => {
@@ -79,6 +88,49 @@ test('registers a real file once and reports the alias loaded', async () => {
   assert.deepEqual(received, { family: 'Material Icons', file: '/data/cache/material.ttf' });
   assert.equal(f.registerCalls(), 1);
   assert.deepEqual(Array.from(f.module.getLoadedFonts()), ['Material Icons']);
+});
+
+test('cached font is ready for platform text before loadAsync reports it loaded', async () => {
+  const ready = new Set();
+  const f = loadModule({
+    onPlatformLoad(family, uri) {
+      assert.equal(uri, 'file:///data/cache/material.ttf');
+      assert.deepEqual(Array.from(f.module.getLoadedFonts()), [], 'Do not advertise loaded before platform readiness');
+      ready.add(family);
+    },
+  });
+  await f.module.loadAsync('material', 'file:///data/cache/material.ttf');
+  assert.equal(ready.has('material'), true, 'Global text must be ready before loadAsync resolves');
+  assert.deepEqual(Array.from(f.module.getLoadedFonts()), ['material']);
+});
+
+test('platform font loading failure rejects without advertising the family as loaded', async () => {
+  const f = loadModule({ platformLoadError: new Error('platform font load failed') });
+  await assert.rejects(f.module.loadAsync('material', 'file:///data/cache/material.ttf'), /platform font load failed/);
+  assert.deepEqual(Array.from(f.module.getLoadedFonts()), []);
+  assert.equal(f.registerCalls(), 1);
+});
+
+test('failed native registration leaves no new global alias and allows the same family to retry', async () => {
+  const options = { registerError: new Error('native registration failed') };
+  const f = loadModule(options);
+  await assert.rejects(f.module.loadAsync('RetryFont', 'file:///data/cache/retry.ttf'), /native registration failed/);
+  assert.equal(f.platformFonts.has('RetryFont'), false, 'Rejected registration must not leave a new global alias');
+  assert.deepEqual(Array.from(f.module.getLoadedFonts()), []);
+  options.registerError = undefined;
+  await f.module.loadAsync('RetryFont', 'file:///data/cache/retry.ttf');
+  assert.equal(f.platformFonts.get('RetryFont'), 'file:///data/cache/retry.ttf');
+  assert.deepEqual(Array.from(f.module.getLoadedFonts()), ['RetryFont']);
+});
+
+test('failed registration cannot unload an alias already used by another module instance', async () => {
+  const first = loadModule();
+  await first.module.loadAsync('SharedFont', 'file:///data/cache/shared.ttf');
+  const second = loadModule({ platformFonts: first.platformFonts, registerError: new Error('second instance failed') });
+  await assert.rejects(second.module.loadAsync('SharedFont', 'file:///data/cache/shared.ttf'), /second instance failed/);
+  assert.equal(first.platformFonts.get('SharedFont'), 'file:///data/cache/shared.ttf');
+  assert.equal(first.module.getFontPath('SharedFont'), '/data/cache/shared.ttf');
+  assert.deepEqual(Array.from(second.module.getLoadedFonts()), []);
 });
 
 test('missing, empty, registration and post-registration failures never mark loaded', async () => {

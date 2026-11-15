@@ -39,11 +39,12 @@ function loadSource(relative, overrides = {}, globals = {}) {
 }
 
 export const dependencyCases = [
-  { id: 'NAV-BOTTOM-EXACT', name: bottom, spec: '7.4.0', version: '7.4.0', knownMismatch: true },
-  { id: 'NAV-NATIVE-EXACT', name: native, spec: '7.1.17', version: '7.1.17', knownMismatch: true },
-  { id: 'NAV-STACK-EXACT', name: stack, spec: '7.3.16', version: '7.3.16', knownMismatch: true },
-  { id: 'RANGE-SUBRANGE', name: native, spec: '^7.1.17', version: '7.1.17', knownMismatch: true },
+  { id: 'NAV-BOTTOM-EXACT', name: bottom, spec: '7.4.0', version: '7.4.0', knownMismatch: false },
+  { id: 'NAV-NATIVE-EXACT', name: native, spec: '7.1.17', version: '7.1.17', knownMismatch: false },
+  { id: 'NAV-STACK-EXACT', name: stack, spec: '7.3.16', version: '7.3.16', knownMismatch: false },
+  { id: 'RANGE-SUBRANGE', name: native, spec: '^7.1.17', version: '7.1.17', knownMismatch: false },
   { id: 'RANGE-INVALID', name: native, spec: '^6.0.0', version: '6.0.0', expectDiagnostic: true, knownMismatch: false },
+  { id: 'RANGE-TOO-WIDE', name: native, spec: '^7.0.0', version: '7.1.17', expectDiagnostic: true, knownMismatch: false },
   { id: 'RANGE-FULL', name: native, spec: '^7.1.8', version: '7.1.17', knownMismatch: false },
   { id: 'ALIAS-COMPATIBLE', name: native, spec: 'npm:@react-navigation/native@7.1.17', version: '7.1.17', knownMismatch: true },
   { id: 'ALIAS-WRONG-TARGET', name: native, spec: 'npm:foreign-nav@7.1.17', version: '7.1.17', expectDiagnostic: true, knownMismatch: true },
@@ -119,9 +120,9 @@ export async function runDependencyBaseline() {
   } catch (error) { if (error instanceof Exit) exitCode = error.code; else throw error; }
   assert.equal(logs.length, 1);
   const json = JSON.parse(logs[0]);
-  assert.equal(exitCode, 1);
-  assert.equal(json.upToDate, false);
-  assert.deepEqual(json.dependencies.map((entry) => entry.packageName).sort(), [bottom, native, stack].sort());
+  assert.equal(exitCode, 0);
+  assert.equal(json.upToDate, true);
+  assert.deepEqual(json.dependencies, []);
   return {
     schemaVersion: 1, productFixed: false,
     scope: 'Current TypeScript source, real semver; CLI config/version collection/I/O isolated. Not packed CLI or device acceptance.',
@@ -129,7 +130,7 @@ export async function runDependencyBaseline() {
       path: file, sha256: createHash('sha256').update(fs.readFileSync(path.join(root, file))).digest('hex'),
     })),
     cases,
-    integration: { id: 'CHECK-PACKAGES-JSON', exitCode, json, desiredBehavior: 'FAIL', reproduction: 'PASS' },
+    integration: { id: 'CHECK-PACKAGES-JSON', exitCode, json, desiredBehavior: 'PASS', reproduction: 'PASS' },
   };
 }
 

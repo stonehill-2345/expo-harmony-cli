@@ -84,6 +84,63 @@ test('rejects a SystemUI run without the background to active transition', () =>
   assert.match(result.stderr, /Missing background -> active transition/);
 });
 
+// Real-capture regression: outputs/v1.7.0/B/20261114-02-capture (C-170-02).
+// The fixture README requires the post-reload runtime to restore the persisted
+// color before any further setter, so a causal restore-only boot is correct.
+test('accepts a causal restore-only boot after the fixture reload request', () => {
+  const result = run(completeOtherLog({ systemUiReloadReplay: true }), 'release', ['--reload']);
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /M4-A03-system-ui=PASS/);
+});
+
+test('rejects a SystemUI reload request before its complete setter sequence', () => {
+  const rows = completeOtherLog({ systemUiReloadReplay: true }).split('\n');
+  const reloadAt = rows.findIndex(row => row.includes('A04_SYSTEM_UI') && row.includes('"kind":"reload-request"'));
+  const [reload] = rows.splice(reloadAt, 1);
+  const bootAt = rows.findIndex(row => row.includes('A04_SYSTEM_UI') && row.includes('"kind":"boot"'));
+  rows.splice(bootAt + 1, 0, reload);
+  const result = run(rows.join('\n'), 'release', ['--reload']);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Reload requested before the full SystemUI stage sequence/);
+});
+
+test('rejects a partial setter sequence after a causal SystemUI restore', () => {
+  const rows = completeOtherLog({ systemUiReloadReplay: true }).split('\n');
+  const restoreAt = rows.findIndex(row => row.includes('A04_SYSTEM_UI') && row.includes('"boot":1793345001000') && row.includes('"name":"restore"'));
+  rows.splice(restoreAt + 1, 0, rows[restoreAt].replace('"name":"restore"', '"name":"solid"').replace('"color":"#336699"', '"color":"#b42318"'));
+  const result = run(rows.join('\n'), 'release', ['--reload']);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Restore-only SystemUI boot contains setter stages/);
+});
+
+test('rejects a restore boot whose color drifts from the persisted stage', () => {
+  const log = completeOtherLog({ systemUiReloadReplay: true }).split('\n')
+    .map(row => row.includes('"boot":1793345001000') && row.includes('"name":"restore"')
+      ? row.replace('"color":"#336699"', '"color":"#ffffff"')
+      : row)
+    .join('\n');
+  const result = run(log, 'release', ['--reload']);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Restore color drifted from the persisted stage/);
+});
+
+test('rejects an orphan restore-only boot without a causal reload request', () => {
+  const log = completeOtherLog({ systemUiReloadReplay: true }).split('\n')
+    .filter(row => !row.includes('"kind":"reload-request"') || !row.includes('A04_SYSTEM_UI'))
+    .join('\n');
+  const result = run(log, 'release', ['--reload']);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Missing SystemUI stage: solid/);
+});
+
+test('rejects an incomplete boot that requests the public reload', () => {
+  const log = completeOtherLog({ systemUiStages: false }) + '\n'
+    + 'A04_SYSTEM_UI=' + JSON.stringify({ boot: 1793345000000, dev: false, kind: 'reload-request' });
+  const result = run(log, 'release', ['--reload']);
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /Reload requested before the full SystemUI stage sequence/);
+});
+
 test('rejects a browser baseline missing one check', () => {
   const log = completeOtherLog().replace('"custom-tabs",', '');
   const result = run(log, 'release');

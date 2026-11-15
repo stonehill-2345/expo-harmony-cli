@@ -2,11 +2,15 @@ import contextlib
 import importlib.util
 import io
 import os
+import sys
 from pathlib import Path
 import tarfile
 import tempfile
 import unittest
 
+# This source tree is also packed for consumers; importing its transformer must
+# not add host-specific bytecode to the release inputs.
+sys.dont_write_bytecode = True
 spec = importlib.util.spec_from_file_location('screens', Path(__file__).resolve().parents[1] / 'router/prepare-screens.py')
 screens = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(screens)

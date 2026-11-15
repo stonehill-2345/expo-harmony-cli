@@ -8,7 +8,7 @@
     {
       "id": "harmony-transformer",
       "path": "packages/expo-modules-autolinking/scripts/harmony/prepare-screens.py",
-      "sha256": "cfd8afb6ab5fbed8b15da981c6de65f92b2f5df1a40eb35497541c84d175cdcd"
+      "sha256": "e69b8511ae8de15ca3ce32185f49c3099b5e9543d6f8f3ad0699b57e6d917766"
     },
     {
       "id": "screens-overlay",
@@ -62,7 +62,7 @@
     {
       "id": "arkui-sdk",
       "path": "<DEVECO_SDK_HOME>/default/openharmony/ets/component/common.d.ts",
-      "sha256": "a664a47d3210a9ae929b19cede76f943de58e53762dc2fa527a4c43540097d71",
+      "sha256": "2662a40432b2fa6efcfe387c3bc4bdc79ac9a993de1e415042b37a78d6315614",
       "evidencePath": "sources/arkui-common.d.ts",
       "anchors": [
         "SheetOptions.detents: first element initial; one to three; landscape API12",
@@ -81,7 +81,7 @@
     {
       "id": "navigation-device-verifier",
       "path": "scripts/sdk54/abc/a-verify-device.mjs",
-      "sha256": "5fd9a9c2cf08bb1ae177ba5a2e047b529565ae736c2690d22ddc8b5c460b649d"
+      "sha256": "ad139367ff8cf469ef24e3a4e5b89a8216e1197727b1c570787e644a69f8bbc3"
     }
   ],
   "cases": [
@@ -782,6 +782,7 @@
         "button-open",
         "second",
         "interior",
+        "back-system",
         "back"
       ],
       "requirement": "M4_REQUIRED",

@@ -29,6 +29,61 @@ test('sheet body sampling tolerates a button at the old point but rejects an abs
   f.png.data.fill(0);f.sample.screenshot=f.ref('absent.png',PNG.sync.write(f.png));
   assert.throws(()=>verifyNavigationCase('S01',{one:readCapture(f.root,f.run,f.sample)}),/body/);
 });
+function compactFitFixture(t) {
+  const f=captureFixture(t),png=new PNG({width:100,height:400});png.data.fill(255);
+  const rect=(x1,y1,x2,y2,color)=>{for(let y=y1;y<y2;y++)for(let x=x1;x<x2;x++)png.data.set([...color,255],(y*100+x)*4);};
+  const node=(type,bounds,text='',id='')=>({attributes:{type,bounds,text,id,visible:'true',bundleName:'dev.fixture'}});
+  const layout={attributes:{bounds:'[0,0][100,400]'},children:[
+    node('root','[0,0][100,400]'),node('SheetWrapper','[0,0][100,400]'),node('SheetPage','[0,120][100,400]'),
+    node('Custom','[0,120][100,400]','','sheet-content'),node('Text','[5,130][95,145]','Harmony Form Sheet: fit','sheet-title'),
+    ...['Toggle sheet orientation','Reload sheet','Close sheet'].map((text,i)=>node('Button',`[5,${160+i*65}][95,${210+i*65}]`,text)),
+  ]};
+  rect(10,135,65,139,[20,20,20]);for(let i=0;i<3;i++)rect(5,160+i*65,95,210+i*65,[49,122,255]);
+  const log=fs.readFileSync(path.join(f.root,f.sample.hilog.path),'utf8')+'11-11 09:00:01.000 123 456 I ReactNative: A_SHEET_LAYOUT={"caseId":"fit","height":280}\n';
+  return {...f,png,rect,layout,sample:{...f.sample,layout:f.ref('fit-layout.json',layout),screenshot:f.ref('fit-screen.png',PNG.sync.write(png)),hilog:f.ref('fit-hilog.txt',log)}};
+}
+test('fit sheet accepts its compact rendered controls without requiring mostly empty white space',async t=>{
+  const {readCapture,verifyNavigationCase}=await import('../abc/a-verify-device.mjs');const f=compactFitFixture(t);
+  assert.doesNotThrow(()=>verifyNavigationCase('S08',{fit:readCapture(f.root,f.run,f.sample)}));
+});
+test('fit sheet rejects missing body, missing controls and layout-only title',async t=>{
+  const {readCapture,verifyNavigationCase}=await import('../abc/a-verify-device.mjs');
+  for(const fault of ['missing body','missing button','missing title'])await t.test(fault,t=>{
+    const f=compactFitFixture(t);
+    if(fault==='missing body')f.png.data.fill(0);
+    if(fault==='missing button')f.rect(5,225,95,275,[255,255,255]);
+    if(fault==='missing title')f.rect(5,130,95,145,[255,255,255]);
+    f.sample.screenshot=f.ref('fit-fault.png',PNG.sync.write(f.png));
+    assert.throws(()=>verifyNavigationCase('S08',{fit:readCapture(f.root,f.run,f.sample)}),/body|control|title/i);
+  });
+});
+function drawerNavigationFixture() {
+  const sample=(text,pathname,status='closed')=>({pid:123,boot:'drawer-boot',hapSha256:'a'.repeat(64),candidateSha256:'b'.repeat(64),
+    nodes:[{text,bounds:'[0,0][100,30]',visible:'true'}],screenshot:{sha256:text+status},
+    log:'123 A_ROUTER_PROBE='+JSON.stringify({boot:'drawer-boot',pathname,state:{routes:[{name:pathname}]}})+'\n123 STEP3_DRAWER='+JSON.stringify({status})+'\n'});
+  return {home:sample('Drawer Home','/drawer'),'gesture-closed':sample('Drawer Home','/drawer'),
+    'gesture-open':sample('Drawer Second','/drawer','open'),'button-open':sample('Drawer Second','/drawer','open'),
+    second:sample('Drawer Second Content','/drawer/second'),interior:sample('Drawer Second Content','/drawer/second'),
+    'back-system':sample('Drawer Home','/drawer'),back:sample('Native Tabs Home','/')};
+}
+test('N01 requires Second system back to stop at Drawer Home before leaving parent Stack',async()=>{
+  const {verifyNavigationCase}=await import('../abc/a-verify-device.mjs');const good=drawerNavigationFixture();
+  assert.doesNotThrow(()=>verifyNavigationCase('N01',good));
+  const jumped=drawerNavigationFixture();jumped['back-system']=jumped.back;
+  assert.throws(()=>verifyNavigationCase('N01',jumped),/Drawer Home|drawer/);
+});
+test('N01 rejects absent intermediate evidence, stale identity, open drawer and route-only claims',async()=>{
+  const {verifyNavigationCase}=await import('../abc/a-verify-device.mjs');
+  for(const fault of ['absent','pid','boot','hapSha256','candidateSha256','open','missing text','wrong route']){
+    const samples=drawerNavigationFixture(),middle=samples['back-system'];
+    if(fault==='absent')delete samples['back-system'];
+    else if(fault==='open')middle.log=middle.log.replace('"status":"closed"','"status":"open"');
+    else if(fault==='missing text')middle.nodes=[];
+    else if(fault==='wrong route')middle.log=middle.log.replace('"pathname":"/drawer"','"pathname":"/drawer/second"');
+    else middle[fault]='stale';
+    assert.throws(()=>verifyNavigationCase('N01',samples),undefined,fault);
+  }
+});
 test('S02 checks the public stable field and rejects unstable or native-only events',async t=>{
   const {readCapture,verifyNavigationCase}=await import('../abc/a-verify-device.mjs');const f=captureFixture(t),samples={};
   for(const [key,index,height] of [['small',0,70],['large',1,150],['collapsed',0,70]]){

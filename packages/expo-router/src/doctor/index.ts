@@ -78,7 +78,7 @@ export function doctor(
     }
 
     debug(`Checking ${dep} with ${allowedRange} and found ${usersRange}`);
-    if (!usersRange || semverRangeSubset(allowedRange, usersRange)) {
+    if (!usersRange || semverRangeSubset(usersRange, allowedRange)) {
       continue;
     }
 

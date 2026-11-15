@@ -113,8 +113,9 @@ export function verifyDefaultRun(directory) {
   const module=JSON.parse(execFileSync('unzip',['-p',hap,'module.json'],{encoding:'utf8'}));
   assert.equal(module.app?.bundleName,manifest.bundle,'HAP bundle does not match manifest');
   const install=JSON.parse(read(manifest.install));checkHdc(install,manifest.target);
-  assert.equal(install.argv.length,5,'Unexpected install arguments');assert.equal(install.argv[3],'install');
-  assert.equal(path.basename(install.argv.at(-1)),path.basename(manifest.hap.path));
+  assert.ok(install.argv.length===5||(install.argv.length===6&&install.argv[4]==='-r'),'Unexpected install arguments');
+  assert.equal(install.argv[3],'install');
+  assert.equal(path.basename(install.argv.at(-1)),path.basename(manifest.hap.path),'Installed HAP does not match manifest');
   assert.equal(install.logs?.length,2,'Missing install stdout/stderr');
   const stdout=read(install.logs[0]).toString(),stderr=read(install.logs[1]).toString();
   checkOutput({stdout,stderr});assert.match(stdout,/install bundle successfully/);

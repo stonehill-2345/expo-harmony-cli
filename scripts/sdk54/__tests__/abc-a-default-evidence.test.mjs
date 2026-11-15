@@ -79,6 +79,23 @@ with zipfile.ZipFile(root/'default.hap','w') as z:
 test('default evidence replays outside original machine paths and preserves nonfatal RNOH warnings',t=>{
   const f=fixture(t);assert.equal(verifyDefaultRun(f.root).cases.length,9);
 });
+test('default evidence accepts the real HDC install -r receipt for replacement installs',t=>{
+  const f=fixture(t);
+  f.install.argv.splice(4,0,'-r');f.flush();
+  assert.equal(verifyDefaultRun(f.root).cases.length,9);
+});
+test('default replacement install rejects wrong target, extra flags and mismatched HAP',async t=>{
+  for(const [name,mutate] of [
+    ['wrong target',f=>f.install.argv[2]='another-target'],
+    ['unknown flag',f=>f.install.argv[4]='--force'],
+    ['extra flag',f=>f.install.argv.splice(5,0,'-s')],
+    ['extra HAP',f=>f.install.argv.push('another.hap')],
+    ['wrong HAP',f=>f.install.argv[f.install.argv.length-1]='/historical/another.hap'],
+  ])await t.test(name,t=>{
+    const f=fixture(t);f.install.argv.splice(4,0,'-r');mutate(f);f.flush();
+    assert.throws(()=>verifyDefaultRun(f.root),/target|install|HAP/i);
+  });
+});
 test('default evidence rejects a HAP belonging to another app',t=>{
   const f=fixture(t,'another.app');assert.throws(()=>verifyDefaultRun(f.root),/HAP bundle/);
 });

@@ -48,10 +48,33 @@ export function readCapture(root,run,capture) {
   return value;
 }
 function sheet(sample,fraction,caseName) {
-  assert.equal(route(sample).pathname,'/sheet','Wrong sheet route');visibleText(sample,'Harmony Form Sheet'+(caseName?': '+caseName:''));
+  assert.equal(route(sample).pathname,'/sheet','Wrong sheet route');const title=visibleText(sample,'Harmony Form Sheet'+(caseName?': '+caseName:''));
   const area=bounds(find(sample,n=>n.type==='SheetPage')),wrapper=bounds(find(sample,n=>n.type==='SheetWrapper'));
   if(fraction!==undefined)assert.ok(Math.abs(area.height/wrapper.height-fraction)<.07,`Sheet actual height ${area.height}/${wrapper.height} != ${fraction}`);
   assert.ok(area.bottom<=sample.image.height&&area.x>=0&&area.right<=sample.image.width,'Sheet outside screenshot');
+  if(caseName==='fit'){
+    // The 280vp fit fixture contains three large controls. Measure its actual
+    // background outside those known controls instead of requiring empty space.
+    const titleArea=bounds(title),controls=['Toggle sheet orientation','Reload sheet','Close sheet'].map(text=>{
+      const matches=sample.nodes.filter(n=>n.type==='Button'&&n.text===text&&n.visible!=='false'&&n.opacity!=='0.000000');
+      assert.equal(matches.length,1,`Missing or duplicate fit control: ${text}`);return bounds(matches[0]);
+    });
+    const inside=(box,x,y)=>x>=box.x&&x<box.right&&y>=box.y&&y<box.bottom;
+    for(const box of [titleArea,...controls])assert.ok(box.x>=area.x&&box.right<=area.right&&box.y>=area.y&&box.bottom<=area.bottom,'Fit content outside sheet');
+    let background=0,white=0,titleInk=0;
+    for(let y=0;y<20;y++)for(let x=0;x<20;x++){
+      const px=area.x+area.width*(.05+.9*(x+.5)/20),py=area.y+area.height*(.05+.9*(y+.5)/20);
+      if(![titleArea,...controls].some(box=>inside(box,px,py))){background++;if(pixel(sample,px,py).every(v=>v>240))white++;}
+      if(pixel(sample,titleArea.x+titleArea.width*(x+.5)/20,titleArea.y+titleArea.height*(y+.5)/20).every(v=>v<100))titleInk++;
+    }
+    assert.ok(background>=80&&white/background>=.9,'Fit sheet body background is absent from screenshot');
+    assert.ok(titleInk>=8,'Fit sheet title is absent from screenshot');
+    for(const box of controls){
+      let contrast=0;for(let y=0;y<10;y++)for(let x=0;x<10;x++)if(pixel(sample,box.x+box.width*(.15+.7*(x+.5)/10),box.y+box.height*(.15+.7*(y+.5)/10)).some(v=>v<200))contrast++;
+      assert.ok(contrast>=50,'Fit sheet control is absent from screenshot');
+    }
+    return area;
+  }
   // The fixture has a white background. Require pixels inside the measured sheet, not just a button event.
   let white=0;
   for(let y=0;y<20;y++)for(let x=0;x<20;x++){
@@ -113,6 +136,10 @@ export function verifyNavigationCase(id,s) {
     for(const key of ['home','gesture-closed']){visibleText(s[key],'Drawer Home');assert.equal(event(s[key],'STEP3_DRAWER').status,'closed');}
     for(const key of ['gesture-open','button-open']){visibleText(s[key],'Drawer Second');assert.equal(event(s[key],'STEP3_DRAWER').status,'open');}
     for(const key of ['second','interior']){visibleText(s[key],'Drawer Second Content');assert.equal(route(s[key]).pathname,'/drawer/second');assert.equal(event(s[key],'STEP3_DRAWER').status,'closed');}
+    const systemBack=s['back-system'];assert.ok(systemBack,'Missing Drawer system-back intermediate capture');
+    visibleText(systemBack,'Drawer Home');assert.equal(route(systemBack).pathname,'/drawer','System back must preserve the parent Drawer route');
+    assert.equal(event(systemBack,'STEP3_DRAWER').status,'closed');
+    for(const key of ['pid','boot','hapSha256','candidateSha256'])assert.equal(systemBack[key],s.interior[key],`Drawer system-back changed ${key}`);
     assert.notEqual(s['gesture-open'].screenshot.sha256,s.home.screenshot.sha256);closed(s.back);
   }else if(id==='N02'){
     unchanged([s.before,s.foreground]);assert.ok(Math.abs(sheet(s.before,.35,'two').height-sheet(s.foreground,.35,'two').height)<8);
