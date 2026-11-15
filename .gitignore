@@ -21,3 +21,4 @@ outputs/sdk54/
 *.hap
 *.har
 apps/cli/README.md
+.claude/settings.local.json

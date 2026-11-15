@@ -1,6 +1,7 @@
 import { getConfig, getPackageJson } from '@expo/config';
 import * as PackageManager from '@expo/package-manager';
 import chalk from 'chalk';
+import npmPackageArg from 'npm-package-arg';
 
 import { applyPluginsAsync } from './applyPlugins';
 import { checkPackagesAsync } from './checkPackages';
@@ -195,7 +196,20 @@ export async function installPackagesAsync(
     });
   }
 
-  if (dev) {
+  if (
+    packageManager.name === 'npm' &&
+    versioning.packages.some((specifier) => isNamelessPackageSpec(specifier))
+  ) {
+    // Nameless specs (e.g. local tarballs or directories) have no package name for the package
+    // file update, which would write `dependencies.undefined` entries. Let npm resolve the real
+    // package names from the package contents by running a plain `npm install --save(-dev)`.
+    await packageManager.runAsync([
+      'install',
+      dev ? '--save-dev' : '--save',
+      ...packageManagerArguments,
+      ...versioning.packages,
+    ]);
+  } else if (dev) {
     await packageManager.addDevAsync([...packageManagerArguments, ...versioning.packages]);
   } else {
     await packageManager.addAsync([...packageManagerArguments, ...versioning.packages]);
@@ -207,6 +221,16 @@ export async function installPackagesAsync(
 /** Find a package, by name, in the requested packages list (`expo` -> `expo`/`expo@<version>`) */
 function findPackageByName(packages: string[], name: string) {
   return packages.find((pkg) => pkg === name || pkg.startsWith(`${name}@`));
+}
+
+/** Determine if a package specifier has no package name, like a local tarball, directory, or remote URL. */
+function isNamelessPackageSpec(specifier: string): boolean {
+  try {
+    return npmPackageArg(specifier).name == null;
+  } catch {
+    // Invalid specifiers keep the default behavior and fail with the original package manager error.
+    return false;
+  }
 }
 
 /** Determine if a specific version is requested for a package */
