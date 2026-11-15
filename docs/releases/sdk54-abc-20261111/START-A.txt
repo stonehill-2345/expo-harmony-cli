@@ -1,1 +1,0 @@
-2026-11-13：A 已退出，不再启动 A 开发。先读取 docs/releases/sdk54-abc-20261111/BC-20261113.md，再使用 START-B.txt 或 START-C.txt。原 A 技术要求与历史证据保留，剩余工作由 B/C 按新分工接管。

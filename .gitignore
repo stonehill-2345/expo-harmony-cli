@@ -11,7 +11,7 @@ pnpm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 *.tgz
-# docs/superpowers/
+docs/superpowers/
 
 # bing local changelog artifacts
 docs/changelog/local/
@@ -20,5 +20,13 @@ docs/changelog/local/
 outputs/sdk54/
 *.hap
 *.har
-apps/cli/README.md
 .claude/settings.local.json
+
+
+内部材料（不入开源仓库）
+output/
+docs/releases/
+docs/plans/
+docs/designs/
+/AGENTS.md
+/CLAUDE.md
