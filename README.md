@@ -4,42 +4,41 @@
 
 **让 React Native / Expo 项目运行在鸿蒙（HarmonyOS / OpenHarmony）上**
 
-一套代码 · 三端运行（鸿蒙 / iOS / Android）· 完整 Expo 工作流
+一套代码，三端运行：鸿蒙 · iOS · Android
 
 [![npm version](https://img.shields.io/npm/v/expo-harmony-cli)](https://www.npmjs.com/package/expo-harmony-cli)
 [![npm downloads](https://img.shields.io/npm/dm/expo-harmony-cli)](https://www.npmjs.com/package/expo-harmony-cli)
 [![License](https://img.shields.io/github/license/stonehill-2345/expo-harmony-cli)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/stonehill-2345/expo-harmony-cli)](https://github.com/stonehill-2345/expo-harmony-cli)
 
-**11 个 Expo 核心模块真机验收 · 8 条 Debug/Release 链路全通过 · 1581 项自动化检查 0 失败**
+11 个 Expo 核心模块真机验收 · 8 条 Debug/Release 链路全通过 · 1581 项自动化检查 0 失败
 
 </div>
 
 > **速答：React Native / Expo 怎么跑在鸿蒙上？**
-> 三步：① `npx @expo-oh/create-expo my-app` 创建项目　② `npx expo prebuild --platform harmony` 生成鸿蒙原生工程　③ `npx expo run:harmony` 真机运行。底层基于 [RNOH](https://github.com/react-native-oh-library/react-native-harmony) 官方桥接层，Expo 标准工作流全部保留。
-
----
+> 三步——
+> ① `npx @expo-oh/create-expo my-app` 创建项目
+> ② `npx expo prebuild --platform harmony` 生成鸿蒙原生工程
+> ③ `npx expo run:harmony` 真机运行
+>
+> 底层基于 [RNOH](https://github.com/react-native-oh-library/react-native-harmony) 官方桥接层，Expo 标准工作流全部保留。
 
 ## 🎬 效果演示
 
-**从创建到真机运行**（终端 × 真机实录，加速播放）
+**从创建到真机运行**（终端 × 真机实录）
 
 ![overview](docs/assets/demo-overview.gif)
 
+**Fast Refresh：改代码，秒级生效** ｜ **Tabs / Modal / 导航**
+
 <table>
 <tr>
-<td width="50%" align="center"><b>Fast Refresh：改代码秒级生效</b></td>
-<td width="50%" align="center"><b>Tabs / Modal / 导航</b></td>
-</tr>
-<tr>
-<td><img src="docs/assets/demo-fast-refresh.gif" alt="热更新演示"></td>
-<td><img src="docs/assets/demo-ui-tour.gif" alt="界面导览"></td>
+<td width="50%"><img src="docs/assets/demo-fast-refresh.gif" alt="Fast Refresh 演示"></td>
+<td width="50%"><img src="docs/assets/demo-ui-tour.gif" alt="界面导览演示"></td>
 </tr>
 </table>
 
----
-
-## 🚀 30 秒快速开始（SDK 54）
+## 🚀 快速开始（SDK 54）
 
 ```bash
 # 1. 创建项目（default 模板含 Expo Router，可换 blank-typescript）
@@ -52,44 +51,37 @@ npx expo prebuild --platform harmony
 # 3. 构建、安装并启动到鸿蒙设备
 npx expo run:harmony
 
-# 4. 日常开发：改代码秒级生效（Fast Refresh）
+# 4. 日常开发：改代码秒级生效
 npx expo start
 ```
 
-<sub>💡 模拟器热更新需一次端口直通 `hdc rport tcp:8081 tcp:8081`；Release 构建：`npx expo run:harmony --configuration Release --no-build-cache`</sub>
+> 💡 模拟器热更新需一次端口直通：`hdc rport tcp:8081 tcp:8081`；
+> Release 构建：`npx expo run:harmony --configuration Release --no-build-cache`
 
-项目保留 `expo`、`expo-router`、`@expo/cli` 等原始依赖名与 import，运行时经 npm alias 解析到 `@expo-oh/*` 适配包——**业务代码与标准 Expo 项目完全一致**，iOS / Android 工作流不受任何影响。
-
----
+项目保留 `expo`、`expo-router`、`@expo/cli` 等原始依赖名与 import，运行时经 npm alias 解析到 `@expo-oh/*` 适配包——业务代码与标准 Expo 项目完全一致，iOS / Android 工作流不受任何影响。
 
 ## ✨ 核心能力
 
-| | 能力 | 说明 |
-| --- | --- | --- |
-| 🚀 | 一键创建 | `@expo-oh/create-expo` 创建即含鸿蒙支持 |
-| 🧬 | 原生工程生成 | `expo prebuild --platform harmony` 一条命令生成 OpenHarmony 工程 |
-| ⚡ | 热更新 | 鸿蒙端完整支持 Metro Fast Refresh / reload |
-| 🔓 | Release 流水线 | `expo run:harmony --configuration Release` 构建 + 安装 + 启动一步到位 |
-| 📦 | 依赖管理 | `expo install / uninstall` 自动处理鸿蒙原生注册，16 个 `@expo-oh` 适配包 |
-| 🔗 | 智能原生注册 | RNOH 官方 `link-harmony` 优先 → 内置映射表 → 未覆盖逐包提示 |
-| 🩺 | 环境诊断 | `env` / `doctor` 工具链体检，退出码分级可接 CI |
-| 🛡️ | 文件保护 | 受管文件被手改时阻断覆盖，事务失败自动回滚 |
+- 🚀 **一键创建** —— `@expo-oh/create-expo` 创建即含鸿蒙支持
+- 🧬 **原生工程生成** —— `expo prebuild --platform harmony` 一条命令生成 OpenHarmony 工程
+- ⚡ **热更新** —— 鸿蒙端完整支持 Metro Fast Refresh / reload
+- 🔓 **Release 流水线** —— 构建 + 安装 + 启动一步到位
+- 📦 **依赖管理** —— `expo install / uninstall` 自动处理鸿蒙原生注册，16 个 `@expo-oh` 适配包
+- 🔗 **智能原生注册** —— RNOH 官方 `link-harmony` 优先，内置映射表补充，未覆盖逐包提示
+- 🩺 **环境诊断** —— `env` / `doctor` 工具链体检，退出码分级可接 CI
+- 🛡️ **文件保护** —— 受管文件被手改时阻断覆盖，事务失败自动回滚
 
----
+## 🔖 SDK 54 与 SDK 52 怎么选？
 
-## 🔖 两个 SDK 版本怎么选？
-
-| | **SDK 54**（推荐） | **SDK 52**（Legacy） |
+| | SDK 54（推荐） | SDK 52（Legacy） |
 | --- | --- | --- |
 | 适配方式 | `@expo-oh` 整包适配 | patch + 注入 |
 | React Native | 0.82.x | 0.77.x |
 | 创建命令 | `npx @expo-oh/create-expo` | `npx expo-harmony-cli <dir> --sdk 52` |
-| 热更新 | ✅ Fast Refresh | ✅ Metro reload |
+| 热更新 | Fast Refresh | Metro reload |
 | 适用场景 | 新项目 | 存量项目维护 |
 
-📌 SDK 52 完整流程见 **[SDK 52 使用指南](docs/sdk52-guide.md)**，两条版本线并存互不影响。
-
----
+SDK 52 完整流程见 **[SDK 52 使用指南](docs/sdk52-guide.md)**，两条版本线并存互不影响。
 
 ## ❓ 常见问题
 
@@ -105,65 +97,45 @@ npx expo start
 **支持 HarmonyOS NEXT（纯血鸿蒙）吗？**
 支持。目标平台 OpenHarmony / HarmonyOS（API 12+），DevEco 模拟器与真机均可。
 
-**热更新（Fast Refresh）在鸿蒙上能用吗？**
+**热更新在鸿蒙上能用吗？**
 能，Metro 完整可用，改代码秒级生效；Release 构建则离线打包资源。
 
 **SDK 52 项目能升级到 SDK 54 吗？**
 不自动迁移，推荐 SDK 54 新建项目后迁移业务代码。
 
----
-
 ## 🧰 环境要求
 
-| 项 | 要求 |
-| --- | --- |
-| Node.js | ≥ 20.19.4 |
-| pnpm / npm | pnpm ≥ 10.19.0 / npm ≥ 10 |
-| DevEco Studio | 5.0+（含 OpenHarmony SDK、ohpm、hdc） |
-
----
+Node.js ≥ 20.19.4 · pnpm ≥ 10.19.0（或 npm ≥ 10）· DevEco Studio 5.0+（含 OpenHarmony SDK、ohpm、hdc）
 
 ## 🔗 与 Expo / RNOH / OpenHarmony 的关系
 
-- [Expo](https://expo.dev)：沿用其 CNG 工作流与全部标准命令——扩展而非替代
-- [RNOH](https://github.com/react-native-oh-library/react-native-harmony)：底层鸿蒙桥接层，本项目负责其上的工程化封装
-- [OpenHarmony](https://www.openharmony.cn) / [HarmonyOS](https://developer.huawei.com/consumer/cn/harmonyos/)：目标运行平台
-
----
+- [Expo](https://expo.dev) —— 沿用其 CNG 工作流与全部标准命令，扩展而非替代
+- [RNOH](https://github.com/react-native-oh-library/react-native-harmony) —— 底层鸿蒙桥接层，本项目负责其上的工程化封装
+- [OpenHarmony](https://www.openharmony.cn) / [HarmonyOS](https://developer.huawei.com/consumer/cn/harmonyos/) —— 目标运行平台
 
 ## 💬 交流与技术支持
 
-<div align="center">
+<table>
+<tr>
+<td align="center"><img src="docs/assets/community-wechat-qr.png" alt="个人微信" width="170"><br>加我微信进群</td>
+<td align="center"><img src="docs/assets/community-qq-qr.png" alt="QQ 交流群" width="170"><br>QQ 交流群</td>
+</tr>
+</table>
 
-| | |
-| :---: | :---: |
-| <img src="docs/assets/community-wechat-qr.png" alt="个人微信" width="170"> | <img src="docs/assets/community-qq-qr.png" alt="QQ 交流群" width="170"> |
-| 加我微信进群 | QQ 交流群 |
-
-[提问 / 建议 → GitHub Issues](https://github.com/stonehill-2345/expo-harmony-cli/issues) · [参与贡献 → 贡献指南](CONTRIBUTING.md)
-
-觉得有用就点个 ⭐ Star，让更多做鸿蒙 RN 开发的朋友找到它
-
-</div>
-
----
+- 使用问题或功能建议：[GitHub Issues](https://github.com/stonehill-2345/expo-harmony-cli/issues)
+- 参与贡献：[贡献指南](CONTRIBUTING.md)
+- 觉得有用就点个 ⭐ Star，让更多做鸿蒙 RN 开发的朋友找到它
 
 ## 📚 文档
 
-| 文档 | 内容 |
-| --- | --- |
-| [SDK 52 使用指南](docs/sdk52-guide.md) | Legacy patch 工作流完整说明 |
-| [CLI 使用指南](apps/cli/docs/guide.md) | 命令详解与排障 |
-| [HarmonyOS 快速开始](docs/harmony/getting-started.md) | 环境搭建与逐包适配 |
-| [配置插件](docs/harmony-config-plugins.md) · [原生工程生成](docs/harmony-generation.md) · [模块开发](docs/harmony-module-authoring.md) | 进阶机制 |
-| [更新日志](apps/cli/CHANGELOG.md) · [安全策略](SECURITY.md) · [行为准则](CODE_OF_CONDUCT.md) · [第三方声明](NOTICE.md) | 项目信息 |
+- [SDK 52 使用指南](docs/sdk52-guide.md) —— Legacy patch 工作流
+- [CLI 使用指南](apps/cli/docs/guide.md) —— 命令详解与排障
+- [HarmonyOS 快速开始](docs/harmony/getting-started.md) —— 环境搭建与逐包适配
+- [配置插件](docs/harmony-config-plugins.md) · [原生工程生成](docs/harmony-generation.md) · [模块开发](docs/harmony-module-authoring.md)
+- [更新日志](apps/cli/CHANGELOG.md) · [贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [行为准则](CODE_OF_CONDUCT.md) · [第三方声明](NOTICE.md)
 
-**仓库镜像**：[GitHub](https://github.com/stonehill-2345/expo-harmony-cli) · [Gitee](https://gitee.com/stonehill-2345/expo-harmony-cli) · [AtomGit](https://atomgit.com/stonehill-2345/expo-harmony-cli)
-
----
+仓库镜像：[GitHub](https://github.com/stonehill-2345/expo-harmony-cli) · [Gitee](https://gitee.com/stonehill-2345/expo-harmony-cli) · [AtomGit](https://atomgit.com/stonehill-2345/expo-harmony-cli)
 
 ## 📄 License
 
-[MIT](LICENSE)
-
-<div align="center"><sub>最近更新 2026-11 · v1.7.0 · 支持 Expo SDK 54 / 52</sub></div>
+MIT · 最近更新 2026-11 · v1.7.0 · 支持 Expo SDK 54 / 52
