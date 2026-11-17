@@ -41,7 +41,7 @@ test('rewrite preserves dependency keys, optional peers and source manifests', (
 test('runtime manifest maps template packages without patch dependencies', () => {
   const manifest = createReleaseManifest();
   assert.equal(manifest.schemaVersion, 1);
-  assert.equal(manifest.cliVersion, '1.6.0');
+  assert.equal(manifest.cliVersion, '1.7.0');
   assert.equal(manifest.packages.length, 16);
   assert.equal(manifest.packages.find(p => p.installName === 'expo').installSpec, 'npm:@expo-oh/expo@54.0.38');
   assert.equal(manifest.packages.find(p => p.installName === 'expo-image').installSpec, 'npm:@expo-oh/expo-image@3.0.12');

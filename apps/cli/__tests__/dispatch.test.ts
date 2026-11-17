@@ -54,9 +54,9 @@ describe('命令分发', () => {
     await dispatch(['--version']);
     await dispatch(['-v']);
 
-    expect(packageJson.version).toBe('1.6.0');
-    expect(output).toHaveBeenNthCalledWith(1, '1.6.0');
-    expect(output).toHaveBeenNthCalledWith(2, '1.6.0');
+    expect(packageJson.version).toBe('1.7.0');
+    expect(output).toHaveBeenNthCalledWith(1, '1.7.0');
+    expect(output).toHaveBeenNthCalledWith(2, '1.7.0');
     expect(mockCreate).not.toHaveBeenCalled();
     output.mockRestore();
   });
