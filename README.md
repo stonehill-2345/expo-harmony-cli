@@ -25,18 +25,13 @@
 
 ## 🎬 效果演示
 
-**从创建到真机运行**（终端 × 真机实录）
+**从创建到运行，三条命令**（终端实录 × HarmonyOS 模拟器，构建段加速回放）
 
-![overview](docs/assets/demo-overview.gif)
+![创建 → prebuild → run:harmony 全流程演示](docs/assets/demo-overview.gif)
 
-**Fast Refresh：改代码，秒级生效** ｜ **Tabs / Modal / 导航**
+**Fast Refresh：改一行代码，秒级生效**
 
-<table>
-<tr>
-<td width="50%"><img src="docs/assets/demo-fast-refresh.gif" alt="Fast Refresh 演示"></td>
-<td width="50%"><img src="docs/assets/demo-ui-tour.gif" alt="界面导览演示"></td>
-</tr>
-</table>
+![Fast Refresh 演示](docs/assets/demo-fast-refresh.gif)
 
 ## 🚀 快速开始（SDK 54）
 
