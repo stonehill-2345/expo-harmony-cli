@@ -2,7 +2,7 @@
 
 # expo-harmony-cli
 
-**让 React Native / Expo 项目运行在鸿蒙（HarmonyOS / OpenHarmony）上**
+**把 React Native / Expo 项目带到鸿蒙（HarmonyOS / OpenHarmony）的开源命令行工具**
 
 一套代码，三端运行：鸿蒙 · iOS · Android
 
@@ -15,23 +15,23 @@
 
 </div>
 
-> **速答：React Native / Expo 怎么跑在鸿蒙上？**
-> 三步——
+> **速答：React Native / Expo 怎么跑在鸿蒙（HarmonyOS）上？**
+> 用 expo-harmony-cli——它在标准 Expo 工作流中新增 `--platform harmony`，底层经 [RNOH](https://github.com/react-native-oh-library/react-native-harmony) 官方桥接层生成并运行 OpenHarmony 原生工程。三步——
 > ① `npx @expo-oh/create-expo my-app` 创建项目
 > ② `npx expo prebuild --platform harmony` 生成鸿蒙原生工程
 > ③ `npx expo run:harmony` 真机运行
 >
-> 底层基于 [RNOH](https://github.com/react-native-oh-library/react-native-harmony) 官方桥接层，Expo 标准工作流全部保留。
+> iOS / Android 工作流不受影响，业务代码与标准 Expo 项目完全一致。
 
 ## 🎬 效果演示
 
 **从创建到运行，三条命令**（终端实录 × HarmonyOS 模拟器，构建段加速回放）
 
-![创建 → prebuild → run:harmony 全流程演示](docs/assets/demo-overview.gif)
+![expo-harmony-cli 全流程演示：创建 Expo 项目 → prebuild 生成鸿蒙原生工程 → run:harmony 在 HarmonyOS 模拟器运行](docs/assets/demo-overview.gif)
 
 **Fast Refresh：改一行代码，秒级生效**
 
-![Fast Refresh 演示](docs/assets/demo-fast-refresh.gif)
+![鸿蒙端 Metro Fast Refresh 演示：修改 React Native 代码后秒级热更新生效](docs/assets/demo-fast-refresh.gif)
 
 ## 🚀 快速开始（SDK 54）
 
@@ -54,6 +54,19 @@ npx expo start
 > Release 构建：`npx expo run:harmony --configuration Release --no-build-cache`
 
 项目保留 `expo`、`expo-router`、`@expo/cli` 等原始依赖名与 import，运行时经 npm alias 解析到 `@expo-oh/*` 适配包——业务代码与标准 Expo 项目完全一致，iOS / Android 工作流不受任何影响。
+
+## 📋 项目状态与兼容矩阵
+
+| 项 | 值 |
+| --- | --- |
+| 最新版本 | v1.7.0（2026-11） |
+| 支持 Expo SDK | 54（推荐）· 52（Legacy），两条版本线并存 |
+| 对应 React Native | 0.82.x（SDK 54）· 0.77.x（SDK 52） |
+| 目标平台 | HarmonyOS / OpenHarmony（API 12+）· iOS · Android |
+| 适配包数量 | 16 个 `@expo-oh` 系 npm 包 |
+| 开发环境 | Node.js ≥ 20.19.4 · DevEco Studio 5.0+ |
+| 许可证 | MIT，开源免费 |
+| 下次更新 | 计划支持 Expo SDK 58 |
 
 ## ✨ 核心能力
 
@@ -95,6 +108,12 @@ SDK 52 完整流程见 **[SDK 52 使用指南](docs/sdk52-guide.md)**，两条�
 **热更新在鸿蒙上能用吗？**
 能，Metro 完整可用，改代码秒级生效；Release 构建则离线打包资源。
 
+**iOS 和 Android 也支持吗？**
+支持。鸿蒙是新增平台而非替代——`run:ios` / `run:android` 与标准 Expo 完全一致，一套代码三端发布。
+
+**怎么安装？收费吗？**
+无需安装，`npx @expo-oh/create-expo my-app` 即用；MIT 开源免费。
+
 **SDK 52 项目能升级到 SDK 54 吗？**
 不自动迁移，推荐 SDK 54 新建项目后迁移业务代码。
 
@@ -102,7 +121,7 @@ SDK 52 完整流程见 **[SDK 52 使用指南](docs/sdk52-guide.md)**，两条�
 
 Node.js ≥ 20.19.4 · pnpm ≥ 10.19.0（或 npm ≥ 10）· DevEco Studio 5.0+（含 OpenHarmony SDK、ohpm、hdc）
 
-## 🔗 与 Expo / RNOH / OpenHarmony 的关系
+## 🔗 与 Expo / RNOH / OpenHarmony 是什么关系？
 
 - [Expo](https://expo.dev) —— 沿用其 CNG 工作流与全部标准命令，扩展而非替代
 - [RNOH](https://github.com/react-native-oh-library/react-native-harmony) —— 底层鸿蒙桥接层，本项目负责其上的工程化封装
@@ -130,6 +149,13 @@ Node.js ≥ 20.19.4 · pnpm ≥ 10.19.0（或 npm ≥ 10）· DevEco Studio 5.0+
 - [更新日志](apps/cli/CHANGELOG.md) · [贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [行为准则](CODE_OF_CONDUCT.md) · [第三方声明](NOTICE.md)
 
 仓库镜像：[GitHub](https://github.com/stonehill-2345/expo-harmony-cli) · [Gitee](https://gitee.com/stonehill-2345/expo-harmony-cli) · [AtomGit](https://atomgit.com/stonehill-2345/expo-harmony-cli)
+
+## 🧭 To be continued
+
+**下次更新预告：支持 Expo SDK 58** 🚧
+
+- 计划支持 Expo SDK 58，敬请期待
+- 现有 SDK 54 / 52 项目使用不受影响
 
 ## 📄 License
 
