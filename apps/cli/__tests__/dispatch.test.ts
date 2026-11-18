@@ -34,16 +34,14 @@ describe('命令分发', () => {
     expect(mockCreate).toHaveBeenCalledWith([]);
   });
 
-  it('--help → 创建仅支持 SDK52，SDK54 引导新创建器', async () => {
+  it('--help → 展示统一 SDK52/54 创建入口', async () => {
     const { dispatch } = await import('../src/index');
     const output = vi.spyOn(console, 'log').mockImplementation(() => undefined);
     await dispatch(['--help']);
     const help = output.mock.calls.map(args => args.join(' ')).join('\n');
-    expect(help).toContain('create [name]           创建 Expo SDK 52 Harmony 项目');
-    expect(help).toContain('--sdk <52>');
-    expect(help).toContain('npx @expo-oh/create-expo@3.5.12 my-app --template default');
-    expect(help).toContain('npx @expo-oh/create-expo@3.5.12 my-app --template blank-typescript');
-    expect(help).not.toContain('--sdk <52|54>');
+    expect(help).toContain('create [name]           统一创建 Expo SDK 52/54 Harmony 项目');
+    expect(help).toContain('--sdk <52|54>');
+    expect(help).toContain('create my-app --sdk 54 --template default');
     output.mockRestore();
   });
 

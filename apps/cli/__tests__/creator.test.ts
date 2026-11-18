@@ -69,6 +69,20 @@ vi.mock('../src/utils/log', () => ({
   },
 }));
 
+vi.mock('../src/sdk54/create-release', () => ({
+  runSdk54ReleaseCreate: vi.fn(async (request: {
+    cwd: string;
+    projectName: string;
+    template: 'blank-typescript' | 'default';
+    packageManager: 'npm' | 'pnpm';
+  }) => ({
+    projectRoot: path.resolve(request.cwd, request.projectName),
+    template: request.template,
+    packageManager: request.packageManager,
+    release: 'sdk54-expo-oh-harmony.1',
+  })),
+}));
+
 describe('runCreate', () => {
   const streams = [process.stdin, process.stdout];
   const ttyDescriptors = streams.map(stream => Object.getOwnPropertyDescriptor(stream, 'isTTY'));
@@ -93,8 +107,11 @@ describe('runCreate', () => {
     await runCreate(['myapp'], { cwd: tmp });
     expect(prompts.select).toHaveBeenCalledWith({
       message: '选择 Expo SDK 模板版本',
-      choices: [{ value: 'sdk-52', name: 'Expo SDK 52 模板（RN 0.77）' }],
-      default: 'sdk-52',
+      choices: [
+        { value: 'sdk-54', name: 'Expo SDK 54 模板（RN 0.82）' },
+        { value: 'sdk-52', name: 'Expo SDK 52 模板（RN 0.77）' },
+      ],
+      default: 'sdk-54',
     });
     const { runFileQuiet } = await import('../src/utils/exec');
     const { log } = await import('../src/utils/log');
@@ -223,20 +240,49 @@ describe('runCreate', () => {
   it.each([
     [['myapp', '--sdk=54'], 'default', 'pnpm'],
     [['myapp', '--sdk', '54', '--template', 'blank-typescript', '--npm'], 'blank-typescript', 'npm'],
-  ] as const)('SDK54 %j → 创建目录前拒绝并指向独立新创建器', async (args, template) => {
+  ] as const)('SDK54 %j → 分流到当前 scoped release 创建器', async (args, template, packageManager) => {
     streams.forEach(stream => Object.defineProperty(stream, 'isTTY', { configurable: true, value: false }));
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk54-'));
     try {
       const { runCreate } = await import('../src/creator');
-      const { runFileQuiet } = await import('../src/utils/exec');
-      await expect(runCreate([...args], { cwd: tmp })).rejects.toThrow(
-        `npx @expo-oh/create-expo@3.5.12 myapp --template ${template}`,
-      );
-      expect(runFileQuiet).not.toHaveBeenCalled();
+      const { runSdk54ReleaseCreate } = await import('../src/sdk54/create-release');
+      await runCreate([...args], { cwd: tmp });
+      expect(runSdk54ReleaseCreate).toHaveBeenCalledWith({
+        cwd: tmp,
+        projectName: 'myapp',
+        template,
+        packageManager,
+      });
       expect(fs.readdirSync(tmp)).toEqual([]);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
+  });
+
+  it('交互式 SDK54 未指定模板 → 展示当前两个模板并复用选择结果', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk54-template-'));
+    const prompts = await import('@inquirer/prompts');
+    vi.mocked(prompts.select)
+      .mockResolvedValueOnce('sdk-54')
+      .mockResolvedValueOnce('blank-typescript');
+    const { runCreate } = await import('../src/creator');
+    const { runSdk54ReleaseCreate } = await import('../src/sdk54/create-release');
+    await runCreate(['myapp'], { cwd: tmp });
+    expect(prompts.select).toHaveBeenNthCalledWith(2, {
+      message: '选择 SDK 54 模板',
+      choices: [
+        { value: 'default', name: 'default（Expo Router）' },
+        { value: 'blank-typescript', name: 'blank-typescript（最小模板）' },
+      ],
+      default: 'default',
+    });
+    expect(runSdk54ReleaseCreate).toHaveBeenCalledWith({
+      cwd: tmp,
+      projectName: 'myapp',
+      template: 'blank-typescript',
+      packageManager: 'pnpm',
+    });
+    fs.rmSync(tmp, { recursive: true, force: true });
   });
 
   it.each(['--yarn', '--bun'])('SDK54 %s → 创建目录前失败关闭', async packageManagerFlag => {
@@ -244,10 +290,10 @@ describe('runCreate', () => {
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk54-pm-'));
     try {
       const { runCreate } = await import('../src/creator');
-      const { runFileQuiet } = await import('../src/utils/exec');
+      const { runSdk54ReleaseCreate } = await import('../src/sdk54/create-release');
       await expect(runCreate(['myapp', '--sdk=54', packageManagerFlag], { cwd: tmp }))
-        .rejects.toThrow('npx @expo-oh/create-expo@3.5.12 myapp --template default');
-      expect(runFileQuiet).not.toHaveBeenCalled();
+        .rejects.toThrow(/SDK 54.*npm.*pnpm/);
+      expect(runSdk54ReleaseCreate).not.toHaveBeenCalled();
       expect(fs.readdirSync(tmp)).toEqual([]);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
@@ -279,7 +325,7 @@ describe('runCreate', () => {
       const { runCreate } = await import('../src/creator');
       const { runFileQuiet } = await import('../src/utils/exec');
       const { select } = await import('@inquirer/prompts');
-      await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/非交互.*--sdk=52$/);
+      await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/非交互.*--sdk=52.*54/);
       expect(select).not.toHaveBeenCalled();
       expect(runFileQuiet).not.toHaveBeenCalled();
     } finally {

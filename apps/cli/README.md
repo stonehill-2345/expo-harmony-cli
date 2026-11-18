@@ -17,13 +17,13 @@
 
 > **速答：React Native / Expo 怎么跑在鸿蒙（HarmonyOS）上？**
 > 用 expo-harmony-cli——它在标准 Expo 工作流中新增 `--platform harmony`，底层经 [RNOH](https://github.com/react-native-oh-library/react-native-harmony) 官方桥接层生成并运行 OpenHarmony 原生工程。三步——
-> 1. `npx @expo-oh/create-expo my-app` 创建项目
+> 1. `npx expo-harmony-cli create my-app --sdk 54` 创建项目
 > 2. `npx expo prebuild --platform harmony` 生成鸿蒙原生工程
 > 3. `npx expo run:harmony` 真机运行
 >
 > iOS / Android 工作流不受影响，业务代码与标准 Expo 项目完全一致。
 
-> **TL;DR (English):** expo-harmony-cli brings React Native / Expo apps to HarmonyOS (OpenHarmony) while keeping the standard Expo workflow: `npx @expo-oh/create-expo` to scaffold, `npx expo prebuild --platform harmony` to generate the native project, `npx expo run:harmony` to run on device — powered by the official [RNOH](https://github.com/react-native-oh-library/react-native-harmony) bridge. Your code stays 100% standard Expo; iOS and Android are untouched.
+> **TL;DR (English):** expo-harmony-cli brings React Native / Expo apps to HarmonyOS (OpenHarmony) while keeping the standard Expo workflow: `npx expo-harmony-cli create` to scaffold, `npx expo prebuild --platform harmony` to generate the native project, `npx expo run:harmony` to run on device — powered by the official [RNOH](https://github.com/react-native-oh-library/react-native-harmony) bridge. Your code stays 100% standard Expo; iOS and Android are untouched.
 
 ## 🎬 效果演示
 
@@ -35,11 +35,11 @@
 
 ![鸿蒙端 Metro Fast Refresh 演示：修改 React Native 代码后秒级热更新生效](docs/assets/demo-fast-refresh.gif)
 
-## 🚀 快速开始（SDK 54）
+## 🚀 快速开始
 
 ```bash
-# 1. 创建项目（default 模板含 Expo Router，可换 blank-typescript）
-npx @expo-oh/create-expo@latest my-app --template default
+# 1. 统一创建入口（default 模板含 Expo Router，可换 blank-typescript）
+npx expo-harmony-cli@latest create my-app --sdk 54 --template default
 
 # 2. 生成 HarmonyOS 原生工程
 cd my-app
@@ -76,7 +76,7 @@ npx expo start
 
 | 你在标准 Expo 里的习惯 | 在这里 | 差异 |
 | --- | --- | --- |
-| `npx create-expo-app` | `npx @expo-oh/create-expo` | 换个创建器包名 |
+| `npx create-expo-app` | `npx expo-harmony-cli create` | 按 SDK 选择对应创建器 |
 | `npx expo install <pkg>` | `npx expo install <pkg>` | 无 |
 | `npx expo start` | `npx expo start` | 无 |
 | `npx expo prebuild` | `npx expo prebuild --platform harmony` | 加一个平台参数 |
@@ -89,7 +89,7 @@ npx expo start
 
 ## ✨ 核心能力
 
-- 🚀 **一键创建** —— `@expo-oh/create-expo` 创建即含鸿蒙支持
+- 🚀 **一键创建** —— `expo-harmony-cli create` 按 SDK 选择对应创建器
 - 🧬 **原生工程生成** —— `expo prebuild --platform harmony` 一条命令生成 OpenHarmony 工程
 - ⚡ **热更新** —— 鸿蒙端完整支持 Metro Fast Refresh / reload
 - 🔓 **Release 流水线** —— 构建 + 安装 + 启动一步到位
@@ -104,7 +104,7 @@ npx expo start
 | --- | --- | --- |
 | 适配方式 | `@expo-oh` 整包适配 | patch + 注入 |
 | React Native | 0.82.x | 0.77.x |
-| 创建命令 | `npx @expo-oh/create-expo` | `npx expo-harmony-cli <dir> --sdk 52` |
+| 创建命令 | `npx expo-harmony-cli create <dir> --sdk 54` | `npx expo-harmony-cli create <dir> --sdk 52` |
 | 热更新 | Fast Refresh | Metro reload |
 | 适用场景 | 新项目 | 存量项目维护 |
 
@@ -131,7 +131,7 @@ SDK 52 完整流程见 **[SDK 52 使用指南](docs/sdk52-guide.md)**，两条�
 支持。鸿蒙是新增平台而非替代——`run:ios` / `run:android` 与标准 Expo 完全一致，一套代码三端发布。
 
 **怎么安装？收费吗？**
-无需安装，`npx @expo-oh/create-expo my-app` 即用；MIT 开源免费。
+无需安装，`npx expo-harmony-cli create my-app --sdk 54` 即用；MIT 开源免费。
 
 **SDK 52 项目能升级到 SDK 54 吗？**
 不自动迁移，推荐 SDK 54 新建项目后迁移业务代码。

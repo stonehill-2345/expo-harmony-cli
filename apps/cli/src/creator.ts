@@ -55,7 +55,13 @@ async function runStep<T>(message: string, action: () => T | Promise<T>): Promis
 }
 
 const SDK_CHOICES: Array<{ value: SdkVersion; label: string }> = [
+  { value: 'sdk-54', label: 'Expo SDK 54 模板（RN 0.82）' },
   { value: 'sdk-52', label: 'Expo SDK 52 模板（RN 0.77）' },
+];
+
+const SDK54_TEMPLATE_CHOICES = [
+  { value: 'default' as const, name: 'default（Expo Router）' },
+  { value: 'blank-typescript' as const, name: 'blank-typescript（最小模板）' },
 ];
 
 /** create 命令编排：选择 SDK → 创建模板 → 注入鸿蒙基线 → 适配依赖 → 写入开发资料。*/
@@ -66,13 +72,28 @@ export async function runCreate(args: string[], opts: CreateOptions = {}): Promi
 
   // 步骤 0：选择 Expo SDK 版本（--sdk flag 优先，否则交互式选择）
   if (parsed.requestedSdk === null && (!process.stdin.isTTY || !process.stdout.isTTY)) {
-    throw new Error('非交互环境必须显式指定 Expo SDK：请使用 --sdk=52');
+    throw new Error('非交互环境必须显式指定 Expo SDK：请使用 --sdk=52 或 --sdk=54');
   }
   const sdk: SdkVersion = parsed.requestedSdk ?? await select({
     message: '选择 Expo SDK 模板版本',
     choices: SDK_CHOICES.map(({ value, label }) => ({ value, name: label })),
-    default: 'sdk-52',
+    default: 'sdk-54',
   });
+  if (sdk === 'sdk-54') {
+    assertCreateSelectionSupported(parsed, sdk);
+    const template = !parsed.rawArgs.some(arg => arg === '--template' || arg.startsWith('--template=')) && process.stdin.isTTY && process.stdout.isTTY
+      ? await select({ message: '选择 SDK 54 模板', choices: SDK54_TEMPLATE_CHOICES, default: 'default' })
+      : parsed.template;
+    const { runSdk54ReleaseCreate } = await import('./sdk54/create-release');
+    await runSdk54ReleaseCreate({
+      cwd,
+      projectName,
+      template,
+      packageManager: parsed.packageManager,
+    });
+    return;
+  }
+
   assertCreateSelectionSupported(parsed, sdk);
   const V = getVersionMatrix(sdk);
   const sdkLabel = 'SDK 52';

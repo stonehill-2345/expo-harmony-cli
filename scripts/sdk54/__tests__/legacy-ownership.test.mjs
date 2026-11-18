@@ -60,8 +60,9 @@ test('OWN-01/03/04/05/06: current file decisions preserve SDK52 and record relea
     assert.equal(find(file).decision.category, 'KEEP_SDK52', file);
   }
   assert.ok(find('apps/cli/src/sdk54/npm-spec.ts').incoming.some((entry) => entry.source === 'apps/cli/src/version-matrix.ts'));
-  for (const name of ['create', 'create-release', 'template-contract', 'default-image-substitution']) {
-    assert.equal(find(`apps/cli/src/sdk54/${name}.ts`), undefined, `M0A-04 removed ${name}`);
+  assert.equal(find('apps/cli/src/sdk54/create.ts'), undefined, '旧 package-patch creator 已移除');
+  for (const name of ['create-release', 'template-contract', 'default-image-substitution']) {
+    assert.ok(find(`apps/cli/src/sdk54/${name}.ts`), `统一入口保留 ${name}`);
   }
   assert.equal(find('scripts/sdk54/generate-external-screens-patch.mjs').decision.category, 'TRANSFER_SDK54');
   assert.ok(find('scripts/sdk54/generate-external-screens-patch.mjs').incoming.some((entry) => entry.source === 'scripts/sdk54/prepare-npm-release.mjs'));

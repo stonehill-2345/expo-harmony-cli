@@ -92,12 +92,16 @@ function assertPackedContentDoesNotContainLocalState(cwd: string, files: string[
 }
 
 describe('expo-harmony-cli 实际打包产物', () => {
-  it('does not publish transferred SDK54 creation implementations or stale build files', () => {
+  it('publishes the SDK54 scoped release adapter without the retired patch creator', () => {
     const { root, files } = readPackedCli();
-    const transferred = /^(?:dist\/sdk54\/)(?:create|create-release|template-contract|default-image-substitution)\.(?:js(?:\.map)?|d\.ts(?:\.map)?)$/;
-    expect(files.filter(file => transferred.test(file))).toEqual([]);
+    expect(files).not.toContain('dist/sdk54/create.js');
+    for (const file of [
+      'dist/sdk54/create-release.js',
+      'dist/sdk54/template-contract.js',
+      'dist/sdk54/default-image-substitution.js',
+    ]) expect(files).toContain(file);
     const creator = fs.readFileSync(path.join(root, 'dist/creator.js'), 'utf8');
-    expect(creator).not.toContain('sdk54/create-release');
+    expect(creator).toContain('sdk54/create-release');
   });
 
   it('从源码生成入口，并清理旧编译文件', () => {

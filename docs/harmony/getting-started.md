@@ -29,7 +29,7 @@
 在希望存放应用的目录执行：
 
 ```bash
-npx expo-harmony-cli@1.6.0 create my-app --sdk 54 --template default --npm
+npx expo-harmony-cli@latest create my-app --sdk 54 --template default --npm
 ```
 
 轻量模板使用 `--template blank-typescript`；pnpm 项目改用 `--pnpm`。

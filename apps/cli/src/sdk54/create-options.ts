@@ -72,7 +72,7 @@ export function parseCreateArgs(args: string[]): ParsedCreateArgs {
     projectName = arg;
   }
 
-  if (!projectName) throw new Error('用法: expo-harmony-cli <project-name> [--sdk=52]');
+  if (!projectName) throw new Error('用法: expo-harmony-cli <project-name> [--sdk=52|54]');
   if (!SAFE_PROJECT_NAME.test(projectName)) {
     throw new Error('项目名仅支持小写字母、数字、点、下划线和连字符，且必须以字母或数字开头。');
   }
@@ -86,13 +86,16 @@ export function parseCreateArgs(args: string[]): ParsedCreateArgs {
   };
 }
 
+export function assertCreateSelectionSupported(
+  parsed: ParsedCreateArgs,
+  sdk: 'sdk-54',
+): asserts parsed is ParsedCreateArgs & { packageManager: 'npm' | 'pnpm' };
+export function assertCreateSelectionSupported(parsed: ParsedCreateArgs, sdk: 'sdk-52'): void;
 export function assertCreateSelectionSupported(parsed: ParsedCreateArgs, sdk: SdkVersion): void {
-  if (sdk === 'sdk-54') {
-    throw new Error(
-      `独立 CLI 仅支持创建 SDK 52 项目；SDK 54 请使用 npx @expo-oh/create-expo@3.5.12 ${parsed.projectName} --template ${parsed.template}`,
-    );
-  }
   if (sdk === 'sdk-52' && parsed.template !== 'default') {
     throw new Error('SDK 52 仅支持 default 模板');
+  }
+  if (sdk === 'sdk-54' && parsed.packageManager !== 'npm' && parsed.packageManager !== 'pnpm') {
+    throw new Error('SDK 54 仅支持 npm 或 pnpm；Yarn/Bun 暂不支持');
   }
 }
