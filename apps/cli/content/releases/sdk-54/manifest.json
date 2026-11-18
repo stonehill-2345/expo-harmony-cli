@@ -32,9 +32,9 @@
         "@react-native-oh/react-native-harmony"
       ],
       "sourceDependencies": {
-        "expo": "~54.0.36",
-        "react": "19.1.0",
-        "react-native": "0.81.5"
+        "expo": "npm:@expo-oh/expo@54.0.38",
+        "react": "19.1.1",
+        "react-native": "0.82.1"
       }
     },
     "default": {
@@ -92,9 +92,9 @@
         "@react-native-ohos/react-native-worklets"
       ],
       "sourceDependencies": {
-        "expo": "~54.0.36",
-        "react": "19.1.0",
-        "react-native": "0.81.5"
+        "expo": "npm:@expo-oh/expo@54.0.38",
+        "react": "19.1.1",
+        "react-native": "0.82.1"
       }
     }
   },

@@ -29,11 +29,13 @@
 
 **从创建到运行，三条命令**（终端实录 × HarmonyOS 模拟器，构建段加速回放）
 
-![expo-harmony-cli 全流程演示：创建 Expo 项目 → prebuild 生成鸿蒙原生工程 → run:harmony 在 HarmonyOS 模拟器运行](docs/assets/demo-overview.gif)
+![expo-harmony-cli 全流程演示：统一入口创建 Expo 项目 → prebuild 生成鸿蒙原生工程 → run:harmony 在 HarmonyOS 模拟器运行](docs/assets/demo-overview.gif)
 
 **Fast Refresh：改一行代码，秒级生效**
 
 ![鸿蒙端 Metro Fast Refresh 演示：修改 React Native 代码后秒级热更新生效](docs/assets/demo-fast-refresh.gif)
+
+> 演示环境：`expo-harmony-cli@1.7.0` 统一创建入口（`create demo-app --sdk 54 --template default`）· Expo SDK 54 / React 19.1.1 / RN 0.82.1 / RNOH 0.82.30 · DevEco Studio 模拟器（单屏 phone，OpenHarmony 6.x）。iOS / Android 流程与此完全一致，见[项目状态与兼容矩阵](#-项目状态与兼容矩阵)。
 
 ## 🚀 快速开始
 
