@@ -20,6 +20,19 @@ pnpm check
 - 修改生成项目内容时同步更新 `apps/cli/content/docs/` 和相关测试。
 - 不提交内网 registry、私有域名、本机路径、token、证书或签名文件。
 
+## 文档职责与维护入口
+
+为避免首页、npm 包页面和详细指南出现内容漂移，文档按职责维护：
+
+| 文件 | 职责 | 维护规则 |
+| --- | --- | --- |
+| `README.md` | 项目首页、产品定位、主流程、版本选择和关键决策信息 | 唯一维护源；面向首次了解项目的用户 |
+| `apps/cli/README.md` | npm 包页面展示内容 | 由 `apps/cli/scripts/sync-readme.mjs` 在 `prepack` 阶段从根 README 生成，禁止手工编辑 |
+| `apps/cli/docs/guide.md` | CLI 命令、参数、环境检查、排障和行为边界 | 面向已经安装或准备使用 CLI 的开发者 |
+| `docs/sdk52-guide.md` | Expo SDK 52 Legacy 工作流 | 只维护 SDK 52 专属流程，不重复首页通用说明 |
+
+新增或修改文档时，先判断内容所属职责，再修改对应唯一维护源。修改根 README 后，使用 `pnpm --dir apps/cli pack` 或执行同步脚本检查 npm README 是否正确生成；不要直接修改生成文件来解决内容问题。
+
 ## Commit 建议
 
 推荐使用简洁的 conventional commit：

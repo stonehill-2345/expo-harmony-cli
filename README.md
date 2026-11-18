@@ -167,6 +167,17 @@ Node.js ≥ 20.19.4 · pnpm ≥ 10.19.0（或 npm ≥ 10）· DevEco Studio 5.0+
 - [配置插件](docs/harmony-config-plugins.md) · [原生工程生成](docs/harmony-generation.md) · [模块开发](docs/harmony-module-authoring.md)
 - [更新日志](apps/cli/CHANGELOG.md) · [贡献指南](CONTRIBUTING.md) · [安全策略](SECURITY.md) · [行为准则](CODE_OF_CONDUCT.md) · [第三方声明](NOTICE.md)
 
+### 文档分工
+
+为避免不同入口重复或互相矛盾，请按用途阅读和维护：
+
+| 文档 | 内容 |
+| --- | --- |
+| `README.md` | 项目定位、主流程、版本选择和关键决策信息；首页唯一维护源 |
+| `apps/cli/docs/guide.md` | CLI 命令、参数、环境检查、排障和行为边界 |
+| `docs/sdk52-guide.md` | SDK 52 Legacy 专属流程 |
+| `apps/cli/README.md` | npm 包页面副本，由发布前脚本从根 README 自动生成，请勿直接编辑 |
+
 仓库镜像：[GitHub](https://github.com/stonehill-2345/expo-harmony-cli) · [Gitee](https://gitee.com/stonehill-2345/expo-harmony-cli) · [AtomGit](https://atomgit.com/stonehill-2345/expo-harmony-cli)
 
 ## 🧭 To be continued
