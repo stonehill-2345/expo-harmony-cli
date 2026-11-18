@@ -68,6 +68,23 @@ npx expo start
 | 许可证 | MIT，开源免费 |
 | 下次更新 | 计划支持 Expo SDK 58 |
 
+## 🧑‍💻 已经会用 Expo，鸿蒙还要学什么？
+
+**不用学。** SDK 54 新架构保留全部标准 Expo 工作流——命令、代码、心智模型与官方 Expo 完全一致，鸿蒙只是新增 `--platform harmony` 一个参数：
+
+| 你在标准 Expo 里的习惯 | 在这里 | 差异 |
+| --- | --- | --- |
+| `npx create-expo-app` | `npx @expo-oh/create-expo` | 换个创建器包名 |
+| `npx expo install <pkg>` | `npx expo install <pkg>` | 无 |
+| `npx expo start` | `npx expo start` | 无 |
+| `npx expo prebuild` | `npx expo prebuild --platform harmony` | 加一个平台参数 |
+| `npx expo run:ios` / `run:android` | 照常使用，另有 `run:harmony` | 鸿蒙是新增而非替代 |
+
+- **代码零改动**：`expo`、`expo-router` 等依赖名与 import 原样保留（npm alias 在底层解析到 `@expo-oh` 适配包），官方 Expo 文档、社区教程、纯 JS 三方库直接适用
+- **心智模型不变**：沿用 Expo CNG 理念，鸿蒙原生工程同样是 `prebuild` 的生成物，不手改、可重建
+- **开发体验同款**：Metro Fast Refresh 秒级热更新，与 iOS / Android 端一致
+- 对比 SDK 52 时代的 patch + 私有命令流程，新架构把“学一套鸿蒙工具”的成本降为零
+
 ## ✨ 核心能力
 
 - 🚀 **一键创建** —— `@expo-oh/create-expo` 创建即含鸿蒙支持
