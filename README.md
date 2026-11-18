@@ -11,17 +11,19 @@
 [![License](https://img.shields.io/github/license/stonehill-2345/expo-harmony-cli)](LICENSE)
 [![GitHub stars](https://img.shields.io/github/stars/stonehill-2345/expo-harmony-cli)](https://github.com/stonehill-2345/expo-harmony-cli)
 
-11 个 Expo 核心模块真机验收 · 8 条 Debug/Release 链路全通过 · 1581 项自动化检查 0 失败
+11 个 Expo 核心模块真机可用 · 全命令 Debug / Release 双模式真机验证 · 千余项自动化测试守护发布
 
 </div>
 
 > **速答：React Native / Expo 怎么跑在鸿蒙（HarmonyOS）上？**
 > 用 expo-harmony-cli——它在标准 Expo 工作流中新增 `--platform harmony`，底层经 [RNOH](https://github.com/react-native-oh-library/react-native-harmony) 官方桥接层生成并运行 OpenHarmony 原生工程。三步——
-> ① `npx @expo-oh/create-expo my-app` 创建项目
-> ② `npx expo prebuild --platform harmony` 生成鸿蒙原生工程
-> ③ `npx expo run:harmony` 真机运行
+> 1. `npx @expo-oh/create-expo my-app` 创建项目
+> 2. `npx expo prebuild --platform harmony` 生成鸿蒙原生工程
+> 3. `npx expo run:harmony` 真机运行
 >
 > iOS / Android 工作流不受影响，业务代码与标准 Expo 项目完全一致。
+
+> **TL;DR (English):** expo-harmony-cli brings React Native / Expo apps to HarmonyOS (OpenHarmony) while keeping the standard Expo workflow: `npx @expo-oh/create-expo` to scaffold, `npx expo prebuild --platform harmony` to generate the native project, `npx expo run:harmony` to run on device — powered by the official [RNOH](https://github.com/react-native-oh-library/react-native-harmony) bridge. Your code stays 100% standard Expo; iOS and Android are untouched.
 
 ## 🎬 效果演示
 
@@ -176,4 +178,4 @@ Node.js ≥ 20.19.4 · pnpm ≥ 10.19.0（或 npm ≥ 10）· DevEco Studio 5.0+
 
 ## 📄 License
 
-MIT · 最近更新 2026-11 · v1.7.0 · 支持 Expo SDK 54 / 52
+MIT（版本与更新时间见[项目状态](#-项目状态与兼容矩阵)）
