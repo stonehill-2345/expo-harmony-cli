@@ -1,7 +1,6 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
-import type { Sdk54CreateRequest } from './create';
-import { createExpoTemplateArg } from './create';
+import type { Sdk54Template } from './create-options';
 import { loadReleaseManifest, buildReleasePackageJson } from './release-manifest';
 import { validateSdk54Template } from './template-contract';
 import { applyDefaultImageSubstitution } from './default-image-substitution';
@@ -11,9 +10,18 @@ import { readManagedState, writeManagedState } from '../lifecycle/managed-state'
 import { commitTextFileTransaction } from './file-transaction';
 import { releaseRuntimeFailures } from './release-runtime';
 
-export async function runSdk54ReleaseCreate(request: Sdk54CreateRequest) {
+export interface Sdk54ReleaseCreateRequest {
+  cwd: string;
+  projectName: string;
+  template: Sdk54Template;
+  packageManager: 'npm' | 'pnpm';
+}
+
+const SDK54_CREATE_EXPO = '@expo-oh/create-expo@3.5.12';
+
+export async function runSdk54ReleaseCreate(request: Sdk54ReleaseCreateRequest) {
   const manifest = loadReleaseManifest();
-  await runFileQuiet('npx', [`create-expo-app@${manifest.createExpoApp}`, request.projectName, '--template', createExpoTemplateArg(request.template), '--no-install'], { cwd: request.cwd });
+  await runFileQuiet('npx', [SDK54_CREATE_EXPO, request.projectName, '--template', request.template, '--no-install'], { cwd: request.cwd });
   const projectRoot = path.resolve(request.cwd, request.projectName);
   const validated = validateSdk54Template(projectRoot, request.template, manifest);
   if (request.template === 'default') applyDefaultImageSubstitution(projectRoot);

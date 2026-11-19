@@ -6,6 +6,7 @@ import { extract } from 'tar';
 import { pathToFileURL } from 'node:url';
 import { RELEASE_ID, RELEASE_PACKAGES, rewriteReleaseManifest, createReleaseManifest } from './release-catalog.mjs';
 import { readReleaseReadme, releaseReadmePath } from './release-readme.mjs';
+import { verifyReleasedCompatibility } from './prepare-released-compatibility.mjs';
 
 export async function verifyRelease(directory, rootDir = process.cwd()) {
   const report = JSON.parse(fs.readFileSync(path.join(directory, 'release.json')));
@@ -49,6 +50,7 @@ export async function verifyRelease(directory, rootDir = process.cwd()) {
         const { cliVersion: _expectedCliVersion, ...expectedRuntime } = createReleaseManifest();
         if (JSON.stringify(actualRuntime) !== JSON.stringify(expectedRuntime)) throw new Error('Stale runtime release metadata');
       }
+      if (descriptor.installName === 'expo-modules-core') verifyReleasedCompatibility(root);
     } catch (error) { failures.push(`${descriptor.publishName}: ${error.message}`); }
     finally { fs.rmSync(stage, { recursive: true, force: true }); }
   }

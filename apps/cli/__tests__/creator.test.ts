@@ -5,7 +5,7 @@ import * as os from 'os';
 
 // mock @inquirer/prompts select（避免交互式阻塞）
 vi.mock('@inquirer/prompts', () => ({
-  select: vi.fn(() => Promise.resolve('sdk-54')),
+  select: vi.fn(() => Promise.resolve('sdk-52')),
 }));
 
 // mock exec（避免真跑 create-expo-app）
@@ -79,7 +79,7 @@ vi.mock('../src/sdk54/create-release', () => ({
     projectRoot: path.resolve(request.cwd, request.projectName),
     template: request.template,
     packageManager: request.packageManager,
-    patchSet: 'sdk54-mvp-1',
+    release: 'sdk54-expo-oh-harmony.1',
   })),
 }));
 
@@ -105,6 +105,14 @@ describe('runCreate', () => {
     vi.mocked(prompts.select).mockResolvedValueOnce('sdk-52');
     const { runCreate } = await import('../src/creator');
     await runCreate(['myapp'], { cwd: tmp });
+    expect(prompts.select).toHaveBeenCalledWith({
+      message: '选择 Expo SDK 模板版本',
+      choices: [
+        { value: 'sdk-54', name: 'Expo SDK 54 模板（RN 0.82）' },
+        { value: 'sdk-52', name: 'Expo SDK 52 模板（RN 0.77）' },
+      ],
+      default: 'sdk-54',
+    });
     const { runFileQuiet } = await import('../src/utils/exec');
     const { log } = await import('../src/utils/log');
     expect(runFileQuiet).toHaveBeenCalledWith(
@@ -232,26 +240,49 @@ describe('runCreate', () => {
   it.each([
     [['myapp', '--sdk=54'], 'default', 'pnpm'],
     [['myapp', '--sdk', '54', '--template', 'blank-typescript', '--npm'], 'blank-typescript', 'npm'],
-  ] as const)('SDK54 %j → 早期分流后立即返回', async (args, template, packageManager) => {
+  ] as const)('SDK54 %j → 分流到当前 scoped release 创建器', async (args, template, packageManager) => {
     streams.forEach(stream => Object.defineProperty(stream, 'isTTY', { configurable: true, value: false }));
     const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk54-'));
     try {
       const { runCreate } = await import('../src/creator');
       const { runSdk54ReleaseCreate } = await import('../src/sdk54/create-release');
-      const { runFileQuiet } = await import('../src/utils/exec');
       await runCreate([...args], { cwd: tmp });
-      expect(runSdk54ReleaseCreate).toHaveBeenCalledOnce();
       expect(runSdk54ReleaseCreate).toHaveBeenCalledWith({
         cwd: tmp,
         projectName: 'myapp',
         template,
         packageManager,
       });
-      expect(runFileQuiet).not.toHaveBeenCalled();
       expect(fs.readdirSync(tmp)).toEqual([]);
     } finally {
       fs.rmSync(tmp, { recursive: true, force: true });
     }
+  });
+
+  it('交互式 SDK54 未指定模板 → 展示当前两个模板并复用选择结果', async () => {
+    const tmp = fs.mkdtempSync(path.join(os.tmpdir(), 'create-sdk54-template-'));
+    const prompts = await import('@inquirer/prompts');
+    vi.mocked(prompts.select)
+      .mockResolvedValueOnce('sdk-54')
+      .mockResolvedValueOnce('blank-typescript');
+    const { runCreate } = await import('../src/creator');
+    const { runSdk54ReleaseCreate } = await import('../src/sdk54/create-release');
+    await runCreate(['myapp'], { cwd: tmp });
+    expect(prompts.select).toHaveBeenNthCalledWith(2, {
+      message: '选择 SDK 54 模板',
+      choices: [
+        { value: 'default', name: 'default（Expo Router）' },
+        { value: 'blank-typescript', name: 'blank-typescript（最小模板）' },
+      ],
+      default: 'default',
+    });
+    expect(runSdk54ReleaseCreate).toHaveBeenCalledWith({
+      cwd: tmp,
+      projectName: 'myapp',
+      template: 'blank-typescript',
+      packageManager: 'pnpm',
+    });
+    fs.rmSync(tmp, { recursive: true, force: true });
   });
 
   it.each(['--yarn', '--bun'])('SDK54 %s → 创建目录前失败关闭', async packageManagerFlag => {
@@ -294,7 +325,7 @@ describe('runCreate', () => {
       const { runCreate } = await import('../src/creator');
       const { runFileQuiet } = await import('../src/utils/exec');
       const { select } = await import('@inquirer/prompts');
-      await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/非交互.*--sdk/);
+      await expect(runCreate(['myapp'], { cwd: tmp })).rejects.toThrow(/非交互.*--sdk=52.*54/);
       expect(select).not.toHaveBeenCalled();
       expect(runFileQuiet).not.toHaveBeenCalled();
     } finally {

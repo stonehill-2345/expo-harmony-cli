@@ -3,9 +3,11 @@ import { ExpoConfig, getConfig, Platform } from '@expo/config';
 import { getPlatformBundlers, PlatformBundlers } from '../start/server/platformBundlers';
 import { CommandError } from '../utils/errors';
 
+export type ExportPlatform = Platform | 'harmony';
+
 export type Options = {
   outputDir: string;
-  platforms: Platform[];
+  platforms: ExportPlatform[];
   maxWorkers?: number;
   dev: boolean;
   clear: boolean;
@@ -22,10 +24,12 @@ export function resolvePlatformOption(
   exp: ExpoConfig,
   platformBundlers: PlatformBundlers,
   platform: string[] = ['all']
-): Platform[] {
+): ExportPlatform[] {
   const platformsAvailable: Partial<PlatformBundlers> = Object.fromEntries(
     Object.entries(platformBundlers).filter(
-      ([platform, bundler]) => bundler === 'metro' && exp.platforms?.includes(platform as Platform)
+      ([platform, bundler]) =>
+        bundler === 'metro' &&
+        (platform === 'harmony' || exp.platforms?.includes(platform as Platform))
     )
   );
 
@@ -35,9 +39,9 @@ export function resolvePlatformOption(
     );
   }
 
-  const assertPlatformBundler = (platform: Platform): Platform => {
+  const assertPlatformBundler = (platform: ExportPlatform): ExportPlatform => {
     if (!platformsAvailable[platform]) {
-      if (!exp.platforms?.includes(platform) && platform === 'web') {
+      if (!exp.platforms?.includes(platform as Platform) && platform === 'web') {
         // Pass through so the more robust error message is shown.
         return platform;
       }
@@ -52,15 +56,15 @@ export function resolvePlatformOption(
     return platform;
   };
 
-  const knownPlatforms = ['android', 'ios', 'web'] as Platform[];
-  const assertPlatformIsKnown = (platform: string): Platform => {
-    if (!knownPlatforms.includes(platform as Platform)) {
+  const knownPlatforms = ['android', 'ios', 'web', 'harmony'] as ExportPlatform[];
+  const assertPlatformIsKnown = (platform: string): ExportPlatform => {
+    if (!knownPlatforms.includes(platform as ExportPlatform)) {
       throw new CommandError(
         `Unsupported platform "${platform}". Options are: ${knownPlatforms.join(',')},all`
       );
     }
 
-    return platform as Platform;
+    return platform as ExportPlatform;
   };
 
   return (

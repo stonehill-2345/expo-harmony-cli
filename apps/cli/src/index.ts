@@ -101,7 +101,7 @@ function printHelp(): void {
 expo-harmony-cli <command> [args]
 
 Commands:
-  create [name]           创建 Expo Harmony 项目（SDK52 legacy；SDK54 @expo-oh packages）
+  create [name]           统一创建 Expo SDK 52/54 Harmony 项目
   install <pkg>           装 iOS/Android + 鸿蒙 JS 包 + 原生集成（--force 跳过 drift 保护）
   uninstall <pkg>         卸载包并清理 CLI 管理的 HarmonyOS 适配资产（remove 同义，--force 跳过 drift 保护）
   prebuild [args]         生成三端原生目录（透传 expo prebuild + harmony 走生成器）
@@ -113,16 +113,15 @@ Commands:
 
 Options:
   --sdk <52|54>           创建时指定 SDK（也支持 --sdk=52；非交互环境必填）
-  --template <blank-typescript|default>
-                          SDK 54 模板（默认 default；SDK 52 仅支持 default）
-  --npm, --pnpm           SDK 54 支持的包管理器（默认 pnpm）
+  --template <name>       SDK52: default；SDK54: default 或 blank-typescript
+  --npm, --pnpm           选择包管理器（SDK54 仅支持 npm/pnpm）
   -h, --help              显示帮助
   -v, --version           显示 CLI 版本
 
 Examples:
   npx expo-harmony-cli my-app
-  npx expo-harmony-cli my-app --sdk=54
-  npx expo-harmony-cli my-app --sdk 54
+  npx expo-harmony-cli create my-app --sdk 54 --template default
+  npx expo-harmony-cli my-app --sdk=52
   pnpm dlx expo-harmony-cli my-app  # pnpm 用户可选
   pnpm dlx expo-harmony-cli install @shopify/flash-list
   pnpm dlx expo-harmony-cli uninstall @shopify/flash-list

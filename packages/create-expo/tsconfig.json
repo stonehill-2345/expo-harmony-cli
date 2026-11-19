@@ -1,0 +1,18 @@
+{
+  "include": ["./src"],
+  "exclude": ["**/__mocks__/*", "**/__tests__/*"],
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "types": ["node"],
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "outDir": "build",
+    "resolveJsonModule": true,
+    "module": "preserve",
+    "moduleResolution": "bundler",
+    "declaration": false,
+    "composite": false
+  }
+}

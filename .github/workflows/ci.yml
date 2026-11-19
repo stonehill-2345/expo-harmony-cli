@@ -9,7 +9,8 @@ permissions:
 
 jobs:
   check:
-    runs-on: ubuntu-latest
+    # Source-analysis tests invoke Xcode's SwiftParser/SwiftSyntax.
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -19,6 +20,16 @@ jobs:
         with:
           node-version: 20.19.4
           cache: pnpm
-      - run: pnpm install --frozen-lockfile
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      # Vendored Expo prepare hooks rebuild/overwrite tracked artifacts. Build
+      # candidates explicitly in staging via pnpm check instead.
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm sdk54:tools:setup
       - run: pnpm check
       - run: pnpm sdk54:release:check

@@ -20,14 +20,14 @@ def digest(path):
 
 
 def run(input, output):
-    return subprocess.run(['python3', str(TOOL), '--input-har', str(input), '--output-har', str(output), '--profile', 'core-v1-v3'],
+    return subprocess.run(['python3', str(TOOL), '--input-har', str(input), '--output-har', str(output), '--profile', 'core-v1-v4'],
                           text=True, capture_output=True)
 
 
 class HarCompatibilityTest(unittest.TestCase):
     def test_pinned_patch_is_reproducible_and_does_not_modify_other_files(self):
         original = digest(INPUT)
-        lock = json.loads((COMPAT / 'rnoh-0.82.30-core-v1-v3.json').read_text())
+        lock = json.loads((COMPAT / 'rnoh-0.82.30-core-v1-v4.json').read_text())
         patches = {entry['source']: entry for entry in lock['patches']}
         with tempfile.TemporaryDirectory(prefix='core-har-test-') as directory:
             root = Path(directory)

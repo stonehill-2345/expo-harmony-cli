@@ -12,10 +12,10 @@ Expo SplashScreen 的 HarmonyOS 适配版本，通过 ArkUI 覆盖层与 RNOH �
 
 ```bash
 # npm
-npm install --save-exact expo-splash-screen@npm:@expo-oh/expo-splash-screen@31.0.14
+npm install --save-exact expo-splash-screen@npm:@expo-oh/expo-splash-screen@31.0.15
 
 # pnpm
-pnpm add --save-exact expo-splash-screen@npm:@expo-oh/expo-splash-screen@31.0.14
+pnpm add --save-exact expo-splash-screen@npm:@expo-oh/expo-splash-screen@31.0.15
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-splash-screen@npm:@expo-oh/expo-splash-screen@31.0.14
 ```json
 {
   "dependencies": {
-    "expo-splash-screen": "npm:@expo-oh/expo-splash-screen@31.0.14"
+    "expo-splash-screen": "npm:@expo-oh/expo-splash-screen@31.0.15"
   }
 }
 ```

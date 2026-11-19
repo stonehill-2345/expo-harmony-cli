@@ -238,12 +238,14 @@ describe(generatePackageListAsync, () => {
     const modules = [
       {
         packageName: 'expo-status-bar',
+        packageRoot: '/app/node_modules/expo-status-bar',
         kind: 'rnoh-reuse' as const,
         reason: 'Uses the StatusBarManager supplied by RNOH.',
         lifecycleDependencies: [],
       },
       {
         packageName: 'expo-linking',
+        packageRoot: LINKING_ROOT,
         kind: 'ability-lifecycle' as const,
         cpp: {
           packageClass: 'expo::linking::harmony::ExpoLinkingPackage',
@@ -267,6 +269,7 @@ describe(generatePackageListAsync, () => {
       },
       {
         packageName: 'expo-asset',
+        packageRoot: '/app/node_modules/expo-asset',
         kind: 'turbo-module' as const,
         cpp: {
           packageClass: 'expo::asset::harmony::ExpoAssetPackage',
@@ -334,6 +337,7 @@ describe(generatePackageListAsync, () => {
   it('produces byte-identical output regardless of input order', async () => {
     const moduleA = {
       packageName: 'z-package',
+      packageRoot: '/modules/z',
       kind: 'turbo-module' as const,
       cpp: {
         packageClass: 'example::ZPackage',
@@ -350,6 +354,7 @@ describe(generatePackageListAsync, () => {
     };
     const moduleB = {
       packageName: 'a-package',
+      packageRoot: '/modules/a',
       kind: 'turbo-module' as const,
       cpp: {
         packageClass: 'example::APackage',
@@ -658,6 +663,6 @@ describe('third-party Harmony conflict validation', () => {
 
     await expect(
       generatePackageListAsync([sourceModule, prebuiltModule], '/conflict', 'unused')
-    ).rejects.toThrow('CMake target "shared_target" resolves to multiple source directories');
+    ).rejects.toThrow('Harmony conflict cpp.cmakeTarget "shared_target"');
   });
 });

@@ -1,0 +1,14 @@
+{
+  "kind": "view",
+  "cpp": {
+    "packageClass": "expo::image::harmony::ExpoImagePackage",
+    "header": "ExpoImagePackage.h",
+    "cmakeTarget": "rnoh_expo_image",
+    "cmakePath": "harmony/src/main/cpp"
+  },
+  "ets": {
+    "packageClass": "ExpoImagePackage",
+    "importPath": "expo-image/harmony",
+    "entrypoint": "harmony/index.ets"
+  }
+}

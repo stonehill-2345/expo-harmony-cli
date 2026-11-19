@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "expo-harmony-sdk54-ai-e2e-results-v1",
+  "type": "object",
+  "required": ["schemaVersion", "runId", "results"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "runId": { "type": "string", "pattern": "^[A-Za-z0-9_.-]+$" },
+    "results": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["caseId", "attemptId", "runId", "caseSetSha256", "candidateSha256", "status", "timedOut", "interrupted", "evidence"]
+      }
+    }
+  }
+}

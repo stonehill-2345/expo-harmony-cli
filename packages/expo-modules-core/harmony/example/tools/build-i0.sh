@@ -15,14 +15,14 @@ const entry = read('/harmony/entry/oh-package.json5').dependencies;
 const overrides = read('/harmony/oh-package.json5').overrides;
 if (entry['@react-native-ohos/react-native-worklets'] !== 'file:../../artifacts/worklets-1.0.0-private-symbols-v2.har' ||
     overrides['@react-native-ohos/react-native-worklets'] !== 'file:../artifacts/worklets-1.0.0-private-symbols-v2.har' ||
-    entry['@react-native-ohos/react-native-screens'] !== 'file:../../artifacts/screens-4.9.0-content-wrapper-v1.har' ||
-    overrides['@react-native-ohos/react-native-screens'] !== 'file:../artifacts/screens-4.9.0-content-wrapper-v1.har') {
+    entry['@react-native-ohos/react-native-screens'] !== 'file:../../artifacts/screens-4.9.0-navigation-v6.har' ||
+    overrides['@react-native-ohos/react-native-screens'] !== 'file:../artifacts/screens-4.9.0-navigation-v6.har') {
   throw new Error('Router host references an older navigation artifact; prepare a fresh fixture');
 }
 NODE
   "${EXPO_HARMONY_PYTHON:-python3}" "$TOOLS/../router/prepare-screens.py" \
     --input-har "$ROOT/node_modules/@react-native-ohos/react-native-screens/harmony/screens.har" \
-    --output-har "$ROOT/artifacts/screens-4.9.0-content-wrapper-v1.har"
+    --output-har "$ROOT/artifacts/screens-4.9.0-navigation-v6.har"
   "${EXPO_HARMONY_PYTHON:-python3}" "$TOOLS/../router/prepare-worklets.py" \
     --input-har "$ROOT/node_modules/@react-native-ohos/react-native-worklets/harmony/worklets.har" \
     --output-har "$ROOT/artifacts/worklets-1.0.0-private-symbols-v2.har"

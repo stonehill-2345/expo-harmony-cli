@@ -20,6 +20,18 @@ pnpm check
 - 修改生成项目内容时同步更新 `apps/cli/content/docs/` 和相关测试。
 - 不提交内网 registry、私有域名、本机路径、token、证书或签名文件。
 
+## 文档职责与维护入口
+
+为避免首页、npm 包页面和详细指南出现内容漂移，文档按职责维护：
+
+| 文件 | 职责 | 维护规则 |
+| --- | --- | --- |
+| `README.md` | 项目首页、产品定位、主流程、版本选择和关键决策信息 | 唯一维护源；面向首次了解项目的用户 |
+| `apps/cli/README.md` | SDK 52 包文档（npm 包页面） | 独立维护，不再从根 README 自动覆盖（约定见 AGENTS.md） |
+| `docs/sdk52-guide.md` | Expo SDK 52 Legacy 工作流、命令详解与排障 | 只维护 SDK 52 专属流程，不重复首页通用说明 |
+
+新增或修改文档时，先判断内容所属职责，再修改对应唯一维护源。修改根 README 后，使用 `pnpm --dir apps/cli pack` 或执行同步脚本检查 npm README 是否正确生成；不要直接修改生成文件来解决内容问题。
+
 ## Commit 建议
 
 推荐使用简洁的 conventional commit：
@@ -43,8 +55,7 @@ expo-harmony-cli/
 │   │   ├── __tests__/          # 源码测试（*.test.ts）+ 打包产物测试（*.pack.test.ts）
 │   │   ├── templates/          # 鸿蒙原生工程模板
 │   │   ├── content/            # 分发内容：patches/sdk-54（补丁、manifest、许可证）等
-│   │   ├── assets/             # 截图等静态资源
-│   │   └── docs/               # 使用指南（guide.md）
+│   │   └── assets/             # 截图等静态资源
 │   └── example/                # 预留：Router + Stack + Linking + SplashScreen 示例应用
 ├── packages/                   # 14 个 Expo SDK54 Harmony 源码包，禁止独立发布
 │   ├── expo/ · expo-router/ · expo-modules-core/ · expo-asset/ · expo-constants/ …

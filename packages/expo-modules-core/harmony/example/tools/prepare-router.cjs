@@ -26,7 +26,10 @@ module.exports = function prepareRouter(sdk, root, pkg, ts) {
     layoutPath,
     "import { RouterProbe } from '../RouterProbe';\n" +
       layout
-        .replace('return <Stack>', 'return <><RouterProbe /><Stack>')
+        .replace(
+          'return <Stack>',
+          'return <><RouterProbe /><Stack screenOptions={{ fullScreenGestureEnabled: true, gestureEnabled: true }}>'
+        )
         .replace('</Stack>;', '</Stack></>;')
   );
 
@@ -122,6 +125,15 @@ module.exports = function prepareRouter(sdk, root, pkg, ts) {
   );
   fs.writeFileSync(pagePath, page);
 
+  const element = path.join(main, 'resources/base/element');
+  fs.writeFileSync(path.join(element, 'float.json'), JSON.stringify({
+    float: [{ name: 'expo_splash_image_width', value: '144vp' }],
+  }, null, 2) + '\n');
+  const stringPath = path.join(element, 'string.json');
+  const strings = JSON.parse(fs.readFileSync(stringPath));
+  strings.string.push({ name: 'expo_splash_resize_mode', value: 'contain' });
+  fs.writeFileSync(stringPath, JSON.stringify(strings, null, 2) + '\n');
+
   const cpp = path.join(main, 'cpp/PackageProvider.cpp');
   fs.writeFileSync(
     cpp,
@@ -151,6 +163,7 @@ module.exports = function prepareRouter(sdk, root, pkg, ts) {
   fs.writeFileSync(
     ets,
     "import { ExpoSplashScreenPackage } from './splash/ExpoSplashScreenPackage';\n" +
+      "import { ExpoSplashScreenController } from './splash/ExpoSplashScreenController';\n" +
       "import RNOHScreensPackage from '@react-native-ohos/react-native-screens';\n" +
       "import { SafeAreaViewPackage } from '@react-native-ohos/react-native-safe-area-context';\n" +
       "import GestureHandlerPackage from '@react-native-ohos/react-native-gesture-handler';\n" +
@@ -160,7 +173,7 @@ module.exports = function prepareRouter(sdk, root, pkg, ts) {
         .readFileSync(ets, 'utf8')
         .replace(
           '  return [',
-          '  return [new ExpoSplashScreenPackage(ctx), new RNOHScreensPackage(ctx), new SafeAreaViewPackage(ctx), new GestureHandlerPackage(ctx), new ReanimatedWorkletPackage(ctx), new ReanimatedPackage(ctx), '
+          "  const splash = AppStorage.get<ExpoSplashScreenController>('ExpoSplashScreenController');\n  if (!splash) throw new Error('Owning Ability Splash lifecycle is missing');\n  return [new ExpoSplashScreenPackage(ctx, splash), new RNOHScreensPackage(ctx), new SafeAreaViewPackage(ctx), new GestureHandlerPackage(ctx), new ReanimatedWorkletPackage(ctx), new ReanimatedPackage(ctx), "
         )
   );
 
@@ -190,7 +203,7 @@ module.exports = function prepareRouter(sdk, root, pkg, ts) {
   const oh = ts.parseConfigFileTextToJson(ohPath, fs.readFileSync(ohPath, 'utf8')).config;
   Object.assign(oh.dependencies, {
     '@react-native-ohos/react-native-screens':
-      'file:../../artifacts/screens-4.9.0-content-wrapper-v1.har',
+      'file:../../artifacts/screens-4.9.0-navigation-v6.har',
     '@react-native-ohos/react-native-safe-area-context':
       'file:../../node_modules/@react-native-ohos/react-native-safe-area-context/harmony/safe_area.har',
     '@react-native-ohos/react-native-gesture-handler':
@@ -207,7 +220,7 @@ module.exports = function prepareRouter(sdk, root, pkg, ts) {
   ohRoot.overrides = {
     '@rnoh/react-native-openharmony': 'file:../artifacts/react_native_openharmony.har',
     '@react-native-ohos/react-native-screens':
-      'file:../artifacts/screens-4.9.0-content-wrapper-v1.har',
+      'file:../artifacts/screens-4.9.0-navigation-v6.har',
     '@react-native-ohos/react-native-worklets':
       'file:../artifacts/worklets-1.0.0-private-symbols-v2.har',
   };

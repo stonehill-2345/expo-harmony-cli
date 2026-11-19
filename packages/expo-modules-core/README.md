@@ -4,6 +4,8 @@ Expo Modules 在 HarmonyOS 上的原生基础设施，连接 RNOH、JSI、原生
 
 上游基线：`expo-modules-core@3.0.30`。本包由 [expo-harmony-cli](https://github.com/stonehill-2345/expo-harmony-cli) 项目维护，非 Expo 官方发行版本。
 
+以下安装与支持说明对应历史 `@expo-oh` 发行组合。SDK54 已完成 M2 阶段，M3 模块作者契约正在验收；设备列表为空的项目仍标记 NOT_RUN/BLOCKED，不据此宣布 M3 完成。第三方作者接入及独立探针见[作者契约](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony-module-authoring.md)，具体状态以[验收记录目录](https://github.com/stonehill-2345/expo-harmony-cli/tree/main/docs/releases)和[测试入口矩阵](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/releases/sdk54-workspace-test-matrix.json)为准。
+
 [鸿蒙快速开始](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/harmony/getting-started.md) · [适配源码](https://github.com/stonehill-2345/expo-harmony-cli/tree/main/packages/expo-modules-core) · [验收记录](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/docs/releases/2026-10-09-sdk54-expo-oh-candidate.md) · [问题反馈](https://github.com/stonehill-2345/expo-harmony-cli/issues)
 
 ## 安装
@@ -12,10 +14,10 @@ Expo Modules 在 HarmonyOS 上的原生基础设施，连接 RNOH、JSI、原生
 
 ```bash
 # npm
-npm install --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.31
+npm install --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.32
 
 # pnpm
-pnpm add --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.31
+pnpm add --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.32
 ```
 
 保留原依赖键：
@@ -23,7 +25,7 @@ pnpm add --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.31
 ```json
 {
   "dependencies": {
-    "expo-modules-core": "npm:@expo-oh/expo-modules-core@3.0.31"
+    "expo-modules-core": "npm:@expo-oh/expo-modules-core@3.0.32"
   }
 }
 ```

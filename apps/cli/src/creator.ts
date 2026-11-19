@@ -59,6 +59,11 @@ const SDK_CHOICES: Array<{ value: SdkVersion; label: string }> = [
   { value: 'sdk-52', label: 'Expo SDK 52 模板（RN 0.77）' },
 ];
 
+const SDK54_TEMPLATE_CHOICES = [
+  { value: 'default' as const, name: 'default（Expo Router）' },
+  { value: 'blank-typescript' as const, name: 'blank-typescript（最小模板）' },
+];
+
 /** create 命令编排：选择 SDK → 创建模板 → 注入鸿蒙基线 → 适配依赖 → 写入开发资料。*/
 export async function runCreate(args: string[], opts: CreateOptions = {}): Promise<void> {
   const parsed = parseCreateArgs(args);
@@ -76,11 +81,14 @@ export async function runCreate(args: string[], opts: CreateOptions = {}): Promi
   });
   if (sdk === 'sdk-54') {
     assertCreateSelectionSupported(parsed, sdk);
+    const template = !parsed.rawArgs.some(arg => arg === '--template' || arg.startsWith('--template=')) && process.stdin.isTTY && process.stdout.isTTY
+      ? await select({ message: '选择 SDK 54 模板', choices: SDK54_TEMPLATE_CHOICES, default: 'default' })
+      : parsed.template;
     const { runSdk54ReleaseCreate } = await import('./sdk54/create-release');
     await runSdk54ReleaseCreate({
       cwd,
       projectName,
-      template: parsed.template,
+      template,
       packageManager: parsed.packageManager,
     });
     return;

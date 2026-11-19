@@ -1,20 +1,21 @@
 import { PlatformOSType } from 'react-native';
-export type PlatformSelectOSType = PlatformOSType | 'native' | 'electron' | 'default';
+export type PlatformSelectOSType = PlatformOSType | 'harmony' | 'native' | 'electron' | 'default';
 export type PlatformSelect = <T>(specifics: {
     [platform in PlatformSelectOSType]?: T;
 }) => T;
 declare const Platform: {
     /**
      * Denotes the currently running platform.
-     * Can be one of ios, android, web.
+     * Can be one of ios, android, harmony, web.
      */
     OS: string;
     /**
      * Returns the value with the matching platform.
-     * Object keys can be any of ios, android, native, web, default.
+     * Object keys can be any of ios, android, harmony, native, web, default.
      *
      * @ios ios, native, default
      * @android android, native, default
+     * @harmony harmony, native, default
      * @web web, default
      */
     select: PlatformSelect;

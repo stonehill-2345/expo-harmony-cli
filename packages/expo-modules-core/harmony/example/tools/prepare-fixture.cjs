@@ -14,6 +14,7 @@ const { values } = parseArgs({ options: {
   'router': { type: 'boolean', default: false },
   'font': { type: 'boolean', default: false },
   'status-bar': { type: 'boolean', default: false },
+  'web-browser': { type: 'boolean', default: false },
 } });
 for (const name of ['sdk-root', 'fixture-root', 'tooling-root']) {
   if (!values[name]) throw new Error(`--${name} is required`);
@@ -22,6 +23,7 @@ if (values.router) { values.i0 = true; values.linking = true; }
 if (values.linking && !values.i0) throw new Error('--linking requires --i0');
 if (values.font && !values.i0) throw new Error('--font requires --i0');
 if (values['status-bar'] && !values.i0) throw new Error('--status-bar requires --i0');
+if (values['web-browser'] && !values.i0) throw new Error('--web-browser requires --i0');
 const sdk = path.resolve(values['sdk-root']);
 const root = path.resolve(values['fixture-root']);
 if (fs.existsSync(root)) throw new Error(`Fixture already exists: ${root}; use a new directory`);
@@ -63,6 +65,7 @@ if (values.router) packages.push(
 );
 if (values.font) packages.push(['expo-font', 'packages/expo-font']);
 if (values['status-bar']) packages.push(['expo-status-bar', 'packages/expo-status-bar']);
+if (values['web-browser']) packages.push(['expo-web-browser', 'packages/expo-web-browser']);
 for (const [name, relative] of packages) {
   const source = path.join(sdk, relative);
   const stage = path.join(root, '.source-build', name, 'package');
@@ -118,6 +121,10 @@ if (values.font) {
 if (values['status-bar']) {
   require('./prepare-status-bar.cjs')(sdk, root);
   manifest.integration += '; expo-status-bar via RNOH StatusBarManager';
+}
+if (values['web-browser']) {
+  require('./prepare-web-browser.cjs')(sdk, root);
+  manifest.integration += '; expo-web-browser Ability lifecycle and ArkWeb overlay';
 }
 if (values.har) {
   const har = path.resolve(values.har);

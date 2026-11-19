@@ -38,3 +38,12 @@ test('accepts a structurally bounded sfnt and rejects corrupt table directories'
   const collection = validSfnt(); collection.set([0x74,0x74,0x63,0x66],0);
   assert.throws(() => validateSfntFont(collection), /collection/);
 });
+
+test('reports web font containers as unsupported instead of claiming to decode them', async () => {
+  const { validateSfntFont } = await import('../src/main/ets/FontFile.ts');
+  for (const signature of ['wOFF', 'wOF2']) {
+    const bytes = new Uint8Array(12);
+    bytes.set(Array.from(signature, value => value.charCodeAt(0)));
+    assert.throws(() => validateSfntFont(bytes), /WOFF.*not supported/);
+  }
+});

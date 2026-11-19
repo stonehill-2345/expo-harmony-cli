@@ -6,7 +6,10 @@ import path from 'path';
 import resolveFrom from 'resolve-from';
 
 import { ensureHarmonyDependenciesAsync } from '../../harmony/dependencies';
+import { resolveHarmonyConfig } from '../../harmony/config';
 import { CommandError } from '../../utils/errors';
+import * as Log from '../../log';
+import { compileHarmonyConfigAsync, validateHarmonyPlugins } from './configPlugins';
 
 interface HarmonyAutolinkingExports {
   queryAutolinkingModulesFromProjectAsync(
@@ -14,14 +17,17 @@ interface HarmonyAutolinkingExports {
     options: { platform: 'harmony' }
   ): Promise<any[]>;
   syncHarmonyNativeProjectAsync(options: any): Promise<any>;
+  validateHarmonyAppAssetsAsync(projectRoot: string, appConfig: Record<string, any>): Promise<void>;
 }
 
 interface HarmonyPrebuildDependencies {
   getConfig: typeof getConfig;
   ensureDependencies: typeof ensureHarmonyDependenciesAsync;
   loadAutolinking: (projectRoot: string) => Promise<HarmonyAutolinkingExports>;
-  removeHarmonyProject: (harmonyRoot: string) => Promise<void>;
+  /** @deprecated Native generation owns cleaning and recovery. */
+  removeHarmonyProject?: (harmonyRoot: string) => Promise<void>;
   updateDebugBundlePath: typeof updateHarmonyDebugBundlePathAsync;
+  compileConfig?: typeof compileHarmonyConfigAsync;
 }
 
 const defaultDependencies: HarmonyPrebuildDependencies = {
@@ -31,10 +37,8 @@ const defaultDependencies: HarmonyPrebuildDependencies = {
     const expoPackageJson = resolveFrom(projectRoot, 'expo/package.json');
     return createRequire(expoPackageJson)('expo-modules-autolinking/exports');
   },
-  removeHarmonyProject: async (harmonyRoot) => {
-    await fs.promises.rm(harmonyRoot, { recursive: true, force: true });
-  },
   updateDebugBundlePath: updateHarmonyDebugBundlePathAsync,
+  compileConfig: compileHarmonyConfigAsync,
 };
 
 export async function prebuildHarmonyAsync(
@@ -43,7 +47,12 @@ export async function prebuildHarmonyAsync(
     install: boolean;
     clean?: boolean;
     bundleName?: string;
-    packageManagerOptions?: { npm?: boolean; yarn?: boolean; pnpm?: boolean; bun?: boolean };
+    packageManagerOptions?: {
+      npm?: boolean;
+      yarn?: boolean;
+      pnpm?: boolean;
+      bun?: boolean;
+    };
   },
   dependencies: HarmonyPrebuildDependencies = defaultDependencies
 ) {
@@ -51,13 +60,20 @@ export async function prebuildHarmonyAsync(
     install: options.install,
     packageManagerOptions: options.packageManagerOptions,
   });
-  if (options.clean) {
-    await dependencies.removeHarmonyProject(path.join(projectRoot, 'harmony'));
-  }
-
   const { exp } = dependencies.getConfig(projectRoot, {
-    skipPlugins: true,
+    isModdedConfig: true,
     skipSDKVersionRequirement: true,
+  });
+  const plugins = validateHarmonyPlugins(projectRoot, exp);
+  for (const plugin of plugins.filter((plugin) => !plugin.platforms.includes('harmony'))) {
+    Log.warn(
+      `Harmony: ${plugin.reference} declares only ${plugin.platforms.join(
+        ', '
+      )}; its platform mods will not run.`
+    );
+  }
+  const snapshot = resolveHarmonyConfig(exp, {
+    bundleName: options.bundleName,
   });
   const autolinking = await dependencies.loadAutolinking(projectRoot);
   const modules = await autolinking.queryAutolinkingModulesFromProjectAsync(projectRoot, {
@@ -67,6 +83,15 @@ export async function prebuildHarmonyAsync(
   if (!core?.packageRoot) {
     throw new CommandError('HARMONY_AUTOLINKING', 'expo-modules-core was not resolved for Harmony');
   }
+  const plan = await (dependencies.compileConfig ?? compileHarmonyConfigAsync)(
+    projectRoot,
+    exp,
+    snapshot
+  );
+  await autolinking.validateHarmonyAppAssetsAsync(projectRoot, snapshot.expoConfig);
+  if (options.clean && fs.existsSync(path.join(projectRoot, 'harmony'))) {
+    Log.log('Harmony clean rebuilds declared configuration; the current project will be retained in .expo/harmony-backups.');
+  }
   const rnohRoot = path.join(
     projectRoot,
     'node_modules',
@@ -75,13 +100,21 @@ export async function prebuildHarmonyAsync(
   );
   const native = await autolinking.syncHarmonyNativeProjectAsync({
     projectRoot,
-    appName: exp.name,
-    bundleName: options.bundleName ?? deriveHarmonyBundleName(exp.slug),
+    appName: snapshot.harmony.name,
+    bundleName: snapshot.harmony.bundleName,
+    appConfig: snapshot.expoConfig,
+    userInterfaceStyle: snapshot.harmony.userInterfaceStyle,
+    nativeConfig: plan.nativeConfig,
+    resources: plan.resources,
     modules,
     inputHarPath: path.join(rnohRoot, 'react_native_openharmony.har'),
     corePackageRoot: core.packageRoot,
+    clean: options.clean,
+    finalize: async (stageRoot: string) => {
+      await dependencies.updateDebugBundlePath(projectRoot, stageRoot);
+    },
   });
-  await dependencies.updateDebugBundlePath(projectRoot, native.harmonyRoot);
+  if (native.backupPath) Log.log(`Harmony project backup: ${native.backupPath}`);
   return native;
 }
 

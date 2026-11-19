@@ -5,7 +5,7 @@ import {
 } from '../../src/sdk54/create-options';
 
 describe('parseCreateArgs', () => {
-  it('defaults SDK54 create options to default template and pnpm', () => {
+  it('parses legacy create options with default template and pnpm', () => {
     expect(parseCreateArgs(['myapp'])).toEqual({
       projectName: 'myapp',
       requestedSdk: null,
@@ -47,6 +47,8 @@ describe('parseCreateArgs', () => {
     { args: ['myapp', 'other'], message: /一个项目名/ },
     { args: ['myapp', '--sdk=55'], message: /--sdk.*52.*54/ },
     { args: ['myapp', '--sdk'], message: /--sdk.*52.*54/ },
+    { args: ['myapp', '--yes'], message: /未知 create 选项/ },
+    { args: ['myapp', '--no-install'], message: /未知 create 选项/ },
   ])('rejects invalid create arguments before creating a directory: $args', ({ args, message }) => {
     expect(() => parseCreateArgs(args)).toThrow(message);
   });
@@ -58,15 +60,19 @@ describe('assertCreateSelectionSupported', () => {
     expect(() => assertCreateSelectionSupported(parsed, 'sdk-52')).toThrow(/SDK 52.*default/);
   });
 
-  it.each(['yarn', 'bun'] as const)('rejects %s for SDK54', packageManager => {
+  it.each(['npm', 'pnpm'] as const)('accepts SDK54 %s for the scoped release creator', packageManager => {
+    const parsed = parseCreateArgs(['myapp', `--${packageManager}`]);
+    expect(() => assertCreateSelectionSupported(parsed, 'sdk-54')).not.toThrow();
+  });
+
+  it.each(['yarn', 'bun'] as const)('rejects SDK54 %s for the scoped release creator', packageManager => {
     const parsed = parseCreateArgs(['myapp', `--${packageManager}`]);
     expect(() => assertCreateSelectionSupported(parsed, 'sdk-54')).toThrow(/SDK 54.*npm.*pnpm/);
   });
 
   it.each([
     ['sdk-52', ['myapp', '--npm']],
-    ['sdk-54', ['myapp', '--npm']],
-    ['sdk-54', ['myapp', '--pnpm', '--template', 'blank-typescript']],
+    ['sdk-52', ['myapp', '--pnpm']],
   ] as const)('accepts supported selection %s %j', (sdk, args) => {
     const parsed = parseCreateArgs([...args]);
     expect(() => assertCreateSelectionSupported(parsed, sdk)).not.toThrow();

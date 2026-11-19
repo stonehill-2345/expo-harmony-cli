@@ -23,7 +23,7 @@ function fixture({ createModule = true } = {}) {
         addListener: (listener) => markerListeners.add(listener),
         removeListener: (listener) => markerListeners.delete(listener),
       },
-      RNOHMarkerId: { CONTENT_APPEARED: 18 },
+      RNOHMarkerId: { RUN_JS_BUNDLE_START: 7, RUN_JS_BUNDLE_STOP: 8, CONTENT_APPEARED: 18 },
       UITurboModule: class {
         constructor(ctx) {
           this.ctx = ctx;
@@ -95,6 +95,8 @@ test('Ability lifecycle auto-hides blank apps without creating the Splash TurboM
   assert.equal(f.markerListeners.size, 1);
 
   Array.from(f.markerListeners)[0].logMarker(18, '', 1);
+  assert.equal(f.controller.getState().visible, true);
+  Array.from(f.markerListeners)[0].logMarker(8, '', 2);
   assert.equal(f.controller.getState().visible, false);
 
   f.controller.onDestroy();
@@ -106,19 +108,33 @@ test('real RNOH CONTENT_APPEARED marker drives automatic dismissal', () => {
   assert.equal(f.markerListeners.size, 1);
   const markerListener = Array.from(f.markerListeners)[0];
   markerListener.logMarker(18, '', 1);
+  assert.equal(f.controller.getState().visible, true);
+  markerListener.logMarker(8, '', 2);
   assert.equal(f.controller.getState().visible, false);
+});
+
+test('module-scope prevention wins when content attaches before JavaScript finishes', async () => {
+  const f = fixture();
+  const markerListener = Array.from(f.markerListeners)[0];
+  markerListener.logMarker(18, '', 1);
+  await f.module.preventAutoHideAsync();
+  markerListener.logMarker(8, '', 2);
+  assert.equal(f.controller.getState().visible, true);
 });
 
 test('Router and user prevention preserve their distinct behavior', async () => {
   const internal = fixture();
   await internal.module.internalPreventAutoHideAsync();
   Array.from(internal.markerListeners)[0].logMarker(18, '', 1);
+  Array.from(internal.markerListeners)[0].logMarker(8, '', 2);
   assert.equal(internal.controller.getState().visible, true);
   await internal.module.internalMaybeHideAsync();
   assert.equal(internal.controller.getState().visible, false);
 
   const user = fixture();
   assert.equal(await user.module.preventAutoHideAsync(), true);
+  Array.from(user.markerListeners)[0].logMarker(18, '', 1);
+  Array.from(user.markerListeners)[0].logMarker(8, '', 2);
   await user.module.internalMaybeHideAsync();
   assert.equal(user.controller.getState().visible, true);
   await user.module.hideAsync();

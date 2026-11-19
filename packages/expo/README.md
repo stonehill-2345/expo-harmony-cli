@@ -12,10 +12,10 @@ Expo SDK54 的 HarmonyOS 入口，连接适配版 Expo CLI、Metro、Modules Cor
 
 ```bash
 # npm
-npm install --save-exact expo@npm:@expo-oh/expo@54.0.38
+npm install --save-exact expo@npm:@expo-oh/expo@54.0.39
 
 # pnpm
-pnpm add --save-exact expo@npm:@expo-oh/expo@54.0.38
+pnpm add --save-exact expo@npm:@expo-oh/expo@54.0.39
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo@npm:@expo-oh/expo@54.0.38
 ```json
 {
   "dependencies": {
-    "expo": "npm:@expo-oh/expo@54.0.38"
+    "expo": "npm:@expo-oh/expo@54.0.39"
   }
 }
 ```

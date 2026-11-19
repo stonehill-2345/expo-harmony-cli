@@ -129,6 +129,22 @@ void runCoreTests() {
         });
         expectJavaScript(*runtime, "expo.modules.Retry.answer === 42");
       }},
+      {"rolls back view configs after failed module initialization", [] {
+        auto runtime = facebook::hermes::makeHermesRuntime();
+        expo::harmony::install(*runtime);
+        expo::harmony::registerViewConfig(*runtime, "RetryView", "Existing", {{"preserved"}, {}});
+        expectFailure([&] {
+          expo::harmony::registerModule(*runtime, "RetryView", [](jsi::Runtime& rt, jsi::Object&) {
+            expo::harmony::registerViewConfig(rt, "RetryView", "", {{"label"}, {}});
+            throw jsi::JSError(rt, "initialization failed");
+          });
+        });
+        expectJavaScript(*runtime, "expo.getViewConfig('RetryView') === null && expo.getViewConfig('RetryView', 'Existing').validAttributes.preserved === true");
+        expo::harmony::registerModule(*runtime, "RetryView", [](jsi::Runtime& rt, jsi::Object&) {
+          expo::harmony::registerViewConfig(rt, "RetryView", "", {{"label"}, {}});
+        });
+        expectJavaScript(*runtime, "expo.getViewConfig('RetryView').validAttributes.label === true");
+      }},
       {"native events stop after subscription removal", [] {
         auto runtime = facebook::hermes::makeHermesRuntime();
         expo::harmony::install(*runtime);

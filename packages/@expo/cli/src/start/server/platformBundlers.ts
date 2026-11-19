@@ -1,8 +1,12 @@
 import { ExpoConfig, Platform } from '@expo/config';
 import resolveFrom from 'resolve-from';
 
+import { isHarmonyProject } from '../../harmony/project';
+
 /** Which bundler each platform should use. */
-export type PlatformBundlers = Record<Platform, 'metro' | 'webpack'>;
+export type PlatformBundlers = Record<Platform, 'metro' | 'webpack'> & {
+  harmony?: 'metro';
+};
 
 /** Get the platform bundlers mapping. */
 export function getPlatformBundlers(
@@ -24,5 +28,6 @@ export function getPlatformBundlers(
     // @ts-expect-error: not on type yet
     android: exp.android?.bundler ?? 'metro',
     web,
+    ...(isHarmonyProject(projectRoot) ? { harmony: 'metro' as const } : {}),
   };
 }

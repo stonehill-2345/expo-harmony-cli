@@ -92,6 +92,18 @@ function assertPackedContentDoesNotContainLocalState(cwd: string, files: string[
 }
 
 describe('expo-harmony-cli 实际打包产物', () => {
+  it('publishes the SDK54 scoped release adapter without the retired patch creator', () => {
+    const { root, files } = readPackedCli();
+    expect(files).not.toContain('dist/sdk54/create.js');
+    for (const file of [
+      'dist/sdk54/create-release.js',
+      'dist/sdk54/template-contract.js',
+      'dist/sdk54/default-image-substitution.js',
+    ]) expect(files).toContain(file);
+    const creator = fs.readFileSync(path.join(root, 'dist/creator.js'), 'utf8');
+    expect(creator).toContain('sdk54/create-release');
+  });
+
   it('从源码生成入口，并清理旧编译文件', () => {
     const { files } = readPackedCli();
     expect(files).toContain('dist/index.js');
@@ -101,7 +113,7 @@ describe('expo-harmony-cli 实际打包产物', () => {
   it('ships CLI dist output and Harmony content assets', () => {
     const { root: cwd, files, archiveName } = readPackedCli();
 
-    expect(archiveName).toBe('expo-harmony-cli-1.6.0.tgz');
+    expect(archiveName).toBe('expo-harmony-cli-1.7.0.tgz');
     expect(files).toContain('dist/index.js');
     expect(files).toContain('README.md');
     expect(files).toContain('CHANGELOG.md');
@@ -134,10 +146,10 @@ describe('expo-harmony-cli 实际打包产物', () => {
     expect(files.filter(file => file.startsWith('content/patches/sdk-54/')).sort())
       .toEqual([...declaredSdk54Assets].sort());
     for (const runtimeFile of [
-      'dist/sdk54/create-options.js', 'dist/sdk54/create.js', 'dist/sdk54/default-image-substitution.js',
+      'dist/sdk54/create-options.js',
       'dist/sdk54/docs.js', 'dist/sdk54/doctor.js', 'dist/sdk54/file-transaction.js',
       'dist/sdk54/install-patches.js', 'dist/sdk54/package-json.js', 'dist/sdk54/patch-manifest.js',
-      'dist/sdk54/project-state.js', 'dist/sdk54/template-contract.js', 'dist/sdk54/verify-runtime.js',
+      'dist/sdk54/project-state.js', 'dist/sdk54/verify-runtime.js',
     ]) expect(files).toContain(runtimeFile);
     expect(files).toContain('content/docs/sdk-54/HARMONY.md');
     expect(files).toContain('content/docs/README.md');
@@ -152,7 +164,7 @@ describe('expo-harmony-cli 实际打包产物', () => {
     expect(files.some(file => file.startsWith('.github/'))).toBe(false);
     expect(files.some(file => !file.startsWith('templates/harmony') && /(^|\/)(?:__tests__|tests?|node_modules)(\/|$)|\.(?:test|spec)\.[^.]+$|\.(?:tgz|hap|har)$|(?:acceptance|evidence|release-report).*\.json$/i.test(file))).toBe(false);
     const packedPackageJson = JSON.parse(fs.readFileSync(path.join(cwd, 'package.json'), 'utf8'));
-    expect(packedPackageJson.version).toBe('1.6.0');
+    expect(packedPackageJson.version).toBe('1.7.0');
     const sensitive = [/\/Users\//, /\/private\/tmp\//, /[A-Za-z]:\\Users\\/, /\b10\.(?:\d{1,3}\.){2}\d{1,3}\b/, /\b192\.168\.(?:\d{1,3}\.)\d{1,3}\b/, /\b172\.(?:1[6-9]|2\d|3[01])\.(?:\d{1,3}\.)\d{1,3}\b/];
     const textExtensions = new Set(['.js', '.mjs', '.cjs', '.json', '.md', '.ts', '.patch', '.txt', '.json5', '.ets', '.cpp', '.h', '.cmake', '.yaml', '.yml', '.xml', '.properties', '.gradle', '']);
     for (const file of files) {

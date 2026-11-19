@@ -17,6 +17,8 @@ export * from './platforms';
 export {
   prepareHarmonyNativeProjectAsync,
   syncHarmonyNativeProjectAsync,
+  validateHarmonyAppAssetsAsync,
+  validateHarmonyAppConfigurationAsync,
 } from './platforms/harmony/nativeProject';
 
 export {

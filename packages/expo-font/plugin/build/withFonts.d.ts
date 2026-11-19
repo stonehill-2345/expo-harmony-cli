@@ -17,5 +17,9 @@ export type FontProps = {
         fonts?: string[];
     };
 };
-declare const _default: ConfigPlugin<FontProps>;
+declare const _default: ConfigPlugin<FontProps> & {
+    harmony: {
+        platforms: string[];
+    };
+};
 export default _default;

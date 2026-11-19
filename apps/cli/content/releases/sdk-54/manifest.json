@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "release": "sdk54-expo-oh-harmony.0",
+  "release": "sdk54-expo-oh-harmony.1",
   "cliVersion": "1.6.0",
   "createExpoApp": "5.0.0",
   "templates": {
@@ -32,9 +32,9 @@
         "@react-native-oh/react-native-harmony"
       ],
       "sourceDependencies": {
-        "expo": "~54.0.36",
-        "react": "19.1.0",
-        "react-native": "0.81.5"
+        "expo": "npm:@expo-oh/expo@54.0.38",
+        "react": "19.1.1",
+        "react-native": "0.82.1"
       }
     },
     "default": {
@@ -75,7 +75,8 @@
         "expo-splash-screen",
         "expo-status-bar",
         "expo-system-ui",
-        "expo-web-browser"
+        "expo-web-browser",
+        "expo-image"
       ],
       "externalPackages": [
         "@react-native-oh/react-native-harmony",
@@ -91,9 +92,9 @@
         "@react-native-ohos/react-native-worklets"
       ],
       "sourceDependencies": {
-        "expo": "~54.0.36",
-        "react": "19.1.0",
-        "react-native": "0.81.5"
+        "expo": "npm:@expo-oh/expo@54.0.38",
+        "react": "19.1.1",
+        "react-native": "0.82.1"
       }
     }
   },
@@ -120,7 +121,8 @@
       "expo-splash-screen": "31.0.13",
       "expo-status-bar": "3.0.9",
       "expo-system-ui": "6.0.9",
-      "expo-web-browser": "15.0.11"
+      "expo-web-browser": "15.0.11",
+      "expo-image": "3.0.11"
     },
     "external": {
       "@react-native-oh/react-native-harmony": "0.82.30",
@@ -141,8 +143,8 @@
       "installName": "@expo/cli",
       "upstreamVersion": "54.0.27",
       "publishName": "@expo-oh/expo-cli",
-      "publishVersion": "54.0.27",
-      "installSpec": "npm:@expo-oh/expo-cli@54.0.27",
+      "publishVersion": "54.0.28",
+      "installSpec": "npm:@expo-oh/expo-cli@54.0.28",
       "templates": [
         "blank-typescript",
         "default"
@@ -168,8 +170,8 @@
       "installName": "@expo/metro-config",
       "upstreamVersion": "54.0.17",
       "publishName": "@expo-oh/expo-metro-config",
-      "publishVersion": "54.0.17",
-      "installSpec": "npm:@expo-oh/expo-metro-config@54.0.17",
+      "publishVersion": "54.0.18",
+      "installSpec": "npm:@expo-oh/expo-metro-config@54.0.18",
       "templates": [
         "blank-typescript",
         "default"
@@ -189,8 +191,8 @@
       "installName": "expo",
       "upstreamVersion": "54.0.37",
       "publishName": "@expo-oh/expo",
-      "publishVersion": "54.0.37",
-      "installSpec": "npm:@expo-oh/expo@54.0.37",
+      "publishVersion": "54.0.38",
+      "installSpec": "npm:@expo-oh/expo@54.0.38",
       "templates": [
         "blank-typescript",
         "default"
@@ -204,8 +206,8 @@
       "installName": "expo-asset",
       "upstreamVersion": "12.0.13",
       "publishName": "@expo-oh/expo-asset",
-      "publishVersion": "12.0.13",
-      "installSpec": "npm:@expo-oh/expo-asset@12.0.13",
+      "publishVersion": "12.0.14",
+      "installSpec": "npm:@expo-oh/expo-asset@12.0.14",
       "templates": [
         "blank-typescript",
         "default"
@@ -217,8 +219,8 @@
       "installName": "expo-constants",
       "upstreamVersion": "18.0.14",
       "publishName": "@expo-oh/expo-constants",
-      "publishVersion": "18.0.14",
-      "installSpec": "npm:@expo-oh/expo-constants@18.0.14",
+      "publishVersion": "18.0.15",
+      "installSpec": "npm:@expo-oh/expo-constants@18.0.15",
       "templates": [
         "blank-typescript",
         "default"
@@ -230,8 +232,8 @@
       "installName": "expo-font",
       "upstreamVersion": "14.0.12",
       "publishName": "@expo-oh/expo-font",
-      "publishVersion": "14.0.12",
-      "installSpec": "npm:@expo-oh/expo-font@14.0.12",
+      "publishVersion": "14.0.13",
+      "installSpec": "npm:@expo-oh/expo-font@14.0.13",
       "templates": [
         "blank-typescript",
         "default"
@@ -243,8 +245,8 @@
       "installName": "expo-linking",
       "upstreamVersion": "8.0.12",
       "publishName": "@expo-oh/expo-linking",
-      "publishVersion": "8.0.12",
-      "installSpec": "npm:@expo-oh/expo-linking@8.0.12",
+      "publishVersion": "8.0.13",
+      "installSpec": "npm:@expo-oh/expo-linking@8.0.13",
       "templates": [
         "blank-typescript",
         "default"
@@ -256,8 +258,8 @@
       "installName": "expo-modules-autolinking",
       "upstreamVersion": "3.0.27",
       "publishName": "@expo-oh/expo-modules-autolinking",
-      "publishVersion": "3.0.27",
-      "installSpec": "npm:@expo-oh/expo-modules-autolinking@3.0.27",
+      "publishVersion": "3.0.28",
+      "installSpec": "npm:@expo-oh/expo-modules-autolinking@3.0.28",
       "templates": [
         "blank-typescript",
         "default"
@@ -278,8 +280,8 @@
       "installName": "expo-modules-core",
       "upstreamVersion": "3.0.30",
       "publishName": "@expo-oh/expo-modules-core",
-      "publishVersion": "3.0.30",
-      "installSpec": "npm:@expo-oh/expo-modules-core@3.0.30",
+      "publishVersion": "3.0.31",
+      "installSpec": "npm:@expo-oh/expo-modules-core@3.0.31",
       "templates": [
         "blank-typescript",
         "default"
@@ -291,8 +293,8 @@
       "installName": "expo-router",
       "upstreamVersion": "6.0.24",
       "publishName": "@expo-oh/expo-router",
-      "publishVersion": "6.0.24",
-      "installSpec": "npm:@expo-oh/expo-router@6.0.24",
+      "publishVersion": "6.0.25",
+      "installSpec": "npm:@expo-oh/expo-router@6.0.25",
       "templates": [
         "default"
       ],
@@ -303,8 +305,8 @@
       "installName": "expo-splash-screen",
       "upstreamVersion": "31.0.13",
       "publishName": "@expo-oh/expo-splash-screen",
-      "publishVersion": "31.0.13",
-      "installSpec": "npm:@expo-oh/expo-splash-screen@31.0.13",
+      "publishVersion": "31.0.14",
+      "installSpec": "npm:@expo-oh/expo-splash-screen@31.0.14",
       "templates": [
         "blank-typescript",
         "default"
@@ -316,8 +318,8 @@
       "installName": "expo-status-bar",
       "upstreamVersion": "3.0.9",
       "publishName": "@expo-oh/expo-status-bar",
-      "publishVersion": "3.0.9",
-      "installSpec": "npm:@expo-oh/expo-status-bar@3.0.9",
+      "publishVersion": "3.0.10",
+      "installSpec": "npm:@expo-oh/expo-status-bar@3.0.10",
       "templates": [
         "blank-typescript",
         "default"
@@ -329,8 +331,8 @@
       "installName": "expo-system-ui",
       "upstreamVersion": "6.0.9",
       "publishName": "@expo-oh/expo-system-ui",
-      "publishVersion": "6.0.9",
-      "installSpec": "npm:@expo-oh/expo-system-ui@6.0.9",
+      "publishVersion": "6.0.10",
+      "installSpec": "npm:@expo-oh/expo-system-ui@6.0.10",
       "templates": [
         "blank-typescript",
         "default"
@@ -342,8 +344,8 @@
       "installName": "expo-web-browser",
       "upstreamVersion": "15.0.11",
       "publishName": "@expo-oh/expo-web-browser",
-      "publishVersion": "15.0.11",
-      "installSpec": "npm:@expo-oh/expo-web-browser@15.0.11",
+      "publishVersion": "15.0.12",
+      "installSpec": "npm:@expo-oh/expo-web-browser@15.0.12",
       "templates": [
         "default"
       ],
@@ -354,13 +356,30 @@
       "installName": "@react-native-ohos/react-native-screens",
       "upstreamVersion": "4.9.0",
       "publishName": "@expo-oh/react-native-screens",
-      "publishVersion": "4.9.0",
-      "installSpec": "npm:@expo-oh/react-native-screens@4.9.0",
+      "publishVersion": "4.9.1",
+      "installSpec": "npm:@expo-oh/react-native-screens@4.9.1",
       "templates": [
         "default"
       ],
       "requiredFiles": [
         "lib/commonjs/components/ScreenStackItem.js"
+      ],
+      "probes": []
+    },
+    {
+      "installName": "expo-image",
+      "upstreamVersion": "3.0.11",
+      "publishName": "@expo-oh/expo-image",
+      "publishVersion": "3.0.12",
+      "installSpec": "npm:@expo-oh/expo-image@3.0.12",
+      "templates": [
+        "default"
+      ],
+      "requiredFiles": [
+        "src/index.ts",
+        "src/ExpoImage.tsx",
+        "harmony/index.ets",
+        "harmony/src/main/cpp/CMakeLists.txt"
       ],
       "probes": []
     }

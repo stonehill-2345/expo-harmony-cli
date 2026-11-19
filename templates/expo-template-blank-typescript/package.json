@@ -1,0 +1,37 @@
+{
+  "name": "@expo-oh/expo-template-blank-typescript",
+  "description": "The Blank project template includes the minimum dependencies to run and an empty root component.",
+  "license": "0BSD",
+  "version": "54.0.48",
+  "main": "index.ts",
+  "scripts": {
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios",
+    "web": "expo start --web",
+    "harmony": "expo run:harmony"
+  },
+  "dependencies": {
+    "expo": "npm:@expo-oh/expo@54.0.39",
+    "expo-status-bar": "npm:@expo-oh/expo-status-bar@3.0.11",
+    "react": "19.1.1",
+    "react-native": "0.82.1",
+    "@react-native-oh/react-native-harmony-cli": "0.82.30",
+    "@expo/cli": "npm:@expo-oh/expo-cli@54.0.28",
+    "@expo/metro-config": "npm:@expo-oh/expo-metro-config@54.0.18",
+    "expo-asset": "npm:@expo-oh/expo-asset@12.0.15",
+    "expo-constants": "npm:@expo-oh/expo-constants@18.0.16",
+    "expo-font": "npm:@expo-oh/expo-font@14.0.14",
+    "expo-linking": "npm:@expo-oh/expo-linking@8.0.14",
+    "expo-modules-autolinking": "npm:@expo-oh/expo-modules-autolinking@3.0.29",
+    "expo-modules-core": "npm:@expo-oh/expo-modules-core@3.0.32",
+    "expo-splash-screen": "npm:@expo-oh/expo-splash-screen@31.0.15",
+    "expo-system-ui": "npm:@expo-oh/expo-system-ui@6.0.11",
+    "@react-native-oh/react-native-harmony": "0.82.30"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.17",
+    "typescript": "5.9.2"
+  },
+  "private": true
+}

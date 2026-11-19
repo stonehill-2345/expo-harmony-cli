@@ -15,10 +15,23 @@ export struct ExpoSplashScreenView {
 
   @Builder
   private defaultSplashContent() {
-    Column() {}
+    Stack() {
+      Image($r('app.media.startIcon'))
+        .width($r('app.float.expo_splash_image_width'))
+        .aspectRatio(1)
+        .objectFit(this.getImageFit())
+    }
       .width('100%')
       .height('100%')
-      .backgroundColor(Color.White)
+      .backgroundColor($r('app.color.start_window_background'))
+  }
+
+  private getImageFit(): ImageFit {
+    const mode = this.getUIContext().getHostContext()?.resourceManager
+      .getStringSync($r('app.string.expo_splash_resize_mode').id);
+    if (mode === 'cover') return ImageFit.Cover;
+    if (mode === 'native') return ImageFit.None;
+    return ImageFit.Contain;
   }
 
   public aboutToAppear(): void {
@@ -27,6 +40,7 @@ export struct ExpoSplashScreenView {
   }
 
   public aboutToDisappear(): void {
+    this.animationToken += 1;
     this.unsubscribe?.();
     this.unsubscribe = undefined;
   }

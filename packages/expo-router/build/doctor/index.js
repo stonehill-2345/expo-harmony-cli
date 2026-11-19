@@ -52,7 +52,7 @@ function doctor(pkg, appReactNavigationPath,
             continue;
         }
         debug(`Checking ${dep} with ${allowedRange} and found ${usersRange}`);
-        if (!usersRange || (0, subset_1.default)(allowedRange, usersRange)) {
+        if (!usersRange || (0, subset_1.default)(usersRange, allowedRange)) {
             continue;
         }
         debug(`Incorrect dependency found for ${dep}`);

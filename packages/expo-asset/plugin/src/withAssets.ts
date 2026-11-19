@@ -2,6 +2,7 @@ import { type ConfigPlugin, createRunOncePlugin } from 'expo/config-plugins';
 
 import { withAssetsAndroid } from './withAssetsAndroid';
 import { withAssetsIos } from './withAssetsIos';
+import { withAssetsHarmony } from './withAssetsHarmony';
 
 const pkg = require('expo-asset/package.json');
 
@@ -10,6 +11,7 @@ export type AssetProps = {
 };
 
 const withAssets: ConfigPlugin<AssetProps | null> = (config, props) => {
+  config = withAssetsHarmony(config, props?.assets ?? []);
   if (!props) {
     return config;
   }
@@ -24,4 +26,6 @@ const withAssets: ConfigPlugin<AssetProps | null> = (config, props) => {
   return config;
 };
 
-export default createRunOncePlugin(withAssets, pkg.name, pkg.version);
+export default Object.assign(createRunOncePlugin(withAssets, pkg.name, pkg.version), {
+  harmony: { platforms: ['harmony', 'ios', 'android'] },
+});

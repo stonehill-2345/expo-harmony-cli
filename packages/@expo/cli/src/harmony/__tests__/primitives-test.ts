@@ -2,7 +2,12 @@ import spawnAsync from '@expo/spawn-async';
 import { vol } from 'memfs';
 import { buildHarmonyAsync } from '../build';
 import { resolveHarmonyToolchain } from '../paths';
-import { resolveHarmonyDeviceAsync, reverseHarmonyPortAsync } from '../device';
+import {
+  installHarmonyAppAsync,
+  launchHarmonyAppAsync,
+  resolveHarmonyDeviceAsync,
+  reverseHarmonyPortAsync,
+} from '../device';
 
 describe('Harmony CLI primitives', () => {
   beforeEach(() => {
@@ -183,17 +188,62 @@ describe('Harmony CLI primitives', () => {
   });
 
   it('reverses the Metro port for the selected device', async () => {
-    jest.mocked(spawnAsync).mockResolvedValueOnce({ stdout: 'OK' } as any);
+    jest
+      .mocked(spawnAsync)
+      .mockResolvedValueOnce({ stdout: '[Empty]' } as any)
+      .mockResolvedValueOnce({ stdout: 'OK' } as any);
 
     await reverseHarmonyPortAsync('/hdc', '127.0.0.1:5555', 8081);
 
-    expect(spawnAsync).toHaveBeenCalledWith('/hdc', [
-      '-t',
-      '127.0.0.1:5555',
-      'rport',
-      'tcp:8081',
-      'tcp:8081',
+    expect(jest.mocked(spawnAsync).mock.calls).toEqual([
+      ['/hdc', ['-t', '127.0.0.1:5555', 'fport', 'ls']],
+      ['/hdc', ['-t', '127.0.0.1:5555', 'rport', 'tcp:8081', 'tcp:8081']],
     ]);
+  });
+
+  it('replaces only the selected device existing Metro reverse mapping', async () => {
+    jest
+      .mocked(spawnAsync)
+      .mockResolvedValueOnce({
+        stdout: [
+          '127.0.0.1:5555    tcp:8091 tcp:8091    [Reverse]',
+          '127.0.0.1:5555    tcp:9000 tcp:9000    [Reverse]',
+        ].join('\n'),
+      } as any)
+      .mockResolvedValueOnce({ stdout: 'removed' } as any)
+      .mockResolvedValueOnce({ stdout: 'OK' } as any);
+
+    await reverseHarmonyPortAsync('/hdc', '127.0.0.1:5555', 8091);
+
+    expect(jest.mocked(spawnAsync).mock.calls).toEqual([
+      ['/hdc', ['-t', '127.0.0.1:5555', 'fport', 'ls']],
+      ['/hdc', ['-t', '127.0.0.1:5555', 'fport', 'rm', 'tcp:8091', 'tcp:8091']],
+      ['/hdc', ['-t', '127.0.0.1:5555', 'rport', 'tcp:8091', 'tcp:8091']],
+    ]);
+  });
+
+  it('rejects an install failure reported by HDC with exit code zero', async () => {
+    jest.mocked(spawnAsync).mockResolvedValueOnce({
+      stdout: '[Fail] install bundle failed',
+      stderr: '',
+      status: 0,
+    } as any);
+
+    await expect(
+      installHarmonyAppAsync('/hdc', '127.0.0.1:5555', '/app/entry-default-unsigned.hap')
+    ).rejects.toThrow('Harmony HDC command failed: [Fail] install bundle failed');
+  });
+
+  it('rejects a launch failure reported by HDC with exit code zero', async () => {
+    jest.mocked(spawnAsync).mockResolvedValueOnce({
+      stdout: '',
+      stderr: '[Fail] start ability failed',
+      status: 0,
+    } as any);
+
+    await expect(
+      launchHarmonyAppAsync('/hdc', '127.0.0.1:5555', 'dev.expo.example')
+    ).rejects.toThrow('Harmony HDC command failed: [Fail] start ability failed');
   });
 });
 

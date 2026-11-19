@@ -1,5 +1,18 @@
 # expo-harmony-cli
 
+## 1.7.0 - 2026-11-15
+
+### Minor Changes
+
+- SDK54 支持完整标准 Expo 开发流程：`create / install --check/--fix / config / prebuild / start / run:harmony / export` 全公开命令真机贯通。
+- `expo install <本地 tgz>` 修复无名包写入 `dependencies.undefined` 的问题：npm 无名 spec 改走 npm 原生解析，写入真实包名，卸载不再残留原生注册。
+- 修复 Font 原生注册顺序导致的 Release 冷启动图标字体错形；修复 expo-router doctor 的 semver 范围误报。
+- 公开加包/移除完整闭环：install tgz → prebuild 注册 → 按真实名卸载 → 无悬空注册 → 冻结锁重装。
+- 首批模块范围在统一候选上完成真机验收：Core/Autolinking、Constants、Asset、Font、SplashScreen、SystemUI、StatusBar、Linking/Router/Screens、WebBrowser、ExpoImage。
+- Android / iOS 双端构建时代差修复：`prebuild` 自动注入 worklets `.so` 物化受管块（reanimated 4.2.x 与 RN 0.82 AGP 产物布局断链，RNOH 锁定组合无法升级）与 Podfile 部署目标抬升（Xcode 27 时代工具链最低 15.0）。打包候选在全新消费者上三端实跑验证：Android 干净 Debug/Release/交替/增量构建 + 官方 `run:android` 装机启动、iOS `pod install` + `xcodebuild Release` + 装机启动、Harmony 全链，均附截图取证。
+- `@expo/cli` 补齐 jest 工具链使 prebuild 行为测试真实可执行（67 用例）；修正 dispatch/pack/release-catalog 三处残留的 1.6.0 版本断言。
+- 文档重构：双语 README、SDK 52 独立使用指南、自动化录制的演示视频、交流社区模块；README 按生成式引擎（GEO）/SEO/AEO 实践优化（速答块、兼容矩阵、Expo 用户对照表、英文 TL;DR），社区二维码体积压缩约 80%。
+
 ## 1.6.0 - 2026-10-10
 
 ### Minor Changes

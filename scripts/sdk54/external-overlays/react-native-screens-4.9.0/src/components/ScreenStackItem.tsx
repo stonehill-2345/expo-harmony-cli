@@ -34,6 +34,8 @@ function ScreenStackItem(
     contentStyle,
     style,
     screenId,
+    onWillDisappear,
+    onDisappear,
     // eslint-disable-next-line camelcase
     unstable_sheetFooter,
     ...rest
@@ -41,6 +43,12 @@ function ScreenStackItem(
   ref: React.ForwardedRef<View>,
 ) {
   const currentScreenRef = React.useRef<View | null>(null);
+  const willDisappearEmitted = React.useRef(false);
+  const disappearEmitted = React.useRef(false);
+  const onWillDisappearRef = React.useRef(onWillDisappear);
+  const onDisappearRef = React.useRef(onDisappear);
+  onWillDisappearRef.current = onWillDisappear;
+  onDisappearRef.current = onDisappear;
   const screenRefs = React.useContext(RNSScreensRefContext);
 
   React.useImperativeHandle(ref, () => currentScreenRef.current!);
@@ -63,6 +71,38 @@ function ScreenStackItem(
 
     headerHiddenPreviousRef.current = headerConfig?.hidden;
   }, [headerConfig?.hidden, stackPresentation]);
+  const emitWillDisappear = React.useCallback((event: any) => {
+    if (willDisappearEmitted.current) return;
+    willDisappearEmitted.current = true;
+    onWillDisappearRef.current?.(event);
+  }, []);
+  const emitDisappear = React.useCallback((event: any) => {
+    emitWillDisappear(event);
+    if (disappearEmitted.current) return;
+    disappearEmitted.current = true;
+    onDisappearRef.current?.(event);
+  }, [emitWillDisappear]);
+  React.useEffect(() => {
+    if (Platform.OS !== 'harmony' || stackPresentation !== 'formSheet') return;
+    return () => {
+      const event = {} as any;
+      emitWillDisappear(event);
+      emitDisappear(event);
+    };
+  }, [emitDisappear, emitWillDisappear, stackPresentation]);
+
+  if (Platform.OS === 'harmony' && stackPresentation === 'formSheet') {
+    const detents = rest.sheetAllowedDetents;
+    if (Array.isArray(detents) && (detents.length < 1 || detents.length > 3 ||
+        detents.some((value, index) => !Number.isFinite(value) || value <= 0 || value > 1 ||
+          (index > 0 && value < detents[index - 1])))) {
+      throw new Error('Harmony sheetAllowedDetents requires one to three ascending fractions in (0, 1], or fitToContents');
+    }
+    if ((rest.sheetCornerRadius != null && !Number.isFinite(rest.sheetCornerRadius)) ||
+        (rest.sheetElevation != null && (!Number.isInteger(rest.sheetElevation) || rest.sheetElevation < 0))) {
+      throw new Error('Invalid Harmony sheetCornerRadius or sheetElevation');
+    }
+  }
 
   const content = (
     <>
@@ -149,7 +189,9 @@ function ScreenStackItem(
       stackPresentation={stackPresentation}
       hasLargeHeader={headerConfig?.largeTitle ?? false}
       style={[style, internalScreenStyle]}
-      {...rest}>
+      {...rest}
+      onWillDisappear={emitWillDisappear}
+      onDisappear={emitDisappear}>
 
       {isHeaderInModal ? (
         <ScreenStack style={styles.container}>

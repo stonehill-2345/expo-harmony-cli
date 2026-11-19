@@ -30,6 +30,7 @@ export class ExpoSystemUITurboModule extends UITurboModule {
     this.assertActive();
     const resolved = resolveBackgroundColor(color, this.ctx.uiAbilityContext.config.colorMode);
     this.applyToWindow(resolved);
+    this.currentColor = resolved;
     if (color === null) {
       this.store.deleteSync(BACKGROUND_COLOR_KEY);
     } else {
@@ -37,7 +38,6 @@ export class ExpoSystemUITurboModule extends UITurboModule {
     }
     await this.store.flush();
     this.assertActive();
-    this.currentColor = resolved;
   }
 
   public async getBackgroundColorAsync(): Promise<string> {

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "expo-harmony-sdk54-ai-e2e-case-set-v1",
+  "type": "object",
+  "required": ["schemaVersion", "registryVersion", "registrySha256", "cases"],
+  "properties": {
+    "schemaVersion": { "const": 1 },
+    "registryVersion": { "type": "string", "minLength": 1 },
+    "registrySha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "required", "requiresDevice", "requiredEvidence"]
+      }
+    }
+  }
+}

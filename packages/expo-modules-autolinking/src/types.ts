@@ -19,6 +19,8 @@ export type PackageRevision = {
   name: string;
   path: string;
   version: string;
+  npmPackageName?: string;
+  npmPackageVersion?: string;
   config?: ExpoModuleConfig;
   duplicates?: PackageRevision[];
 };
@@ -133,6 +135,8 @@ export interface RawModuleConfigHarmony {
 
 export interface ModuleDescriptorHarmony {
   packageName: string;
+  npmPackageName?: string;
+  npmPackageVersion?: string;
   packageVersion?: string;
   packageRoot: string;
   kind: HarmonyModuleKind;

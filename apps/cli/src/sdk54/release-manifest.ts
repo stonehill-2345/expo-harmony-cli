@@ -21,7 +21,7 @@ export interface ReleaseManifest extends Pick<Sdk54PatchManifest, 'schemaVersion
 
 export function loadReleaseManifest(packageRoot = path.resolve(__dirname, '../..')): ReleaseManifest {
   const value = JSON.parse(fs.readFileSync(path.join(packageRoot, 'content/releases/sdk-54/manifest.json'), 'utf8')) as ReleaseManifest;
-  if (value.schemaVersion !== 1 || !value.release || !/^\d+\.\d+\.\d+$/.test(value.cliVersion) || !Array.isArray(value.packages) || value.packages.length !== 15) throw new Error('Invalid SDK54 release manifest');
+  if (value.schemaVersion !== 1 || !value.release || !/^\d+\.\d+\.\d+$/.test(value.cliVersion) || !Array.isArray(value.packages) || value.packages.length !== 16) throw new Error('Invalid SDK54 release manifest');
   const names = new Set<string>();
   for (const item of value.packages) {
     if (!/^(@[a-z0-9-]+\/)?[a-z0-9-]+$/.test(item.installName) || names.has(item.installName)

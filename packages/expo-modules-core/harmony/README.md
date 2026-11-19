@@ -1,10 +1,11 @@
 # Expo Modules Core: Harmony native foundation
 
 This directory contains the **Core-v1 contract candidate**, based on Expo Modules
-Core 3.0.30 and RNOH 0.82.30 with the pinned SDK compatibility artifact. The bounded
-C01–C09 contract and its review status are tracked in
-`docs/harmony-sdk54/team/progress-a.md`. This is not full Expo SDK/DSL parity or
-standard Expo template acceptance; do not infer release approval from code presence.
+Core 3.0.30 and RNOH 0.82.30 with the pinned SDK compatibility artifact. Current
+architecture work is tracked in the [M0 validation baseline](../../../docs/releases/2026-10-22-sdk54-m0-validation-baseline-acceptance.md)
+and [workspace test matrix](../../../docs/releases/sdk54-workspace-test-matrix.json).
+M0 remains open. Existing implementations and historical C01–C09 results do not
+establish full Expo SDK/DSL parity, current template acceptance or release approval.
 
 ## Implemented
 
@@ -37,7 +38,11 @@ JSI objects, and shared-object releasers refer back to it weakly.
 ## Not implemented or not yet validated
 
 - Full Expo Core contract parity, module-definition DSL and ArkTS authoring bridge.
-- ETS/package/HAR metadata, automatic linking and prebuild/Expo CLI support.
+- ETS/package/HAR metadata, autolinking and prebuild/Expo CLI integration have
+  source implementations in this repository; their current architecture contracts
+  and independent consumer behavior still require acceptance. See
+  [module metadata](../expo-module.config.json), [autolinking](../../expo-modules-autolinking/src/platforms/harmony/index.ts)
+  and [CLI prebuild](../../@expo/cli/src/prebuild/harmony/prebuildHarmonyAsync.ts).
 - All native view variants, event types, layout/teardown and imperative contracts.
 - Standard Expo JS startup, Constants/Asset/Router and the unmodified Expo template.
 - Full Expo monorepo typechecking, Android/iOS native regression and production load.
@@ -54,17 +59,17 @@ The tests run a real aarch64 executable on Harmony using the unmodified
 `libhermesvm.so` from the published RNOH HAR. `libjsi.so` is compiled from the same
 HAR's RN JSI sources. This is **not** a mock runtime or an Android executable.
 
-Run from the `expo-harmony-template` repository root. Set these paths to the
+Run from the `expo-harmony-cli` repository root. Set these paths to the
 actual local SDK, extracted RNOH HAR and scratch directory. Use a fresh build
-directory: old CMake caches refer to `expo-harmony-sdk54`, whose Harmony changes
-have been moved out. The HAR extraction below is a local development dependency,
+directory: old CMake caches can refer to another checkout. The HAR extraction
+below is a local development dependency,
 not a file guaranteed to exist on a teammate's machine:
 
 ```sh
 export CORE="$PWD/packages/expo-modules-core"
 export OH_NATIVE_SDK="/Applications/DevEco-Studio.app/Contents/sdk/default/openharmony/native"
 export RNOH_PACKAGE_DIR="/tmp/expo-core-native-20260918/rnoh-full/package"
-export BUILD="/tmp/expo-harmony-template-core-debug"
+export BUILD="/tmp/expo-harmony-cli-core-debug"
 export CMAKE="$OH_NATIVE_SDK/build-tools/cmake/bin/cmake"
 
 "$CMAKE" -S "$CORE/harmony/tests" -B "$BUILD" -G Ninja \
@@ -94,7 +99,10 @@ hdc -t "$DEVICE" file send "$OH_NATIVE_SDK/llvm/lib/aarch64-linux-ohos/libc++_sh
 hdc -t "$DEVICE" shell "chmod 700 '$REMOTE/expo_core_runtime_test'; LD_LIBRARY_PATH='$REMOTE' '$REMOTE/expo_core_runtime_test'; result=\$?; echo EXPO_CORE_TEST_EXIT=\$result; exit \$result"
 ```
 
-Require **both** `CORE_TESTS_PASSED=19` and `EXPO_CORE_TEST_EXIT=0` in the output.
+Require both the current executable's `CORE_TESTS_PASSED` count and
+`EXPO_CORE_TEST_EXIT=0` in the output. The historical count was 19; derive the
+current expected count from [RuntimeTest.cpp](tests/RuntimeTest.cpp), whose runner
+prints `tests.size()`. These device tests were not rerun in the M0 baseline round.
 HDC can return host exit code zero even when the remote process exits nonzero;
 do not infer test success from the host command alone.
 
@@ -111,12 +119,12 @@ headers. It compiles the Package subclass and its GlobalJSIBinder override, plus
 a caller matching a native PackageProvider.
 
 ```sh
-"$CMAKE" -S "$CORE/harmony/tests/rnoh" -B /tmp/expo-harmony-template-package-check \
+"$CMAKE" -S "$CORE/harmony/tests/rnoh" -B /tmp/expo-harmony-cli-package-check \
   -G Ninja -DCMAKE_MAKE_PROGRAM="$OH_NATIVE_SDK/build-tools/cmake/bin/ninja" \
   -DCMAKE_TOOLCHAIN_FILE="$OH_NATIVE_SDK/build/cmake/ohos.toolchain.cmake" \
   -DOHOS_ARCH=arm64-v8a -DCMAKE_BUILD_TYPE=Debug \
-  -DRNOH_PACKAGE_DIR=/tmp/expo-core-native-20260918/rnoh-full/package
-"$CMAKE" --build /tmp/expo-harmony-template-package-check \
+  -DRNOH_PACKAGE_DIR="$RNOH_PACKAGE_DIR"
+"$CMAKE" --build /tmp/expo-harmony-cli-package-check \
   --target expo_core_package_compile_check -j 4
 ```
 
@@ -129,7 +137,8 @@ No module logic should be copied into an application's EntryAbility.
 
 The same test CMake project builds `expo_core_async_test`. Deploy it beside the
 existing test libraries and run it with the same LD_LIBRARY_PATH. Require both
-`ASYNC_TESTS_PASSED=8` and remote exit zero. These tests use actual device Hermes
+the current `ASYNC_TESTS_PASSED` count and remote exit zero (historically 8; see
+[AsyncTest.cpp](tests/AsyncTest.cpp)). These tests use actual device Hermes
 and OS threads, with a deterministic test CallInvoker queue; the HAP additionally
 verifies RNOH's actual JS CallInvoker. Debug and Release must both be tested.
 
@@ -142,7 +151,7 @@ The real RNOH TurboModule rejection path requires the pinned
 [rnoh-compat](rnoh-compat/README.md) artifact; the original upstream 0.82.30 drops
 native error codes. This is an SDK-maintained dependency build, not an app patch.
 
-The original 16 runtime and 6 async tests remain; the counts are now 19 and 8 with
-binding/lifecycle and coded-error additions. Standalone tests do not replace real
-HAP checks. Final contract completion additionally requires the C01–C09 report and
-independent review, which are not implied by these commands.
+Historical counts reached 19 runtime and 8 async cases after binding/lifecycle and
+coded-error additions. Standalone tests do not replace real HAP checks. Current
+architecture completion requires the stage report, matching candidate artifacts
+and device evidence; none is implied by these commands or historical counts.

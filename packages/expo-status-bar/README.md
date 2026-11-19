@@ -12,10 +12,10 @@ Expo StatusBar 的 HarmonyOS 适配版本，通过 React Native StatusBar 复用
 
 ```bash
 # npm
-npm install --save-exact expo-status-bar@npm:@expo-oh/expo-status-bar@3.0.10
+npm install --save-exact expo-status-bar@npm:@expo-oh/expo-status-bar@3.0.11
 
 # pnpm
-pnpm add --save-exact expo-status-bar@npm:@expo-oh/expo-status-bar@3.0.10
+pnpm add --save-exact expo-status-bar@npm:@expo-oh/expo-status-bar@3.0.11
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-status-bar@npm:@expo-oh/expo-status-bar@3.0.10
 ```json
 {
   "dependencies": {
-    "expo-status-bar": "npm:@expo-oh/expo-status-bar@3.0.10"
+    "expo-status-bar": "npm:@expo-oh/expo-status-bar@3.0.11"
   }
 }
 ```

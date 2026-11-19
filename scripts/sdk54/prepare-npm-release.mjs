@@ -9,6 +9,8 @@ import { stageBuildAndPack } from './pack-packages.mjs';
 import { RELEASE_ID, SCREENS_UPSTREAM_INTEGRITY, RELEASE_PACKAGES, rewriteReleaseManifest, createReleaseManifest } from './release-catalog.mjs';
 import { applyScreensOverlay } from './generate-external-screens-patch.mjs';
 import { readReleaseReadme } from './release-readme.mjs';
+import { prepareReleasedCompatibility } from './prepare-released-compatibility.mjs';
+import { prepareExpoImage } from './abc/a-prepare-expo-image.mjs';
 
 export async function transformPackage(directory, source) {
   const manifest = rewriteReleaseManifest(source);
@@ -32,7 +34,7 @@ async function packDirectory(directory, file) {
   await create({ cwd: directory, file, gzip: true, portable: true, mtime: new Date('2000-01-01T00:00:00Z'), prefix: 'package/' }, files.sort());
 }
 
-export async function prepareRelease({ rootDir, outputDir, screensArchive }) {
+export async function prepareRelease({ rootDir, outputDir, screensArchive, expoImageArchive, rnohHarPath = process.env.EXPO_HARMONY_RELEASE_RNOH_HAR, workletsHarPath = process.env.EXPO_HARMONY_RELEASE_WORKLETS_HAR }) {
   fs.mkdirSync(outputDir, { recursive: true });
   const previousReport = path.join(outputDir, 'release.json');
   if (fs.existsSync(previousReport)) {
@@ -46,7 +48,18 @@ export async function prepareRelease({ rootDir, outputDir, screensArchive }) {
     const file = `${descriptor.publishName.replace('@', '').replace('/', '-')}-${descriptor.publishVersion}.tgz`;
     const archive = path.join(outputDir, file);
     try {
-      if (!descriptor.relativePath) {
+      if (descriptor.installName === 'expo-image') {
+        if (!expoImageArchive) throw new Error('Supply --expo-image-archive with the pinned expo-image@3.0.11 tarball');
+        const stage = fs.mkdtempSync(path.join(os.tmpdir(), 'expo-oh-image-'));
+        try {
+          const prepared = path.join(stage, 'prepared');
+          const image = await prepareExpoImage({ archive: expoImageArchive, output: prepared });
+          const directory = path.join(prepared, 'package');
+          await transformPackage(directory, JSON.parse(fs.readFileSync(path.join(directory, 'package.json'))));
+          await packDirectory(directory, archive);
+          report.expoImageUpstreamSha256 = image.upstream.sha256;
+        } finally { fs.rmSync(stage, { recursive: true, force: true }); }
+      } else if (!descriptor.relativePath) {
         if (!screensArchive) throw new Error('Supply --screens-archive with the verified upstream screens@4.9.0 tarball');
         const integrity = `sha512-${crypto.createHash('sha512').update(fs.readFileSync(screensArchive)).digest('base64')}`;
         if (integrity !== SCREENS_UPSTREAM_INTEGRITY) throw new Error('Screens upstream integrity mismatch');
@@ -60,7 +73,19 @@ export async function prepareRelease({ rootDir, outputDir, screensArchive }) {
           await packDirectory(directory, archive);
         } finally { fs.rmSync(stage, { recursive: true, force: true }); }
       } else {
-        await stageBuildAndPack({ rootDir, outputDir, descriptor, transform: transformPackage, archiveFile: file });
+        await stageBuildAndPack({ rootDir, outputDir, descriptor, archiveFile: file, transform: async (directory, source) => {
+          await transformPackage(directory, source);
+          if (source.name === 'expo-modules-core') {
+            if (!screensArchive) throw new Error('Supply --screens-archive for compatibility release staging');
+            const integrity = `sha512-${crypto.createHash('sha512').update(fs.readFileSync(screensArchive)).digest('base64')}`;
+            if (integrity !== SCREENS_UPSTREAM_INTEGRITY) throw new Error('Screens upstream integrity mismatch');
+            const compatStage = fs.mkdtempSync(path.join(os.tmpdir(), 'expo-oh-compat-input-'));
+            try {
+              await extract({ file: screensArchive, cwd: compatStage, strict: true });
+              report.compatibility = await prepareReleasedCompatibility({ rootDir, corePackageRoot: directory, rnohHarPath, workletsHarPath, screensHarPath: path.join(compatStage, 'package/harmony/screens.har') });
+            } finally { fs.rmSync(compatStage, { recursive: true, force: true }); }
+          }
+        } });
       }
       report.packages.push({ installName: descriptor.installName, name: descriptor.publishName, version: descriptor.publishVersion, batch: descriptor.batch, file,
         integrity: `sha512-${crypto.createHash('sha512').update(fs.readFileSync(archive)).digest('base64')}` });
@@ -74,7 +99,7 @@ export async function prepareRelease({ rootDir, outputDir, screensArchive }) {
 if (process.argv[1] && pathToFileURL(process.argv[1]).href === import.meta.url) {
   const args = process.argv.slice(2);
   const value = (flag, fallback) => args.includes(flag) ? args[args.indexOf(flag) + 1] : fallback;
-  const report = await prepareRelease({ rootDir: process.cwd(), outputDir: path.resolve(value('--output', 'outputs/sdk54/npm-release')), screensArchive: value('--screens-archive') });
+  const report = await prepareRelease({ rootDir: process.cwd(), outputDir: path.resolve(value('--output', 'outputs/sdk54/npm-release')), screensArchive: value('--screens-archive'), expoImageArchive: value('--expo-image-archive'), rnohHarPath: value('--rnoh-har'), workletsHarPath: value('--worklets-har') });
   console.log(JSON.stringify(report, null, 2));
   if (report.failures.length) process.exitCode = 1;
 }

@@ -247,6 +247,6 @@ describe('version-locked RNOH navigation compatibility catalog', () => {
         'harmony',
         new Set()
       )
-    ).resolves.toBeNull();
+    ).rejects.toThrow('installed 4.9.1, supported 4.9.0');
   });
 });

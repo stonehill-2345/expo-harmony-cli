@@ -24,11 +24,19 @@ function ScreenStackItem({
   contentStyle,
   style,
   screenId,
+  onWillDisappear,
+  onDisappear,
   // eslint-disable-next-line camelcase
   unstable_sheetFooter,
   ...rest
 }, ref) {
   const currentScreenRef = React.useRef(null);
+  const willDisappearEmitted = React.useRef(false);
+  const disappearEmitted = React.useRef(false);
+  const onWillDisappearRef = React.useRef(onWillDisappear);
+  const onDisappearRef = React.useRef(onDisappear);
+  onWillDisappearRef.current = onWillDisappear;
+  onDisappearRef.current = onDisappear;
   const screenRefs = React.useContext(_contexts.RNSScreensRefContext);
   React.useImperativeHandle(ref, () => currentScreenRef.current);
   const isHeaderInModal = _reactNative.Platform.OS === 'android' ? false : stackPresentation !== 'push' && headerConfig?.hidden === false;
@@ -39,6 +47,38 @@ function ScreenStackItem({
     (0, _warnOnce.default)(_reactNative.Platform.OS !== 'android' && stackPresentation !== 'push' && headerHiddenPreviousRef.current !== headerConfig?.hidden, `Dynamically changing header's visibility in modals will result in remounting the screen and losing all local state.`);
     headerHiddenPreviousRef.current = headerConfig?.hidden;
   }, [headerConfig?.hidden, stackPresentation]);
+  const emitWillDisappear = React.useCallback(event => {
+    if (willDisappearEmitted.current) return;
+    willDisappearEmitted.current = true;
+    onWillDisappearRef.current?.(event);
+  }, []);
+  const emitDisappear = React.useCallback(event => {
+    emitWillDisappear(event);
+    if (disappearEmitted.current) return;
+    disappearEmitted.current = true;
+    onDisappearRef.current?.(event);
+  }, [emitWillDisappear]);
+  React.useEffect(() => {
+    if (_reactNative.Platform.OS !== 'harmony' || stackPresentation !== 'formSheet') return;
+    return () => {
+      const event = {};
+      emitWillDisappear(event);
+      emitDisappear(event);
+    };
+  }, [emitDisappear, emitWillDisappear, stackPresentation]);
+  if (_reactNative.Platform.OS === 'harmony' && stackPresentation === 'formSheet') {
+    const detents = rest.sheetAllowedDetents;
+    if (Array.isArray(detents) && (detents.length < 1 || detents.length > 3 ||
+        detents.some((value, index) => !Number.isFinite(value) || value <= 0 || value > 1 ||
+          (index > 0 && value < detents[index - 1])))) {
+      throw new Error('Harmony sheetAllowedDetents requires one to three ascending fractions in (0, 1], or fitToContents');
+    }
+    if ((rest.sheetCornerRadius != null && !Number.isFinite(rest.sheetCornerRadius)) ||
+        (rest.sheetElevation != null && (!Number.isInteger(rest.sheetElevation) || rest.sheetElevation < 0))) {
+      throw new Error('Invalid Harmony sheetCornerRadius or sheetElevation');
+    }
+  }
+
   const content = /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(_reactNative.View, {
     collapsable: false,
     style: [stackPresentation === 'formSheet' ? _reactNative.Platform.OS === 'ios' ? styles.absolute : null : styles.container]
@@ -83,7 +123,10 @@ function ScreenStackItem({
     stackPresentation: stackPresentation,
     hasLargeHeader: headerConfig?.largeTitle ?? false,
     style: [style, internalScreenStyle]
-  }, rest), isHeaderInModal ? /*#__PURE__*/React.createElement(_ScreenStack.default, {
+  }, rest, {
+    onWillDisappear: emitWillDisappear,
+    onDisappear: emitDisappear
+  }), isHeaderInModal ? /*#__PURE__*/React.createElement(_ScreenStack.default, {
     style: styles.container
   }, /*#__PURE__*/React.createElement(_Screen.default, {
     enabled: true,

@@ -12,10 +12,10 @@ Expo Font 的 HarmonyOS 适配版本，通过 RNOH 字体注册接口加载字�
 
 ```bash
 # npm
-npm install --save-exact expo-font@npm:@expo-oh/expo-font@14.0.13
+npm install --save-exact expo-font@npm:@expo-oh/expo-font@14.0.14
 
 # pnpm
-pnpm add --save-exact expo-font@npm:@expo-oh/expo-font@14.0.13
+pnpm add --save-exact expo-font@npm:@expo-oh/expo-font@14.0.14
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-font@npm:@expo-oh/expo-font@14.0.13
 ```json
 {
   "dependencies": {
-    "expo-font": "npm:@expo-oh/expo-font@14.0.13"
+    "expo-font": "npm:@expo-oh/expo-font@14.0.14"
   }
 }
 ```
@@ -54,12 +54,15 @@ export default function App() {
 
 | 能力 | HarmonyOS 实现与限制 |
 | --- | --- |
-| 运行时字体加载 | 校验非空本地 file:// 文件、TTF/OTF 头和表目录后注册字体 |
+| 运行时字体加载 | 当前源码校验非空本地 file:// 文件、TTF/OTF 头和表目录及原生解码后注册字体 |
 | getLoadedFonts / isLoaded | 成功注册后才能报告加载完成 |
 | 字体集合 TTC | 当前不支持 ttcf 字体集合 |
-| renderToImageAsync | 当前 Harmony 后端未实现 |
+| WOFF / WOFF2 | 当前 Harmony 运行时明确拒绝；不沿用上游 iOS 插件的格式承诺 |
+| renderToImageAsync | 当前源码候选已实现 PNG、字号、颜色与透明度；Harmony API 20+，详见 harmony/README.md |
 | Web 卸载接口 | 不作为 Harmony 能力提供 |
 | 静态字体插件 | 本文示例采用运行时加载，不承诺上游 config plugin 的字体嵌入流程在鸿蒙等价可用 |
+
+当前源码候选的新增能力尚未随本轮工作发布，不能据此推定上方已发布版本具有相同实现。
 
 ## 生成和运行原生工程
 

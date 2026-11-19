@@ -11,6 +11,12 @@ restore the same real window state. Passing `null` removes that preference and
 resolves the current UIAbility color mode to black or white, matching the
 Android/iOS reset behavior.
 
+The getter updates as soon as the window accepts the color, before asynchronous
+persistence completes. Older flush callbacks cannot restore stale getter state.
+Persistence failure rejects the setter but does not undo an already applied
+window color; successful persistence is required to promise process restoration.
+A window update failure leaves the prior getter and preference unchanged.
+
 ## Host wiring
 
 ArkTS package provider:

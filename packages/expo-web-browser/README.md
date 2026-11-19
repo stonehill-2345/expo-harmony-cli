@@ -12,10 +12,10 @@ Expo WebBrowser 的 HarmonyOS 适配版本，使用应用内 ArkWeb 全屏浮层
 
 ```bash
 # npm
-npm install --save-exact expo-web-browser@npm:@expo-oh/expo-web-browser@15.0.12
+npm install --save-exact expo-web-browser@npm:@expo-oh/expo-web-browser@15.0.13
 
 # pnpm
-pnpm add --save-exact expo-web-browser@npm:@expo-oh/expo-web-browser@15.0.12
+pnpm add --save-exact expo-web-browser@npm:@expo-oh/expo-web-browser@15.0.13
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-web-browser@npm:@expo-oh/expo-web-browser@15.0.12
 ```json
 {
   "dependencies": {
-    "expo-web-browser": "npm:@expo-oh/expo-web-browser@15.0.12"
+    "expo-web-browser": "npm:@expo-oh/expo-web-browser@15.0.13"
   }
 }
 ```

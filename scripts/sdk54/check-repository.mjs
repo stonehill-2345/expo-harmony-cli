@@ -9,6 +9,7 @@ const ROOT_IGNORED_DIRECTORIES = new Set([
   '.git', '.pnpm-store', 'coverage', 'dist', 'node_modules', 'outputs',
 ]);
 const APPROVED_STAGE_COMMAND = 'node scripts/sdk54/stage-e2e-packages.mjs';
+const CREATION_WORKSPACES = ['packages/create-expo'];
 const FORBIDDEN_DIRECTORY_NAMES = new Set([
   'node_modules', 'oh_modules', '.hvigor', '.cxx', 'build-cache',
 ]);
@@ -93,6 +94,7 @@ function workspaceManifestPaths(rootDir) {
   for (const descriptor of SDK54_PACKAGES) {
     manifests.push(path.join(rootDir, descriptor.relativePath, 'package.json'));
   }
+  for (const directory of CREATION_WORKSPACES) manifests.push(path.join(rootDir, directory, 'package.json'));
   return manifests.filter((manifestPath) => fs.existsSync(manifestPath));
 }
 
@@ -100,7 +102,7 @@ function repositoryFiles(rootDir) {
   const files = [];
   const gitCheckout = fs.existsSync(path.join(rootDir, '.git'));
   const visibleEvidenceFiles = gitVisibleEvidenceFiles(rootDir);
-  const workspaceRoots = new Set(SDK54_PACKAGES.map(({ relativePath }) => relativePath));
+  const workspaceRoots = new Set([...SDK54_PACKAGES.map(({ relativePath }) => relativePath), ...CREATION_WORKSPACES]);
   const appsDir = path.join(rootDir, 'apps');
   if (fs.existsSync(appsDir)) {
     for (const entry of fs.readdirSync(appsDir, { withFileTypes: true })) {

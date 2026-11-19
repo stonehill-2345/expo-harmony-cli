@@ -30,15 +30,25 @@ describe('validateSdk54Template', () => {
     });
   });
 
+  it.each(['blank-typescript', 'default'] as const)('accepts the real @expo-oh/create-expo 3.5.12 output shape for %s', template => {
+    writeValidTemplate(root, template);
+    mutatePackage(root, pkg => {
+      pkg.dependencies.expo = 'npm:@expo-oh/expo@54.0.39';
+      pkg.dependencies.react = '19.1.1';
+      pkg.dependencies['react-native'] = '0.82.1';
+    });
+    expect(() => validateSdk54Template(root, template, manifest)).not.toThrow();
+  });
+
   it.each([
     ['missing package.json', 'blank-typescript', (dir: string) => fs.rmSync(path.join(dir, 'package.json')), /package\.json.*存在/],
     ['missing app.json', 'blank-typescript', (dir: string) => fs.rmSync(path.join(dir, 'app.json')), /app\.json.*存在/],
     ['missing blank entry', 'blank-typescript', (dir: string) => fs.rmSync(path.join(dir, 'App.tsx')), /App\.tsx.*存在/],
     ['wrong default main', 'default', (dir: string) => mutatePackage(dir, pkg => { pkg.main = 'index.js'; }), /main.*expo-router\/entry/],
     ['missing default modal', 'default', (dir: string) => fs.rmSync(path.join(dir, 'app/modal.tsx')), /app\/modal\.tsx.*存在/],
-    ['wrong template Expo version', 'default', (dir: string) => mutatePackage(dir, pkg => { pkg.dependencies.expo = '~54.0.35'; }), /expo.*~54\.0\.35.*~54\.0\.36/],
-    ['wrong React version', 'blank-typescript', (dir: string) => mutatePackage(dir, pkg => { pkg.dependencies.react = '19.0.0'; }), /react.*19\.0\.0.*19\.1\.0/],
-    ['wrong React Native version', 'blank-typescript', (dir: string) => mutatePackage(dir, pkg => { pkg.dependencies['react-native'] = '0.81.4'; }), /react-native.*0\.81\.4.*0\.81\.5/],
+    ['wrong template Expo version', 'default', (dir: string) => mutatePackage(dir, pkg => { pkg.dependencies.expo = 'npm:@expo-oh/expo@54.0.36'; }), /expo.*54\.0\.36.*54\.0\.39/],
+    ['wrong React version', 'blank-typescript', (dir: string) => mutatePackage(dir, pkg => { pkg.dependencies.react = '19.0.0'; }), /react.*19\.0\.0.*19\.1\.1/],
+    ['wrong React Native version', 'blank-typescript', (dir: string) => mutatePackage(dir, pkg => { pkg.dependencies['react-native'] = '0.81.4'; }), /react-native.*0\.81\.4.*0\.82\.1/],
     ['default Image import drift', 'default', (dir: string) => {
       const file = path.join(dir, 'app/(tabs)/index.tsx');
       fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(manifest.defaultImage.sourceImport, "import { Image } from 'react-native';"));

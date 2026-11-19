@@ -87,11 +87,10 @@ async function runFontChecks() {
     await expectReject('CorruptFont', `${server}/corrupt.ttf?run=${encodeURIComponent(runId)}`, /font|register|query|invalid/i);
     await expectReject('', asset.localUri!, /Font family|empty name|ERR_FONT_FAMILY/);
 
-    let imageError: unknown;
-    try { await Font.renderToImageAsync('home', { fontFamily: 'material', size: 40 }); }
-    catch (caught) { imageError = caught; }
-    check(/unavailable|ExpoFontUtils/i.test(errorText(imageError)), 'FontUtils unsupported boundary was not explicit');
-    report('font-utils-unsupported', { error: errorText(imageError) });
+    const image = await Font.renderToImageAsync('\ue88a', { fontFamily: 'material', size: 40 });
+    check(image.uri.startsWith('file:///') && image.width > 0 && image.height > 0 && image.scale > 0,
+      'FontUtils returned invalid image metadata');
+    report('font-utils-pass', image);
 
     await waitFor(() => Font.isLoaded('UnmountedHookMaterial'), 'unmounted hook font did not finish native load');
     report('unmounted-hook-finished', { loaded: Font.isLoaded('UnmountedHookMaterial') });

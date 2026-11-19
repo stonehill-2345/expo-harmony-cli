@@ -163,6 +163,41 @@ export async function prebuildAsync(
     throw error;
   }
 
+  // reanimated 4.2.x（RNOH 0.82 锁定组合）期望的 worklets .so 路径与 RN 0.82 AGP
+  // 实际产出位置不一致，导致 Android 构建链接必败；在生成的 android/build.gradle
+  // 注入受管物化块兜底（幂等；版本组合变更时自动移除受管块，不影响鸿蒙侧）。
+  if (options.platforms.includes('android')) {
+    const { ensureWorkletsGradleLink } = await import('./android/ensureWorkletsGradleLink.js');
+    const workletsPatch = ensureWorkletsGradleLink(projectRoot);
+    if (workletsPatch.patched) {
+      Log.log(chalk.gray(`Patched android/build.gradle worklets so-link hook (${workletsPatch.reason ?? 'managed block'})`));
+    } else if (workletsPatch.removedStale) {
+      Log.log(chalk.gray(`Removed stale worklets so-link managed block (${workletsPatch.reason})`));
+    } else {
+      debug(`android worklets so-link patch skipped: ${workletsPatch.reason}`);
+    }
+  }
+
+  // Xcode 27.2 时代差兜底：把第三方 pod 低于 15.0 的部署目标统一抬到 RN 支持下限
+  // （幂等注入；--no-install 场景同样生效）。Podfile 变更后必须 pod install 才影响
+  // Pods 工程，未执行时明确提示补跑。
+  if (options.platforms.includes('ios')) {
+    const { ensureIosPodfileDeploymentTarget } = await import(
+      './ios/ensurePodfileDeploymentTarget.js'
+    );
+    const podfilePatch = ensureIosPodfileDeploymentTarget(projectRoot);
+    if (podfilePatch.patched) {
+      Log.log(chalk.gray(`Patched ios/Podfile pod deployment target floor`));
+      if (!(options.install && needsPodInstall)) {
+        Log.warn(
+          'ios/Podfile 已修改但本次不会执行 pod install；请稍后运行 npx pod-install 使 Pods 工程生效。'
+        );
+      }
+    } else {
+      debug(`ios/Podfile deployment target patch skipped: ${podfilePatch.reason}`);
+    }
+  }
+
   // Install CocoaPods
   let podsInstalled: boolean = false;
   // err towards running pod install less because it's slow and users can easily run npx pod-install afterwards.

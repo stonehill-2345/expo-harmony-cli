@@ -159,6 +159,11 @@ void registerModule(jsi::Runtime& runtime, const std::string& name,
   if (name.empty() || !initialize) {
     throw jsi::JSError(runtime, "Expo module registration requires a name and initializer");
   }
+  const auto viewPrefix = name + std::string(1, '\0');
+  std::unordered_set<std::string> existingViews;
+  for (const auto& [key, config] : state->viewConfigs_) {
+    if (key.starts_with(viewPrefix)) existingViews.insert(key);
+  }
   if (!state->moduleNames_.insert(name).second) {
     throw jsi::JSError(runtime, "Expo module is already registered: " + name);
   }
@@ -172,6 +177,13 @@ void registerModule(jsi::Runtime& runtime, const std::string& name,
     modules.setProperty(runtime, name.c_str(), module);
   } catch (...) {
     state->moduleNames_.erase(name);
+    for (auto it = state->viewConfigs_.begin(); it != state->viewConfigs_.end();) {
+      if (it->first.starts_with(viewPrefix) && !existingViews.contains(it->first)) {
+        it = state->viewConfigs_.erase(it);
+      } else {
+        ++it;
+      }
+    }
     throw;
   }
 }

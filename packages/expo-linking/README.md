@@ -12,10 +12,10 @@ Expo Linking 的 HarmonyOS 适配版本，连接 UIAbility 的 URI 生命周期�
 
 ```bash
 # npm
-npm install --save-exact expo-linking@npm:@expo-oh/expo-linking@8.0.13
+npm install --save-exact expo-linking@npm:@expo-oh/expo-linking@8.0.14
 
 # pnpm
-pnpm add --save-exact expo-linking@npm:@expo-oh/expo-linking@8.0.13
+pnpm add --save-exact expo-linking@npm:@expo-oh/expo-linking@8.0.14
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-linking@npm:@expo-oh/expo-linking@8.0.13
 ```json
 {
   "dependencies": {
-    "expo-linking": "npm:@expo-oh/expo-linking@8.0.13"
+    "expo-linking": "npm:@expo-oh/expo-linking@8.0.14"
   }
 }
 ```

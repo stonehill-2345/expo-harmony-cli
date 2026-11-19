@@ -18,7 +18,7 @@ beforeEach(() => {
   mocks.run.mockImplementation(async (command: string, args: string[]) => {
     const root = path.join(cwd, 'app');
     if (command === 'npx') {
-      expect(args).toContain('create-expo-app@5.0.0');
+      expect(args).toContain('@expo-oh/create-expo@3.5.12');
       expect(args).toContain('--no-install');
       fs.mkdirSync(root);
       fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: 'app', dependencies: loadReleaseManifest().templates['blank-typescript'].sourceDependencies }));
@@ -26,7 +26,8 @@ beforeEach(() => {
       fs.writeFileSync(path.join(root, 'App.tsx'), 'export default function App() {}');
     } else {
       const pkg = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
-      expect(pkg.dependencies.expo).toBe('npm:@expo-oh/expo@54.0.37');
+      const manifest = loadReleaseManifest();
+      expect(pkg.dependencies.expo).toBe(manifest.packages.find(item => item.installName === 'expo')?.installSpec);
       expect(pkg.devDependencies['patch-package']).toBeUndefined();
       expect(fs.existsSync(path.join(root, 'patches'))).toBe(false);
     }

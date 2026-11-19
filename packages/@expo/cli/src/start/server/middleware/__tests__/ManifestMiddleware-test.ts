@@ -5,9 +5,18 @@ import * as Log from '../../../../log';
 import * as ProjectDevices from '../../../project/devices';
 import { getPlatformBundlers } from '../../platformBundlers';
 import { createTemplateHtmlFromExpoConfigAsync } from '../../webTemplate';
-import { ManifestMiddleware, ManifestRequestInfo } from '../ManifestMiddleware';
+import {
+  getEntryWithServerRoot,
+  ManifestMiddleware,
+  ManifestRequestInfo,
+} from '../ManifestMiddleware';
 import { ServerHeaders, ServerRequest, ServerResponse } from '../server.types';
 
+jest.mock(
+  '@expo/metro-config/build/harmonyProject',
+  () => jest.requireActual('../../../../../../metro-config/src/harmonyProject'),
+  { virtual: true }
+);
 jest.mock('../../webTemplate', () => ({
   createTemplateHtmlFromExpoConfigAsync: jest.fn(async () => '<html />'),
 }));
@@ -55,6 +64,12 @@ class MockManifestMiddleware extends ManifestMiddleware<any> {
 
 const asReq = (req: Partial<ServerRequest>) => req as ServerRequest;
 const asRes = (res: Partial<ServerResponse>) => res as ServerResponse;
+
+describe(getEntryWithServerRoot, () => {
+  it('resolves the Harmony entry file', () => {
+    expect(getEntryWithServerRoot('/', { platform: 'harmony' })).toBe('index.js');
+  });
+});
 
 describe('checkBrowserRequestAsync', () => {
   const createConstructUrl = () =>

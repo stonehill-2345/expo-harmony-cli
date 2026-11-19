@@ -55,8 +55,11 @@ test('Router assembly uses official entry and registers navigation and Splash pa
     assert.ok(read(prefix + 'ets/PackageProvider.ets').includes(name));
   }
   const provider = read(prefix + 'ets/PackageProvider.ets');
-  assert.match(provider, /new ExpoSplashScreenPackage\(ctx\)/);
-  assert.doesNotMatch(provider, /new ExpoSplashScreenPackage\(ctx, /);
+  assert.match(
+    provider,
+    /AppStorage\.get<ExpoSplashScreenController>\('ExpoSplashScreenController'\)/
+  );
+  assert.match(provider, /new ExpoSplashScreenPackage\(ctx, splash\)/);
   assert.match(read(prefix + 'cpp/CMakeLists.txt'), /rnoh_screens rnoh_safe_area/);
   assert.match(read(prefix + 'cpp/CMakeLists.txt'), /rnoh_expo_splash_screen/);
   const ability = read(prefix + 'ets/entryability/EntryAbility.ets');
@@ -73,6 +76,14 @@ test('Router assembly uses official entry and registers navigation and Splash pa
   assert.match(page, /build\(\) \{\s+Stack\(\) \{/);
   assert.match(page, /ExpoSplashScreenView\(\{/);
   assert.ok(page.indexOf('ExpoSplashScreenView({') > page.indexOf('RNApp({'));
+  assert.deepEqual(JSON.parse(read(prefix + 'resources/base/element/float.json')), {
+    float: [{ name: 'expo_splash_image_width', value: '144vp' }],
+  });
+  assert.ok(
+    JSON.parse(read(prefix + 'resources/base/element/string.json')).string.some(
+      (entry) => entry.name === 'expo_splash_resize_mode' && entry.value === 'contain'
+    )
+  );
   for (const file of [
     'ExpoSplashScreenController.ts',
     'ExpoSplashScreenPackage.ets',
@@ -84,7 +95,7 @@ test('Router assembly uses official entry and registers navigation and Splash pa
   const oh = JSON.parse(read('harmony/entry/oh-package.json5'));
   assert.equal(
     oh.dependencies['@react-native-ohos/react-native-screens'],
-    'file:../../artifacts/screens-4.9.0-content-wrapper-v1.har'
+    'file:../../artifacts/screens-4.9.0-navigation-v6.har'
   );
   assert.equal(
     oh.dependencies['@react-native-ohos/react-native-worklets'],
@@ -100,7 +111,7 @@ test('Router assembly uses official entry and registers navigation and Splash pa
     JSON.parse(read('harmony/oh-package.json5')).overrides[
       '@react-native-ohos/react-native-screens'
     ],
-    'file:../artifacts/screens-4.9.0-content-wrapper-v1.har'
+    'file:../artifacts/screens-4.9.0-navigation-v6.har'
   );
   const native = JSON.parse(read(prefix + 'module.json5')).module;
   assert.ok(
@@ -109,6 +120,11 @@ test('Router assembly uses official entry and registers navigation and Splash pa
     )
   );
   assert.ok(read('app/_layout.tsx').includes("from 'expo-router'"));
+  assert.match(
+    read('app/_layout.tsx'),
+    /screenOptions=\{\{ fullScreenGestureEnabled: true, gestureEnabled: true \}\}/
+  );
+  assert.match(read('RouterProbe.tsx'), /latestURL: Linking\.getLinkingURL\(\)/);
   const archive = JSON.parse(read('source-manifest.json')).packages['expo-router'];
   assert.ok(archive.files['_ctx.harmony.js']);
   const splashArchive = JSON.parse(read('source-manifest.json')).packages['expo-splash-screen'];

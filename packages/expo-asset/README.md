@@ -12,10 +12,10 @@ Expo Asset 的 HarmonyOS 适配版本，用于下载资源和解析嵌入应用�
 
 ```bash
 # npm
-npm install --save-exact expo-asset@npm:@expo-oh/expo-asset@12.0.14
+npm install --save-exact expo-asset@npm:@expo-oh/expo-asset@12.0.15
 
 # pnpm
-pnpm add --save-exact expo-asset@npm:@expo-oh/expo-asset@12.0.14
+pnpm add --save-exact expo-asset@npm:@expo-oh/expo-asset@12.0.15
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-asset@npm:@expo-oh/expo-asset@12.0.14
 ```json
 {
   "dependencies": {
-    "expo-asset": "npm:@expo-oh/expo-asset@12.0.14"
+    "expo-asset": "npm:@expo-oh/expo-asset@12.0.15"
   }
 }
 ```

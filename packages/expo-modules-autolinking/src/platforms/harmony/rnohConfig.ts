@@ -81,7 +81,13 @@ function createNavigationCompatibilityConfig(
     ? '@react-native-ohos/react-native-screens'
     : packageJson.name;
   const entry = NAVIGATION_COMPATIBILITY[nativePackageName];
-  if (!entry || packageJson.version !== entry.version) return null;
+  if (!entry) return null;
+  const supportedVersion = packageJson.name === '@expo-oh/react-native-screens'
+    ? '4.9.1'
+    : entry.version;
+  if (packageJson.version !== supportedVersion) {
+    throw new Error(`Invalid Harmony navigation compatibility for "${packageJson.name}" at "${packageRoot}": installed ${packageJson.version}, supported ${supportedVersion}; provide explicit Harmony metadata`);
+  }
   return new ExpoModuleConfig({
     platforms: ['harmony'],
     harmony: {
@@ -129,16 +135,25 @@ export async function discoverRnohHarmonyConfigAsync(
   } catch {
     return null;
   }
-  const provided = packageJson.harmony?.autolinking as RnohAutolinkingConfig | null | undefined;
-  if (provided == null) {
+  const provided = packageJson.harmony?.autolinking;
+  if (!Object.prototype.hasOwnProperty.call(packageJson.harmony ?? {}, 'autolinking')) {
     return createNavigationCompatibilityConfig(packageRoot, packageJson);
   }
-  const config = provided === true ? {} : provided;
+  // RNOH itself publishes null to opt out of linking its host package.
+  if (provided === false || provided === null) return null;
+  const fail = (message: string): never => { throw new Error(`Invalid Harmony autolinking config for "${packageJson.name ?? fallbackPackageName}" at "${packageRoot}": ${message}`); };
+  if (provided !== true && (!provided || typeof provided !== 'object' || Array.isArray(provided))) fail('autolinking must be true, false, null, or an object');
+  const config: Exclude<RnohAutolinkingConfig, true> = provided === true ? {} : provided;
+  for (const field of ['etsPackageClassName', 'cppPackageClassName', 'cmakeLibraryTargetName', 'mainHarPath'] as const) {
+    if (config[field] !== undefined && (typeof config[field] !== 'string' || !config[field]!.trim())) fail(`${field} must be a non-empty string`);
+  }
+  if (config.ohPackageName !== undefined && typeof config.ohPackageName !== 'string' && !Array.isArray(config.ohPackageName)) fail('ohPackageName must be a string or mapping array');
   const packageName = packageJson.name ?? fallbackPackageName;
   const harRoot = path.join(packageRoot, config.mainHarPath ?? 'harmony');
+  if (config.mainHarPath && (path.isAbsolute(config.mainHarPath) || config.mainHarPath.split(/[\\/]/).includes('..'))) fail('mainHarPath must be package-relative and cannot escape its root');
   const harPaths = await findHarFilesAsync(harRoot);
   if (harPaths.length === 0) {
-    return null;
+    fail(`HAR files do not exist at "${harRoot}"`);
   }
   const hars = resolveRnohHars(packageName, harPaths, config.ohPackageName);
   hars[0] = { ...hars[0], primary: true };
@@ -196,6 +211,9 @@ function resolveRnohHars(
   names: string | RnohHarMapping[] | undefined
 ): HarmonyHarConfig[] {
   const defaultName = rnohOhPackageName(npmPackageName);
+  if (new Set(harPaths.map((file) => path.basename(file))).size !== harPaths.length) {
+    throw new Error(`Invalid Harmony HAR config for "${npmPackageName}": duplicate HAR basename`);
+  }
   const createHar = (packagePath: string, mapping?: RnohHarMapping): HarmonyHarConfig => {
     const harName = path.basename(packagePath);
     const suffix = harPaths.length > 1 ? `--${path.basename(harName, '.har')}` : '';
@@ -212,10 +230,13 @@ function resolveRnohHars(
   const harByName = new Map(
     harPaths.map((packagePath) => [path.basename(packagePath), packagePath])
   );
+  if (harByName.size !== harPaths.length) throw new Error(`Invalid Harmony HAR config for "${npmPackageName}": duplicate HAR basename`);
   const processed = new Set<string>();
   const resolved: HarmonyHarConfig[] = [];
   for (const mapping of names) {
+    if (!mapping || typeof mapping.harName !== 'string' || typeof mapping.packageName !== 'string' || !mapping.packageName.trim() || (mapping.version !== undefined && typeof mapping.version !== 'string')) throw new Error(`Invalid Harmony HAR mapping for "${npmPackageName}"`);
     const packagePath = harByName.get(mapping.harName);
+    if (!packagePath || processed.has(mapping.harName)) throw new Error(`Invalid Harmony HAR mapping for "${npmPackageName}": missing or duplicate HAR "${mapping.harName}"`);
     if (packagePath) {
       resolved.push(createHar(packagePath, mapping));
       processed.add(mapping.harName);

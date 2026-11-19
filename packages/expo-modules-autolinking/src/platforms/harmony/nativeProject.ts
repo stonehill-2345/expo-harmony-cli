@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
-import { createHash } from 'crypto';
-import { spawn } from 'child_process';
+import JSON5 from 'json5';
 
 import type {
   HarmonyHarConfig,
@@ -9,23 +8,30 @@ import type {
   ModuleDescriptorHarmony,
 } from '../../types';
 import { generatePackageListAsync } from './harmony';
+import { stageHarmonyResourcesAsync } from './resourceContributions';
+import type { HarmonyResourceContribution } from './resourceContributions';
+import { mergeHarmonyGenerationStateAsync } from './generationState';
+import { runHarmonyGenerationTransactionAsync } from './generationTransaction';
+import type { HarmonyGenerationFaultPoint } from './generationTransaction';
+import { copyReleasedHarmonyHarAsync, copyReleasedRnohCompatibilityHarAsync } from './releasedCompatibility';
+import { validateHarmonyModuleGraph, validateHarmonyModuleSourcesAsync } from './moduleValidation';
 
 type OwnedLifecycleDependency = HarmonyLifecycleDependency & {
   packageName: string;
 };
 
-export const RNOH_COMPATIBILITY_ID = 'expo-rnoh-0.82.30-core-v1-v3';
+export const RNOH_COMPATIBILITY_ID = 'expo-rnoh-0.82.30-core-v1-v4';
 export const RNOH_INPUT_HAR_SHA256 =
   'cac2b5d1b9ce7d306079218931db12489aaceb240002c9c32e6c13185c577011';
 export const RNOH_OUTPUT_HAR_SHA256 =
-  '0e0cf3dbb5b2e510f49c819ff5db2f43ad5a5918d38e840cc2714055c9f6fd83';
+  'b6f643f3131e89f108f4d96c3ed95ca66c562d71a1dc2b88f57bbcb2a3d1f226';
 
 export interface RunCompatibilityToolOptions {
   pythonExecutable: string;
   scriptPath: string;
   inputHarPath: string;
   outputHarPath: string;
-  profile: 'core-v1-v3';
+  profile: 'core-v1-v4';
 }
 
 export type RunCompatibilityTool = (options: RunCompatibilityToolOptions) => Promise<void>;
@@ -42,28 +48,29 @@ export interface HarmonyNativeProjectOptions {
   projectRoot: string;
   appName: string;
   bundleName: string;
+  appConfig: Record<string, any>;
+  userInterfaceStyle?: 'light' | 'dark' | 'automatic';
+  nativeConfig?: {
+    app?: Record<string, any>;
+    module?: Record<string, any>;
+  };
+  resources?: HarmonyResourceContribution[];
   modules: ModuleDescriptorHarmony[];
   inputHarPath: string;
   corePackageRoot: string;
   pythonExecutable?: string;
   runCompatibilityTool?: RunCompatibilityTool;
+  clean?: boolean;
+  finalize?: (stageRoot: string) => Promise<void>;
+  generationFault?: (point: HarmonyGenerationFaultPoint) => Promise<void>;
+  /** @deprecated Ignored. appConfig is the already evaluated public configuration snapshot. */
   runAppConfigGenerator?: RunAppConfigGenerator;
   templateRoot?: string;
 }
 
-export async function prepareHarmonyNativeProjectAsync({
-  projectRoot,
-  appName,
-  bundleName,
-  modules,
-  inputHarPath,
-  corePackageRoot,
-  pythonExecutable,
-  runCompatibilityTool,
-  runAppConfigGenerator = runAppConfigGeneratorAsync,
-  templateRoot = path.resolve(__dirname, '../../../templates/harmony'),
-}: HarmonyNativeProjectOptions): Promise<{
+type HarmonyNativeProjectResult = {
   harmonyRoot: string;
+  backupPath?: string;
   rnohHarPath: string;
   generatedFiles: {
     cpp: string;
@@ -72,118 +79,243 @@ export async function prepareHarmonyNativeProjectAsync({
     lifecycle: string;
     overlays: string;
   };
-}> {
-  const harmonyRoot = path.join(projectRoot, 'harmony');
-  if (fs.existsSync(harmonyRoot)) {
-    throw new Error(`Harmony native project already exists at "${harmonyRoot}"`);
-  }
+};
 
-  try {
-    await fs.promises.cp(templateRoot, harmonyRoot, { recursive: true });
-    await copyHarmonyTemplateMediaAsync(projectRoot, harmonyRoot);
-    await replaceTemplatePlaceholdersAsync(harmonyRoot, {
-      __EXPO_APP_NAME__: appName,
-      __EXPO_BUNDLE_NAME__: bundleName,
-    });
-    const { rnohHarPath, generatedFiles } = await assembleHarmonyGeneratedAreasAsync({
-      projectRoot,
-      harmonyRoot,
-      modules,
-      inputHarPath,
-      corePackageRoot,
-      pythonExecutable,
-      runCompatibilityTool,
-      runAppConfigGenerator,
-    });
-    return { harmonyRoot, rnohHarPath, generatedFiles };
-  } catch (error) {
-    await fs.promises.rm(harmonyRoot, { recursive: true, force: true });
-    throw error;
-  }
+export async function prepareHarmonyNativeProjectAsync(
+  options: HarmonyNativeProjectOptions
+): Promise<HarmonyNativeProjectResult> {
+  return generateHarmonyNativeProjectAsync(options, true);
 }
 
 export async function copyHarmonyTemplateMediaAsync(
   projectRoot: string,
-  harmonyRoot: string
+  harmonyRoot: string,
+  appConfig: Record<string, any>
 ): Promise<void> {
-  const appJsonPath = path.join(projectRoot, 'app.json');
-  const app = JSON.parse(await fs.promises.readFile(appJsonPath, 'utf8'));
-  const expo = app?.expo ?? {};
-  const icon = expo.icon;
-  if (typeof icon !== 'string' || !icon) {
-    throw new Error('Expo app.json must define expo.icon for Harmony media generation');
-  }
-  const foreground = expo.android?.adaptiveIcon?.foregroundImage ?? icon;
-  const splash = expo.splash?.image ?? icon;
-  const resolveAsset = (relativePath: unknown, field: string): string => {
-    if (typeof relativePath !== 'string' || !relativePath) throw new Error(`${field} must be a project-relative asset path`);
-    const absolute = path.resolve(projectRoot, relativePath);
-    const relative = path.relative(projectRoot, absolute);
-    if (!relative || relative.startsWith('..') || path.isAbsolute(relative)) throw new Error(`${field} must stay inside the project`);
-    if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile()) throw new Error(`${field} asset is missing: ${relativePath}`);
-    return absolute;
-  };
-  const media = [
-    [resolveAsset(icon, 'expo.icon'), 'entry/src/main/resources/base/media/background.png'],
-    [resolveAsset(foreground, 'expo.android.adaptiveIcon.foregroundImage'), 'entry/src/main/resources/base/media/foreground.png'],
-    [resolveAsset(splash, 'expo.splash.image'), 'entry/src/main/resources/base/media/startIcon.png'],
-    [resolveAsset(icon, 'expo.icon'), 'AppScope/resources/base/media/app_icon.png'],
-  ] as const;
+  const { media, background, darkBackground, imageWidth, resizeMode } = resolveHarmonyAppAssets(projectRoot, appConfig);
   for (const [source, relativeTarget] of media) {
     const target = path.join(harmonyRoot, relativeTarget);
+    await assertHarmonyTargetPathAsync(harmonyRoot, target);
     await fs.promises.mkdir(path.dirname(target), { recursive: true });
     await fs.promises.copyFile(source, target);
+  }
+  const colorsPath = path.join(harmonyRoot, 'entry/src/main/resources/base/element/color.json');
+  await assertHarmonyTargetPathAsync(harmonyRoot, colorsPath);
+  const colors = fs.existsSync(colorsPath)
+    ? JSON5.parse(await fs.promises.readFile(colorsPath, 'utf8'))
+    : { color: [] };
+  const existing = colors.color.find(
+    (item: { name: string }) => item.name === 'start_window_background'
+  );
+  if (existing) existing.value = background;
+  else colors.color.push({ name: 'start_window_background', value: background });
+  await fs.promises.mkdir(path.dirname(colorsPath), { recursive: true });
+  await fs.promises.writeFile(colorsPath, JSON.stringify(colors, null, 2) + '\n');
+  const resources: [string, Record<string, { name: string; value: string }[]>][] = [
+    ['base/element/float.json', { float: [{ name: 'expo_splash_image_width', value: `${imageWidth}vp` }] }],
+    ['base/element/string.json', { string: [{ name: 'expo_splash_resize_mode', value: resizeMode }] }],
+  ];
+  if (darkBackground) resources.push(['dark/element/color.json', { color: [{ name: 'start_window_background', value: darkBackground }] }]);
+  for (const [relative, additions] of resources) {
+    const target = path.join(harmonyRoot, 'entry/src/main/resources', relative);
+    await assertHarmonyTargetPathAsync(harmonyRoot, target);
+    const contents = fs.existsSync(target) ? JSON5.parse(await fs.promises.readFile(target, 'utf8')) : {};
+    for (const [type, entries] of Object.entries(additions)) {
+      const names = new Set(entries.map((entry: { name: string }) => entry.name));
+      contents[type] = [...(contents[type] ?? []).filter((entry: { name: string }) => !names.has(entry.name)), ...entries];
+    }
+    await fs.promises.mkdir(path.dirname(target), { recursive: true });
+    await fs.promises.writeFile(target, JSON.stringify(contents, null, 2) + '\n');
+  }
+}
+
+export async function validateHarmonyAppAssetsAsync(
+  projectRoot: string,
+  appConfig: Record<string, any>
+): Promise<void> {
+  resolveHarmonyAppAssets(projectRoot, appConfig);
+}
+
+function resolveHarmonyAppAssets(projectRoot: string, appConfig: Record<string, any>) {
+  assertAppConfigSnapshot(appConfig);
+  JSON.stringify(appConfig);
+  const harmony = appConfig.harmony ?? {};
+  const icon = harmony.icon ?? appConfig.icon;
+  if (typeof icon !== 'string' || !icon) {
+    throw new Error(
+      'Harmony configuration snapshot must define harmony.icon or expo.icon for media generation'
+    );
+  }
+  const foreground =
+    harmony.foregroundImage ??
+    harmony.icon ??
+    appConfig.android?.adaptiveIcon?.foregroundImage ??
+    icon;
+  const splash = harmony.splash?.image ?? appConfig.splash?.image ?? icon;
+  const background =
+    harmony.splash?.backgroundColor ?? appConfig.splash?.backgroundColor ?? '#FFFFFF';
+  if (typeof background !== 'string' || !/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(background)) {
+    throw new Error('Harmony splash.backgroundColor must be a six or eight digit hex color');
+  }
+  const darkBackground = harmony.splash?.dark?.backgroundColor;
+  if (darkBackground !== undefined && (typeof darkBackground !== 'string' || !/^#([0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/.test(darkBackground))) {
+    throw new Error('Harmony splash.dark.backgroundColor must be a six or eight digit hex color');
+  }
+  const imageWidth = harmony.splash?.imageWidth ?? 100;
+  const resizeMode = harmony.splash?.resizeMode ?? 'contain';
+  if (typeof imageWidth !== 'number' || !Number.isFinite(imageWidth) || imageWidth <= 0) throw new Error('Invalid Harmony splash.imageWidth');
+  if (!['contain', 'cover', 'native'].includes(resizeMode)) throw new Error('Invalid Harmony splash.resizeMode');
+  const realProjectRoot = fs.realpathSync(projectRoot);
+  const resolveAsset = (relativePath: unknown, field: string): string => {
+    if (typeof relativePath !== 'string' || !relativePath)
+      throw new Error(`${field} must be a project-relative asset path`);
+    const absolute = path.resolve(projectRoot, relativePath);
+    const relative = path.relative(projectRoot, absolute);
+    if (
+      !relative ||
+      relative === '..' ||
+      relative.startsWith(`..${path.sep}`) ||
+      path.isAbsolute(relative)
+    )
+      throw new Error(`${field} must stay inside the project`);
+    if (!fs.existsSync(absolute) || !fs.statSync(absolute).isFile())
+      throw new Error(`${field} asset is missing: ${relativePath}`);
+    const realRelative = path.relative(realProjectRoot, fs.realpathSync(absolute));
+    if (
+      !realRelative ||
+      realRelative === '..' ||
+      realRelative.startsWith(`..${path.sep}`) ||
+      path.isAbsolute(realRelative)
+    )
+      throw new Error(`${field} must stay inside the project`);
+    return absolute;
+  };
+  const media: [string, string][] = [
+    [resolveAsset(icon, 'expo.icon'), 'entry/src/main/resources/base/media/background.png'],
+    [
+      resolveAsset(foreground, 'expo.android.adaptiveIcon.foregroundImage'),
+      'entry/src/main/resources/base/media/foreground.png',
+    ],
+    [
+      resolveAsset(splash, 'expo.splash.image'),
+      'entry/src/main/resources/base/media/startIcon.png',
+    ],
+    [resolveAsset(icon, 'expo.icon'), 'AppScope/resources/base/media/app_icon.png'],
+  ];
+  if (harmony.splash?.dark?.image) {
+    media.push([resolveAsset(harmony.splash.dark.image, 'harmony.splash.dark.image'), 'entry/src/main/resources/dark/media/startIcon.png']);
+  }
+  return { media, background, darkBackground, imageWidth, resizeMode };
+}
+
+async function assertHarmonyTargetPathAsync(harmonyRoot: string, target: string): Promise<void> {
+  await fs.promises.mkdir(harmonyRoot, { recursive: true });
+  const realRoot = await fs.promises.realpath(harmonyRoot);
+  let ancestor = target;
+  while (true) {
+    try {
+      await fs.promises.lstat(ancestor);
+      break;
+    } catch (error: any) {
+      if (error?.code !== 'ENOENT') throw error;
+      const parent = path.dirname(ancestor);
+      if (ancestor === parent) throw new Error('Resource must stay inside the Harmony project');
+      ancestor = parent;
+    }
+  }
+  let realAncestor: string;
+  try {
+    realAncestor = await fs.promises.realpath(ancestor);
+  } catch (error: any) {
+    if (error?.code === 'ENOENT') throw new Error(`Resource symbolic link is dangling: ${ancestor}`);
+    throw error;
+  }
+  const relative = path.relative(realRoot, realAncestor);
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new Error(`Resource must stay inside the Harmony project: ${target}`);
   }
 }
 
 export async function syncHarmonyNativeProjectAsync(
   options: HarmonyNativeProjectOptions
 ): ReturnType<typeof prepareHarmonyNativeProjectAsync> {
-  const harmonyRoot = path.join(options.projectRoot, 'harmony');
-  if (!fs.existsSync(harmonyRoot)) {
-    return await prepareHarmonyNativeProjectAsync(options);
-  }
+  return generateHarmonyNativeProjectAsync(options, false);
+}
 
-  await writeHarmonyAppIdentityAsync(harmonyRoot, options.appName, options.bundleName);
-  await Promise.all([
-    fs.promises.rm(path.join(harmonyRoot, 'expo-modules'), { recursive: true, force: true }),
-    fs.promises.rm(path.join(harmonyRoot, 'dependencies/expo-modules'), {
-      recursive: true,
-      force: true,
-    }),
-    fs.promises.rm(path.join(harmonyRoot, 'entry/src/main/cpp/generated'), {
-      recursive: true,
-      force: true,
-    }),
-    fs.promises.rm(path.join(harmonyRoot, 'entry/src/main/ets/generated'), {
-      recursive: true,
-      force: true,
-    }),
-    fs.promises.rm(path.join(harmonyRoot, '.expo-autolinking'), {
-      recursive: true,
-      force: true,
-    }),
-  ]);
-  const { rnohHarPath, generatedFiles } = await assembleHarmonyGeneratedAreasAsync({
-    ...options,
-    harmonyRoot,
+async function generateHarmonyNativeProjectAsync(
+  options: HarmonyNativeProjectOptions,
+  prepareOnly: boolean
+): Promise<HarmonyNativeProjectResult> {
+  const currentRoot = path.join(options.projectRoot, 'harmony');
+  await validateHarmonyModuleSourcesAsync(options.modules);
+  resolveHarmonyUserInterfaceStyle(options.appConfig, options.userInterfaceStyle);
+  assertHarmonyThemeManifestPlan(options.nativeConfig);
+  await validateHarmonyAppAssetsAsync(options.projectRoot, options.appConfig);
+  const transaction = await runHarmonyGenerationTransactionAsync({
+    projectRoot: options.projectRoot,
+    clean: options.clean,
+    prepareOnly,
+    fault: options.generationFault,
+    generate: async (stageRoot, hash) => {
+      if (!options.clean && fs.existsSync(currentRoot)) await validateHarmonyAppConfigurationAsync(currentRoot);
+      const templateRoot = options.templateRoot ?? path.resolve(__dirname, '../../../templates/harmony');
+      await assertHarmonyPackageSourceAsync(templateRoot, templateRoot);
+      await fs.promises.cp(templateRoot, stageRoot, { recursive: true });
+      await copyHarmonyTemplateMediaAsync(options.projectRoot, stageRoot, options.appConfig);
+      await replaceTemplatePlaceholdersAsync(stageRoot, {
+        __EXPO_APP_NAME__: options.appName,
+        __EXPO_BUNDLE_NAME__: options.bundleName,
+      });
+      await writeHarmonyAppIdentityAsync(stageRoot, options.appName, options.bundleName, options.nativeConfig);
+      const modules = [...options.modules].sort((a, b) => a.packageName.localeCompare(b.packageName));
+      const generated = await assembleHarmonyGeneratedAreasAsync({ ...options, modules, harmonyRoot: stageRoot });
+      const owners = await stageHarmonyResourcesAsync({ projectRoot: options.projectRoot, stageRoot, currentRoot,
+        resources: options.resources, clean: options.clean });
+      await options.finalize?.(stageRoot);
+      const merge = await mergeHarmonyGenerationStateAsync({
+        stageRoot,
+        currentRoot,
+        clean: options.clean,
+        detectUnchanged: true,
+        owners,
+      });
+      if (merge.unchanged) hash.reuseCurrentTree();
+      else if (merge.managedPatch) hash.applyManagedPatch(merge.managedPatch);
+      else for (const root of merge.clonedRoots) hash.reuseClonedRoot(root);
+      // Restore the documented insertion when users have removed only the theme wiring.
+      const ability = await getHarmonyAppConfigurationEntryAsync(stageRoot);
+      if (await fs.promises.readFile(ability.abilityPath, 'utf8') !== ability.contents) {
+        await fs.promises.writeFile(ability.abilityPath, ability.contents, 'utf8');
+      }
+      return {
+        rnohHarPath: path.relative(stageRoot, generated.rnohHarPath),
+        generatedFiles: Object.fromEntries(Object.entries(generated.generatedFiles).map(([key, file]) => [key, path.relative(stageRoot, file)])),
+      };
+    },
+    validate: validateHarmonyAppConfigurationAsync,
   });
-  return { harmonyRoot, rnohHarPath, generatedFiles };
+  return {
+    harmonyRoot: transaction.harmonyRoot,
+    ...(transaction.backupPath ? { backupPath: transaction.backupPath } : {}),
+    rnohHarPath: path.join(transaction.harmonyRoot, transaction.value.rnohHarPath),
+    generatedFiles: Object.fromEntries(Object.entries(transaction.value.generatedFiles).map(([key, file]) => [key, path.join(transaction.harmonyRoot, file)])) as HarmonyNativeProjectResult['generatedFiles'],
+  };
 }
 
 async function assembleHarmonyGeneratedAreasAsync({
   projectRoot,
+  appConfig,
+  userInterfaceStyle,
   harmonyRoot,
   modules,
   inputHarPath,
   corePackageRoot,
   pythonExecutable,
   runCompatibilityTool,
-  runAppConfigGenerator,
 }: Omit<HarmonyNativeProjectOptions, 'appName' | 'bundleName' | 'templateRoot'> & {
   harmonyRoot: string;
 }) {
-  await generateHarmonyAppConfigAsync({ projectRoot, harmonyRoot, runAppConfigGenerator });
+  await generateHarmonyAppConfigAsync({ projectRoot, harmonyRoot, appConfig });
   const rnohHarPath = await prepareRnohCompatibilityHarAsync({
     harmonyRoot,
     inputHarPath,
@@ -191,10 +323,19 @@ async function assembleHarmonyGeneratedAreasAsync({
     pythonExecutable,
     runCompatibilityTool,
   });
-  await stageHarmonyEtsPackagesAsync(modules, harmonyRoot);
+  await stageHarmonyEtsPackagesAsync(modules, harmonyRoot, (transform, inputHarPath, outputHarPath) =>
+    copyReleasedHarmonyHarAsync({ transform, inputHarPath, outputHarPath, corePackageRoot })
+  );
 
   const scratch = path.join(harmonyRoot, '.expo-autolinking');
-  await generatePackageListAsync(modules, scratch, 'expo.modules');
+  const finalCppRoot = path.join(projectRoot, 'harmony/entry/src/main/cpp');
+  const relativeModules = modules.map((module) => ({
+    ...module,
+    ...(module.cpp && module.kind !== 'rnoh-package' ? {
+      cpp: { ...module.cpp, cmakePath: path.relative(finalCppRoot, module.cpp.cmakePath).split(path.sep).join('/') },
+    } : {}),
+  }));
+  await generatePackageListAsync(relativeModules, scratch, 'expo.modules');
   const generatedFiles = {
     cpp: path.join(harmonyRoot, 'entry/src/main/cpp/generated/ExpoModulesPackages.cpp'),
     ets: path.join(harmonyRoot, 'entry/src/main/ets/generated/ExpoModulesPackages.ets'),
@@ -222,63 +363,164 @@ async function assembleHarmonyGeneratedAreasAsync({
       ),
   ]);
   await fs.promises.rm(scratch, { recursive: true, force: true });
+  await writeHarmonyAppConfigurationAsync(harmonyRoot, resolveHarmonyUserInterfaceStyle(appConfig, userInterfaceStyle));
   return { rnohHarPath, generatedFiles };
+}
+
+function assertHarmonyThemeManifestPlan(nativeConfig?: HarmonyNativeProjectOptions['nativeConfig']): void {
+  if (nativeConfig?.app && Object.prototype.hasOwnProperty.call(nativeConfig.app, 'colorMode')) {
+    throw new Error('Harmony app.colorMode is not supported; use userInterfaceStyle');
+  }
+}
+
+function resolveHarmonyUserInterfaceStyle(
+  appConfig: Record<string, any>,
+  explicit?: HarmonyNativeProjectOptions['userInterfaceStyle']
+): NonNullable<HarmonyNativeProjectOptions['userInterfaceStyle']> {
+  const style = explicit ?? appConfig.harmony?.userInterfaceStyle ?? appConfig.userInterfaceStyle ?? 'light';
+  if (!['light', 'dark', 'automatic'].includes(style)) {
+    throw new Error('Harmony userInterfaceStyle must be light, dark or automatic');
+  }
+  return style;
+}
+
+export function renderExpoAppConfiguration(
+  style: NonNullable<HarmonyNativeProjectOptions['userInterfaceStyle']>
+): string {
+  const modes = { light: 'COLOR_MODE_LIGHT', dark: 'COLOR_MODE_DARK', automatic: 'COLOR_MODE_NOT_SET' };
+  return '// @generated by expo-modules-autolinking. Do not edit.\n' +
+    "import { common, ConfigurationConstant } from '@kit.AbilityKit';\n\n" +
+    'export function applyExpoAppConfiguration(context: common.UIAbilityContext): void {\n' +
+    `  context.getApplicationContext().setColorMode(ConfigurationConstant.ColorMode.${modes[style]});\n` +
+    '}\n';
+}
+
+const APP_CONFIGURATION_IMPORT = "import { applyExpoAppConfiguration } from '../generated/ExpoAppConfiguration';";
+const APP_CONFIGURATION_CALL = 'applyExpoAppConfiguration(this.context);';
+
+async function getHarmonyAppConfigurationEntryAsync(harmonyRoot: string): Promise<{ abilityPath: string; contents: string }> {
+  const abilityPath = path.join(harmonyRoot, 'entry/src/main/ets/entryability/EntryAbility.ets');
+  await assertHarmonyTargetPathAsync(harmonyRoot, abilityPath);
+  let contents = await fs.promises.readFile(abilityPath, 'utf8');
+  const calls = contents.match(/^[ \t]*applyExpoAppConfiguration\(this\.context\);[ \t]*$/gm) ?? [];
+  const imports = contents.split(APP_CONFIGURATION_IMPORT).length - 1;
+  if (calls.length > 1 || imports > 1) {
+    throw new Error('EntryAbility contains duplicate Expo app configuration wiring');
+  }
+  if (calls.length === 0) {
+    const anchor = /^([ \t]*)this\.expoModulesLifecycle\.onCreate\(want\);[ \t]*$/m;
+    if (!anchor.test(contents)) {
+      throw new Error('EntryAbility has no supported app configuration insertion anchor');
+    }
+    contents = contents.replace(anchor, (_line, indent) => `${indent}${APP_CONFIGURATION_CALL}\n${_line}`);
+  }
+  if (imports === 0) contents = `${APP_CONFIGURATION_IMPORT}\n${contents}`;
+  return { abilityPath, contents };
+}
+
+export async function validateHarmonyAppConfigurationAsync(harmonyRoot: string): Promise<void> {
+  if (!fs.existsSync(harmonyRoot)) return;
+  await getHarmonyAppConfigurationEntryAsync(harmonyRoot);
+}
+
+async function writeHarmonyAppConfigurationAsync(
+  harmonyRoot: string,
+  style: NonNullable<HarmonyNativeProjectOptions['userInterfaceStyle']>
+): Promise<void> {
+  const { abilityPath, contents } = await getHarmonyAppConfigurationEntryAsync(harmonyRoot);
+  const configPath = path.join(harmonyRoot, 'entry/src/main/ets/generated/ExpoAppConfiguration.ets');
+  await assertHarmonyTargetPathAsync(harmonyRoot, configPath);
+  await fs.promises.mkdir(path.dirname(configPath), { recursive: true });
+  await fs.promises.writeFile(configPath, renderExpoAppConfiguration(style), 'utf8');
+  await fs.promises.writeFile(abilityPath, contents, 'utf8');
 }
 
 async function writeHarmonyAppIdentityAsync(
   harmonyRoot: string,
   appName: string,
-  bundleName: string
+  bundleName: string,
+  nativeConfig?: HarmonyNativeProjectOptions['nativeConfig']
 ): Promise<void> {
   const appPath = path.join(harmonyRoot, 'AppScope/app.json5');
-  const app = JSON.parse(await fs.promises.readFile(appPath, 'utf8'));
-  app.app.bundleName = bundleName;
+  await assertHarmonyTargetPathAsync(harmonyRoot, appPath);
+  const app = JSON5.parse(await fs.promises.readFile(appPath, 'utf8'));
+  app.app = mergeHarmonyManifest(app.app, { bundleName, ...nativeConfig?.app });
+  delete app.app.colorMode;
   await fs.promises.writeFile(appPath, JSON.stringify(app, null, 2) + '\n');
+  const modulePath = path.join(harmonyRoot, 'entry/src/main/module.json5');
+  await assertHarmonyTargetPathAsync(harmonyRoot, modulePath);
+  const module = JSON5.parse(await fs.promises.readFile(modulePath, 'utf8'));
+  module.module = mergeHarmonyManifest(module.module, nativeConfig?.module ?? {});
+  await fs.promises.writeFile(modulePath, JSON.stringify(module, null, 2) + '\n');
   for (const relativePath of [
     'AppScope/resources/base/element/string.json',
     'entry/src/main/resources/base/element/string.json',
   ]) {
     const filePath = path.join(harmonyRoot, relativePath);
-    const resource = JSON.parse(await fs.promises.readFile(filePath, 'utf8'));
+    await assertHarmonyTargetPathAsync(harmonyRoot, filePath);
+    const resource = JSON5.parse(await fs.promises.readFile(filePath, 'utf8'));
     for (const item of resource.string ?? []) {
-      item.value = appName;
+      if (
+        ['app_name', 'module_desc', 'EntryAbility_desc', 'EntryAbility_label'].includes(item.name)
+      ) {
+        item.value = appName;
+      }
     }
     await fs.promises.writeFile(filePath, JSON.stringify(resource, null, 2) + '\n');
   }
 }
 
+function mergeHarmonyManifest(
+  current: Record<string, any>,
+  planned: Record<string, any>
+): Record<string, any> {
+  const merged = { ...current };
+  for (const [key, value] of Object.entries(planned)) {
+    if (key === 'abilities' && Array.isArray(value) && Array.isArray(merged[key])) {
+      const abilities = [...merged[key]];
+      for (const ability of value) {
+        const index = abilities.findIndex((existing) => existing.name === ability.name);
+        if (index < 0) abilities.push(ability);
+        else abilities[index] = mergeHarmonyManifest(abilities[index], ability);
+      }
+      merged[key] = abilities;
+    } else if (value && typeof value === 'object' && !Array.isArray(value)) {
+      merged[key] = mergeHarmonyManifest(
+        merged[key] && typeof merged[key] === 'object' && !Array.isArray(merged[key])
+          ? merged[key]
+          : {},
+        value
+      );
+    } else {
+      merged[key] = value;
+    }
+  }
+  return merged;
+}
+
+function assertAppConfigSnapshot(appConfig: unknown): asserts appConfig is Record<string, any> {
+  if (!appConfig || typeof appConfig !== 'object' || Array.isArray(appConfig)) {
+    throw new Error('Harmony appConfig snapshot must be a JSON object');
+  }
+}
+
 export async function generateHarmonyAppConfigAsync({
-  projectRoot,
   harmonyRoot,
-  runAppConfigGenerator = runAppConfigGeneratorAsync,
+  appConfig,
 }: {
   projectRoot: string;
   harmonyRoot: string;
+  appConfig: Record<string, any>;
+  /** @deprecated Ignored. The provided snapshot is written without evaluating configuration again. */
   runAppConfigGenerator?: RunAppConfigGenerator;
 }): Promise<string> {
-  const scriptPath = path.join(
-    projectRoot,
-    'node_modules',
-    'expo-constants',
-    'scripts',
-    'getAppConfig.js'
-  );
-  if (!fs.existsSync(scriptPath)) {
-    throw new Error(`expo-constants app config generator does not exist at "${scriptPath}"`);
-  }
+  assertAppConfigSnapshot(appConfig);
+  const serialized = JSON.stringify(appConfig);
   const destinationDir = path.join(harmonyRoot, 'entry', 'src', 'main', 'resources', 'rawfile');
-  await fs.promises.mkdir(destinationDir, { recursive: true });
-  await runAppConfigGenerator({ scriptPath, projectRoot, destinationDir });
   const outputPath = path.join(destinationDir, 'app.config');
-  let config: unknown;
-  try {
-    config = JSON.parse(await fs.promises.readFile(outputPath, 'utf8'));
-  } catch (error) {
-    throw new Error(`Invalid generated Harmony app.config at "${outputPath}": ${String(error)}`);
-  }
-  if (!config || typeof config !== 'object' || Array.isArray(config)) {
-    throw new Error(`Generated Harmony app.config must contain a JSON object at "${outputPath}"`);
-  }
+  await assertHarmonyTargetPathAsync(harmonyRoot, outputPath);
+  await fs.promises.mkdir(destinationDir, { recursive: true });
+  await fs.promises.writeFile(outputPath, serialized, 'utf8');
   return outputPath;
 }
 
@@ -286,8 +528,6 @@ export async function prepareRnohCompatibilityHarAsync({
   harmonyRoot,
   inputHarPath,
   corePackageRoot,
-  pythonExecutable = resolveHarmonyPythonExecutable(),
-  runCompatibilityTool = runCompatibilityToolAsync,
 }: {
   harmonyRoot: string;
   inputHarPath: string;
@@ -295,39 +535,8 @@ export async function prepareRnohCompatibilityHarAsync({
   pythonExecutable?: string;
   runCompatibilityTool?: RunCompatibilityTool;
 }): Promise<string> {
-  await assertSha256Async(inputHarPath, RNOH_INPUT_HAR_SHA256, 'input');
   const outputHarPath = path.join(harmonyRoot, 'dependencies', 'react_native_openharmony.har');
-  if (fs.existsSync(outputHarPath)) {
-    await assertSha256Async(outputHarPath, RNOH_OUTPUT_HAR_SHA256, 'output');
-    return outputHarPath;
-  }
-
-  const scriptPath = path.join(corePackageRoot, 'harmony', 'rnoh-compat', 'prepare_har.py');
-  if (!fs.existsSync(scriptPath)) {
-    throw new Error(`RNOH compatibility tool does not exist at "${scriptPath}"`);
-  }
-  await fs.promises.mkdir(path.dirname(outputHarPath), { recursive: true });
-  try {
-    await runCompatibilityTool({
-      pythonExecutable,
-      scriptPath,
-      inputHarPath,
-      outputHarPath,
-      profile: 'core-v1-v3',
-    });
-    await assertSha256Async(outputHarPath, RNOH_OUTPUT_HAR_SHA256, 'output');
-    const manifestPath = `${outputHarPath}.manifest.json`;
-    if (!fs.existsSync(manifestPath)) {
-      throw new Error(`RNOH compatibility manifest does not exist at "${manifestPath}"`);
-    }
-    return outputHarPath;
-  } catch (error) {
-    await Promise.all([
-      fs.promises.rm(outputHarPath, { force: true }),
-      fs.promises.rm(`${outputHarPath}.manifest.json`, { force: true }),
-    ]);
-    throw error;
-  }
+  return copyReleasedRnohCompatibilityHarAsync({ inputHarPath, outputHarPath, corePackageRoot });
 }
 
 export type RunHarmonyHarTransform = (
@@ -339,8 +548,11 @@ export type RunHarmonyHarTransform = (
 export async function stageHarmonyEtsPackagesAsync(
   modules: ModuleDescriptorHarmony[],
   harmonyRoot: string,
-  runHarTransform: RunHarmonyHarTransform = runHarmonyHarTransformAsync
+  runHarTransform: RunHarmonyHarTransform = async (transform) => {
+    throw new Error(`Released Harmony compatibility artifact lookup requires Core package root for ${transform}`);
+  }
 ): Promise<Record<string, string>> {
+  await validateHarmonyModuleSourcesAsync(modules);
   const packages = new Map<
     string,
     ModuleDescriptorHarmony & { ets: NonNullable<ModuleDescriptorHarmony['ets']> }
@@ -360,6 +572,27 @@ export async function stageHarmonyEtsPackagesAsync(
   }
 
   const dependencies = new Map<string, { specifier: string; owner: string }>();
+  const harEntries = modules
+    .flatMap((module) => (module.hars ?? []).map((har) => ({ har, owner: module.packageName })))
+    .sort((a, b) => a.har.packageName.localeCompare(b.har.packageName));
+  const etsPaths = new Map<string, string>();
+  const moduleNames = new Map<string, string>();
+  const harPaths = new Map<string, string>();
+  const claimName = (claims: Map<string, string>, generatedName: string, ohName: string) => {
+    const existing = claims.get(generatedName);
+    if (existing && existing !== ohName) {
+      throw new Error(`Harmony generated path collision: "${existing}" and "${ohName}" both resolve to "${generatedName}"`);
+    }
+    claims.set(generatedName, ohName);
+  };
+  for (const name of packages.keys()) {
+    const stagingName = sanitizeOhPackageName(name);
+    claimName(etsPaths, stagingName, name);
+    claimName(moduleNames, stagingName.replace(/[^A-Za-z0-9_.]/g, '_'), name);
+  }
+  for (const { har } of harEntries) {
+    if (!har.version) claimName(harPaths, sanitizeOhPackageName(har.packageName), har.packageName);
+  }
   const projectModules: Array<{
     name: string;
     srcPath: string;
@@ -375,6 +608,7 @@ export async function stageHarmonyEtsPackagesAsync(
         `Harmony ETS entrypoint for "${module.packageName}" is outside its package root`
       );
     }
+    await assertHarmonyPackageSourceAsync(module.packageRoot, module.ets.entrypoint);
 
     await fs.promises.mkdir(stagingRoot, { recursive: true });
     await copyFileAsync(module.ets.entrypoint, path.join(stagingRoot, entrypointRelative));
@@ -383,6 +617,7 @@ export async function stageHarmonyEtsPackagesAsync(
     try {
       const stats = await fs.promises.stat(sourceEtsRoot);
       if (stats.isDirectory()) {
+        await assertHarmonyPackageSourceAsync(module.packageRoot, sourceEtsRoot);
         await fs.promises.cp(
           sourceEtsRoot,
           path.join(stagingRoot, path.relative(module.packageRoot, sourceEtsRoot)),
@@ -450,9 +685,6 @@ export async function stageHarmonyEtsPackagesAsync(
   const managedHarRoot = path.join(harmonyRoot, 'dependencies', 'expo-modules');
   const managedHarScratch = path.join(harmonyRoot, '.expo-har-staging');
   await fs.promises.rm(managedHarScratch, { recursive: true, force: true });
-  const harEntries = modules
-    .flatMap((module) => (module.hars ?? []).map((har) => ({ har, owner: module.packageName })))
-    .sort((a, b) => a.har.packageName.localeCompare(b.har.packageName));
   let hasLocalHars = false;
   try {
     for (const { har, owner } of harEntries) {
@@ -500,7 +732,7 @@ export async function stageHarmonyEtsPackagesAsync(
 
   const rootManifestPath = path.join(harmonyRoot, 'oh-package.json5');
   if (fs.existsSync(rootManifestPath)) {
-    const rootManifest = JSON.parse(await fs.promises.readFile(rootManifestPath, 'utf8'));
+    const rootManifest = JSON5.parse(await fs.promises.readFile(rootManifestPath, 'utf8'));
     const harOverrides = Object.fromEntries(
       harEntries.map(({ har }) => [
         har.packageName,
@@ -530,14 +762,14 @@ export async function stageHarmonyEtsPackagesAsync(
   );
 
   const entryManifestPath = path.join(harmonyRoot, 'entry', 'oh-package.json5');
-  const entryManifest = JSON.parse(await fs.promises.readFile(entryManifestPath, 'utf8'));
+  const entryManifest = JSON5.parse(await fs.promises.readFile(entryManifestPath, 'utf8'));
   entryManifest.dependencies = {
     '@rnoh/react-native-openharmony': 'file:../dependencies/react_native_openharmony.har',
     ...dependencySpecifiers,
   };
   await fs.promises.writeFile(entryManifestPath, JSON.stringify(entryManifest, null, 2) + '\n');
   const buildProfilePath = path.join(harmonyRoot, 'build-profile.json5');
-  const buildProfile = JSON.parse(await fs.promises.readFile(buildProfilePath, 'utf8'));
+  const buildProfile = JSON5.parse(await fs.promises.readFile(buildProfilePath, 'utf8'));
   buildProfile.modules = [
     ...(buildProfile.modules ?? []).filter(
       (module: { srcPath?: string }) => !module.srcPath?.startsWith('./expo-modules/')
@@ -548,31 +780,20 @@ export async function stageHarmonyEtsPackagesAsync(
   return dependencySpecifiers;
 }
 
-async function runHarmonyHarTransformAsync(
-  transform: NonNullable<HarmonyHarConfig['transform']>,
-  input: string,
-  output: string
-): Promise<void> {
-  await fs.promises.mkdir(path.dirname(output), { recursive: true });
-  const script = path.resolve(
-    __dirname,
-    `../../../scripts/harmony/${
-      transform === 'screens-content-wrapper-v1' ? 'prepare-screens.py' : 'prepare-worklets.py'
-    }`
-  );
-  await new Promise<void>((resolve, reject) => {
-    const child = spawn(
-      resolveHarmonyPythonExecutable(),
-      [script, '--input-har', input, '--output-har', output],
-      { stdio: 'inherit' }
-    );
-    child.once('error', reject);
-    child.once('exit', (code) =>
-      code === 0
-        ? resolve()
-        : reject(new Error(`Harmony HAR transform ${transform} failed with exit code ${code}`))
-    );
-  });
+async function assertHarmonyPackageSourceAsync(packageRoot: string, source: string): Promise<void> {
+  const info = await fs.promises.lstat(source);
+  if (info.isSymbolicLink()) throw new Error(`Harmony package source must not be a symbolic link: ${source}`);
+  const realRoot = await fs.promises.realpath(packageRoot);
+  const realSource = await fs.promises.realpath(source);
+  const relative = path.relative(realRoot, realSource);
+  if (relative === '..' || relative.startsWith(`..${path.sep}`) || path.isAbsolute(relative)) {
+    throw new Error(`Harmony source is outside its package root: ${source}`);
+  }
+  if (info.isDirectory()) {
+    for (const entry of (await fs.promises.readdir(source)).sort()) {
+      await assertHarmonyPackageSourceAsync(packageRoot, path.join(source, entry));
+    }
+  }
 }
 
 function registerHarmonyDependency(
@@ -595,6 +816,7 @@ function sanitizeOhPackageName(packageName: string): string {
 }
 
 export function renderExpoModulesLifecycle(modules: ModuleDescriptorHarmony[]): string {
+  validateHarmonyModuleGraph(modules);
   const dependencies = collectLifecycleDependencies(modules);
   const imports = deduplicateLifecycleImports(dependencies)
     .map(
@@ -648,6 +870,7 @@ export function renderExpoModulesLifecycle(modules: ModuleDescriptorHarmony[]): 
 }
 
 export function renderExpoModulesAppOverlays(modules: ModuleDescriptorHarmony[]): string {
+  validateHarmonyModuleGraph(modules);
   const overlays = collectLifecycleDependencies(modules)
     .filter((dependency) => dependency.arkUIOverlay != null)
     .map((dependency) => ({ ...dependency, overlay: dependency.arkUIOverlay! }));
@@ -782,7 +1005,13 @@ function deduplicateLifecycleImports(dependencies: OwnedLifecycleDependency[]) {
 }
 
 function escapeEtsString(value: string): string {
-  return value.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/'/g, "\\'")
+    .replace(/\r/g, '\\r')
+    .replace(/\n/g, '\\n')
+    .replace(/\u2028/g, '\\u2028')
+    .replace(/\u2029/g, '\\u2029');
 }
 
 function getOhPackageName(importPath: string): string {
@@ -799,69 +1028,6 @@ async function copyFileAsync(source: string, target: string): Promise<void> {
   await fs.promises.copyFile(source, target);
 }
 
-async function assertSha256Async(
-  filePath: string,
-  expected: string,
-  label: 'input' | 'output'
-): Promise<void> {
-  let data: Buffer;
-  try {
-    data = await fs.promises.readFile(filePath);
-  } catch (error: any) {
-    if (error?.code === 'ENOENT') {
-      throw new Error(`RNOH compatibility ${label} HAR does not exist at "${filePath}"`);
-    }
-    throw error;
-  }
-  const actual = createHash('sha256').update(data).digest('hex');
-  if (actual !== expected) {
-    throw new Error(
-      `RNOH compatibility ${label} SHA256 mismatch for "${filePath}": expected ${expected}, got ${actual}`
-    );
-  }
-}
-
-function runCompatibilityToolAsync(options: RunCompatibilityToolOptions): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(
-      options.pythonExecutable,
-      [
-        options.scriptPath,
-        '--input-har',
-        options.inputHarPath,
-        '--output-har',
-        options.outputHarPath,
-        '--profile',
-        options.profile,
-      ],
-      { stdio: 'inherit' }
-    );
-    child.once('error', reject);
-    child.once('exit', (code, signal) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(
-          new Error(
-            `RNOH compatibility tool failed with ${
-              signal ? `signal ${signal}` : `exit code ${code}`
-            }`
-          )
-        );
-      }
-    });
-  });
-}
-
-function resolveHarmonyPythonExecutable(): string {
-  if (process.env.EXPO_HARMONY_PYTHON) {
-    return process.env.EXPO_HARMONY_PYTHON;
-  }
-  const candidates =
-    process.platform === 'darwin' ? ['/opt/homebrew/bin/python3', '/usr/local/bin/python3'] : [];
-  return candidates.find((candidate) => fs.existsSync(candidate)) ?? 'python3';
-}
-
 async function replaceTemplatePlaceholdersAsync(
   root: string,
   replacements: Record<string, string>
@@ -875,34 +1041,12 @@ async function replaceTemplatePlaceholdersAsync(
     if (!/\.(?:cmake|ets|json|json5|ts|txt)$/.test(entry.name) && entry.name !== 'CMakeLists.txt') {
       continue;
     }
+    // JSON identities and labels are written through their structured documents.
+    if (/\.json5?$/.test(entry.name)) continue;
     let contents = await fs.promises.readFile(entryPath, 'utf8');
     for (const [placeholder, value] of Object.entries(replacements)) {
-      contents = contents.split(placeholder).join(value);
+      contents = contents.split(placeholder).join(/\.(?:ets|ts)$/.test(entry.name) ? escapeEtsString(value) : value);
     }
     await fs.promises.writeFile(entryPath, contents, 'utf8');
   }
-}
-
-function runAppConfigGeneratorAsync(options: RunAppConfigGeneratorOptions): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const child = spawn(
-      process.execPath,
-      [options.scriptPath, options.projectRoot, options.destinationDir],
-      { stdio: 'inherit' }
-    );
-    child.once('error', reject);
-    child.once('exit', (code, signal) => {
-      if (code === 0) {
-        resolve();
-      } else {
-        reject(
-          new Error(
-            `expo-constants app config generator failed with ${
-              signal ? `signal ${signal}` : `exit code ${code}`
-            }`
-          )
-        );
-      }
-    });
-  });
 }

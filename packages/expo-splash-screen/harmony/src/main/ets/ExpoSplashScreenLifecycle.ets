@@ -7,6 +7,14 @@ export class ExpoSplashScreenLifecycle
   extends ExpoSplashScreenController
   implements RNOHMarkerListener {
   private markerRegistered = false;
+  private contentAppearedRuntime = 0;
+  private javaScriptBundleFinished = false;
+
+  public override beginRuntime(): number {
+    this.contentAppearedRuntime = 0;
+    this.javaScriptBundleFinished = false;
+    return super.beginRuntime();
+  }
 
   public onCreate(_want: Want): void {
     if (this.markerRegistered) return;
@@ -17,9 +25,19 @@ export class ExpoSplashScreenLifecycle
   public onNewWant(_want: Want): void {}
 
   public logMarker(markerId: RNOHMarkerId, _tag: string, _timestamp: number): void {
-    if (markerId !== RNOHMarkerId.CONTENT_APPEARED) return;
-    const runtime = this.getState().runtime;
-    if (runtime !== 0) this.onContentAppeared(runtime);
+    if (markerId === RNOHMarkerId.RUN_JS_BUNDLE_START) {
+      this.javaScriptBundleFinished = false;
+      return;
+    }
+    if (markerId === RNOHMarkerId.RUN_JS_BUNDLE_STOP) {
+      this.javaScriptBundleFinished = true;
+      this.maybeAutoHide();
+      return;
+    }
+    if (markerId === RNOHMarkerId.CONTENT_APPEARED) {
+      this.contentAppearedRuntime = this.getState().runtime;
+      this.maybeAutoHide();
+    }
   }
 
   public onDestroy(): void {
@@ -28,5 +46,12 @@ export class ExpoSplashScreenLifecycle
       RNOHMarker.removeListener(this);
     }
     this.destroy();
+  }
+
+  private maybeAutoHide(): void {
+    if (!this.javaScriptBundleFinished || this.contentAppearedRuntime === 0) return;
+    const runtime = this.contentAppearedRuntime;
+    this.contentAppearedRuntime = 0;
+    this.onContentAppeared(runtime);
   }
 }

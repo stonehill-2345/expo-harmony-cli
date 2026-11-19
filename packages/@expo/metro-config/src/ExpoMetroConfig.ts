@@ -19,6 +19,7 @@ import resolveFrom from 'resolve-from';
 
 import { getDefaultCustomizeFrame, INTERNAL_CALLSITES_REGEX } from './customizeFrame';
 import { withHarmony, withHarmonySerializer } from './withHarmony';
+import { shouldEnableHarmonyMetro } from './harmonyProject';
 import { env } from './env';
 import { FileStore } from './file-store';
 import { getModulesPaths } from './getModulesPaths';
@@ -428,8 +429,7 @@ export function getDefaultConfig(
     expoMetroConfig
   );
 
-  const harmonyEnabled =
-    platform === 'harmony' || process.env.EXPO_HARMONY_METRO === '1';
+  const harmonyEnabled = shouldEnableHarmonyMetro(projectRoot, platform);
   const platformConfig = harmonyEnabled
     ? withHarmony(metroConfig, projectRoot, { platform })
     : metroConfig;
@@ -449,7 +449,7 @@ export const internal_supervisingTransformerPath = require.resolve(
 export { MetroConfig, INTERNAL_CALLSITES_REGEX };
 
 // re-export for legacy cases.
-export const EXPO_DEBUG = env.EXPO_DEBUG;
+export const EXPO_DEBUG: boolean = env.EXPO_DEBUG;
 
 function getExpoOptional(projectRoot: string, subModule = 'package.json'): string | undefined {
   return resolveFrom.silent(projectRoot, `expo/${subModule}`);

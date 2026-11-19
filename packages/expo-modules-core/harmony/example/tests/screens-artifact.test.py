@@ -2,18 +2,22 @@ import contextlib
 import importlib.util
 import io
 import os
+import sys
 from pathlib import Path
 import tarfile
 import tempfile
 import unittest
 
+# This source tree is also packed for consumers; importing its transformer must
+# not add host-specific bytecode to the release inputs.
+sys.dont_write_bytecode = True
 spec = importlib.util.spec_from_file_location('screens', Path(__file__).resolve().parents[1] / 'router/prepare-screens.py')
 screens = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(screens)
 
 
 class ScreensArtifactTest(unittest.TestCase):
-    def test_real_archive_registers_only_content_wrapper_and_is_repeatable(self):
+    def test_real_archive_registers_navigation_components_and_is_repeatable(self):
         original = Path(os.environ['EXPO_HARMONY_SCREENS_HAR'])
         before = original.read_bytes()
         with tempfile.TemporaryDirectory() as directory, contextlib.redirect_stdout(io.StringIO()):
@@ -29,10 +33,38 @@ class ScreensArtifactTest(unittest.TestCase):
                 for member in a:
                     if member.isfile() and a.extractfile(member).read() != b.extractfile(member.name).read():
                         changed.append(member.name)
-                self.assertEqual(changed, [screens.SOURCE])
+                self.assertEqual(
+                    set(changed),
+                    {
+                        screens.SOURCE,
+                        screens.SCREEN_SOURCE,
+                        screens.BOTTOM_TABS_SCREEN_SOURCE,
+                        screens.CPP_PACKAGE_SOURCE,
+                    },
+                )
                 fixed = b.extractfile(screens.SOURCE).read()
                 self.assertIn(b'.set(RNSScreenContentWrapper.NAME, wrapBuilder(componentBuilder))', fixed)
                 self.assertEqual(fixed.count(b'.set(RNSScreenContentWrapper.NAME'), 1)
+                self.assertIn(b'.set(RNSBottomTabs.NAME, wrapBuilder(componentBuilder))', fixed)
+                self.assertNotIn(b'.set(RNSBottomTabsScreen.NAME, wrapBuilder(componentBuilder))', fixed)
+                self.assertIn(b'} else if (ctx.componentName == RNSBottomTabs.NAME) {', fixed)
+                self.assertNotIn(b'} else if (ctx.componentName == RNSBottomTabsScreen.NAME) {', fixed)
+                fixed_screen = b.extractfile(screens.SCREEN_SOURCE).read()
+                self.assertIn(screens.BACK_AFTER, fixed_screen)
+                self.assertNotIn(screens.BACK_BEFORE, fixed_screen)
+                fixed_bottom_tabs_screen = b.extractfile(screens.BOTTOM_TABS_SCREEN_SOURCE).read()
+                self.assertIn(screens.BOTTOM_TABS_TOUCH_AFTER, fixed_bottom_tabs_screen)
+                self.assertNotIn(screens.BOTTOM_TABS_TOUCH_BEFORE, fixed_bottom_tabs_screen)
+                fixed_cpp = b.extractfile(screens.CPP_PACKAGE_SOURCE).read()
+                self.assertIn(b'RNSBottomTabsJSIBinder.h', fixed_cpp)
+                self.assertIn(b'RNSBottomTabsScreenJSIBinder.h', fixed_cpp)
+                self.assertIn(b'RNSBottomTabsComponentDescriptor>()', fixed_cpp)
+                self.assertIn(b'RNSBottomTabsScreenComponentDescriptor>()', fixed_cpp)
+                self.assertIn(b'{"RNSBottomTabs", std::make_shared<RNSBottomTabsJSIBinder>()}', fixed_cpp)
+                self.assertIn(
+                    b'{"RNSBottomTabsScreen", std::make_shared<RNSBottomTabsScreenJSIBinder>()}',
+                    fixed_cpp,
+                )
             target.write_bytes(b'conflicting output')
             with self.assertRaisesRegex(ValueError, 'conflict'):
                 screens.prepare(original, target)

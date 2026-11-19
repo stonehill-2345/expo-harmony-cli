@@ -25,7 +25,7 @@ function fixture(t, options = {}) {
   const hashStarted = deferred();
   const openStarted = deferred();
   const response = deferred();
-  let requests = 0, cancellations = 0;
+  let requests = 0, cancellations = 0, rawReads = 0;
   const descriptors = new Set();
   const platformFs = {
     OpenMode: { WRITE_ONLY: 1, CREATE: 2, TRUNC: 4 }, accessSync: fs.existsSync,
@@ -34,7 +34,8 @@ function fixture(t, options = {}) {
       if (options.openGate) await options.openGate.promise;
       const fd = fs.openSync(file, 'w'); descriptors.add(fd); return { fd };
     },
-    write: async (fd, data) => fs.writeSync(fd, Buffer.from(data)),
+    write: async (fd, data) => options.zeroWrite ? 0 :
+      fs.writeSync(fd, Buffer.from(data).subarray(0, options.partialWrites ? 1 : undefined)),
     fsync: async (fd) => fs.fsyncSync(fd),
     close: async (file) => { fs.closeSync(file.fd); descriptors.delete(file.fd); },
     rename: async (from, to) => fs.renameSync(from, to),
@@ -73,7 +74,11 @@ function fixture(t, options = {}) {
   }
   const context = {
     uiAbilityContext: { cacheDir: root, resourceManager: {
-      getRawFileContent: async () => new Uint8Array([1, 2, 3]),
+      getRawFileContent: async () => {
+        rawReads++;
+        if (options.rawMissing) throw new Error('Rawfile missing');
+        return options.rawBytes ?? new Uint8Array([1, 2, 3]);
+      },
     } },
     rnInstance: { getAssetsDest: () => 'assets/' },
     httpClient: { sendRequest: () => {
@@ -85,7 +90,7 @@ function fixture(t, options = {}) {
   };
   const Module = load('ExpoAssetTurboModule.ets').ExpoAssetTurboModule;
   return { root, module: new Module(context), response, httpStarted, hashStarted, openStarted,
-    descriptors, requests: () => requests, cancellations: () => cancellations };
+    descriptors, requests: () => requests, cancellations: () => cancellations, rawReads: () => rawReads };
 }
 
 test('destroy cancels transport without synthesizing a second JS-facing rejection', async t => {
@@ -126,4 +131,70 @@ test('destroy during file open still closes and removes the late-created tempora
   assert.match(await result, /destroyed/);
   assert.equal(f.descriptors.size, 0, 'file descriptor leaked');
   assert.deepEqual(fs.readdirSync(f.root), [], 'temporary file leaked after destroy/open race');
+});
+
+test('verified embedded cache is reused and corruption is repaired from the source', async t => {
+  const f = fixture(t);
+  const bytes = Buffer.from([1, 2, 3]);
+  const hash = crypto.createHash('md5').update(bytes).digest('hex');
+  const uri = await f.module.downloadAsync('rawfile://fixture.bin', hash, 'bin');
+  assert.deepEqual(fs.readFileSync(new URL(uri)), bytes);
+  assert.equal(await f.module.downloadAsync('rawfile://fixture.bin', hash, 'bin'), uri);
+  assert.equal(f.rawReads(), 2);
+  fs.writeFileSync(new URL(uri), 'corrupt');
+  assert.equal(await f.module.downloadAsync('rawfile://fixture.bin', hash, 'bin'), uri);
+  assert.deepEqual(fs.readFileSync(new URL(uri)), bytes);
+  assert.equal(f.rawReads(), 3);
+  assert.equal(f.descriptors.size, 0);
+  assert.equal(fs.readdirSync(f.root).length, 1);
+});
+
+test('MD5 mismatch rejects without publishing a cache or leaking temporary files', async t => {
+  const f = fixture(t);
+  await assert.rejects(f.module.downloadAsync('rawfile://fixture.bin', '0'.repeat(32), 'bin'), /MD5 mismatch/);
+  assert.deepEqual(fs.readdirSync(f.root), []);
+  assert.equal(f.descriptors.size, 0);
+});
+
+test('partial writes preserve all bytes and stalled writes clean up', async t => {
+  const partial = fixture(t, { partialWrites: true });
+  const uri = await partial.module.downloadAsync('rawfile://fixture.bin', null, 'bin');
+  assert.deepEqual(fs.readFileSync(new URL(uri)), Buffer.from([1, 2, 3]));
+  const stalled = fixture(t, { zeroWrite: true });
+  await assert.rejects(stalled.module.downloadAsync('rawfile://fixture.bin', null, 'bin'), /no progress/);
+  assert.equal(stalled.descriptors.size, 0);
+  assert.deepEqual(fs.readdirSync(stalled.root), []);
+});
+
+test('HTTP errors do not create cache files or retain completed cancellation handles', async t => {
+  const f = fixture(t);
+  const result = f.module.downloadAsync('https://fixture/missing', null, 'bin');
+  await f.httpStarted.promise;
+  f.response.resolve({ statusCode: 404, body: 'not found' });
+  await assert.rejects(result, /HTTP 404/);
+  f.module.__onDestroy__();
+  assert.equal(f.cancellations(), 0);
+  assert.deepEqual(fs.readdirSync(f.root), []);
+});
+
+test('concurrent embedded downloads publish complete bytes without temporary leaks', async t => {
+  const f = fixture(t, { partialWrites: true });
+  const uris = await Promise.all(Array.from({ length: 4 }, () =>
+    f.module.downloadAsync('rawfile://fixture.bin', null, 'bin')));
+  assert.equal(new Set(uris).size, 1);
+  assert.deepEqual(fs.readFileSync(new URL(uris[0])), Buffer.from([1, 2, 3]));
+  assert.equal(fs.readdirSync(f.root).length, 1);
+  assert.equal(f.descriptors.size, 0);
+});
+
+test('embedded replacement and removal cannot reuse an old URI cache after an app update', async t => {
+  const options = { rawBytes: new Uint8Array([1, 2, 3]) };
+  const f = fixture(t, options);
+  const uri = await f.module.downloadAsync('rawfile://expo-asset/data.json', null, 'json');
+  options.rawBytes = new Uint8Array([4, 5, 6]);
+  const updated = await f.module.downloadAsync('rawfile://expo-asset/data.json', null, 'json');
+  assert.equal(updated, uri);
+  assert.deepEqual([...fs.readFileSync(decodeURIComponent(uri.slice(7)))], [4, 5, 6]);
+  options.rawMissing = true;
+  await assert.rejects(f.module.downloadAsync('rawfile://expo-asset/data.json', null, 'json'), /Rawfile missing/);
 });

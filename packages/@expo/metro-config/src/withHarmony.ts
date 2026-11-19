@@ -63,7 +63,22 @@ export function withHarmony(
       },
       resolveRequest: (context, moduleName, platform) => {
         if (platform === 'harmony') {
-          return harmony.resolver.resolveRequest(context, moduleName, platform);
+          const resolution = harmony.resolver.resolveRequest(context, moduleName, platform);
+          // Drawer ships native gesture entrypoints only for iOS and Android.
+          // Its default entry disables gestures, even on other native platforms.
+          if (
+            resolution.type === 'sourceFile' &&
+            /\/react-native-drawer-layout\/(?:src|lib\/module)\/views\/GestureHandler\.(?:tsx|js)$/.test(
+              resolution.filePath.replaceAll('\\', '/')
+            )
+          ) {
+            return context.resolveRequest(
+              context,
+              path.join(path.dirname(resolution.filePath), 'GestureHandlerNative'),
+              platform
+            );
+          }
+          return resolution;
         }
         return resolveRequest
           ? resolveRequest(context, moduleName, platform)

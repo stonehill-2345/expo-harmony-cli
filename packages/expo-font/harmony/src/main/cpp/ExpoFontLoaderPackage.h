@@ -1,10 +1,12 @@
 #pragma once
 #include "ExpoFontLoaderTurboModule.h"
+#include "ExpoFontUtilsTurboModule.h"
 #include "RNOH/Package.h"
 namespace expo::font::harmony {
 class ExpoFontLoaderFactory final : public rnoh::TurboModuleFactoryDelegate {
  public:
   SharedTurboModule createTurboModule(Context context, const std::string& name) const override {
+    if (name == "ExpoFontUtils") return std::make_shared<ExpoFontUtilsTurboModule>(std::move(context), name);
     if (name != "ExpoFontLoader") return nullptr;
     return std::make_shared<ExpoFontLoaderTurboModule>(std::move(context), name);
   }

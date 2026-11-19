@@ -23,7 +23,7 @@ import {
 import { getVirtualFaviconAssetsAsync } from './favicon';
 import { getPublicExpoManifestAsync } from './getPublicExpoManifest';
 import { copyPublicFolderAsync, getPublicFolderPath } from './publicFolder';
-import type { Options } from './resolveOptions';
+import type { ExportPlatform, Options } from './resolveOptions';
 import type { ExportAssetMap, BundleOutput, BundleAssetWithFileHashes } from './saveAssets';
 import { getFilesFromSerialAssets, persistMetroFilesAsync } from './saveAssets';
 import { createAssetMap } from './writeContents';
@@ -133,8 +133,10 @@ export async function exportAppAsync(
   const devServer = devServerManager.getDefaultDevServer();
   assert(devServer instanceof MetroBundlerDevServer);
 
-  const bundles: Partial<Record<Platform, BundleOutput>> = {};
-  const domComponentAssetsMetadata: Partial<Record<Platform, PlatformMetadata['assets']>> = {};
+  const bundles: Partial<Record<ExportPlatform, BundleOutput>> = {};
+  const domComponentAssetsMetadata: Partial<
+    Record<ExportPlatform, PlatformMetadata['assets']>
+  > = {};
 
   const spaPlatforms =
     // TODO: Support server and static rendering for server component exports.
@@ -165,9 +167,9 @@ export async function exportAppAsync(
         spaPlatforms.map(async (platform) => {
           // Assert early so the user doesn't have to wait until bundling is complete to find out that
           // Hermes won't be available.
-          const isHermes = isEnableHermesManaged(exp, platform);
+          const isHermes = isEnableHermesManaged(exp, platform as Platform);
           if (isHermes) {
-            await assertEngineMismatchAsync(projectRoot, exp, platform);
+            await assertEngineMismatchAsync(projectRoot, exp, platform as Platform);
           }
 
           let bundle: {

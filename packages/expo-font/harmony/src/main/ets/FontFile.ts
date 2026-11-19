@@ -40,7 +40,10 @@ function readUint32(bytes: Uint8Array, offset: number): number {
 export function validateSfntFont(bytes: Uint8Array): void {
   if (bytes.byteLength < 12) throw new Error('Font file is not a valid TTF/OTF sfnt');
   const signature = String.fromCharCode(bytes[0], bytes[1], bytes[2], bytes[3]);
-  if (signature === 'ttcf') throw new Error('Font collection files are not supported by Font-v1');
+  if (signature === 'ttcf') throw new Error('Font collection files (TTC) are not supported on Harmony');
+  if (signature === 'wOFF' || signature === 'wOF2') {
+    throw new Error('WOFF/WOFF2 font files are not supported on Harmony');
+  }
   const isTrueType = bytes[0] === 0 && bytes[1] === 1 && bytes[2] === 0 && bytes[3] === 0;
   if (!isTrueType && !['OTTO', 'true', 'typ1'].includes(signature)) {
     throw new Error('Font file is not a valid TTF/OTF sfnt');

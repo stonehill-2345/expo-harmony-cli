@@ -1,6 +1,12 @@
 import { getConfig } from '@expo/config';
 
-import { resolveOptionsAsync } from '../resolveOptions';
+jest.mock(
+  '@expo/metro-config/build/harmonyProject',
+  () => jest.requireActual('../../../../metro-config/src/harmonyProject'),
+  { virtual: true }
+);
+
+import { resolveOptionsAsync, resolvePlatformOption } from '../resolveOptions';
 
 jest.mock('@expo/config', () => ({
   getConfig: jest.fn(() => ({
@@ -15,6 +21,33 @@ jest.mock('@expo/config', () => ({
 }));
 
 describe(resolveOptionsAsync, () => {
+  it('allows Harmony when installed identity exposes a Metro bundler', () => {
+    expect(
+      resolvePlatformOption(
+        { platforms: ['ios', 'android'] } as any,
+        { ios: 'metro', android: 'metro', web: 'metro', harmony: 'metro' },
+        ['harmony']
+      )
+    ).toEqual(['harmony']);
+  });
+
+  it('includes Harmony in all only when the bundler map exposes it', () => {
+    expect(
+      resolvePlatformOption(
+        { platforms: ['ios', 'android'] } as any,
+        { ios: 'metro', android: 'metro', web: 'metro', harmony: 'metro' },
+        ['all']
+      )
+    ).toEqual(['ios', 'android', 'harmony']);
+    expect(() =>
+      resolvePlatformOption(
+        { platforms: ['ios', 'android'] } as any,
+        { ios: 'metro', android: 'metro', web: 'metro' },
+        ['harmony']
+      )
+    ).toThrow(/Platform "harmony" is not configured/);
+  });
+
   it(`asserts unknown platform`, async () => {
     await expect(resolveOptionsAsync('/', { '--platform': ['foobar'] })).rejects.toThrow(
       /^Unsupported platform "foobar"\./

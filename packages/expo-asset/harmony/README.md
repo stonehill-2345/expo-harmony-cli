@@ -11,9 +11,18 @@ This directory provides the RNOH `ExpoAsset` TurboModule backend for Expo SDK 54
 - Ensure the application requests `ohos.permission.INTERNET` when HTTP/HTTPS assets are used.
 - Keep RNOH's `assetsDest` aligned with Metro's rawfile asset output. The default is `assets/`, so `asset://images/icon.png` reads rawfile `assets/images/icon.png`.
 
-`downloadAsync(url, md5Hash, type)` returns a `file://` URI. HTTP/HTTPS and embedded rawfile bytes are written to the application cache through a temporary file, flushed, optionally MD5-verified, and atomically renamed. Existing caches with a supplied hash are content-verified before reuse. Active network requests and temporary files are cancelled/cleaned when the module is destroyed.
+`downloadAsync(url, md5Hash, type)` returns a `file://` URI. HTTP/HTTPS and embedded rawfile bytes are written to the application cache through a temporary file, flushed, optionally MD5-verified, and atomically renamed. Existing caches with a supplied hash are content-verified before reuse. Embedded resources are read from the current HAP and content-verified even without a supplied hash, so an app update cannot reuse removed or replaced rawfile bytes. Active network requests and temporary files are cancelled/cleaned when the module is destroyed.
 
 Direct RNOH validation is separate from validation through Expo Modules Core and the official expo-asset JavaScript API.
+
+The `expo-asset` config plugin embeds shared `assets` entries as rawfiles under
+`expo-asset/<basename>`. Use `Asset.fromURI('rawfile://expo-asset/<basename>')`
+and `downloadAsync()` to obtain a local URI. JSON, DB, PNG, JPG, GIF, MP4, MP3,
+Lottie and Rive files are accepted as resource bytes; embedding does not imply
+a runtime decoder for every format. Fonts belong to `expo-font`. Duplicate
+destinations, unsupported types, symlinks, paths outside the project and empty
+resources reject. Prebuild updates/removes owned resources transactionally and
+protects manual edits. Rebuild the HAP after changing plugin configuration.
 
 See [the lane B handoff](example/README.md) for preserved direct-test sources,
 public API checks, fixture resources, server, and the outstanding S1 prerequisite.

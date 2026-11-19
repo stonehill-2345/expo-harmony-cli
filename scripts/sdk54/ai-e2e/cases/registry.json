@@ -1,0 +1,66 @@
+{
+  "schemaVersion": 1,
+  "registryVersion": "2026-11-11",
+  "stages": {
+    "V-01": [
+      {
+        "id": "V01-CREATE-BLANK-NPM",
+        "required": true,
+        "requiresDevice": false,
+        "requiredEvidence": [
+          "command-log"
+        ]
+      },
+      {
+        "id": "V01-DEVICE-PREFLIGHT",
+        "required": true,
+        "requiresDevice": true,
+        "requiredEvidence": [
+          "device-assertion",
+          "screenshot"
+        ]
+      }
+    ],
+    "V-02": [
+      { "id": "V02-RESOURCE-ADD", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V02-RESOURCE-CHANGE", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V02-RESOURCE-RENAME", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V02-RESOURCE-REMOVE", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V02-RESOURCE-ROLLBACK", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V02-RESOURCE-OWNERSHIP", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V02-FONT-LOAD", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-FONT-UPDATE", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-FONT-REMOVE", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-FONT-RELOAD", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-ASSET-LOAD", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-ASSET-UPDATE", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-ASSET-REMOVE", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-ASSET-RELOAD", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-SHEET-CONTRACT", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-DRAWER-GESTURE", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-ORIENTATION", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V02-CORE-M4", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion"] },
+      { "id": "V02-OTHER-M4", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion"] }
+    ],
+    "V-03": [
+      { "id": "V03-CONFIG-NPM", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V03-CONFIG-PNPM", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V03-INSTALL-BLANK-NPM", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V03-INSTALL-BLANK-PNPM", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V03-INSTALL-DEFAULT-NPM", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V03-INSTALL-DEFAULT-PNPM", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V03-EXPORT-NPM", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V03-EXPORT-PNPM", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V03-BLANK-NPM-DEBUG", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V03-BLANK-NPM-RELEASE", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V03-BLANK-PNPM-DEBUG", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V03-BLANK-PNPM-RELEASE", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V03-DEFAULT-NPM-DEBUG", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V03-DEFAULT-NPM-RELEASE", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V03-DEFAULT-PNPM-DEBUG", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V03-DEFAULT-PNPM-RELEASE", "required": true, "requiresDevice": true, "requiredEvidence": ["command-log", "device-assertion", "screenshot"] },
+      { "id": "V03-PERFORMANCE", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] },
+      { "id": "V03-ERROR-PATHS", "required": true, "requiresDevice": false, "requiredEvidence": ["command-log"] }
+    ]
+  }
+}

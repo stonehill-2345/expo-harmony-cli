@@ -95,12 +95,15 @@ const CLI_RUNTIME = runtime(
     { path: 'build/bin/cli', executable: true },
     { path: 'build/src/run/harmony/runHarmonyAsync.js' },
     { path: 'build/src/prebuild/harmony/prebuildHarmonyAsync.js' },
+    { path: 'build/src/prebuild/harmony/configPlugins.js' },
+    { path: 'build/src/harmony/config.js' },
+    { path: 'build/src/harmony/project.js' },
   ],
   { type: 'cli', version: '54.0.27' },
 );
 
 const METRO_RUNTIME = runtime(
-  [{ path: 'build/withHarmony.js' }],
+  [{ path: 'build/withHarmony.js' }, { path: 'build/harmonyProject.js' }],
   { type: 'metro', peerProviders: ['expo'] },
 );
 
@@ -108,6 +111,9 @@ const AUTOLINKING_RUNTIME = runtime(
   [
     { path: 'build/platforms/harmony/index.js' },
     { path: 'build/platforms/harmony/nativeProject.js' },
+    { path: 'build/platforms/harmony/generationTransaction.js' },
+    { path: 'build/platforms/harmony/generationState.js' },
+    { path: 'build/platforms/harmony/releasedCompatibility.js' },
   ],
   { type: 'autolinking' },
 );
@@ -180,10 +186,12 @@ const SDK54_RUNTIME_PATCH_EXACT = Object.freeze({
     'build/bin/cli',
     'build/src/harmony/build.js',
     'build/src/harmony/bundle.js',
+    'build/src/harmony/config.js',
     'build/src/harmony/dependencies.js',
     'build/src/harmony/device.js',
     'build/src/harmony/paths.js',
     'build/src/prebuild/harmony/prebuildHarmonyAsync.js',
+    'build/src/prebuild/harmony/configPlugins.js',
     'build/src/prebuild/index.js',
     'build/src/run/harmony/index.js',
     'build/src/run/harmony/runHarmonyAsync.js',
@@ -197,7 +205,17 @@ const SDK54_RUNTIME_PATCH_EXACT = Object.freeze({
     'build/withHarmony.d.ts',
     'build/withHarmony.js',
   ]),
-  expo: Object.freeze(['bundledNativeModules.json']),
+  expo: Object.freeze(['bundledNativeModules.json', 'harmony-config.js', 'harmony-config.d.ts', 'harmony-config.schema.json']),
+  'expo-asset': Object.freeze([
+    'plugin/src/withAssets.ts', 'plugin/src/withAssetsHarmony.ts',
+    'plugin/build/withAssets.js', 'plugin/build/withAssets.d.ts',
+    'plugin/build/withAssetsHarmony.js', 'plugin/build/withAssetsHarmony.d.ts',
+  ]),
+  'expo-font': Object.freeze([
+    'plugin/src/withFonts.ts', 'plugin/src/withFontsHarmony.ts',
+    'plugin/build/withFonts.js', 'plugin/build/withFonts.d.ts',
+    'plugin/build/withFontsHarmony.js', 'plugin/build/withFontsHarmony.d.ts',
+  ]),
   'expo-linking': Object.freeze(['build/Linking.js', 'src/Linking.ts']),
   'expo-modules-core': Object.freeze([
     'ios/JSI/EXJSIUtils.h',

@@ -3,16 +3,17 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import os from 'node:os';
-import http from 'node:http';
 import { spawn, execFileSync } from 'node:child_process';
 import { createRequire } from 'node:module';
-import { extract } from 'tar';
+import { startCandidateRegistry } from './candidate-registry.mjs';
 import { createReleaseManifest } from './release-catalog.mjs';
 import { verifyRelease } from './verify-npm-release.mjs';
 
 const args = process.argv.slice(2);
 const option = (name, fallback) => args.includes(name) ? args[args.indexOf(name) + 1] : fallback;
 const directory = path.resolve(option('--directory', 'outputs/sdk54/npm-release'));
+const reportPath = path.resolve(option('--report', path.join(directory, 'peer-install-report.json')));
+const upstreamRegistry = new URL(option('--upstream-registry', execFileSync('npm', ['config', 'get', 'registry'], { encoding: 'utf8' }).trim())).toString();
 // The independently published product CLI is not one of the runtime tarballs.
 const cliPackage = path.resolve(option('--cli-package', 'apps/cli'));
 const require = createRequire(import.meta.url);
@@ -24,44 +25,18 @@ const failures = await verifyRelease(directory);
 if (failures.length) throw new Error(failures.join('\n'));
 const report = JSON.parse(fs.readFileSync(path.join(directory, 'release.json')));
 const work = fs.mkdtempSync(path.join(os.tmpdir(), 'expo-oh-install-'));
-const manifests = new Map();
-for (const item of report.packages) {
-  const target = path.join(work, item.name.split('/')[1]);
-  fs.mkdirSync(target);
-  await extract({ file: path.join(directory, item.file), cwd: target });
-  manifests.set(item.name, { item, pkg: JSON.parse(fs.readFileSync(path.join(target, 'package/package.json'))) });
-}
-const server = http.createServer(async (request, response) => {
-  try {
-    const name = decodeURIComponent(request.url.slice(1));
-    if (name.startsWith('tarballs/')) {
-      const file = path.basename(name);
-      if (!report.packages.some(p => p.file === file)) { response.writeHead(404).end(); return; }
-      response.setHeader('Content-Type', 'application/octet-stream');
-      fs.createReadStream(path.join(directory, file)).pipe(response);
-    } else if (manifests.has(name)) {
-      const { item, pkg } = manifests.get(name);
-      const body = { name, 'dist-tags': { latest: item.version, harmony: item.version }, versions: { [item.version]: { ...pkg, dist: { integrity: item.integrity, tarball: `${registry}tarballs/${item.file}` } } } };
-      response.setHeader('Content-Type', 'application/json');
-      response.end(JSON.stringify(body));
-    } else if (name.startsWith('@expo-oh/')) { response.writeHead(404).end(); }
-    else {
-      const upstream = await fetch(`https://registry.npmjs.org${request.url}`, { headers: { accept: 'application/vnd.npm.install-v1+json' } });
-      response.writeHead(upstream.status, { 'Content-Type': upstream.headers.get('content-type') ?? 'application/octet-stream' });
-      response.end(Buffer.from(await upstream.arrayBuffer()));
-    }
-  } catch (error) { response.writeHead(502).end(String(error)); }
-});
-await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
-const registry = `http://127.0.0.1:${server.address().port}/`;
+const candidateRegistry = await startCandidateRegistry(report.packages.map(item => ({
+  ...item,
+  archive: path.join(directory, item.file),
+})), { upstreamRegistry });
+const { registry } = candidateRegistry;
 if (args.includes('--serve')) {
   console.log(`Candidate registry: ${registry}`);
   await new Promise(resolve => {
     process.once('SIGINT', resolve);
     process.once('SIGTERM', resolve);
   });
-  server.closeAllConnections();
-  await new Promise(resolve => server.close(resolve));
+  await candidateRegistry.close();
   process.exit(0);
 }
 const manifest = createReleaseManifest();
@@ -76,7 +51,9 @@ try {
       const args = pm === 'npm' ? ['install', ...(fullInstall ? [] : ['--package-lock-only']), ...(lifecycle ? [] : ['--ignore-scripts']), '--strict-peer-deps', '--no-audit', '--no-fund'] : ['install', ...(fullInstall ? [] : ['--lockfile-only']), ...(lifecycle ? [] : ['--ignore-scripts']), '--strict-peer-dependencies'];
       const log = fs.openSync(path.join(cwd, 'install.log'), 'w');
       const run = commandArgs => new Promise(resolve => {
-        const child = spawn(pm, [...commandArgs, '--registry', registry], { cwd, stdio: ['ignore', log, log], env: { ...process.env, CI: '1', npm_config_registry: registry } });
+        const child = spawn(pm, [...commandArgs, '--registry', registry], { cwd, stdio: ['ignore', log, log], env: {
+          ...process.env, CI: '1', npm_config_registry: registry, npm_config_fetch_timeout: '900000',
+        } });
         child.on('error', () => resolve(-1));
         child.on('exit', resolve);
       });
@@ -108,7 +85,7 @@ try {
       console.log(JSON.stringify(results.at(-1)));
     }
   }
-} finally { server.closeAllConnections(); await new Promise(resolve => server.close(resolve)); }
-fs.writeFileSync(path.join(directory, 'peer-install-report.json'), JSON.stringify({ release: report.release, mode: fullInstall ? (lifecycle ? 'install' : 'install-ignore-scripts') : 'lockfile-only', artifacts: report.packages.map(p => ({ name: p.name, integrity: p.integrity })), results }, null, 2));
+} finally { await candidateRegistry.close(); }
+fs.writeFileSync(reportPath, JSON.stringify({ release: report.release, mode: fullInstall ? (lifecycle ? 'install' : 'install-ignore-scripts') : 'lockfile-only', artifacts: report.packages.map(p => ({ name: p.name, integrity: p.integrity })), upstreamRegistry, results }, null, 2));
 console.log(`Evidence: ${work}`);
 if (results.some(r => r.status !== 0 || (fullInstall && r.reinstallStatus !== 0) || r.runtimeFailures.length)) process.exitCode = 1;

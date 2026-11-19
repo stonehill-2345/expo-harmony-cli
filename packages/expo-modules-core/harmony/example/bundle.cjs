@@ -5,8 +5,9 @@ const root = path.resolve(process.argv[2]);
 const dev = process.argv.includes('--dev');
 const requireApp = createRequire(path.join(root, 'package.json'));
 const { getDefaultConfig } = requireApp('@expo/metro-config');
-const metro = requireApp('@expo/metro/metro');
-const { loadConfig } = requireApp('@expo/metro/metro-config');
+const requireMetroConfig = createRequire(requireApp.resolve('@expo/metro-config'));
+const metro = requireMetroConfig('@expo/metro/metro');
+const { loadConfig } = requireMetroConfig('@expo/metro/metro-config');
 process.chdir(root);
 async function build() {
 const config = await loadConfig({ cwd: root }, getDefaultConfig(root, { platform: 'harmony' }));

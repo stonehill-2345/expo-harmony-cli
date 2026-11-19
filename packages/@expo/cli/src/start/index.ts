@@ -1,23 +1,13 @@
 #!/usr/bin/env node
 import chalk from 'chalk';
-import fs from 'fs';
-import path from 'path';
 
 import { Command } from '../../bin/cli';
+import { isHarmonyProject } from '../harmony/project';
 import { assertArgs, getProjectRoot, printHelp } from '../utils/args';
 import { logCmdError } from '../utils/errors';
 
 export function enableHarmonyMetroForManagedProject(projectRoot: string): boolean {
-  try {
-    const state = JSON.parse(
-      fs.readFileSync(path.join(projectRoot, '.expo-harmony/managed-state.json'), 'utf8')
-    );
-    if (!['sdk54-package-patch', 'sdk54-scoped-packages'].includes(state?.sdk54?.mode)) return false;
-    process.env.EXPO_HARMONY_METRO = '1';
-    return true;
-  } catch {
-    return false;
-  }
+  return isHarmonyProject(projectRoot);
 }
 
 export const expoStart: Command = async (argv) => {
