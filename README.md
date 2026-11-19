@@ -29,7 +29,7 @@
 
 **从创建到运行，三条命令**（终端实录 × HarmonyOS 模拟器，构建段加速回放）
 
-![expo-harmony-cli 全流程演示：统一入口创建（交互选择 SDK 54）→ prebuild 生成鸿蒙原生工程 → run:harmony 构建运行 → App 交互](https://github.com/stonehill-2345/expo-harmony-cli/raw/main/docs/assets/demo-overview.gif)
+![expo-harmony-cli 全流程演示：统一入口创建（交互选择 SDK 54）→ prebuild 生成鸿蒙原生工程 → run:harmony 构建运行 → App 交互](docs/assets/demo-overview.gif)
 
 > 演示环境：`expo-harmony-cli@1.7.0` 统一创建入口（`create demo-app` 交互选择 SDK 54）· Expo SDK 54 / React 19.1.1 / RN 0.82.1 / RNOH 0.82.30 · DevEco Studio 模拟器（单屏 phone，OpenHarmony 6.x）。iOS / Android 流程与此完全一致，见[项目状态与兼容矩阵](#-项目状态与兼容矩阵)。
 
@@ -104,7 +104,6 @@ npx expo start
 | React Native | 0.82.x | 0.77.x |
 | 创建命令 | `npx expo-harmony-cli create <dir> --sdk 54` | `npx expo-harmony-cli create <dir> --sdk 52` |
 | 热更新 | Fast Refresh | Metro reload |
-| 适用场景 | 新项目 | 存量项目维护 |
 
 SDK 52 完整流程见 **[SDK 52 使用指南](docs/sdk52-guide.md)**；SDK 54 命令与参数详解见 **[SDK 54 使用指南](docs/sdk54-guide.md)**，两条版本线并存互不影响。
 
@@ -148,8 +147,8 @@ Node.js ≥ 20.19.4 · pnpm ≥ 10.19.0（或 npm ≥ 10）· DevEco Studio 5.0+
 
 <table>
 <tr>
-<td align="center"><img src="https://github.com/stonehill-2345/expo-harmony-cli/raw/main/docs/assets/community-wechat-qr.png" alt="个人微信" width="170"><br>加我微信进群</td>
-<td align="center"><img src="https://github.com/stonehill-2345/expo-harmony-cli/raw/main/docs/assets/community-qq-qr.png" alt="QQ 交流群" width="170"><br>QQ 交流群</td>
+<td align="center"><img src="docs/assets/community-wechat-qr.png" alt="个人微信" width="170"><br>加我微信进群</td>
+<td align="center"><img src="docs/assets/community-qq-qr.png" alt="QQ 交流群" width="170"><br>QQ 交流群</td>
 </tr>
 </table>
 

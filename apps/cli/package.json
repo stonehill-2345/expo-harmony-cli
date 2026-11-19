@@ -34,7 +34,7 @@
     "templates",
     "CHANGELOG.md",
     "NOTICE.md",
-    "assets"
+    "docs"
   ],
   "engines": {
     "node": ">=20.19.4"
