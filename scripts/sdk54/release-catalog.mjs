@@ -25,7 +25,7 @@ const publishVersions = {
   'expo-status-bar': '3.0.11',
   'expo-system-ui': '6.0.11',
   'expo-web-browser': '15.0.13',
-  '@react-native-ohos/react-native-screens': '4.9.1',
+  '@react-native-ohos/react-native-screens': '4.9.2',
 };
 const batches = {
   expo: 'C', 'expo-router': 'C', 'expo-asset': 'B', 'expo-linking': 'B', '@expo/cli': 'B',

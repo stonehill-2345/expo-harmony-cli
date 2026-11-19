@@ -52,7 +52,7 @@
     "@react-native-ohos/react-native-gesture-handler": "2.30.1",
     "@react-native-ohos/react-native-reanimated": "4.0.1",
     "@react-native-ohos/react-native-safe-area-context": "5.6.3",
-    "@react-native-ohos/react-native-screens": "npm:@expo-oh/react-native-screens@4.9.1",
+    "@react-native-ohos/react-native-screens": "npm:@expo-oh/react-native-screens@4.9.2",
     "@react-native-ohos/react-native-worklets": "1.0.0"
   },
   "devDependencies": {

@@ -12,10 +12,10 @@
 
 ```bash
 # npm
-npm install --save-exact @react-native-ohos/react-native-screens@npm:@expo-oh/react-native-screens@4.9.1
+npm install --save-exact @react-native-ohos/react-native-screens@npm:@expo-oh/react-native-screens@4.9.2
 
 # pnpm
-pnpm add --save-exact @react-native-ohos/react-native-screens@npm:@expo-oh/react-native-screens@4.9.1
+pnpm add --save-exact @react-native-ohos/react-native-screens@npm:@expo-oh/react-native-screens@4.9.2
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact @react-native-ohos/react-native-screens@npm:@expo-oh/react
 ```json
 {
   "dependencies": {
-    "@react-native-ohos/react-native-screens": "npm:@expo-oh/react-native-screens@4.9.1"
+    "@react-native-ohos/react-native-screens": "npm:@expo-oh/react-native-screens@4.9.2"
   }
 }
 ```
