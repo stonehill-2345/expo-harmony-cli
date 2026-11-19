@@ -24,7 +24,7 @@
     "expo-font": "npm:@expo-oh/expo-font@14.0.14",
     "expo-linking": "npm:@expo-oh/expo-linking@8.0.14",
     "expo-modules-autolinking": "npm:@expo-oh/expo-modules-autolinking@3.0.29",
-    "expo-modules-core": "npm:@expo-oh/expo-modules-core@3.0.32",
+    "expo-modules-core": "npm:@expo-oh/expo-modules-core@3.0.33",
     "expo-splash-screen": "npm:@expo-oh/expo-splash-screen@31.0.15",
     "expo-system-ui": "npm:@expo-oh/expo-system-ui@6.0.11",
     "@react-native-oh/react-native-harmony": "0.82.30"

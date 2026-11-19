@@ -47,7 +47,7 @@
     "@expo/metro-config": "npm:@expo-oh/expo-metro-config@54.0.19",
     "expo-asset": "npm:@expo-oh/expo-asset@12.0.15",
     "expo-modules-autolinking": "npm:@expo-oh/expo-modules-autolinking@3.0.29",
-    "expo-modules-core": "npm:@expo-oh/expo-modules-core@3.0.32",
+    "expo-modules-core": "npm:@expo-oh/expo-modules-core@3.0.33",
     "@react-native-oh/react-native-harmony": "0.82.30",
     "@react-native-ohos/react-native-gesture-handler": "2.30.1",
     "@react-native-ohos/react-native-reanimated": "4.0.1",

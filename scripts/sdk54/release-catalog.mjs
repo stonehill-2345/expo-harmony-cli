@@ -19,7 +19,7 @@ const publishVersions = {
   'expo-image': '3.0.12',
   'expo-linking': '8.0.14',
   'expo-modules-autolinking': '3.0.29',
-  'expo-modules-core': '3.0.32',
+  'expo-modules-core': '3.0.33',
   'expo-router': '6.0.26',
   'expo-splash-screen': '31.0.15',
   'expo-status-bar': '3.0.11',
