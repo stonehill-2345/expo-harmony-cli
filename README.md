@@ -25,6 +25,14 @@
 
 > **TL;DR (English):** expo-harmony-cli brings React Native / Expo apps to HarmonyOS (OpenHarmony) while keeping the standard Expo workflow: `npx expo-harmony-cli create` to scaffold, `npx expo prebuild --platform harmony` to generate the native project, `npx expo run:harmony` to run on device — powered by the official [RNOH](https://github.com/react-native-oh-library/react-native-harmony) bridge. Your code stays 100% standard Expo; iOS and Android are untouched.
 
+## 🎬 效果演示
+
+**从创建到运行，三条命令**（终端实录 × HarmonyOS 模拟器，构建段加速回放）
+
+![expo-harmony-cli 全流程演示：统一入口创建（交互选择 SDK 54）→ prebuild 生成鸿蒙原生工程 → run:harmony 构建运行 → App 交互](https://github.com/stonehill-2345/expo-harmony-cli/raw/main/docs/assets/demo-overview.gif)
+
+> 演示环境：`expo-harmony-cli@1.7.0` 统一创建入口（`create demo-app` 交互选择 SDK 54）· Expo SDK 54 / React 19.1.1 / RN 0.82.1 / RNOH 0.82.30 · DevEco Studio 模拟器（单屏 phone，OpenHarmony 6.x）。iOS / Android 流程与此完全一致，见[项目状态与兼容矩阵](#-项目状态与兼容矩阵)。
+
 ## 🚀 快速开始
 
 ```bash
@@ -140,8 +148,8 @@ Node.js ≥ 20.19.4 · pnpm ≥ 10.19.0（或 npm ≥ 10）· DevEco Studio 5.0+
 
 <table>
 <tr>
-<td align="center"><img src="docs/assets/community-wechat-qr.png" alt="个人微信" width="170"><br>加我微信进群</td>
-<td align="center"><img src="docs/assets/community-qq-qr.png" alt="QQ 交流群" width="170"><br>QQ 交流群</td>
+<td align="center"><img src="https://github.com/stonehill-2345/expo-harmony-cli/raw/main/docs/assets/community-wechat-qr.png" alt="个人微信" width="170"><br>加我微信进群</td>
+<td align="center"><img src="https://github.com/stonehill-2345/expo-harmony-cli/raw/main/docs/assets/community-qq-qr.png" alt="QQ 交流群" width="170"><br>QQ 交流群</td>
 </tr>
 </table>
 
