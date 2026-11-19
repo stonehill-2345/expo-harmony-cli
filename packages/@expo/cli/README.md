@@ -12,10 +12,10 @@ Expo CLI 的 HarmonyOS 适配版本，提供项目内的 `expo` 命令。它与�
 
 ```bash
 # npm
-npm install --save-exact @expo/cli@npm:@expo-oh/expo-cli@54.0.28
+npm install --save-exact @expo/cli@npm:@expo-oh/expo-cli@54.0.29
 
 # pnpm
-pnpm add --save-exact @expo/cli@npm:@expo-oh/expo-cli@54.0.28
+pnpm add --save-exact @expo/cli@npm:@expo-oh/expo-cli@54.0.29
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact @expo/cli@npm:@expo-oh/expo-cli@54.0.28
 ```json
 {
   "dependencies": {
-    "@expo/cli": "npm:@expo-oh/expo-cli@54.0.28"
+    "@expo/cli": "npm:@expo-oh/expo-cli@54.0.29"
   }
 }
 ```

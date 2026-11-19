@@ -10,8 +10,8 @@ export const EXPO_IMAGE_UPSTREAM_SHA256 = 'e17879a4cc6cebdf50efadf3170956b260136
 export const RELEASE_ID = 'sdk54-expo-oh-harmony.1';
 // Fork release versions are independent of the pinned upstream source versions.
 const publishVersions = {
-  '@expo/cli': '54.0.28',
-  '@expo/metro-config': '54.0.18',
+  '@expo/cli': '54.0.29',
+  '@expo/metro-config': '54.0.19',
   expo: '54.0.39',
   'expo-asset': '12.0.15',
   'expo-constants': '18.0.16',
