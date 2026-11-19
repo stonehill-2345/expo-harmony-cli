@@ -12,10 +12,10 @@ Expo Router 的 HarmonyOS 适配版本，保留文件路由和 `expo-router/entr
 
 ```bash
 # npm
-npm install --save-exact expo-router@npm:@expo-oh/expo-router@6.0.25
+npm install --save-exact expo-router@npm:@expo-oh/expo-router@6.0.26
 
 # pnpm
-pnpm add --save-exact expo-router@npm:@expo-oh/expo-router@6.0.25
+pnpm add --save-exact expo-router@npm:@expo-oh/expo-router@6.0.26
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-router@npm:@expo-oh/expo-router@6.0.25
 ```json
 {
   "dependencies": {
-    "expo-router": "npm:@expo-oh/expo-router@6.0.25"
+    "expo-router": "npm:@expo-oh/expo-router@6.0.26"
   }
 }
 ```

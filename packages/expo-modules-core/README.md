@@ -14,10 +14,10 @@ Expo Modules 在 HarmonyOS 上的原生基础设施，连接 RNOH、JSI、原生
 
 ```bash
 # npm
-npm install --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.31
+npm install --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.32
 
 # pnpm
-pnpm add --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.31
+pnpm add --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.32
 ```
 
 保留原依赖键：
@@ -25,7 +25,7 @@ pnpm add --save-exact expo-modules-core@npm:@expo-oh/expo-modules-core@3.0.31
 ```json
 {
   "dependencies": {
-    "expo-modules-core": "npm:@expo-oh/expo-modules-core@3.0.31"
+    "expo-modules-core": "npm:@expo-oh/expo-modules-core@3.0.32"
   }
 }
 ```

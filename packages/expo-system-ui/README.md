@@ -12,10 +12,10 @@ Expo SystemUI 的 HarmonyOS 适配版本，用于设置应用主窗口背景颜�
 
 ```bash
 # npm
-npm install --save-exact expo-system-ui@npm:@expo-oh/expo-system-ui@6.0.10
+npm install --save-exact expo-system-ui@npm:@expo-oh/expo-system-ui@6.0.11
 
 # pnpm
-pnpm add --save-exact expo-system-ui@npm:@expo-oh/expo-system-ui@6.0.10
+pnpm add --save-exact expo-system-ui@npm:@expo-oh/expo-system-ui@6.0.11
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-system-ui@npm:@expo-oh/expo-system-ui@6.0.10
 ```json
 {
   "dependencies": {
-    "expo-system-ui": "npm:@expo-oh/expo-system-ui@6.0.10"
+    "expo-system-ui": "npm:@expo-oh/expo-system-ui@6.0.11"
   }
 }
 ```

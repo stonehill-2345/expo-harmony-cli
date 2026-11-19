@@ -12,10 +12,10 @@ Expo Font 的 HarmonyOS 适配版本，通过 RNOH 字体注册接口加载字�
 
 ```bash
 # npm
-npm install --save-exact expo-font@npm:@expo-oh/expo-font@14.0.13
+npm install --save-exact expo-font@npm:@expo-oh/expo-font@14.0.14
 
 # pnpm
-pnpm add --save-exact expo-font@npm:@expo-oh/expo-font@14.0.13
+pnpm add --save-exact expo-font@npm:@expo-oh/expo-font@14.0.14
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-font@npm:@expo-oh/expo-font@14.0.13
 ```json
 {
   "dependencies": {
-    "expo-font": "npm:@expo-oh/expo-font@14.0.13"
+    "expo-font": "npm:@expo-oh/expo-font@14.0.14"
   }
 }
 ```

@@ -12,10 +12,10 @@ Expo Constants 的 HarmonyOS 适配版本，提供嵌入应用配置以及设备
 
 ```bash
 # npm
-npm install --save-exact expo-constants@npm:@expo-oh/expo-constants@18.0.15
+npm install --save-exact expo-constants@npm:@expo-oh/expo-constants@18.0.16
 
 # pnpm
-pnpm add --save-exact expo-constants@npm:@expo-oh/expo-constants@18.0.15
+pnpm add --save-exact expo-constants@npm:@expo-oh/expo-constants@18.0.16
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-constants@npm:@expo-oh/expo-constants@18.0.15
 ```json
 {
   "dependencies": {
-    "expo-constants": "npm:@expo-oh/expo-constants@18.0.15"
+    "expo-constants": "npm:@expo-oh/expo-constants@18.0.16"
   }
 }
 ```

@@ -12,10 +12,10 @@ Expo Modules 自动链接工具的 HarmonyOS 适配版本，用于模块发现�
 
 ```bash
 # npm
-npm install --save-exact expo-modules-autolinking@npm:@expo-oh/expo-modules-autolinking@3.0.28
+npm install --save-exact expo-modules-autolinking@npm:@expo-oh/expo-modules-autolinking@3.0.29
 
 # pnpm
-pnpm add --save-exact expo-modules-autolinking@npm:@expo-oh/expo-modules-autolinking@3.0.28
+pnpm add --save-exact expo-modules-autolinking@npm:@expo-oh/expo-modules-autolinking@3.0.29
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact expo-modules-autolinking@npm:@expo-oh/expo-modules-autolin
 ```json
 {
   "dependencies": {
-    "expo-modules-autolinking": "npm:@expo-oh/expo-modules-autolinking@3.0.28"
+    "expo-modules-autolinking": "npm:@expo-oh/expo-modules-autolinking@3.0.29"
   }
 }
 ```

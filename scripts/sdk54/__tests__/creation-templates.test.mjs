@@ -61,7 +61,7 @@ test('real template packing is repeatable and preserves app bytes without native
       fs.mkdirSync(unpacked);
       await extract({ file: path.join(outputDir, item.file), cwd: unpacked });
       const manifest = JSON.parse(fs.readFileSync(path.join(unpacked, 'package/package.json')));
-      assert.equal(manifest.dependencies.expo, 'npm:@expo-oh/expo@54.0.38');
+      assert.equal(manifest.dependencies.expo, 'npm:@expo-oh/expo@54.0.39');
       assert.equal(manifest.private, false);
       const app = item.template === 'default' ? 'app/(tabs)/index.tsx' : 'App.tsx';
       assert.deepEqual(fs.readFileSync(path.join(unpacked, 'package', app)), fs.readFileSync(path.join('templates', `expo-template-${item.template}`, app)));

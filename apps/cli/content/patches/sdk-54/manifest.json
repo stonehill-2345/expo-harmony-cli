@@ -328,7 +328,7 @@
         "@react-native-oh/react-native-harmony"
       ],
       "sourceDependencies": {
-        "expo": "npm:@expo-oh/expo@54.0.38",
+        "expo": "npm:@expo-oh/expo@54.0.39",
         "react": "19.1.1",
         "react-native": "0.82.1"
       }
@@ -387,7 +387,7 @@
         "@react-native-ohos/react-native-worklets"
       ],
       "sourceDependencies": {
-        "expo": "npm:@expo-oh/expo@54.0.38",
+        "expo": "npm:@expo-oh/expo@54.0.39",
         "react": "19.1.1",
         "react-native": "0.82.1"
       }
