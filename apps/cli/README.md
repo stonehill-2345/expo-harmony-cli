@@ -29,11 +29,11 @@
 
 **从创建到运行，三条命令**（终端实录 × HarmonyOS 模拟器，构建段加速回放）
 
-![expo-harmony-cli 全流程演示：创建 Expo 项目 → prebuild 生成鸿蒙原生工程 → run:harmony 在 HarmonyOS 模拟器运行](docs/assets/demo-overview.gif)
+![expo-harmony-cli 全流程演示：创建 Expo 项目 → prebuild 生成鸿蒙原生工程 → run:harmony 在 HarmonyOS 模拟器运行](../../docs/assets/demo-overview.gif)
 
 **Fast Refresh：改一行代码，秒级生效**
 
-![鸿蒙端 Metro Fast Refresh 演示：修改 React Native 代码后秒级热更新生效](docs/assets/demo-fast-refresh.gif)
+![鸿蒙端 Metro Fast Refresh 演示：修改 React Native 代码后秒级热更新生效](../../docs/assets/demo-fast-refresh.gif)
 
 ## 🚀 快速开始
 
@@ -108,7 +108,7 @@ npx expo start
 | 热更新 | Fast Refresh | Metro reload |
 | 适用场景 | 新项目 | 存量项目维护 |
 
-SDK 52 完整流程见 **[SDK 52 使用指南](docs/sdk52-guide.md)**，两条版本线并存互不影响。
+SDK 52 完整流程见 **[SDK 52 使用指南](../../docs/sdk52-guide.md)**，两条版本线并存互不影响。
 
 ## ❓ 常见问题
 
@@ -150,35 +150,23 @@ Node.js ≥ 20.19.4 · pnpm ≥ 10.19.0（或 npm ≥ 10）· DevEco Studio 5.0+
 
 <table>
 <tr>
-<td align="center"><img src="docs/assets/community-wechat-qr.png" alt="个人微信" width="170"><br>加我微信进群</td>
-<td align="center"><img src="docs/assets/community-qq-qr.png" alt="QQ 交流群" width="170"><br>QQ 交流群</td>
+<td align="center"><img src="../../docs/assets/community-wechat-qr.png" alt="个人微信" width="170"><br>加我微信进群</td>
+<td align="center"><img src="../../docs/assets/community-qq-qr.png" alt="QQ 交流群" width="170"><br>QQ 交流群</td>
 </tr>
 </table>
 
+- 仓库镜像：[GitHub](https://github.com/stonehill-2345/expo-harmony-cli) · [Gitee](https://gitee.com/stonehill-2345/expo-harmony-cli) · [AtomGit](https://atomgit.com/stonehill-2345/expo-harmony-cli)
 - 使用问题或功能建议：[GitHub Issues](https://github.com/stonehill-2345/expo-harmony-cli/issues)
 - 参与贡献：[贡献指南](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/CONTRIBUTING.md)
 - 觉得有用就点个 ⭐ Star，让更多做鸿蒙 RN 开发的朋友找到它
 
 ## 📚 文档
 
-- [SDK 52 使用指南](docs/sdk52-guide.md) —— Legacy patch 工作流
-- [CLI 使用指南](docs/guide.md) —— 命令详解与排障
-- [HarmonyOS 快速开始](docs/harmony/getting-started.md) —— 环境搭建与逐包适配
-- [配置插件](docs/harmony-config-plugins.md) · [原生工程生成](docs/harmony-generation.md) · [模块开发](docs/harmony-module-authoring.md)
+- [SDK 54 使用指南](../../docs/sdk54-guide.md) —— 主线：命令、参数与完整工作流
+- [SDK 52 使用指南](../../docs/sdk52-guide.md) —— Legacy patch 工作流、命令详解与排障
+- [HarmonyOS 快速开始](../../docs/harmony/getting-started.md) —— 环境搭建与逐包适配
+- [配置插件](../../docs/harmony-config-plugins.md) · [原生工程生成](../../docs/harmony-generation.md) · [模块开发](../../docs/harmony-module-authoring.md)
 - [更新日志](CHANGELOG.md) · [贡献指南](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/CONTRIBUTING.md) · [安全策略](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/SECURITY.md) · [行为准则](https://github.com/stonehill-2345/expo-harmony-cli/blob/main/CODE_OF_CONDUCT.md) · [第三方声明](NOTICE.md)
-
-### 文档分工
-
-为避免不同入口重复或互相矛盾，请按用途阅读和维护：
-
-| 文档 | 内容 |
-| --- | --- |
-| `README.md` | 项目定位、主流程、版本选择和关键决策信息；首页唯一维护源 |
-| `docs/guide.md` | CLI 命令、参数、环境检查、排障和行为边界 |
-| `docs/sdk52-guide.md` | SDK 52 Legacy 专属流程 |
-| `apps/cli/README.md` | npm 包页面副本，由发布前脚本从根 README 自动生成，请勿直接编辑 |
-
-仓库镜像：[GitHub](https://github.com/stonehill-2345/expo-harmony-cli) · [Gitee](https://gitee.com/stonehill-2345/expo-harmony-cli) · [AtomGit](https://atomgit.com/stonehill-2345/expo-harmony-cli)
 
 ## 🧭 To be continued
 

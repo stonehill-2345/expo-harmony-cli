@@ -20,7 +20,7 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "prepack": "pnpm run clean && pnpm run build && node scripts/sync-readme.mjs",
+    "prepack": "pnpm run clean && pnpm run build",
     "clean": "rm -rf dist",
     "type-check": "tsc --noEmit -p tsconfig.json",
     "test": "vitest run",
@@ -34,7 +34,6 @@
     "templates",
     "CHANGELOG.md",
     "NOTICE.md",
-    "docs/guide.md",
     "assets"
   ],
   "engines": {

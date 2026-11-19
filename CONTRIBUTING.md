@@ -27,9 +27,8 @@ pnpm check
 | 文件 | 职责 | 维护规则 |
 | --- | --- | --- |
 | `README.md` | 项目首页、产品定位、主流程、版本选择和关键决策信息 | 唯一维护源；面向首次了解项目的用户 |
-| `apps/cli/README.md` | npm 包页面展示内容 | 由 `apps/cli/scripts/sync-readme.mjs` 在 `prepack` 阶段从根 README 生成，禁止手工编辑 |
-| `apps/cli/docs/guide.md` | CLI 命令、参数、环境检查、排障和行为边界 | 面向已经安装或准备使用 CLI 的开发者 |
-| `docs/sdk52-guide.md` | Expo SDK 52 Legacy 工作流 | 只维护 SDK 52 专属流程，不重复首页通用说明 |
+| `apps/cli/README.md` | SDK 52 包文档（npm 包页面） | 独立维护，不再从根 README 自动覆盖（约定见 AGENTS.md） |
+| `docs/sdk52-guide.md` | Expo SDK 52 Legacy 工作流、命令详解与排障 | 只维护 SDK 52 专属流程，不重复首页通用说明 |
 
 新增或修改文档时，先判断内容所属职责，再修改对应唯一维护源。修改根 README 后，使用 `pnpm --dir apps/cli pack` 或执行同步脚本检查 npm README 是否正确生成；不要直接修改生成文件来解决内容问题。
 
@@ -56,8 +55,7 @@ expo-harmony-cli/
 │   │   ├── __tests__/          # 源码测试（*.test.ts）+ 打包产物测试（*.pack.test.ts）
 │   │   ├── templates/          # 鸿蒙原生工程模板
 │   │   ├── content/            # 分发内容：patches/sdk-54（补丁、manifest、许可证）等
-│   │   ├── assets/             # 截图等静态资源
-│   │   └── docs/               # 使用指南（guide.md）
+│   │   └── assets/             # 截图等静态资源
 │   └── example/                # 预留：Router + Stack + Linking + SplashScreen 示例应用
 ├── packages/                   # 14 个 Expo SDK54 Harmony 源码包，禁止独立发布
 │   ├── expo/ · expo-router/ · expo-modules-core/ · expo-asset/ · expo-constants/ …
