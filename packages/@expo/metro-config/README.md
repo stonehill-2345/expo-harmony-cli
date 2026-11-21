@@ -12,10 +12,10 @@ Expo Metro 配置的 HarmonyOS 适配版本，负责平台解析、RNOH 初始�
 
 ```bash
 # npm
-npm install --save-exact @expo/metro-config@npm:@expo-oh/expo-metro-config@54.0.19
+npm install --save-exact @expo/metro-config@npm:@expo-oh/expo-metro-config@54.0.20
 
 # pnpm
-pnpm add --save-exact @expo/metro-config@npm:@expo-oh/expo-metro-config@54.0.19
+pnpm add --save-exact @expo/metro-config@npm:@expo-oh/expo-metro-config@54.0.20
 ```
 
 保留原依赖键：
@@ -23,7 +23,7 @@ pnpm add --save-exact @expo/metro-config@npm:@expo-oh/expo-metro-config@54.0.19
 ```json
 {
   "dependencies": {
-    "@expo/metro-config": "npm:@expo-oh/expo-metro-config@54.0.19"
+    "@expo/metro-config": "npm:@expo-oh/expo-metro-config@54.0.20"
   }
 }
 ```

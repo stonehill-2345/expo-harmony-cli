@@ -55,9 +55,9 @@ it('keeps install and fix specs scoped and rejects unsupported explicit versions
     fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: expo.publishName, version: expo.publishVersion }));
     fs.writeFileSync(path.join(root, 'harmony-release.json'), JSON.stringify(manifest));
     const release = getHarmonyRelease(dir)!;
-    const expected = 'expo-font@npm:@expo-oh/expo-font@14.0.13';
+    const expected = 'expo-font@npm:@expo-oh/expo-font@14.0.14';
     expect(versionHarmonyPackage(release, 'expo-font')).toBe(expected);
-    expect(versionHarmonyPackage(release, 'expo-font@14.0.13')).toBe(expected);
+    expect(versionHarmonyPackage(release, 'expo-font@14.0.14')).toBe(expected);
     expect(versionHarmonyPackage(release, expected)).toBe(expected);
     expect(harmonyInstallSpec(dir, 'expo-font', '14.0.12')).toBe(expected);
     expect(versionHarmonyPackage(release, 'expo-font@14.0.12')).toBe(expected);

@@ -7,6 +7,17 @@ export interface CommandInvocation {
   shell: boolean;
 }
 
+/** 从命令失败错误中提取子进程 stdout/stderr 作为诊断详情；无输出时退回错误消息本身。*/
+export function getCommandErrorDetail(error: unknown): string {
+  if (!(error instanceof Error)) return String(error);
+  const commandError = error as Error & { stdout?: string | Buffer; stderr?: string | Buffer };
+  const output = [commandError.stderr, commandError.stdout]
+    .map((value) => value?.toString().trim())
+    .filter((value): value is string => Boolean(value))
+    .join('\n');
+  return output || error.message;
+}
+
 /** Windows 的 Node CLI 在 PATH 中以 .cmd 包装器提供，spawn/execFile 不经 shell 时需显式使用它。*/
 export function resolveCommand(file: string, platform: NodeJS.Platform = process.platform): string {
   if (

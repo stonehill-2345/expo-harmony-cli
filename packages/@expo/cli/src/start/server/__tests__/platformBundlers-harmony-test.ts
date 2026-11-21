@@ -25,13 +25,13 @@ describe(getPlatformBundlers, () => {
   afterEach(() => fs.rmSync(root, { recursive: true, force: true }));
 
   it('adds Harmony only for a complete installed release identity', () => {
-    write('node_modules/expo/package.json', { name: '@expo-oh/expo', version: '54.0.38' });
+    write('node_modules/expo/package.json', { name: '@expo-oh/expo', version: '54.0.39' });
     write('node_modules/expo/harmony-release.json', {
       schemaVersion: 1,
       release: 'sdk54-expo-oh-harmony.1',
       packages: [{
-        installName: 'expo', publishName: '@expo-oh/expo', publishVersion: '54.0.38',
-        upstreamVersion: '54.0.37', installSpec: 'npm:@expo-oh/expo@54.0.38',
+        installName: 'expo', publishName: '@expo-oh/expo', publishVersion: '54.0.39',
+        upstreamVersion: '54.0.37', installSpec: 'npm:@expo-oh/expo@54.0.39',
       }],
       catalog: { external: { '@react-native-oh/react-native-harmony': '0.82.30' } },
     });

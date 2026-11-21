@@ -9,12 +9,12 @@ import { detectSdkVersion } from '../../src/version-matrix';
 it('installs all selected release packages via aliases without patch-package', () => {
   const m = loadReleaseManifest();
   const pkg = buildReleasePackageJson({ name: 'test' }, 'default', m);
-  expect(pkg.dependencies.expo).toBe('npm:@expo-oh/expo@54.0.38');
+  expect(pkg.dependencies.expo).toBe('npm:@expo-oh/expo@54.0.39');
   expect(pkg.dependencies['expo-image']).toBe('npm:@expo-oh/expo-image@3.0.12');
-  expect(pkg.dependencies['@react-native-ohos/react-native-screens']).toBe('npm:@expo-oh/react-native-screens@4.9.1');
+  expect(pkg.dependencies['@react-native-ohos/react-native-screens']).toBe('npm:@expo-oh/react-native-screens@4.9.2');
   expect(pkg.devDependencies['patch-package']).toBeUndefined();
-  expect(pkg.overrides.expo).toBe('npm:@expo-oh/expo@54.0.38');
-  expect(pkg.pnpm.overrides.expo).toBe('npm:@expo-oh/expo@54.0.38');
+  expect(pkg.overrides.expo).toBe('npm:@expo-oh/expo@54.0.39');
+  expect(pkg.pnpm.overrides.expo).toBe('npm:@expo-oh/expo@54.0.39');
   expect(pkg.pnpm.overrides['expo-image']).toBe('npm:@expo-oh/expo-image@3.0.12');
   expect(pkg.pnpm.overrides['@expo/metro-runtime']).toBe('6.1.2');
 });

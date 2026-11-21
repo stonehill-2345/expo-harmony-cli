@@ -12,8 +12,8 @@ const sourceInventory = JSON.parse(fs.readFileSync(new URL('./creation-template-
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 
 export const CREATION_TEMPLATES = Object.freeze({
-  default: Object.freeze({ name: '@expo-oh/expo-template-default', version: '54.0.64', upstreamVersion: '54.0.63' }),
-  'blank-typescript': Object.freeze({ name: '@expo-oh/expo-template-blank-typescript', version: '54.0.48', upstreamVersion: '54.0.47' }),
+  default: Object.freeze({ name: '@expo-oh/expo-template-default', version: '54.0.65', upstreamVersion: '54.0.63' }),
+  'blank-typescript': Object.freeze({ name: '@expo-oh/expo-template-blank-typescript', version: '54.0.49', upstreamVersion: '54.0.47' }),
 });
 
 export function createTemplateManifest(source, template) {

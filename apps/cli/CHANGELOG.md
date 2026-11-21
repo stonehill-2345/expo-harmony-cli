@@ -1,5 +1,15 @@
 # expo-harmony-cli
 
+## 1.7.1 - 2026-11-21
+
+### Patch Changes
+
+- 修复上游 `@expo-oh` 模板升级（54.0.64/54.0.65）后 SDK54 `create` 因 release manifest 钉点漂移而失败的问题：manifest 由 catalog 重新生成，组合对齐 `expo@54.0.39` / `expo-modules-core@3.0.33` / `react-native-screens@4.9.2`；新增测试锁死 runtime manifest 与 catalog 逐字段一致，杜绝同类漂移再次无声上线。
+- `create` 前预检目标目录：已存在时直接给出中文指引（更换项目名或移动目录），不再由内层命令静默退出且无任何报错输出。
+- SDK54 创建与依赖安装子进程失败时透出 stderr/stdout 诊断详情，与 SDK52 路径行为对齐。
+- 依赖组合升级：`@expo-oh/expo-metro-config@54.0.20`（修复 `isHarmonyProject` 身份表与 `expo@54.0.39` 互斥导致的运行时误拒）、`@expo-oh/expo-cli@54.0.30`、`@expo-oh/create-expo@3.5.13`、模板 54.0.65；两包 README 安装示例与 metro-config build 产物同步。
+- 兼容性说明：1.7.0 创建的旧项目（`expo@54.0.38` 组合）在 `install --check` / `doctor` 下会提示版本不一致，`--fix` 将整组迁移至新组合；请勿只替换单一依赖而保留旧 overrides。
+
 ## 1.7.0 - 2026-11-15
 
 ### Minor Changes

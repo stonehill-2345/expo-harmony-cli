@@ -8,9 +8,9 @@ const supportedRelease = {
   expo: {
     installName: 'expo',
     publishName: '@expo-oh/expo',
-    publishVersion: '54.0.38',
+    publishVersion: '54.0.39',
     upstreamVersion: '54.0.37',
-    installSpec: 'npm:@expo-oh/expo@54.0.38',
+    installSpec: 'npm:@expo-oh/expo@54.0.39',
   },
   harmonyVersion: '0.82.30',
 } as const;

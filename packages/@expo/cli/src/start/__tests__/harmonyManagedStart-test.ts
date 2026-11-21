@@ -22,9 +22,9 @@ describe(enableHarmonyMetroForManagedProject, () => {
       {
         installName: 'expo',
         publishName: '@expo-oh/expo',
-        publishVersion: '54.0.38',
+        publishVersion: '54.0.39',
         upstreamVersion: '54.0.37',
-        installSpec: 'npm:@expo-oh/expo@54.0.38',
+        installSpec: 'npm:@expo-oh/expo@54.0.39',
       },
     ],
     catalog: { external: { [rnoh]: '0.82.30' } },
@@ -38,7 +38,7 @@ describe(enableHarmonyMetroForManagedProject, () => {
     write('package.json', { name: 'test-app' });
     write('node_modules/expo/package.json', {
       name: '@expo-oh/expo',
-      version: '54.0.38',
+      version: '54.0.39',
     });
     write('node_modules/expo/harmony-release.json', release);
     write(`node_modules/${rnoh}/package.json`, {
@@ -77,7 +77,7 @@ describe(enableHarmonyMetroForManagedProject, () => {
 
   it('does not authorize dependency declarations without installed packages', () => {
     write('package.json', {
-      dependencies: { expo: 'npm:@expo-oh/expo@54.0.38', [rnoh]: '0.82.30' },
+      dependencies: { expo: 'npm:@expo-oh/expo@54.0.39', [rnoh]: '0.82.30' },
     });
     expect(enableHarmonyMetroForManagedProject(root)).toBe(false);
   });

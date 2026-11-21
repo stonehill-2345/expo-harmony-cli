@@ -8,8 +8,9 @@ vi.mock('@inquirer/prompts', () => ({
   select: vi.fn(() => Promise.resolve('sdk-52')),
 }));
 
-// mock exec（避免真跑 create-expo-app）
-vi.mock('../src/utils/exec', () => ({
+// mock exec（避免真跑 create-expo-app；其余导出保留真实实现）
+vi.mock('../src/utils/exec', async (importOriginal) => ({
+  ...await importOriginal<typeof import('../src/utils/exec')>(),
   runFileQuiet: vi.fn((file: string, args: string[], opts: { cwd?: string }) => {
     // 模拟 create-expo-app 产物：在 cwd 下建 <projectName>/ 含 app.json + package.json
     if (file === 'npx' && args[0] === 'create-expo-app') {

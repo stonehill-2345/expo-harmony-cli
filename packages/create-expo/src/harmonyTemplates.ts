@@ -1,5 +1,5 @@
-export const HARMONY_DEFAULT_TEMPLATE = '@expo-oh/expo-template-default@54.0.64';
-export const HARMONY_BLANK_TYPESCRIPT_TEMPLATE = '@expo-oh/expo-template-blank-typescript@54.0.48';
+export const HARMONY_DEFAULT_TEMPLATE = '@expo-oh/expo-template-default@54.0.65';
+export const HARMONY_BLANK_TYPESCRIPT_TEMPLATE = '@expo-oh/expo-template-blank-typescript@54.0.49';
 
 export function resolveHarmonyTemplate(template?: string | null): string {
   switch (template) {

@@ -8,7 +8,7 @@ import packlist from 'npm-packlist';
 import { create as createTar } from 'tar';
 
 const NAME = '@expo-oh/create-expo';
-const VERSION = '3.5.12';
+const VERSION = '3.5.13';
 const FIXED_MTIME = new Date('2000-01-01T00:00:00.000Z');
 const hash = (bytes, algorithm, encoding) => crypto.createHash(algorithm).update(bytes).digest(encoding);
 
@@ -38,7 +38,7 @@ export function validateCreatorBuild({ packageDir }) {
 }
 
 function candidateReadme() {
-  return `# @expo-oh/create-expo\n\nSDK54 Expo Harmony creation candidate, based on Expo create-expo 3.5.11 at 5b42e3d21e0ac5e086752361ca8a5cb4de53bec1.\n\n\`npx @expo-oh/create-expo@3.5.12 my-app --yes\`\n\nThe default template is @expo-oh/expo-template-default@54.0.64. Use \`--template blank-typescript\` for @expo-oh/expo-template-blank-typescript@54.0.48. Explicit template packages, repositories and local .tgz files retain upstream behavior. \`--no-install\` skips dependency installation. npm, pnpm, yarn and bun are selected through npm_config_user_agent; there are no --npm or --pnpm switches. Installation and package-manager configuration failures return a nonzero exit code.\n\nThis tarball includes all NCC runtime chunks and third-party license notices; installation needs no workspace, build tooling, or lifecycle scripts. Creation does not establish Harmony build, runtime, device, HAR or ABI support.\n\nThe upstream package manifest declares BSD-3-Clause; LICENSE provides that text with the upstream Expo copyright notice. The pinned repository root instead contains an MIT license, preserved verbatim in UPSTREAM_LICENSE. This candidate records both source notices without asserting they are equivalent. Bundled dependency notices are in build/THIRD_PARTY_LICENSES.txt.\n`;
+  return `# @expo-oh/create-expo\n\nSDK54 Expo Harmony creation candidate, based on Expo create-expo 3.5.11 at 5b42e3d21e0ac5e086752361ca8a5cb4de53bec1.\n\n\`npx @expo-oh/create-expo@3.5.13 my-app --yes\`\n\nThe default template is @expo-oh/expo-template-default@54.0.65. Use \`--template blank-typescript\` for @expo-oh/expo-template-blank-typescript@54.0.49. Explicit template packages, repositories and local .tgz files retain upstream behavior. \`--no-install\` skips dependency installation. npm, pnpm, yarn and bun are selected through npm_config_user_agent; there are no --npm or --pnpm switches. Installation and package-manager configuration failures return a nonzero exit code.\n\nThis tarball includes all NCC runtime chunks and third-party license notices; installation needs no workspace, build tooling, or lifecycle scripts. Creation does not establish Harmony build, runtime, device, HAR or ABI support.\n\nThe upstream package manifest declares BSD-3-Clause; LICENSE provides that text with the upstream Expo copyright notice. The pinned repository root instead contains an MIT license, preserved verbatim in UPSTREAM_LICENSE. This candidate records both source notices without asserting they are equivalent. Bundled dependency notices are in build/THIRD_PARTY_LICENSES.txt.\n`;
 }
 
 export async function buildAndPackCreator({ rootDir = process.cwd(), outputDir }) {

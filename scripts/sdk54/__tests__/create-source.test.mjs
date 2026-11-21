@@ -98,10 +98,10 @@ test('--no-install skips installation but still prepares project', async () => {
 test('default and blank-typescript aliases resolve to exact Harmony candidate templates', () => {
   const { resolveHarmonyTemplate } = loadSource('src/harmonyTemplates.ts');
   for (const input of [undefined, null, 'default', 'expo-template-default']) {
-    assert.equal(resolveHarmonyTemplate(input), '@expo-oh/expo-template-default@54.0.64');
+    assert.equal(resolveHarmonyTemplate(input), '@expo-oh/expo-template-default@54.0.65');
   }
   for (const input of ['blank-typescript', 'expo-template-blank-typescript']) {
-    assert.equal(resolveHarmonyTemplate(input), '@expo-oh/expo-template-blank-typescript@54.0.48');
+    assert.equal(resolveHarmonyTemplate(input), '@expo-oh/expo-template-blank-typescript@54.0.49');
   }
   for (const input of ['file:./template.tgz', '/tmp/template.tgz', './template.tgz', '@custom/template@1.2.3', 'blank@53']) {
     assert.equal(resolveHarmonyTemplate(input), input);
@@ -110,8 +110,8 @@ test('default and blank-typescript aliases resolve to exact Harmony candidate te
 
 test('template selection reaches extraction using pinned candidates or unchanged local archive', async () => {
   for (const [input, expected] of [
-    [undefined, '@expo-oh/expo-template-default@54.0.64'],
-    [true, '@expo-oh/expo-template-blank-typescript@54.0.48'],
+    [undefined, '@expo-oh/expo-template-default@54.0.65'],
+    [true, '@expo-oh/expo-template-blank-typescript@54.0.49'],
     ['file:./local.tgz', 'file:./local.tgz'],
   ]) {
     const project = fs.mkdtempSync(path.join(os.tmpdir(), 'sdk54-create-template-'));

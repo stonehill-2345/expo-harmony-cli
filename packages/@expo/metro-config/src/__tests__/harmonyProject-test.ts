@@ -16,7 +16,7 @@ describe('installed Harmony platform detection', () => {
     fs.writeFileSync(target, JSON.stringify(value));
   };
   const install = (name = '@expo-oh/expo') => {
-    write('node_modules/expo/package.json', { name, version: '54.0.38' });
+    write('node_modules/expo/package.json', { name, version: '54.0.39' });
     write('node_modules/expo/harmony-release.json', {
       schemaVersion: 1,
       release: 'sdk54-expo-oh-harmony.1',
@@ -24,9 +24,9 @@ describe('installed Harmony platform detection', () => {
         {
           installName: 'expo',
           publishName: '@expo-oh/expo',
-          publishVersion: '54.0.38',
+          publishVersion: '54.0.39',
           upstreamVersion: '54.0.37',
-          installSpec: 'npm:@expo-oh/expo@54.0.38',
+          installSpec: 'npm:@expo-oh/expo@54.0.39',
         },
       ],
       catalog: {

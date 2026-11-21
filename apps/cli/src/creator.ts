@@ -1,7 +1,7 @@
 import * as fs from 'fs';
 import * as path from 'path';
 import { select } from '@inquirer/prompts';
-import { runFileQuiet } from './utils/exec';
+import { runFileQuiet, getCommandErrorDetail } from './utils/exec';
 import { log } from './utils/log';
 import { resolvePm } from './lib/pkg-manager';
 import { injectHarmonyBaseline } from './injector';
@@ -30,16 +30,6 @@ function removeOptionalDefaultTemplateDependencies(targetDir: string): void {
 
 export interface CreateOptions {
   cwd?: string;
-}
-
-function getCommandErrorDetail(error: unknown): string {
-  if (!(error instanceof Error)) return String(error);
-  const commandError = error as Error & { stdout?: string | Buffer; stderr?: string | Buffer };
-  const output = [commandError.stderr, commandError.stdout]
-    .map((value) => value?.toString().trim())
-    .filter((value): value is string => Boolean(value))
-    .join('\n');
-  return output || error.message;
 }
 
 async function runStep<T>(message: string, action: () => T | Promise<T>): Promise<T> {
