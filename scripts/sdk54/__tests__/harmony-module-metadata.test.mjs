@@ -47,11 +47,11 @@ test('unknown fixed navigation version fails unless explicitly overridden', asyn
   assert.equal((await resolve(explicit)).kind, 'rnoh-package');
 });
 test('frozen screens alias uses its own exact release version', async t => {
-  const accepted = fixture(t, { name: '@expo-oh/react-native-screens', version: '4.9.1' }, undefined, ['harmony/screens.har']);
+  const accepted = fixture(t, { name: '@expo-oh/react-native-screens', version: '4.9.2' }, undefined, ['harmony/screens.har']);
   assert.ok(await discover(accepted));
-  for (const version of ['4.9.0', '4.9.2']) {
+  for (const version of ['4.9.0', '4.9.1']) {
     const unknown = fixture(t, { name: '@expo-oh/react-native-screens', version }, undefined, ['harmony/screens.har']);
-    await assert.rejects(() => discover(unknown), /supported 4\.9\.1/);
+    await assert.rejects(() => discover(unknown), /supported 4\.9\.2/);
   }
 });
 test('HAR basename ambiguity and dangling or repeated mappings fail', async t => {

@@ -63,8 +63,12 @@ function execute(file, args, options) {
 
 function runtimeProbeStatus(result) {
   const output = `${result.stdout}\n${result.stderr}`.replace(ANSI_PATTERN, '');
-  if (/[✓✔]\s*runtime probes\b/i.test(output)) return true;
-  if (/[✗×]\s*runtime probes\b/i.test(output) || /runtime probes[^\n]*(?:fail|missing|wrong|未通过|失败)/i.test(output)) return false;
+  // 1.5.0 时代断言只认 legacy patch 模式的 "runtime probes" 文案；
+  // 1.6.0+ release 模式 doctor 的等价探针是 "SDK54 npm release"（同一意图：安装身份核验）。
+  // 注意：doctor 的标签与 detail 之间无分隔符（"SDK54 npm releasesdk54-expo-oh-harmony.1"），不能加 \b。
+  if (/[✓✔]\s*(?:runtime probes\b|SDK54 npm release)/i.test(output)) return true;
+  if (/[✗×]\s*(?:runtime probes\b|SDK54 npm release)/i.test(output)
+    || /(?:runtime probes|SDK54 npm release)[^\n]*(?:fail|missing|wrong|未通过|失败)/i.test(output)) return false;
   return null;
 }
 

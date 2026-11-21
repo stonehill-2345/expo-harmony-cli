@@ -258,8 +258,8 @@
       "installName": "expo-modules-autolinking",
       "upstreamVersion": "3.0.27",
       "publishName": "@expo-oh/expo-modules-autolinking",
-      "publishVersion": "3.0.29",
-      "installSpec": "npm:@expo-oh/expo-modules-autolinking@3.0.29",
+      "publishVersion": "3.0.30",
+      "installSpec": "npm:@expo-oh/expo-modules-autolinking@3.0.30",
       "templates": [
         "blank-typescript",
         "default"

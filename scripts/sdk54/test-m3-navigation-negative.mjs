@@ -36,7 +36,7 @@ const manifestPath = request.resolve('@react-native-ohos/react-native-screens/pa
 const original = fs.readFileSync(manifestPath);
 const manifest = JSON.parse(original);
 assert.equal(manifest.name, '@expo-oh/react-native-screens');
-assert.equal(manifest.version, '4.9.1');
+assert.equal(manifest.version, '4.9.2');
 const cli = request.resolve('expo/bin/cli');
 let execution;
 try {
@@ -47,7 +47,7 @@ try {
   });
   assert.equal(execution.error, undefined);
   assert.notEqual(execution.status, 0);
-  assert.match(execution.stdout + execution.stderr, /installed 99\.0\.0, supported 4\.9\.1/);
+  assert.match(execution.stdout + execution.stderr, /installed 99\.0\.0, supported 4\.9\.2/);
   assert.deepEqual(tree(nativeRoot), native);
 } finally {
   fs.writeFileSync(manifestPath, original);

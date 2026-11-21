@@ -148,6 +148,18 @@ describe('version-locked RNOH navigation compatibility catalog', () => {
       'screens-content-wrapper-v1',
     ],
     [
+      // @expo-oh 发布名走 publishVersion 特判（非表内 upstreamVersion），必须与 catalog publishVersions 同步。
+      '@expo-oh/react-native-screens',
+      '4.9.2',
+      'screens.har',
+      'ScreensPackage',
+      'RNOHScreensPackage',
+      'rnoh_screens',
+      'default',
+      'screens-content-wrapper-v1',
+      '@react-native-ohos/react-native-screens',
+    ],
+    [
       '@react-native-ohos/react-native-safe-area-context',
       '5.6.3',
       'safe_area.har',
@@ -189,7 +201,7 @@ describe('version-locked RNOH navigation compatibility catalog', () => {
     ],
   ])(
     'resolves %s@%s without package-owned autolinking metadata',
-    async (name, version, har, cppClass, etsClass, target, importKind, transform) => {
+    async (name, version, har, cppClass, etsClass, target, importKind, transform, harPackageName = undefined) => {
       const packageRoot = `/app/node_modules/${name}`;
       vol.fromJSON({
         [`${packageRoot}/package.json`]: JSON.stringify({
@@ -217,7 +229,7 @@ describe('version-locked RNOH navigation compatibility catalog', () => {
         kind: 'rnoh-package',
         cpp: { packageClass: cppClass, cmakeTarget: target },
         ets: { packageClass: etsClass, importKind },
-        hars: [expect.objectContaining({ packageName: name, primary: true, transform })],
+        hars: [expect.objectContaining({ packageName: harPackageName ?? name, primary: true, transform })],
       });
     }
   );
@@ -248,5 +260,33 @@ describe('version-locked RNOH navigation compatibility catalog', () => {
         new Set()
       )
     ).rejects.toThrow('installed 4.9.1, supported 4.9.0');
+  });
+
+  it('rejects an outdated @expo-oh screens publish pin', async () => {
+    const name = '@expo-oh/react-native-screens';
+    const packageRoot = `/app/node_modules/${name}`;
+    vol.fromJSON({
+      [`${packageRoot}/package.json`]: JSON.stringify({
+        name,
+        version: '4.9.1',
+        harmony: { alias: 'react-native-screens' },
+      }),
+      [`${packageRoot}/harmony/screens.har`]: 'har',
+    });
+    await expect(
+      resolveExpoModule(
+        {
+          name,
+          version: '4.9.1',
+          path: packageRoot,
+          originPath: packageRoot,
+          source: 0,
+          duplicates: null,
+          depth: 0,
+        },
+        'harmony',
+        new Set()
+      )
+    ).rejects.toThrow('installed 4.9.1, supported 4.9.2');
   });
 });

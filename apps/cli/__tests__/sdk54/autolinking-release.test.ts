@@ -16,7 +16,7 @@ it('links scoped screens using its unchanged native package identity', async () 
       fs.writeFileSync(target, ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022, esModuleInterop: true } }).outputText);
     }
     const { discoverRnohHarmonyConfigAsync } = createRequire(import.meta.url)(path.join(root, 'compiled/platforms/harmony/rnohConfig.js'));
-    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: '@expo-oh/react-native-screens', version: '4.9.1' }));
+    fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: '@expo-oh/react-native-screens', version: '4.9.2' }));
     const config = await discoverRnohHarmonyConfigAsync(root, '@react-native-ohos/react-native-screens');
     expect(config).not.toBeNull();
     expect(config?.toJSON().harmony).toMatchObject({
@@ -26,7 +26,7 @@ it('links scoped screens using its unchanged native package identity', async () 
     });
     fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ name: '@expo-oh/react-native-screens', version: '5.0.0' }));
     await expect(discoverRnohHarmonyConfigAsync(root, '@react-native-ohos/react-native-screens'))
-      .rejects.toThrow('installed 5.0.0, supported 4.9.1');
+      .rejects.toThrow('installed 5.0.0, supported 4.9.2');
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }

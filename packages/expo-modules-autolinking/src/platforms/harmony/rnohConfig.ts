@@ -83,7 +83,7 @@ function createNavigationCompatibilityConfig(
   const entry = NAVIGATION_COMPATIBILITY[nativePackageName];
   if (!entry) return null;
   const supportedVersion = packageJson.name === '@expo-oh/react-native-screens'
-    ? '4.9.1'
+    ? '4.9.2'
     : entry.version;
   if (packageJson.version !== supportedVersion) {
     throw new Error(`Invalid Harmony navigation compatibility for "${packageJson.name}" at "${packageRoot}": installed ${packageJson.version}, supported ${supportedVersion}; provide explicit Harmony metadata`);
