@@ -133,7 +133,7 @@ export async function runPackedCliBlackbox({
       initialRuntimeProbePassed: false,
       prebuildPassed: false,
       normalReinstallRestoredPatch: false,
-      ignoreScriptsRuntimeProbeRejected: false,
+      ignoreScriptsRuntimeProbePassed: false,
       deviceSkipped: noDevice,
     },
     failures: [],
@@ -233,9 +233,11 @@ export async function runPackedCliBlackbox({
       report.failures.push(commandFailure('normal reinstall did not restore patched runtime', reinstallDoctor, privateRoots));
     }
   } else {
-    report.checks.ignoreScriptsRuntimeProbeRejected = reinstallProbe === false;
-    if (!report.checks.ignoreScriptsRuntimeProbeRejected) {
-      report.failures.push(commandFailure('--ignore-scripts unexpectedly passed runtime probes', reinstallDoctor, privateRoots));
+    // 1.6.0+ release 语义：探针校验安装身份（package.json/lock 决定，不依赖 postinstall），
+    // --ignore-scripts 重装后探针理应依然通过；被拒才是失败。
+    report.checks.ignoreScriptsRuntimeProbePassed = reinstallProbe === true;
+    if (!report.checks.ignoreScriptsRuntimeProbePassed) {
+      report.failures.push(commandFailure('--ignore-scripts runtime probes unexpectedly rejected', reinstallDoctor, privateRoots));
     }
   }
 

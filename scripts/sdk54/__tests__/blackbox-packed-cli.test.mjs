@@ -28,9 +28,10 @@ if (process.env.FAKE_CLI_LOG) {
 }
 
 function runtimeHealthy(root) {
+  // 1.6.0+ release 语义：探针校验安装身份（file: 依赖解包即得，不依赖 postinstall）。
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(root, 'node_modules/fake-runtime/package.json'), 'utf8'));
-    return pkg.version === '1.0.0' && fs.existsSync(path.join(root, 'node_modules/fake-runtime/PATCHED'));
+    return pkg.version === '1.0.0';
   } catch {
     return false;
   }
@@ -43,19 +44,31 @@ if (command === 'create') {
   const packageManager = argv.includes('--npm') ? 'npm' : 'pnpm';
   const projectRoot = path.join(process.cwd(), projectName);
   fs.mkdirSync(projectRoot, { recursive: true });
+  // fake-runtime 以 file: 依赖提供安装身份（ignore-scripts 下依然解包）；wrong-version 作用于身份本身。
+  const runtimeVersion = behavior.mode === 'wrong-version' ? '0.0.0' : '1.0.0';
+  const runtimeDir = path.join(projectRoot, 'fake-runtime-src');
+  fs.mkdirSync(runtimeDir, { recursive: true });
+  fs.writeFileSync(path.join(runtimeDir, 'package.json'), JSON.stringify({ name: 'fake-runtime', version: runtimeVersion }) + '\n');
+  childProcess.execFileSync('npm', ['pack', '--ignore-scripts', '--json', '--pack-destination', projectRoot], {
+    cwd: runtimeDir, encoding: 'utf8', env: process.env, stdio: 'pipe',
+  });
+  const runtimeTgz = 'fake-runtime-' + runtimeVersion + '.tgz';
   fs.writeFileSync(path.join(projectRoot, 'package.json'), JSON.stringify({
     name: projectName,
     private: true,
     scripts: { postinstall: 'node apply-patch.cjs' },
+    dependencies: { 'fake-runtime': 'file:' + runtimeTgz },
     fakeTemplate: template,
   }, null, 2) + '\n');
+  // postinstall 仅追加 PATCHED 观测标记（1.5.0 patch 语义的遗留观测面，探针不再依赖它）。
   fs.writeFileSync(path.join(projectRoot, 'apply-patch.cjs'), [
     "const fs = require('node:fs');",
     "const path = require('node:path');",
     "const root = path.join(__dirname, 'node_modules/fake-runtime');",
-    "fs.mkdirSync(root, { recursive: true });",
-    "fs.writeFileSync(path.join(root, 'package.json'), JSON.stringify({ version: '" + (behavior.mode === 'wrong-version' ? '0.0.0' : '1.0.0') + "' }));",
-    "fs.writeFileSync(path.join(root, 'PATCHED'), 'yes\\n');",
+    "if (fs.existsSync(path.join(__dirname, 'node_modules'))) {",
+    "  fs.mkdirSync(root, { recursive: true });",
+    "  fs.writeFileSync(path.join(root, 'PATCHED'), 'yes\\n');",
+    "}",
   ].join('\n') + '\n');
   fs.mkdirSync(path.join(projectRoot, '.expo-harmony'), { recursive: true });
   fs.writeFileSync(path.join(projectRoot, '.expo-harmony/managed-state.json'), JSON.stringify({
@@ -73,14 +86,14 @@ if (command === 'create') {
   console.log('created ' + template);
 } else if (command === 'doctor') {
   if (runtimeHealthy(process.cwd())) {
-    console.log('✓ runtime probes');
+    console.log('✓ SDK54 npm release');
   } else {
-    console.error('✗ runtime probes missing or wrong patch version');
+    console.error('✗ SDK54 npm release missing or wrong version');
     process.exitCode = 1;
   }
 } else if (command === 'prebuild') {
   if (!runtimeHealthy(process.cwd())) {
-    console.error('runtime probes failed before prebuild');
+    console.error('SDK54 npm release identity failed before prebuild');
     process.exit(1);
   }
   if (behavior.mode !== 'missing-prebuild-output') {
@@ -201,7 +214,7 @@ test('installs the TGZ into an isolated harness and uses only its bin for normal
   });
 });
 
-test('treats --ignore-scripts runtime-probe failure as the required negative result', async (t) => {
+test('keeps runtime probes passing under --ignore-scripts on install identity', async (t) => {
   const root = tempRoot(t);
   const cliTgz = makeFakeCliTgz(root);
 
@@ -216,10 +229,10 @@ test('treats --ignore-scripts runtime-probe failure as the required negative res
     });
 
     assert.deepEqual(report.failures, []);
-    assert.equal(report.checks.ignoreScriptsRuntimeProbeRejected, true);
+    assert.equal(report.checks.ignoreScriptsRuntimeProbePassed, true);
     assert.ok(report.commands.some((command) => command.file === 'npm' && command.args.includes('--ignore-scripts')));
     const doctors = report.commands.filter((command) => command.args[0] === 'doctor');
-    assert.equal(doctors.at(-1).exitCode, 1);
+    assert.equal(doctors.at(-1).exitCode, 0);
     assertReportIsPortable(report, root, cliTgz);
   });
 });
