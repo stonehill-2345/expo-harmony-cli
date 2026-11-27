@@ -59,7 +59,7 @@ npx expo start
 
 | 项 | 值 |
 | --- | --- |
-| 最新版本 | v1.7.0（2026-11） |
+| 最新版本 | v1.7.1（2026-11） |
 | 支持 Expo SDK | 54（推荐）· 52（Legacy），两条版本线并存 |
 | 对应 React Native | 0.82.x（SDK 54）· 0.77.x（SDK 52） |
 | 目标平台 | HarmonyOS / OpenHarmony（API 12+）· iOS · Android |
